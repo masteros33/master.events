@@ -1,0 +1,24 @@
+{
+    "version": "3.1",
+    "proxyGroups": [
+        {
+            "id": "b3da3e44-2fa6-4977-8992-cbe58dce4da2",
+            "name": "默认配置",
+            "port": 8888,
+            "interceptPrefix": "/api",
+            "baseUrl": "http://localhost:8080",
+            "stripPrefix": true,
+            "globalCookie": "",
+            "enabled": true,
+            "mockApis": [],
+            "protocol": "HTTP",
+            "wsBaseUrl": null,
+            "wsInterceptPrefix": null,
+            "wsManualPush": true,
+            "wsPushRules": [],
+            "wssEnabled": false,
+            "wssKeystorePath": null,
+            "wssKeystorePassword": null
+        }
+    ]
+}

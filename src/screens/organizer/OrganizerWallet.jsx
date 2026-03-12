@@ -1,5 +1,4 @@
 import React, { useState } from "react";
-import useStore from "../../store/useStore";
 import { inputStyle, btnStyle } from "../../styles/common";
 
 export default function OrganizerWallet() {
@@ -48,7 +47,9 @@ export default function OrganizerWallet() {
             <span style={{ fontSize: "11px", opacity: 0.75 }}>5% Platform · Powered by Paystack Split</span>
           </div>
         </div>
-        <button onClick={() => { setShowModal(true); setStep(1); }} style={{ width: "100%", padding: "14px", background: "#fff", color: "#f5a623", border: "none", borderRadius: "50px", fontWeight: 800, fontSize: "15px", cursor: "pointer" }}>💸 WITHDRAW FUNDS</button>
+        <button onClick={() => { setShowModal(true); setStep(1); }} style={{ width: "100%", padding: "14px", background: "#fff", color: "#f5a623", border: "none", borderRadius: "50px", fontWeight: 800, fontSize: "15px", cursor: "pointer" }}>
+          💸 WITHDRAW FUNDS
+        </button>
       </div>
 
       <div style={{ padding: "0 20px" }}>
@@ -69,8 +70,8 @@ export default function OrganizerWallet() {
 
       {showModal && (
         <>
-          <div onClick={() => setShowModal(false)} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", zIndex: 200 }} />
-          <div style={{ position: "fixed", bottom: 0, left: "50%", transform: "translateX(-50%)", width: "390px", background: "#fff", borderRadius: "28px 28px 0 0", zIndex: 201, padding: "28px 24px 40px" }}>
+          <div onClick={() => setShowModal(false)} style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.5)", zIndex: 200 }} />
+          <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, background: "#fff", borderRadius: "28px 28px 0 0", zIndex: 201, padding: "28px 24px 40px" }}>
             {step === 1 && (
               <>
                 <div style={{ fontWeight: 800, fontSize: "18px", color: "#111", marginBottom: "20px" }}>Withdraw Funds</div>
@@ -88,7 +89,7 @@ export default function OrganizerWallet() {
             )}
             {step === 2 && (
               <>
-                <div style={{ fontSize: "13px", color: "#555", lineHeight: 1.7, marginBottom: "20px" }}>{overlayEvent.description}</div>
+                <div style={{ fontWeight: 800, fontSize: "18px", color: "#111", marginBottom: "20px" }}>Confirm Withdrawal</div>
                 {[["Amount", "Ghc " + amount], ["Method", method === "momo" ? "MTN MoMo" : "Bank Transfer"], ["To", momoNumber], ["Processing", "5–10 minutes"]].map(([k, v]) => (
                   <div key={k} style={{ display: "flex", justifyContent: "space-between", padding: "12px 0", borderBottom: "1px solid #f5f5f5" }}>
                     <span style={{ color: "#888", fontSize: "13px" }}>{k}</span>

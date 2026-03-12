@@ -2,8 +2,6 @@ import React from "react";
 import useStore from "./store/useStore";
 import PhoneFrame from "./components/PhoneFrame";
 import BottomNav from "./components/BottomNav";
-
-// Screens
 import Onboarding from "./screens/onboarding/Onboarding";
 import Login from "./screens/auth/Login";
 import { Signup, RoleSelect } from "./screens/auth/Signup";
@@ -14,24 +12,22 @@ import { OrganizerHome, OrganizerEvents, OrganizerAlerts, AddEvent, OrganizerEve
 import OrganizerWallet from "./screens/organizer/OrganizerWallet";
 import { DoorStaffLogin, DoorStaffScan, OrganizerScan } from "./screens/doorstaff/DoorStaffScreens";
 
-// ── Main tab view ─────────────────────────────────────────────────────
 function AppTabs() {
   const role = useStore(s => s.role);
   const activeTab = useStore(s => s.activeTab);
   const setScreen = useStore(s => s.setScreen);
-  const setAddEventForm = useStore(s => s.setAddEventForm);
 
   const renderTab = () => {
     if (role === "attendee") {
       if (activeTab === "home")    return <AttendeeHome />;
       if (activeTab === "tickets") return <AttendeeTickets />;
-      if (activeTab === "notifs")  return <AttendeeAlerts />;
+      if (activeTab === "alerts")  return <AttendeeAlerts />;
     }
     if (role === "organizer") {
-      if (activeTab === "home")   return <OrganizerHome />;
-      if (activeTab === "events") return <OrganizerEvents />;
-      if (activeTab === "wallet") return <OrganizerWallet />;
-      if (activeTab === "notifs") return <OrganizerAlerts />;
+      if (activeTab === "dashboard") return <OrganizerHome />;
+      if (activeTab === "events")    return <OrganizerEvents />;
+      if (activeTab === "wallet")    return <OrganizerWallet />;
+      if (activeTab === "alerts")    return <OrganizerAlerts />;
     }
     return null;
   };
@@ -41,46 +37,39 @@ function AppTabs() {
       <div style={{ flex: 1, overflowY: "auto" }}>
         {renderTab()}
       </div>
-
-      {/* Organizer FAB */}
       {role === "organizer" && (
         <div onClick={() => setScreen("addEvent")}
-          style={{ position: "fixed", bottom: "90px", right: "calc(50% - 195px + 16px)", width: "52px", height: "52px", borderRadius: "50%", background: "#f5a623", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "28px", cursor: "pointer", boxShadow: "0 4px 20px rgba(245,166,35,0.5)", color: "#fff", zIndex: 50 }}>
+          style={{ position: "absolute", bottom: "90px", right: "16px", width: "52px", height: "52px", borderRadius: "50%", background: "#f5a623", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "28px", cursor: "pointer", boxShadow: "0 4px 20px rgba(245,166,35,0.5)", color: "#fff", zIndex: 50 }}>
           +
         </div>
       )}
-
       <BottomNav />
     </div>
   );
 }
 
-// ── Router ────────────────────────────────────────────────────────────
 function AppContent() {
   const screen = useStore(s => s.screen);
-
   const routes = {
-    onboarding:      <Onboarding />,
-    login:           <Login />,
-    signup:          <Signup />,
-    role:            <RoleSelect />,
-    app:             <AppTabs />,
-    checkout:        <Checkout />,
-    ticketView:      <TicketView />,
-    resale:          <Resale />,
-    resaleSuccess:   <ResaleSuccess />,
-    transfer:        <Transfer />,
-    addEvent:        <AddEvent />,
-    orgEventDetail:  <OrganizerEventDetail />,
-    scanTicket:      <OrganizerScan />,
-    doorStaffLogin:  <DoorStaffLogin />,
-    doorStaffScan:   <DoorStaffScan />,
+    onboarding:     <Onboarding />,
+    login:          <Login />,
+    signup:         <Signup />,
+    role:           <RoleSelect />,
+    app:            <AppTabs />,
+    checkout:       <Checkout />,
+    ticketView:     <TicketView />,
+    resale:         <Resale />,
+    resaleSuccess:  <ResaleSuccess />,
+    transfer:       <Transfer />,
+    addEvent:       <AddEvent />,
+    orgEventDetail: <OrganizerEventDetail />,
+    scanTicket:     <OrganizerScan />,
+    doorStaffLogin: <DoorStaffLogin />,
+    doorStaffScan:  <DoorStaffScan />,
   };
-
   return routes[screen] || <Login />;
 }
 
-// ── Root ──────────────────────────────────────────────────────────────
 export default function App() {
   return (
     <PhoneFrame>

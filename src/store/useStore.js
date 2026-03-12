@@ -27,7 +27,8 @@ const useStore = create((set, get) => ({
     const account = DEMO_ACCOUNTS[email];
     if (account && account.password === password) {
       const user = { name: account.name, email };
-      set({ currentUser: user, role: account.role, screen: "app", activeTab: "home" });
+      const firstTab = account.role === "organizer" ? "dashboard" : "home";
+      set({ currentUser: user, role: account.role, screen: "app", activeTab: firstTab });
       if (account.role === "organizer") {
         set({ orgEvents: DEMO_ORG_EVENTS.map(e => ({ ...e })) });
       }
@@ -45,13 +46,17 @@ const useStore = create((set, get) => ({
     set({ currentUser: { name: fullName, email: signupEmail }, screen: "role" });
   },
 
-  handleSelectRole: (role) => set({ role, screen: "app", activeTab: "home" }),
+  handleSelectRole: (role) => {
+    const firstTab = role === "organizer" ? "dashboard" : "home";
+    set({ role, screen: "app", activeTab: firstTab });
+  },
 
   handleLogout: () => set({
     screen: "login", currentUser: null, role: null, menuOpen: false,
     email: "", password: "", activeTab: "home",
     overlayEvent: null, checkoutEvent: null,
     doorStaffUser: null, doorCode: "", doorCodeError: "",
+    doorStaffInvites: {},
   }),
 
   // ── Onboarding ──────────────────────────────────────────────
@@ -173,10 +178,11 @@ const useStore = create((set, get) => ({
         ...addEventForm,
         host: currentUser.name,
         price: parseFloat(addEventForm.price) || 0,
+        totalTickets: parseInt(addEventForm.totalTickets) || 100,
         color: "#f5a623", image: "", ticketsSold: 0, salesOpen: true,
       }],
       addEventForm: { name: "", subtitle: "", date: "", time: "", venue: "", price: "", description: "" },
-      screen: "app", activeTab: "home",
+      screen: "app", activeTab: "events",
     });
   },
 
@@ -188,8 +194,8 @@ const useStore = create((set, get) => ({
   },
 
   // ── Door Staff ───────────────────────────────────────────────
-  doorStaffInvites: {},   // { eventId: [{ code, eventId, eventName, used, createdAt }] }
-  doorStaffUser: null,    // { code, eventId, eventName }
+  doorStaffInvites: {},
+  doorStaffUser: null,
   doorCode: "",
   doorCodeError: "",
   setDoorCode: (doorCode) => set({ doorCode: doorCode.toUpperCase(), doorCodeError: "" }),
@@ -206,7 +212,6 @@ const useStore = create((set, get) => ({
         [eventId]: [...(state.doorStaffInvites[eventId] || []), invite],
       },
     }));
-    return code;
   },
 
   handleDoorStaffLogin: () => {
@@ -218,7 +223,6 @@ const useStore = create((set, get) => ({
     });
     if (!found) { set({ doorCodeError: "Invalid code. Ask your organizer for a valid door staff code." }); return; }
     if (found.used) { set({ doorCodeError: "This code has already been used. Ask for a new one." }); return; }
-    // Mark code as used
     set(state => {
       const updated = { ...state.doorStaffInvites };
       updated[found.eventId] = updated[found.eventId].map(inv =>
@@ -226,7 +230,7 @@ const useStore = create((set, get) => ({
       );
       return {
         doorStaffInvites: updated,
-        doorStaffUser: { code: trimmed, eventId: found.eventId, eventName: found.eventName },
+        doorStaffUser: { code: trimmed, eventId: found.eventId, eventName: found.eventName, name: "Door Staff" },
         admittedList: [], scanInput: "", scanResult: null,
         screen: "doorStaffScan",
       };

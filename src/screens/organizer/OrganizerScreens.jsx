@@ -4,12 +4,24 @@ import { inputStyle, btnStyle } from "../../styles/common";
 
 export function OrganizerHome() {
   const orgEvents = useStore(s => s.orgEvents);
+  const handleLogout = useStore(s => s.handleLogout);
+  const currentUser = useStore(s => s.currentUser);
+  const setScreen = useStore(s => s.setScreen);
   const totalRevenue = orgEvents.reduce((sum, e) => sum + (e.ticketsSold * e.price * 0.95), 0);
   const totalSold = orgEvents.reduce((sum, e) => sum + e.ticketsSold, 0);
   return (
-    <div style={{ padding: "20px 20px 100px" }}>
-      <div style={{ fontWeight: 800, fontSize: "22px", color: "#111", marginBottom: "4px" }}>Dashboard</div>
-      <div style={{ color: "#888", fontSize: "13px", marginBottom: "20px" }}>Welcome back, Organizer 👋</div>
+    <div style={{ padding: "20px 20px 120px" }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "4px" }}>
+        <div>
+          <div style={{ fontWeight: 800, fontSize: "22px", color: "#111" }}>Dashboard</div>
+          <div style={{ color: "#888", fontSize: "13px" }}>Welcome back, Organizer 👋</div>
+        </div>
+        <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
+          <div onClick={() => setScreen("doorStaffLogin")} style={{ padding: "8px 14px", background: "#11111111", border: "1px solid #ddd", borderRadius: "20px", fontSize: "12px", fontWeight: 700, color: "#111", cursor: "pointer" }}>🚪 Door Staff</div>
+          <div onClick={handleLogout} style={{ padding: "8px 14px", background: "#e74c3c22", border: "1px solid #e74c3c44", borderRadius: "20px", fontSize: "12px", fontWeight: 700, color: "#e74c3c", cursor: "pointer" }}>Log Out</div>
+        </div>
+      </div>
+      <div style={{ height: "1px", background: "#f0f0f0", margin: "16px 0" }} />
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px", marginBottom: "20px" }}>
         {[
           { label: "Total Revenue", value: "Ghc " + Math.round(totalRevenue).toLocaleString(), icon: "💰", color: "#27ae60" },
@@ -50,7 +62,7 @@ export function OrganizerEvents() {
   const setViewingOrgEvent = useStore(s => s.setViewingOrgEvent);
   const setScreen = useStore(s => s.setScreen);
   return (
-    <div style={{ padding: "20px 20px 100px" }}>
+    <div style={{ padding: "20px 20px 120px" }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
         <div style={{ fontWeight: 800, fontSize: "22px", color: "#111" }}>My Events</div>
         <button onClick={() => setScreen("addEvent")} style={{ padding: "10px 18px", background: "#f5a623", color: "#fff", border: "none", borderRadius: "30px", fontSize: "13px", fontWeight: 700, cursor: "pointer" }}>+ New</button>
@@ -84,7 +96,7 @@ export function OrganizerAlerts() {
     { icon: "⚠️", color: "#e74c3c", bg: "#fff0f0", title: "Low Tickets", body: "Only 10 tickets left for Gospel Night at Perez Dome.", time: "Yesterday" },
   ];
   return (
-    <div style={{ padding: "20px 20px 100px" }}>
+    <div style={{ padding: "20px 20px 120px" }}>
       <div style={{ fontWeight: 800, fontSize: "22px", color: "#111", marginBottom: "20px" }}>Alerts</div>
       {alerts.map((a, i) => (
         <div key={i} style={{ background: a.bg, borderRadius: "16px", padding: "16px", marginBottom: "12px", display: "flex", gap: "14px", alignItems: "flex-start" }}>
@@ -118,7 +130,7 @@ export function AddEvent() {
   return (
     <div style={{ background: "#fafaf8", minHeight: "100%", paddingBottom: "40px" }}>
       <div style={{ display: "flex", alignItems: "center", padding: "20px", gap: "14px" }}>
-        <div onClick={() => setScreen("app")} style={{ width: "36px", height: "36px", borderRadius: "50%", background: "#f5a62322", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", color: "#f5a623", fontSize: "18px" }}>←</div>
+        <button onClick={() => setScreen("app")} style={{ width: "36px", height: "36px", borderRadius: "50%", background: "#f5a62322", border: "none", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", color: "#f5a623", fontSize: "18px" }}>←</button>
         <div style={{ fontSize: "18px", fontWeight: 800, color: "#111" }}>Create Event</div>
       </div>
       <div style={{ padding: "0 20px" }}>
@@ -149,7 +161,7 @@ export function OrganizerEventDetail() {
     <div style={{ background: "#fafaf8", minHeight: "100%", paddingBottom: "40px" }}>
       <div style={{ height: "160px", background: ev.color || "#f5a623", position: "relative", display: "flex", alignItems: "center", justifyContent: "center" }}>
         <div style={{ fontSize: "52px" }}>{ev.icon || "🎪"}</div>
-        <div onClick={() => setScreen("app")} style={{ position: "absolute", top: "16px", left: "16px", width: "36px", height: "36px", borderRadius: "50%", background: "rgba(0,0,0,0.2)", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", color: "#fff", fontSize: "18px" }}>←</div>
+        <button onClick={() => setScreen("app")} style={{ position: "absolute", top: "16px", left: "16px", width: "36px", height: "36px", borderRadius: "50%", background: "rgba(0,0,0,0.25)", border: "none", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", color: "#fff", fontSize: "18px" }}>←</button>
       </div>
       <div style={{ padding: "20px" }}>
         <div style={{ fontWeight: 800, fontSize: "22px", color: "#111", marginBottom: "4px" }}>{ev.name}</div>
@@ -164,7 +176,7 @@ export function OrganizerEventDetail() {
         </div>
         <button onClick={() => toggleSales(ev.id)} style={{ ...btnStyle, background: ev.salesOpen ? "#e74c3c" : "#27ae60", marginBottom: "12px" }}>{ev.salesOpen ? "⏸ PAUSE TICKET SALES" : "▶ RESUME TICKET SALES"}</button>
         <button onClick={() => setScreen("scanTicket")} style={{ ...btnStyle, background: "#111", marginBottom: "20px" }}>🔍 SCAN TICKETS AT DOOR</button>
-        <div style={{ background: "#fff", borderRadius: "16px", padding: "16px", boxShadow: "0 2px 10px rgba(0,0,0,0.06)" }}>
+        <div style={{ background: "#fff", borderRadius: "16px", padding: "16px", boxShadow: "0 2px 10px rgba(0,0,0,0.06)", marginBottom: "16px" }}>
           <div style={{ fontWeight: 700, fontSize: "14px", color: "#111", marginBottom: "12px" }}>🚪 Door Staff Access</div>
           <button onClick={() => generateDoorCode(ev.id)} style={{ width: "100%", padding: "12px", background: "#f5a62322", color: "#f5a623", border: "2px dashed #f5a623", borderRadius: "12px", fontSize: "13px", fontWeight: 700, cursor: "pointer", marginBottom: "12px" }}>+ Generate Door Staff Invite Code</button>
           {invites.map(inv => (
@@ -173,6 +185,10 @@ export function OrganizerEventDetail() {
               <span style={{ fontSize: "11px", color: inv.used ? "#aaa" : "#27ae60", fontWeight: 600 }}>{inv.used ? "USED" : "ACTIVE"}</span>
             </div>
           ))}
+        </div>
+        <div style={{ background: "#e8f4fd", borderRadius: "14px", padding: "14px 16px" }}>
+          <div style={{ fontSize: "12px", fontWeight: 700, color: "#2980b9", marginBottom: "6px" }}>ℹ️ How Door Staff Flow Works</div>
+          <div style={{ fontSize: "12px", color: "#555", lineHeight: 1.6 }}>1. Generate a code above<br/>2. Share it with your door staff<br/>3. They go to Login → "Enter with invite code"<br/>4. They scan tickets at the door</div>
         </div>
       </div>
     </div>

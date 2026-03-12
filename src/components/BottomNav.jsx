@@ -4,6 +4,7 @@ import useStore from "../store/useStore";
 export default function BottomNav() {
   const activeTab = useStore(s => s.activeTab);
   const setActiveTab = useStore(s => s.setActiveTab);
+  const setScreen = useStore(s => s.setScreen);
   const role = useStore(s => s.role);
 
   const attendeeTabs = [
@@ -24,8 +25,8 @@ export default function BottomNav() {
   return (
     <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, background: "rgba(255,255,255,0.97)", backdropFilter: "blur(12px)", borderTop: "1px solid rgba(245,166,35,0.15)", display: "flex", justifyContent: "space-around", padding: "10px 0 20px", zIndex: 300 }}>
       {tabs.map(item => (
-        <div key={item.id} onClick={() => setActiveTab(item.id)}
-          style={{ display: "flex", flexDirection: "column", alignItems: "center", cursor: "pointer", padding: "4px 16px", borderRadius: "16px", background: activeTab === item.id ? "#f5a62315" : "transparent", transition: "all 0.2s" }}>
+        <div key={item.id} onClick={() => { setActiveTab(item.id); setScreen("app"); }}
+          style={{ display: "flex", flexDirection: "column", alignItems: "center", cursor: "pointer", padding: "4px 16px", borderRadius: "16px", background: activeTab === item.id ? "#f5a62315" : "transparent" }}>
           <div style={{ fontSize: "22px", marginBottom: "2px" }}>{item.icon}</div>
           <div style={{ fontSize: "10px", fontWeight: activeTab === item.id ? 700 : 500, color: activeTab === item.id ? "#f5a623" : "#aaa" }}>{item.label}</div>
           {activeTab === item.id && <div style={{ width: "4px", height: "4px", borderRadius: "50%", background: "#f5a623", marginTop: "3px" }} />}

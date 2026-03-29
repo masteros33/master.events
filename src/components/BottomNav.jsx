@@ -24,20 +24,25 @@ export default function BottomNav() {
 
   return (
     <div style={{
-      position: "absolute", bottom: 0, left: 0, right: 0, zIndex: 300,
+      position: "fixed",
+      bottom: 0, left: 0, right: 0,
+      zIndex: 300,
       background: "rgba(20,13,3,0.97)",
       backdropFilter: "blur(16px)",
+      WebkitBackdropFilter: "blur(16px)",
       borderTop: "1px solid rgba(245,166,35,0.2)",
-      display: "flex", justifyContent: "space-around",
-      padding: "10px 0 20px",
+      display: "flex",
+      justifyContent: "space-around",
+      padding: "10px 0 env(safe-area-inset-bottom, 20px)",
+      boxShadow: "0 -4px 24px rgba(0,0,0,0.4)",
     }}>
       {tabs.map(item => (
         <div key={item.id} onClick={() => { setActiveTab(item.id); setScreen("app"); }}
           style={{
             display: "flex", flexDirection: "column", alignItems: "center",
-            cursor: "pointer", padding: "6px 16px", borderRadius: "16px",
+            cursor: "pointer", padding: "6px 20px", borderRadius: "16px",
             background: activeTab === item.id ? "rgba(245,166,35,0.12)" : "transparent",
-            transition: "all 0.2s",
+            minWidth: "60px",
           }}>
           <div style={{ fontSize: "22px", marginBottom: "2px" }}>{item.icon}</div>
           <div style={{

@@ -104,14 +104,20 @@ export function AttendeeTickets() {
     </div>
   );
 }
-
 export function AttendeeAlerts() {
-  const alerts = [
-    { icon: "✅", color: "#27ae60", title: "Purchase Confirmed", body: "Your ticket for Afrobeats Night is confirmed. NFT minted to your wallet.", time: "2 mins ago" },
-    { icon: "📤", color: "#2980b9", title: "Transfer Complete", body: "Your ticket was successfully transferred to Kwame Mensah.", time: "1 hr ago" },
-    { icon: "🏷️", color: "#f5a623", title: "Resale Listed", body: "Your ticket for Tech Summit is now listed on the resale market.", time: "3 hrs ago" },
-    { icon: "🔔", color: "#8e44ad", title: "New Event Nearby", body: "Gospel Concert at Perez Dome is happening this Sunday. Tickets from Ghc 60.", time: "Yesterday" },
+  const myTickets = useStore(s => s.myTickets);
+  const currentUser = useStore(s => s.currentUser);
+
+  const alerts = myTickets.length > 0 ? myTickets.map((t, i) => ({
+    icon: t.status === "redeemed" ? "✅" : t.status === "resale" ? "🏷️" : "🎟️",
+    color: t.status === "redeemed" ? "#27ae60" : t.status === "resale" ? "#f5a623" : "#5dade2",
+    title: t.status === "redeemed" ? "Ticket Used" : t.status === "resale" ? "Listed for Resale" : "Ticket Purchased",
+    body: `Your ticket for ${t.event?.name} on ${t.event?.date}.`,
+    time: t.purchasedAt || "Recently",
+  })) : [
+    { icon: "🔔", color: "#f5a623", title: "No alerts yet", body: "Buy a ticket to an event and your alerts will appear here.", time: "Now" }
   ];
+
   return (
     <div style={{ background: BG, minHeight: "100%", padding: "20px 20px 100px" }}>
       <div style={{ fontWeight: 800, fontSize: "22px", color: "#fff", marginBottom: "20px" }}>Alerts</div>

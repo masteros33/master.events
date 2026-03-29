@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import useStore from "../../store/useStore";
 
 const BG = "linear-gradient(160deg, #1a0e00 0%, #110900 60%, #1a0e00 100%)";
@@ -29,13 +29,21 @@ export function Checkout() {
   const setPayMethod = useStore(s => s.setPayMethod);
   const handleBuyTicket = useStore(s => s.handleBuyTicket);
   const setScreen = useStore(s => s.setScreen);
+  const [paying, setPaying] = useState(false);
+
   if (!checkoutEvent) return null;
   const subtotal = checkoutEvent.price * ticketQty;
   const fee = Math.round(subtotal * 0.05);
   const total = subtotal + fee;
 
+  const onPay = async () => {
+    setPaying(true);
+    await handleBuyTicket();
+    setPaying(false);
+  };
+
   return (
-    <div style={{ background: BG, minHeight: "100%", paddingBottom: "40px" }}>
+    <div style={{ background: BG, minHeight: "100%", paddingBottom: "100px" }}>
       <div style={{ display: "flex", alignItems: "center", padding: "20px", gap: "14px" }}>
         <div onClick={() => setScreen("app")} style={{ width: "36px", height: "36px", borderRadius: "50%", background: "rgba(245,166,35,0.15)", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", color: "#f5a623", fontSize: "16px" }}>←</div>
         <div style={{ fontSize: "18px", fontWeight: 800, color: "#fff" }}>Checkout</div>
@@ -88,8 +96,17 @@ export function Checkout() {
           </div>
         </div>
 
-        <button onClick={handleBuyTicket} style={darkBtn}>
-          {checkoutEvent.price === 0 ? "GET FREE TICKET" : "PAY Ghc " + total}
+        {/* Payment processing overlay */}
+        {paying && (
+          <div style={{ background: "rgba(245,166,35,0.1)", border: "1px solid rgba(245,166,35,0.3)", borderRadius: "20px", padding: "20px", marginBottom: "16px", textAlign: "center" }}>
+            <div style={{ fontSize: "32px", marginBottom: "8px" }}>⏳</div>
+            <div style={{ color: "#f5a623", fontWeight: 700, fontSize: "16px" }}>Processing Payment...</div>
+            <div style={{ color: "rgba(255,255,255,0.4)", fontSize: "12px", marginTop: "4px" }}>Please wait, minting your NFT ticket</div>
+          </div>
+        )}
+
+        <button onClick={onPay} disabled={paying} style={{ ...darkBtn, opacity: paying ? 0.6 : 1 }}>
+          {paying ? "⏳ Processing..." : checkoutEvent.price === 0 ? "🎟️ GET FREE TICKET" : "💳 PAY Ghc " + total}
         </button>
       </div>
     </div>
@@ -110,8 +127,14 @@ export function TicketView() {
   if (!viewingTicket) return null;
   const ev = viewingTicket.event;
 
+  // Format time properly
+  const formatTime = (t) => {
+    if (!t) return "TBA";
+    return t.substring(0, 5);
+  };
+
   return (
-    <div style={{ background: BG, minHeight: "100%", paddingBottom: "40px" }}>
+    <div style={{ background: BG, minHeight: "100%", paddingBottom: "100px" }}>
       <div style={{ height: "220px", position: "relative" }}>
         {ev.image
           ? <img src={ev.image} alt={ev.name} style={{ width: "100%", height: "100%", objectFit: "cover", opacity: 0.5 }} />
@@ -127,7 +150,11 @@ export function TicketView() {
 
       <div style={{ background: "rgba(30,18,0,0.9)", margin: "20px", borderRadius: "24px", overflow: "hidden", boxShadow: "0 8px 40px rgba(0,0,0,0.5)", border: "1px solid rgba(245,166,35,0.2)" }}>
         <div style={{ padding: "20px", display: "flex", justifyContent: "space-around", borderBottom: "1px dashed rgba(245,166,35,0.2)" }}>
-          {[["📅 DATE", ev.date], ["🕐 TIME", ev.time || "TBA"], ["💺 QTY", viewingTicket.qty]].map(([k, v]) => (
+          {[
+            ["📅 DATE", ev.date || "TBA"],
+            ["🕐 TIME", formatTime(ev.time || viewingTicket.event?.time)],
+            ["💺 QTY", viewingTicket.qty || 1]
+          ].map(([k, v]) => (
             <div key={k} style={{ textAlign: "center" }}>
               <div style={{ fontSize: "10px", color: "rgba(255,255,255,0.35)", fontWeight: 600, marginBottom: "4px" }}>{k}</div>
               <div style={{ fontWeight: 800, fontSize: "14px", color: "#fff" }}>{v}</div>
@@ -137,11 +164,22 @@ export function TicketView() {
 
         <div style={{ padding: "20px", display: "flex", flexDirection: "column", alignItems: "center", gap: "12px" }}>
           {viewingTicket.qr_base64 ? (
-            <img src={`data:image/png;base64,${viewingTicket.qr_base64}`} alt="QR Code" style={{ width: "160px", height: "160px", borderRadius: "8px", border: "3px solid rgba(245,166,35,0.3)" }} />
+            <img
+              src={`data:image/png;base64,${viewingTicket.qr_base64}`}
+              alt="QR Code"
+              style={{ width: "180px", height: "180px", borderRadius: "12px", border: "3px solid rgba(245,166,35,0.5)", background: "#fff", padding: "4px" }}
+            />
           ) : viewingTicket.qr_image ? (
-            <img src={`http://localhost:8000${viewingTicket.qr_image}`} alt="QR Code" style={{ width: "160px", height: "160px", borderRadius: "8px", border: "3px solid rgba(245,166,35,0.3)" }} />
+            <img
+              src={`https://master-events-backend.onrender.com${viewingTicket.qr_image}`}
+              alt="QR Code"
+              style={{ width: "180px", height: "180px", borderRadius: "12px", border: "3px solid rgba(245,166,35,0.5)", background: "#fff", padding: "4px" }}
+            />
           ) : (
-            <div style={{ width: "160px", height: "160px", background: "rgba(255,255,255,0.05)", borderRadius: "8px", display: "flex", alignItems: "center", justifyContent: "center", color: "#aaa", fontSize: "40px", border: "1px solid rgba(245,166,35,0.2)" }}>📱</div>
+            <div style={{ width: "180px", height: "180px", background: "rgba(255,255,255,0.05)", borderRadius: "12px", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", color: "#aaa", border: "1px solid rgba(245,166,35,0.2)", gap: "8px" }}>
+              <span style={{ fontSize: "40px" }}>📱</span>
+              <span style={{ fontSize: "11px", color: "rgba(255,255,255,0.3)" }}>Loading QR...</span>
+            </div>
           )}
           <div style={{ fontFamily: "monospace", fontSize: "12px", color: "rgba(255,255,255,0.35)", letterSpacing: "2px" }}>{viewingTicket.id}</div>
           <div style={{ background: "rgba(39,174,96,0.15)", border: "1px solid rgba(39,174,96,0.3)", padding: "6px 14px", borderRadius: "20px" }}>
@@ -173,11 +211,12 @@ export function Resale() {
   if (!resaleTicket) return null;
   const ev = resaleTicket.event;
   const price = parseFloat(resalePrice) || 0;
-  const fee = Math.round(price * 0.05 * 100) / 100;
+  // ✅ Changed from 5% to 2%
+  const fee = Math.round(price * 0.02 * 100) / 100;
   const payout = Math.round((price - fee) * 100) / 100;
 
   return (
-    <div style={{ background: BG, minHeight: "100%", paddingBottom: "40px" }}>
+    <div style={{ background: BG, minHeight: "100%", paddingBottom: "100px" }}>
       <div style={{ display: "flex", alignItems: "center", padding: "20px", gap: "14px" }}>
         <div onClick={() => setScreen("ticketView")} style={{ width: "36px", height: "36px", borderRadius: "50%", background: "rgba(245,166,35,0.15)", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", color: "#f5a623", fontSize: "18px" }}>←</div>
         <div style={{ fontSize: "18px", fontWeight: 800, color: "#fff" }}>List for Resale</div>
@@ -187,16 +226,28 @@ export function Resale() {
           <div style={{ fontWeight: 700, fontSize: "14px", color: "#fff" }}>{ev.name}</div>
           <div style={{ color: "rgba(255,255,255,0.4)", fontSize: "12px", marginTop: "4px" }}>Original: Ghc {ev.price} · Max: Ghc {ev.price - 1} · Min: Ghc {Math.floor(ev.price * 0.3)}</div>
         </div>
+
+        {/* Resale fee info */}
+        <div style={{ background: "rgba(39,174,96,0.08)", border: "1px solid rgba(39,174,96,0.2)", borderRadius: "14px", padding: "12px 16px", marginBottom: "16px" }}>
+          <div style={{ fontSize: "12px", color: "#27ae60", fontWeight: 700 }}>✅ Only 2% platform fee on resales</div>
+          <div style={{ fontSize: "11px", color: "rgba(255,255,255,0.4)", marginTop: "4px" }}>You keep 98% of your resale price</div>
+        </div>
+
         <div style={{ background: CARD, border: "1px solid " + BORDER, borderRadius: "20px", padding: "18px", marginBottom: "16px" }}>
           <div style={{ fontWeight: 700, fontSize: "14px", color: "#fff", marginBottom: "12px" }}>Your Resale Price (Ghc)</div>
           <input value={resalePrice} onChange={e => setResalePrice(e.target.value)} type="number" placeholder={"Max: " + (ev.price - 1)}
             style={{ ...darkInput, fontSize: "20px", fontWeight: 700, border: "2px solid " + (resaleError ? "#e74c3c" : "rgba(245,166,35,0.4)") }} />
           {resaleError && <div style={{ color: "#ff6b6b", fontSize: "12px", marginTop: "4px" }}>⚠️ {resaleError}</div>}
         </div>
+
         {price > 0 && (
           <div style={{ background: CARD, border: "1px solid " + BORDER, borderRadius: "20px", padding: "18px", marginBottom: "16px" }}>
             <div style={{ fontWeight: 700, fontSize: "14px", color: "#fff", marginBottom: "12px" }}>Fee Breakdown</div>
-            {[["Listing Price", "Ghc " + price], ["Platform Fee (5%)", "- Ghc " + fee], ["Your Payout", "Ghc " + payout]].map(([k, v], i) => (
+            {[
+              ["Listing Price", "Ghc " + price],
+              ["Platform Fee (2%)", "- Ghc " + fee],
+              ["Your Payout", "Ghc " + payout]
+            ].map(([k, v], i) => (
               <div key={k} style={{ display: "flex", justifyContent: "space-between", padding: "8px 0", borderBottom: i < 2 ? "1px solid rgba(255,255,255,0.06)" : "none" }}>
                 <span style={{ color: "rgba(255,255,255,0.5)", fontSize: "13px" }}>{k}</span>
                 <span style={{ color: i === 2 ? "#27ae60" : "#fff", fontWeight: i === 2 ? 800 : 600, fontSize: "13px" }}>{v}</span>
@@ -237,14 +288,24 @@ export function Transfer() {
   const handleTransfer = useStore(s => s.handleTransfer);
   const setScreen = useStore(s => s.setScreen);
   const setActiveTab = useStore(s => s.setActiveTab);
+  const [transferring, setTransferring] = useState(false);
+
   if (!transferTicket) return null;
   const ev = transferTicket.event;
+
+  const onTransfer = async () => {
+    setTransferring(true);
+    await handleTransfer();
+    setTransferring(false);
+  };
 
   if (transferDone) return (
     <div style={{ background: BG, minHeight: "100%", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "40px 28px", textAlign: "center" }}>
       <div style={{ fontSize: "72px", marginBottom: "20px" }}>✅</div>
       <div style={{ fontSize: "24px", fontWeight: 800, color: "#fff", marginBottom: "10px" }}>Ticket Transferred!</div>
-      <div style={{ color: "rgba(255,255,255,0.5)", fontSize: "14px", lineHeight: 1.7, marginBottom: "20px" }}>Your ticket for <span style={{ color: "#fff", fontWeight: 700 }}>{ev.name}</span> has been sent to <span style={{ color: "#f5a623", fontWeight: 700 }}>{transferName || transferEmail}</span></div>
+      <div style={{ color: "rgba(255,255,255,0.5)", fontSize: "14px", lineHeight: 1.7, marginBottom: "20px" }}>
+        Your ticket for <span style={{ color: "#fff", fontWeight: 700 }}>{ev.name}</span> has been sent to <span style={{ color: "#f5a623", fontWeight: 700 }}>{transferName || transferEmail}</span>
+      </div>
       <div style={{ background: "rgba(39,174,96,0.1)", border: "1px solid rgba(39,174,96,0.3)", borderRadius: "16px", padding: "16px 20px", marginBottom: "28px", width: "100%", textAlign: "left" }}>
         <div style={{ fontSize: "12px", color: "#27ae60", fontWeight: 700, marginBottom: "6px" }}>✅ Transfer Complete</div>
         <div style={{ fontFamily: "monospace", fontSize: "11px", color: "#27ae60" }}>Your old QR code is now void. Recipient has a new ticket.</div>
@@ -254,7 +315,7 @@ export function Transfer() {
   );
 
   return (
-    <div style={{ background: BG, minHeight: "100%", paddingBottom: "40px" }}>
+    <div style={{ background: BG, minHeight: "100%", paddingBottom: "100px" }}>
       <div style={{ display: "flex", alignItems: "center", padding: "20px", gap: "14px" }}>
         <div onClick={() => setScreen("ticketView")} style={{ width: "36px", height: "36px", borderRadius: "50%", background: "rgba(245,166,35,0.15)", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", color: "#f5a623", fontSize: "18px" }}>←</div>
         <div style={{ fontSize: "18px", fontWeight: 800, color: "#fff" }}>Transfer Ticket</div>
@@ -276,7 +337,9 @@ export function Transfer() {
           <div style={{ fontSize: "12px", color: "#f5a623", fontWeight: 700, marginBottom: "4px" }}>⚠️ Final Warning</div>
           <div style={{ fontSize: "12px", color: "rgba(255,255,255,0.4)" }}>This action cannot be undone. Make sure the email is correct.</div>
         </div>
-        <button onClick={handleTransfer} style={{ ...darkBtn, background: "linear-gradient(135deg, #2980b9, #1a6fa8)" }}>📤 CONFIRM TRANSFER</button>
+        <button onClick={onTransfer} disabled={transferring} style={{ ...darkBtn, background: "linear-gradient(135deg, #2980b9, #1a6fa8)", opacity: transferring ? 0.6 : 1 }}>
+          {transferring ? "⏳ Transferring..." : "📤 CONFIRM TRANSFER"}
+        </button>
       </div>
     </div>
   );

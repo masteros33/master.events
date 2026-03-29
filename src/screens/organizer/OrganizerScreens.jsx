@@ -33,6 +33,8 @@ const categoryImages = {
   other: "https://images.unsplash.com/photo-1492684223066-81342ee5ff30?w=600",
 };
 
+const CATEGORIES = ["music", "tech", "food", "arts", "sports", "business", "other"];
+
 const mapEvent = e => ({
   id: e.id, name: e.name, date: e.date, venue: e.venue,
   category: e.category || "other", price: parseFloat(e.price),
@@ -44,10 +46,12 @@ const mapEvent = e => ({
 export function OrganizerHome() {
   const orgEvents = useStore(s => s.orgEvents);
   const setOrgEvents = useStore(s => s.setOrgEvents);
-  const handleLogout = useStore(s => s.handleLogout);
   const setScreen = useStore(s => s.setScreen);
   const setViewingOrgEvent = useStore(s => s.setViewingOrgEvent);
+  const currentUser = useStore(s => s.currentUser);
+  const handleLogout = useStore(s => s.handleLogout);
   const [loading, setLoading] = useState(true);
+  const [menuOpen, setMenuOpen] = useState(false);
 
   useEffect(() => {
     eventsAPI.myEvents().then(data => {
@@ -61,14 +65,34 @@ export function OrganizerHome() {
 
   return (
     <div style={{ background: BG, minHeight: "100%", padding: "20px 20px 120px" }}>
+      {/* Profile Menu */}
+      {menuOpen && (
+        <>
+          <div onClick={() => setMenuOpen(false)} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.7)", zIndex: 100 }} />
+          <div style={{ position: "fixed", top: 0, right: 0, width: "75%", maxWidth: "280px", height: "100%", background: "linear-gradient(160deg, #1e1100 0%, #150c00 100%)", zIndex: 101, padding: "60px 24px 40px", display: "flex", flexDirection: "column", boxShadow: "-4px 0 32px rgba(0,0,0,0.5)", borderLeft: "1px solid rgba(245,166,35,0.15)" }}>
+            <div style={{ width: "60px", height: "60px", borderRadius: "50%", background: "linear-gradient(135deg, #f5a623, #e8920f)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "28px", marginBottom: "12px" }}>👤</div>
+            <div style={{ fontSize: "18px", fontWeight: 800, color: "#fff", marginBottom: "4px" }}>{currentUser?.first_name} {currentUser?.last_name}</div>
+            <div style={{ fontSize: "13px", color: "rgba(255,255,255,0.4)", marginBottom: "32px" }}>{currentUser?.email}</div>
+            <div onClick={() => { setMenuOpen(false); setScreen("doorStaffLogin"); }} style={{ display: "flex", alignItems: "center", gap: "14px", padding: "16px 0", borderBottom: "1px solid rgba(255,255,255,0.06)", cursor: "pointer" }}>
+              <span style={{ fontSize: "20px" }}>🚪</span>
+              <span style={{ fontSize: "15px", fontWeight: 600, color: "rgba(255,255,255,0.8)" }}>Door Staff Access</span>
+            </div>
+            <div style={{ flex: 1 }} />
+            <button onClick={handleLogout} style={{ width: "100%", padding: "14px", background: "rgba(231,76,60,0.2)", border: "1px solid rgba(231,76,60,0.4)", color: "#ff6b6b", borderRadius: "50px", fontWeight: 700, cursor: "pointer", fontSize: "14px" }}>LOG OUT</button>
+          </div>
+        </>
+      )}
+
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "4px" }}>
         <div>
           <div style={{ fontWeight: 800, fontSize: "22px", color: "#fff" }}>Dashboard</div>
-          <div style={{ color: "rgba(255,255,255,0.4)", fontSize: "13px" }}>Welcome back, Organizer 👋</div>
+          <div style={{ color: "rgba(255,255,255,0.4)", fontSize: "13px" }}>Welcome back, {currentUser?.first_name} 👋</div>
         </div>
-        <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
-          <div onClick={() => setScreen("doorStaffLogin")} style={{ padding: "8px 14px", background: CARD, border: "1px solid " + BORDER, borderRadius: "20px", fontSize: "12px", fontWeight: 700, color: "rgba(255,255,255,0.7)", cursor: "pointer" }}>🚪 Door Staff</div>
-          <div onClick={handleLogout} style={{ padding: "8px 14px", background: "rgba(231,76,60,0.15)", border: "1px solid rgba(231,76,60,0.3)", borderRadius: "20px", fontSize: "12px", fontWeight: 700, color: "#ff6b6b", cursor: "pointer" }}>Log Out</div>
+        {/* Hamburger menu */}
+        <div onClick={() => setMenuOpen(true)} style={{ width: "40px", height: "40px", borderRadius: "50%", background: "linear-gradient(135deg, #f5a623, #e8920f)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: "5px", cursor: "pointer" }}>
+          <div style={{ width: "16px", height: "2px", background: "#fff", borderRadius: "2px" }} />
+          <div style={{ width: "16px", height: "2px", background: "#fff", borderRadius: "2px" }} />
+          <div style={{ width: "16px", height: "2px", background: "#fff", borderRadius: "2px" }} />
         </div>
       </div>
       <div style={{ height: "1px", background: BORDER, margin: "16px 0" }} />
@@ -184,12 +208,17 @@ export function OrganizerEvents() {
 }
 
 export function OrganizerAlerts() {
-  const alerts = [
-    { icon: "💰", color: "#27ae60", title: "New Sale", body: "3 tickets sold for Afrobeats Night. Ghc 285 added to your wallet.", time: "5 mins ago" },
-    { icon: "🏦", color: "#5dade2", title: "Payout Processed", body: "Ghc 1,200 withdrawal to MTN MoMo completed successfully.", time: "2 hrs ago" },
-    { icon: "📅", color: "#f5a623", title: "Event Tomorrow", body: "Tech Summit Ghana is tomorrow. 142 tickets sold, 58 remaining.", time: "8 hrs ago" },
-    { icon: "⚠️", color: "#e74c3c", title: "Low Tickets", body: "Only 10 tickets left for Gospel Night at Perez Dome.", time: "Yesterday" },
+  const currentUser = useStore(s => s.currentUser);
+  const orgEvents = useStore(s => s.orgEvents);
+
+  const alerts = orgEvents.length > 0 ? [
+    { icon: "💰", color: "#27ae60", title: "Revenue Update", body: `Your events have generated Ghc ${Math.round(orgEvents.reduce((s, e) => s + e.ticketsSold * e.price * 0.95, 0)).toLocaleString()} in total revenue.`, time: "Just now" },
+    { icon: "🎟️", color: "#5dade2", title: "Tickets Sold", body: `${orgEvents.reduce((s, e) => s + e.ticketsSold, 0)} tickets sold across ${orgEvents.length} events.`, time: "Today" },
+    { icon: "🎪", color: "#f5a623", title: "Active Events", body: `You have ${orgEvents.filter(e => e.salesOpen).length} active events with sales open.`, time: "Today" },
+  ] : [
+    { icon: "🔔", color: "#f5a623", title: "No alerts yet", body: "Create an event and start selling tickets to see your alerts here.", time: "Now" },
   ];
+
   return (
     <div style={{ background: BG, minHeight: "100%", padding: "20px 20px 120px" }}>
       <div style={{ fontWeight: 800, fontSize: "22px", color: "#fff", marginBottom: "20px" }}>Alerts</div>
@@ -212,30 +241,61 @@ export function AddEvent() {
   const setAddEventForm = useStore(s => s.setAddEventForm);
   const handleAddEvent = useStore(s => s.handleAddEvent);
   const setScreen = useStore(s => s.setScreen);
+
   const fields = [
-    ["name", "Event Name", "text", "e.g. Afrobeats Night 2025"],
+    ["name", "Event Name *", "text", "e.g. Afrobeats Night 2026"],
     ["subtitle", "Subtitle", "text", "e.g. The biggest night in Accra"],
-    ["date", "Date (YYYY-MM-DD)", "text", "e.g. 2025-11-15"],
-    ["time", "Time (HH:MM:SS)", "text", "e.g. 20:00:00"],
-    ["venue", "Venue", "text", "e.g. Accra Sports Stadium"],
-    ["price", "Ticket Price (Ghc)", "number", "e.g. 150"],
-    ["totalTickets", "Total Tickets", "number", "e.g. 500"],
+    ["date", "Date *", "date", ""],
+    ["time", "Time *", "time", ""],
+    ["venue", "Venue *", "text", "e.g. Accra Sports Stadium"],
+    ["city", "City", "text", "e.g. Accra"],
+    ["price", "Ticket Price (Ghc) *", "number", "e.g. 150"],
+    ["totalTickets", "Total Tickets *", "number", "e.g. 500"],
     ["description", "Description", "text", "Short description of the event"],
   ];
+
   return (
-    <div style={{ background: BG, minHeight: "100%", paddingBottom: "40px" }}>
+    <div style={{ background: BG, minHeight: "100%", paddingBottom: "100px" }}>
       <div style={{ display: "flex", alignItems: "center", padding: "20px", gap: "14px" }}>
         <button onClick={() => setScreen("app")} style={{ width: "36px", height: "36px", borderRadius: "50%", background: "rgba(245,166,35,0.15)", border: "none", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", color: "#f5a623", fontSize: "18px" }}>←</button>
         <div style={{ fontSize: "18px", fontWeight: 800, color: "#fff" }}>Create Event</div>
       </div>
       <div style={{ padding: "0 20px" }}>
+
+        {/* Category Selector */}
+        <div style={{ marginBottom: "16px" }}>
+          <div style={{ fontSize: "13px", color: "rgba(255,255,255,0.5)", fontWeight: 600, marginBottom: "8px" }}>Category *</div>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
+            {CATEGORIES.map(cat => (
+              <div key={cat} onClick={() => setAddEventForm({ ...addEventForm, category: cat })}
+                style={{ padding: "8px 16px", borderRadius: "20px", cursor: "pointer", fontSize: "13px", fontWeight: 700, border: "2px solid " + (addEventForm.category === cat ? "#f5a623" : "rgba(255,255,255,0.1)"), background: addEventForm.category === cat ? "rgba(245,166,35,0.15)" : "rgba(255,255,255,0.04)", color: addEventForm.category === cat ? "#f5a623" : "rgba(255,255,255,0.4)" }}>
+                {cat.charAt(0).toUpperCase() + cat.slice(1)}
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Image URL field */}
+        <div style={{ marginBottom: "16px" }}>
+          <div style={{ fontSize: "13px", color: "rgba(255,255,255,0.5)", fontWeight: 600, marginBottom: "8px" }}>Event Image URL (optional)</div>
+          <input type="text" placeholder="https://... (leave blank for auto image)" value={addEventForm.image || ""} onChange={e => setAddEventForm({ ...addEventForm, image: e.target.value })} style={darkInput} />
+          {addEventForm.category && !addEventForm.image && (
+            <div style={{ marginTop: "-10px", marginBottom: "10px" }}>
+              <img src={categoryImages[addEventForm.category]} alt="preview" style={{ width: "100%", height: "120px", objectFit: "cover", borderRadius: "12px", opacity: 0.7 }} />
+              <div style={{ fontSize: "11px", color: "rgba(255,255,255,0.3)", marginTop: "4px" }}>Auto image for {addEventForm.category}</div>
+            </div>
+          )}
+        </div>
+
         {fields.map(([key, label, type, placeholder]) => (
           <div key={key} style={{ marginBottom: "16px" }}>
             <div style={{ fontSize: "13px", color: "rgba(255,255,255,0.5)", fontWeight: 600, marginBottom: "8px" }}>{label}</div>
-            <input type={type} placeholder={placeholder} value={addEventForm[key] || ""} onChange={e => setAddEventForm({ ...addEventForm, [key]: e.target.value })} style={darkInput} />
+            <input type={type} placeholder={placeholder} value={addEventForm[key] || ""} onChange={e => setAddEventForm({ ...addEventForm, [key]: e.target.value })}
+              style={{ ...darkInput, colorScheme: "dark" }} />
           </div>
         ))}
-        <button onClick={handleAddEvent} style={darkBtn}>🎪 CREATE EVENT</button>
+
+        <button onClick={handleAddEvent} style={{ ...darkBtn, marginTop: "8px" }}>🎪 CREATE EVENT</button>
       </div>
     </div>
   );
@@ -260,8 +320,8 @@ export function OrganizerEventDetail() {
         <img src={coverImage} alt={ev.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} onError={e => { e.target.src = categoryImages.other; }} />
         <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to bottom, rgba(17,9,0,0.3), rgba(17,9,0,0.85))" }} />
         <button onClick={() => setScreen("app")} style={{ position: "absolute", top: "16px", left: "16px", width: "36px", height: "36px", borderRadius: "50%", background: "rgba(0,0,0,0.4)", border: "1px solid rgba(245,166,35,0.3)", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", color: "#f5a623", fontSize: "18px" }}>←</button>
+        <div style={{ position: "absolute", top: "16px", right: "16px", background: "rgba(245,166,35,0.9)", color: "#000", fontSize: "10px", fontWeight: 800, padding: "4px 12px", borderRadius: "20px", letterSpacing: "1px" }}>{ev.category?.toUpperCase()}</div>
         <div style={{ position: "absolute", bottom: "16px", left: "20px", right: "20px" }}>
-          <div style={{ color: "#f5a623", fontSize: "11px", fontWeight: 700, letterSpacing: "1px", marginBottom: "4px" }}>{ev.category?.toUpperCase()}</div>
           <div style={{ color: "#fff", fontWeight: 900, fontSize: "20px" }}>{ev.name}</div>
           <div style={{ color: "rgba(255,255,255,0.7)", fontSize: "12px", marginTop: "4px" }}>📍 {ev.venue} · {ev.date}</div>
         </div>

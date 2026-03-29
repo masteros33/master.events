@@ -64,22 +64,23 @@ const BORDER = "rgba(245,166,35,0.15)";
 
 export default function AttendeeHome() {
   const setScreen = useStore(s => s.setScreen);
+  const setActiveTab = useStore(s => s.setActiveTab);
   const setCheckoutEvent = useStore(s => s.setCheckoutEvent);
   const setTicketQty = useStore(s => s.setTicketQty);
   const setOverlayEvent = useStore(s => s.setOverlayEvent);
   const overlayEvent = useStore(s => s.overlayEvent);
   const searchQ = useStore(s => s.searchQ);
   const setSearchQ = useStore(s => s.setSearchQ);
-  const menuOpen = useStore(s => s.menuOpen);
-  const setMenuOpen = useStore(s => s.setMenuOpen);
   const handleLogout = useStore(s => s.handleLogout);
   const currentUser = useStore(s => s.currentUser);
 
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeCategory, setActiveCategory] = useState("all");
+  const [menuOpen, setMenuOpen] = useState(false);
 
   useEffect(() => {
+    setLoading(true);
     eventsAPI.list().then(data => {
       if (Array.isArray(data)) {
         setEvents(data.map(e => ({
@@ -121,8 +122,12 @@ export default function AttendeeHome() {
 
         <div style={{ padding: "20px", flex: 1, background: BG }}>
           <div style={{ display: "flex", gap: "10px", marginBottom: "20px" }}>
-            {[["📅", overlayEvent.date], ["🕐", overlayEvent.time], ["🎟️", (overlayEvent.totalTickets - overlayEvent.ticketsSold) + " left"]].map(([icon, val]) => (
-              <div key={val} style={{ flex: 1, background: CARD, border: "1px solid " + BORDER, borderRadius: "14px", padding: "10px 8px", textAlign: "center" }}>
+            {[
+              ["📅", overlayEvent.date],
+              ["🕐", overlayEvent.time ? overlayEvent.time.substring(0, 5) : "TBA"],
+              ["🎟️", (overlayEvent.totalTickets - overlayEvent.ticketsSold) + " left"]
+            ].map(([icon, val]) => (
+              <div key={icon} style={{ flex: 1, background: CARD, border: "1px solid " + BORDER, borderRadius: "14px", padding: "10px 8px", textAlign: "center" }}>
                 <div style={{ fontSize: "16px", marginBottom: "4px" }}>{icon}</div>
                 <div style={{ fontSize: "11px", fontWeight: 700, color: "#fff" }}>{val}</div>
               </div>
@@ -130,7 +135,7 @@ export default function AttendeeHome() {
           </div>
           <div style={{ fontSize: "15px", fontWeight: 800, color: "#fff", marginBottom: "8px" }}>About This Event</div>
           <div style={{ fontSize: "13px", color: "rgba(255,255,255,0.6)", lineHeight: 1.8, marginBottom: "20px" }}>{overlayEvent.description}</div>
-          <div style={{ background: "rgba(245,166,35,0.1)", border: "1px solid rgba(245,166,35,0.25)", borderRadius: "16px", padding: "14px 16px", marginBottom: "20px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <div style={{ background: "rgba(245,166,35,0.1)", border: "1px solid rgba(245,166,35,0.25)", borderRadius: "16px", padding: "14px 16px", marginBottom: "80px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
             <div>
               <div style={{ fontSize: "11px", color: "rgba(255,255,255,0.4)", marginBottom: "4px" }}>Ticket Price</div>
               <div style={{ fontSize: "26px", fontWeight: 900, color: "#f5a623" }}>{overlayEvent.price === 0 ? "FREE" : "Ghc " + overlayEvent.price}</div>
@@ -140,10 +145,12 @@ export default function AttendeeHome() {
               <div>remaining</div>
             </div>
           </div>
-          <button onClick={() => { setCheckoutEvent(overlayEvent); setTicketQty(1); setOverlayEvent(null); setScreen("checkout"); }}
-            style={{ width: "100%", padding: "16px", background: "linear-gradient(135deg, #f5a623, #e8920f)", color: "#fff", border: "none", borderRadius: "50px", fontSize: "15px", fontWeight: 800, cursor: "pointer", boxShadow: "0 8px 24px rgba(245,166,35,0.35)" }}>
-            {overlayEvent.price === 0 ? "GET FREE TICKET" : "BUY TICKET — Ghc " + overlayEvent.price}
-          </button>
+          <div style={{ position: "fixed", bottom: 0, left: 0, right: 0, padding: "16px 20px", background: "rgba(17,9,0,0.97)", borderTop: "1px solid rgba(245,166,35,0.15)" }}>
+            <button onClick={() => { setCheckoutEvent(overlayEvent); setTicketQty(1); setOverlayEvent(null); setScreen("checkout"); }}
+              style={{ width: "100%", padding: "16px", background: "linear-gradient(135deg, #f5a623, #e8920f)", color: "#fff", border: "none", borderRadius: "50px", fontSize: "15px", fontWeight: 800, cursor: "pointer", boxShadow: "0 8px 24px rgba(245,166,35,0.35)" }}>
+              {overlayEvent.price === 0 ? "🎟️ GET FREE TICKET" : "🎟️ BUY TICKET — Ghc " + overlayEvent.price}
+            </button>
+          </div>
         </div>
       </div>
     );
@@ -151,21 +158,29 @@ export default function AttendeeHome() {
 
   return (
     <div style={{ background: BG, minHeight: "100%", paddingBottom: "100px" }}>
+
+      {/* Slide-out menu */}
       {menuOpen && (
         <>
-          <div onClick={() => setMenuOpen(false)} style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.7)", zIndex: 100 }} />
-          <div style={{ position: "absolute", top: 0, left: 0, width: "75%", maxWidth: "280px", height: "100%", background: "linear-gradient(160deg, #1e1100 0%, #150c00 100%)", zIndex: 101, padding: "60px 24px 40px", display: "flex", flexDirection: "column", boxShadow: "4px 0 32px rgba(0,0,0,0.5)", borderRight: "1px solid rgba(245,166,35,0.15)" }}>
+          <div onClick={() => setMenuOpen(false)} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.7)", zIndex: 100 }} />
+          <div style={{ position: "fixed", top: 0, left: 0, width: "75%", maxWidth: "280px", height: "100%", background: "linear-gradient(160deg, #1e1100 0%, #150c00 100%)", zIndex: 101, padding: "60px 24px 40px", display: "flex", flexDirection: "column", boxShadow: "4px 0 32px rgba(0,0,0,0.5)", borderRight: "1px solid rgba(245,166,35,0.15)" }}>
             <div style={{ width: "52px", height: "52px", borderRadius: "50%", background: "linear-gradient(135deg, #f5a623, #e8920f)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "22px", marginBottom: "12px" }}>👤</div>
-            <div style={{ fontSize: "18px", fontWeight: 800, color: "#fff", marginBottom: "4px" }}>{currentUser?.first_name || "User"}</div>
+            <div style={{ fontSize: "18px", fontWeight: 800, color: "#fff", marginBottom: "4px" }}>{currentUser?.first_name} {currentUser?.last_name}</div>
             <div style={{ fontSize: "13px", color: "rgba(255,255,255,0.4)", marginBottom: "32px" }}>{currentUser?.email}</div>
-            {[["🏠", "Home"], ["🎟️", "My Tickets"], ["🔔", "Alerts"], ["⚙️", "Settings"]].map(([icon, label]) => (
-              <div key={label} onClick={() => setMenuOpen(false)} style={{ display: "flex", alignItems: "center", gap: "14px", padding: "14px 0", borderBottom: "1px solid rgba(255,255,255,0.06)", cursor: "pointer" }}>
+            {[
+              ["🏠", "Home", () => { setMenuOpen(false); setActiveTab("home"); setScreen("app"); }],
+              ["🎟️", "My Tickets", () => { setMenuOpen(false); setActiveTab("tickets"); setScreen("app"); }],
+              ["🔔", "Alerts", () => { setMenuOpen(false); setActiveTab("alerts"); setScreen("app"); }],
+            ].map(([icon, label, action]) => (
+              <div key={label} onClick={action} style={{ display: "flex", alignItems: "center", gap: "14px", padding: "14px 0", borderBottom: "1px solid rgba(255,255,255,0.06)", cursor: "pointer" }}>
                 <span style={{ fontSize: "20px" }}>{icon}</span>
                 <span style={{ fontSize: "15px", fontWeight: 600, color: "rgba(255,255,255,0.8)" }}>{label}</span>
               </div>
             ))}
             <div style={{ flex: 1 }} />
-            <button onClick={handleLogout} style={{ width: "100%", padding: "14px", background: "rgba(231,76,60,0.2)", border: "1px solid rgba(231,76,60,0.4)", color: "#ff6b6b", borderRadius: "50px", fontWeight: 700, cursor: "pointer", fontSize: "14px" }}>LOG OUT</button>
+            <button onClick={handleLogout} style={{ width: "100%", padding: "14px", background: "rgba(231,76,60,0.2)", border: "1px solid rgba(231,76,60,0.4)", color: "#ff6b6b", borderRadius: "50px", fontWeight: 700, cursor: "pointer", fontSize: "14px" }}>
+              LOG OUT
+            </button>
           </div>
         </>
       )}

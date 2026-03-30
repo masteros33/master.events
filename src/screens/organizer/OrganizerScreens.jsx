@@ -65,18 +65,25 @@ export function OrganizerHome() {
 
   return (
     <div style={{ background: BG, minHeight: "100%", padding: "20px 20px 120px" }}>
-      {/* Profile Menu */}
       {menuOpen && (
         <>
           <div onClick={() => setMenuOpen(false)} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.7)", zIndex: 100 }} />
-          <div style={{ position: "fixed", top: 0, right: 0, width: "75%", maxWidth: "280px", height: "100%", background: "linear-gradient(160deg, #1e1100 0%, #150c00 100%)", zIndex: 101, padding: "60px 24px 40px", display: "flex", flexDirection: "column", boxShadow: "-4px 0 32px rgba(0,0,0,0.5)", borderLeft: "1px solid rgba(245,166,35,0.15)" }}>
+          {/* ✅ Fixed: menu on LEFT side like attendee */}
+          <div style={{ position: "fixed", top: 0, left: 0, width: "75%", maxWidth: "280px", height: "100%", background: "linear-gradient(160deg, #1e1100 0%, #150c00 100%)", zIndex: 101, padding: "60px 24px 120px", display: "flex", flexDirection: "column", boxShadow: "4px 0 32px rgba(0,0,0,0.5)", borderRight: "1px solid rgba(245,166,35,0.15)" }}>
             <div style={{ width: "60px", height: "60px", borderRadius: "50%", background: "linear-gradient(135deg, #f5a623, #e8920f)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "28px", marginBottom: "12px" }}>👤</div>
             <div style={{ fontSize: "18px", fontWeight: 800, color: "#fff", marginBottom: "4px" }}>{currentUser?.first_name} {currentUser?.last_name}</div>
-            <div style={{ fontSize: "13px", color: "rgba(255,255,255,0.4)", marginBottom: "32px" }}>{currentUser?.email}</div>
-            <div onClick={() => { setMenuOpen(false); setScreen("doorStaffLogin"); }} style={{ display: "flex", alignItems: "center", gap: "14px", padding: "16px 0", borderBottom: "1px solid rgba(255,255,255,0.06)", cursor: "pointer" }}>
-              <span style={{ fontSize: "20px" }}>🚪</span>
-              <span style={{ fontSize: "15px", fontWeight: 600, color: "rgba(255,255,255,0.8)" }}>Door Staff Access</span>
-            </div>
+            <div style={{ fontSize: "13px", color: "rgba(255,255,255,0.4)", marginBottom: "8px" }}>{currentUser?.email}</div>
+            <div style={{ fontSize: "11px", color: "#f5a623", fontWeight: 700, background: "rgba(245,166,35,0.1)", padding: "4px 10px", borderRadius: "20px", display: "inline-block", marginBottom: "32px" }}>Organizer</div>
+            {[
+              ["📊", "Dashboard", () => { setMenuOpen(false); }],
+              ["🎪", "My Events", () => { setMenuOpen(false); }],
+              ["🚪", "Door Staff Access", () => { setMenuOpen(false); setScreen("doorStaffLogin"); }],
+            ].map(([icon, label, action]) => (
+              <div key={label} onClick={action} style={{ display: "flex", alignItems: "center", gap: "14px", padding: "16px 0", borderBottom: "1px solid rgba(255,255,255,0.06)", cursor: "pointer" }}>
+                <span style={{ fontSize: "20px" }}>{icon}</span>
+                <span style={{ fontSize: "15px", fontWeight: 600, color: "rgba(255,255,255,0.8)" }}>{label}</span>
+              </div>
+            ))}
             <div style={{ flex: 1 }} />
             <button onClick={handleLogout} style={{ width: "100%", padding: "14px", background: "rgba(231,76,60,0.2)", border: "1px solid rgba(231,76,60,0.4)", color: "#ff6b6b", borderRadius: "50px", fontWeight: 700, cursor: "pointer", fontSize: "14px" }}>LOG OUT</button>
           </div>
@@ -88,7 +95,6 @@ export function OrganizerHome() {
           <div style={{ fontWeight: 800, fontSize: "22px", color: "#fff" }}>Dashboard</div>
           <div style={{ color: "rgba(255,255,255,0.4)", fontSize: "13px" }}>Welcome back, {currentUser?.first_name} 👋</div>
         </div>
-        {/* Hamburger menu */}
         <div onClick={() => setMenuOpen(true)} style={{ width: "40px", height: "40px", borderRadius: "50%", background: "linear-gradient(135deg, #f5a623, #e8920f)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: "5px", cursor: "pointer" }}>
           <div style={{ width: "16px", height: "2px", background: "#fff", borderRadius: "2px" }} />
           <div style={{ width: "16px", height: "2px", background: "#fff", borderRadius: "2px" }} />
@@ -98,7 +104,17 @@ export function OrganizerHome() {
       <div style={{ height: "1px", background: BORDER, margin: "16px 0" }} />
 
       {loading ? (
-        <div style={{ textAlign: "center", padding: "40px", color: "rgba(255,255,255,0.3)" }}>Loading...</div>
+        <div>
+          {[1,2,3].map(i => (
+            <div key={i} style={{ background: CARD, borderRadius: "20px", marginBottom: "14px", overflow: "hidden" }}>
+              <div className="skeleton" style={{ height: "110px" }} />
+              <div style={{ padding: "12px 16px" }}>
+                <div className="skeleton" style={{ height: "14px", width: "60%", marginBottom: "8px" }} />
+                <div className="skeleton" style={{ height: "12px", width: "40%" }} />
+              </div>
+            </div>
+          ))}
+        </div>
       ) : (
         <>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px", marginBottom: "20px" }}>
@@ -173,7 +189,17 @@ export function OrganizerEvents() {
         <button onClick={() => setScreen("addEvent")} style={{ padding: "10px 18px", background: "linear-gradient(135deg, #f5a623, #e8920f)", color: "#fff", border: "none", borderRadius: "30px", fontSize: "13px", fontWeight: 700, cursor: "pointer" }}>+ New</button>
       </div>
       {loading ? (
-        <div style={{ textAlign: "center", padding: "40px", color: "rgba(255,255,255,0.3)" }}>Loading...</div>
+        <div>
+          {[1,2,3].map(i => (
+            <div key={i} style={{ background: CARD, borderRadius: "20px", marginBottom: "14px", overflow: "hidden" }}>
+              <div className="skeleton" style={{ height: "140px" }} />
+              <div style={{ padding: "12px 16px" }}>
+                <div className="skeleton" style={{ height: "14px", width: "60%", marginBottom: "8px" }} />
+                <div className="skeleton" style={{ height: "12px", width: "40%" }} />
+              </div>
+            </div>
+          ))}
+        </div>
       ) : (
         <>
           {orgEvents.length === 0 && (
@@ -208,9 +234,7 @@ export function OrganizerEvents() {
 }
 
 export function OrganizerAlerts() {
-  const currentUser = useStore(s => s.currentUser);
   const orgEvents = useStore(s => s.orgEvents);
-
   const alerts = orgEvents.length > 0 ? [
     { icon: "💰", color: "#27ae60", title: "Revenue Update", body: `Your events have generated Ghc ${Math.round(orgEvents.reduce((s, e) => s + e.ticketsSold * e.price * 0.95, 0)).toLocaleString()} in total revenue.`, time: "Just now" },
     { icon: "🎟️", color: "#5dade2", title: "Tickets Sold", body: `${orgEvents.reduce((s, e) => s + e.ticketsSold, 0)} tickets sold across ${orgEvents.length} events.`, time: "Today" },
@@ -241,6 +265,7 @@ export function AddEvent() {
   const setAddEventForm = useStore(s => s.setAddEventForm);
   const handleAddEvent = useStore(s => s.handleAddEvent);
   const setScreen = useStore(s => s.setScreen);
+  const [imageType, setImageType] = useState("upload");
 
   const fields = [
     ["name", "Event Name *", "text", "e.g. Afrobeats Night 2026"],
@@ -255,7 +280,7 @@ export function AddEvent() {
   ];
 
   return (
-    <div style={{ background: BG, minHeight: "100%", paddingBottom: "100px" }}>
+    <div style={{ background: BG, minHeight: "100%", paddingBottom: "120px" }}>
       <div style={{ display: "flex", alignItems: "center", padding: "20px", gap: "14px" }}>
         <button onClick={() => setScreen("app")} style={{ width: "36px", height: "36px", borderRadius: "50%", background: "rgba(245,166,35,0.15)", border: "none", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", color: "#f5a623", fontSize: "18px" }}>←</button>
         <div style={{ fontSize: "18px", fontWeight: 800, color: "#fff" }}>Create Event</div>
@@ -263,8 +288,8 @@ export function AddEvent() {
       <div style={{ padding: "0 20px" }}>
 
         {/* Category Selector */}
-        <div style={{ marginBottom: "16px" }}>
-          <div style={{ fontSize: "13px", color: "rgba(255,255,255,0.5)", fontWeight: 600, marginBottom: "8px" }}>Category *</div>
+        <div style={{ marginBottom: "20px" }}>
+          <div style={{ fontSize: "13px", color: "rgba(255,255,255,0.5)", fontWeight: 600, marginBottom: "10px" }}>Category *</div>
           <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
             {CATEGORIES.map(cat => (
               <div key={cat} onClick={() => setAddEventForm({ ...addEventForm, category: cat })}
@@ -275,14 +300,54 @@ export function AddEvent() {
           </div>
         </div>
 
-        {/* Image URL field */}
-        <div style={{ marginBottom: "16px" }}>
-          <div style={{ fontSize: "13px", color: "rgba(255,255,255,0.5)", fontWeight: 600, marginBottom: "8px" }}>Event Image URL (optional)</div>
-          <input type="text" placeholder="https://... (leave blank for auto image)" value={addEventForm.image || ""} onChange={e => setAddEventForm({ ...addEventForm, image: e.target.value })} style={darkInput} />
-          {addEventForm.category && !addEventForm.image && (
-            <div style={{ marginTop: "-10px", marginBottom: "10px" }}>
-              <img src={categoryImages[addEventForm.category]} alt="preview" style={{ width: "100%", height: "120px", objectFit: "cover", borderRadius: "12px", opacity: 0.7 }} />
-              <div style={{ fontSize: "11px", color: "rgba(255,255,255,0.3)", marginTop: "4px" }}>Auto image for {addEventForm.category}</div>
+        {/* Image Upload — JPG/PNG/URL */}
+        <div style={{ marginBottom: "20px" }}>
+          <div style={{ fontSize: "13px", color: "rgba(255,255,255,0.5)", fontWeight: 600, marginBottom: "10px" }}>Event Image</div>
+          <div style={{ display: "flex", gap: "8px", marginBottom: "12px" }}>
+            {[["upload", "📷 Upload Photo"], ["url", "🔗 Image URL"]].map(([t, label]) => (
+              <div key={t} onClick={() => setImageType(t)}
+                style={{ flex: 1, padding: "10px", borderRadius: "12px", textAlign: "center", cursor: "pointer", fontSize: "12px", fontWeight: 700, border: "2px solid " + (imageType === t ? "#f5a623" : "rgba(255,255,255,0.1)"), background: imageType === t ? "rgba(245,166,35,0.15)" : "rgba(255,255,255,0.04)", color: imageType === t ? "#f5a623" : "rgba(255,255,255,0.4)" }}>
+                {label}
+              </div>
+            ))}
+          </div>
+
+          {imageType === "upload" ? (
+            <div>
+              <input type="file" accept="image/jpeg,image/png,image/webp,image/jpg" id="event-image-upload" style={{ display: "none" }}
+                onChange={(e) => {
+                  const file = e.target.files[0];
+                  if (!file) return;
+                  const reader = new FileReader();
+                  reader.onload = (ev) => setAddEventForm({ ...addEventForm, image: ev.target.result });
+                  reader.readAsDataURL(file);
+                }}
+              />
+              <label htmlFor="event-image-upload" style={{ display: "block", padding: "24px 20px", background: "rgba(255,255,255,0.04)", border: "2px dashed rgba(245,166,35,0.3)", borderRadius: "14px", textAlign: "center", cursor: "pointer" }}>
+                {addEventForm.image && addEventForm.image.startsWith('data:') ? (
+                  <div>
+                    <img src={addEventForm.image} alt="preview" style={{ width: "100%", height: "140px", objectFit: "cover", borderRadius: "10px", marginBottom: "8px" }} />
+                    <div style={{ color: "#27ae60", fontSize: "12px", fontWeight: 700 }}>✅ Image selected — tap to change</div>
+                  </div>
+                ) : (
+                  <div>
+                    <div style={{ fontSize: "32px", marginBottom: "8px" }}>📷</div>
+                    <div style={{ color: "rgba(255,255,255,0.6)", fontSize: "13px", fontWeight: 600 }}>Tap to upload JPG or PNG</div>
+                    <div style={{ color: "rgba(255,255,255,0.3)", fontSize: "11px", marginTop: "4px" }}>Max 5MB</div>
+                  </div>
+                )}
+              </label>
+            </div>
+          ) : (
+            <div>
+              <input type="text" placeholder="https://..." value={addEventForm.image?.startsWith('data:') ? '' : (addEventForm.image || "")}
+                onChange={e => setAddEventForm({ ...addEventForm, image: e.target.value })} style={darkInput} />
+              {addEventForm.category && !(addEventForm.image?.startsWith('http')) && (
+                <div style={{ marginTop: "-8px", marginBottom: "10px" }}>
+                  <img src={categoryImages[addEventForm.category]} alt="preview" style={{ width: "100%", height: "100px", objectFit: "cover", borderRadius: "10px", opacity: 0.6 }} />
+                  <div style={{ fontSize: "11px", color: "rgba(255,255,255,0.3)", marginTop: "4px" }}>Auto image for {addEventForm.category}</div>
+                </div>
+              )}
             </div>
           )}
         </div>
@@ -290,7 +355,8 @@ export function AddEvent() {
         {fields.map(([key, label, type, placeholder]) => (
           <div key={key} style={{ marginBottom: "16px" }}>
             <div style={{ fontSize: "13px", color: "rgba(255,255,255,0.5)", fontWeight: 600, marginBottom: "8px" }}>{label}</div>
-            <input type={type} placeholder={placeholder} value={addEventForm[key] || ""} onChange={e => setAddEventForm({ ...addEventForm, [key]: e.target.value })}
+            <input type={type} placeholder={placeholder} value={addEventForm[key] || ""}
+              onChange={e => setAddEventForm({ ...addEventForm, [key]: e.target.value })}
               style={{ ...darkInput, colorScheme: "dark" }} />
           </div>
         ))}
@@ -303,10 +369,14 @@ export function AddEvent() {
 
 export function OrganizerEventDetail() {
   const viewingOrgEvent = useStore(s => s.viewingOrgEvent);
+  const setViewingOrgEvent = useStore(s => s.setViewingOrgEvent);
   const toggleSales = useStore(s => s.toggleSales);
   const generateDoorCode = useStore(s => s.generateDoorCode);
   const doorStaffInvites = useStore(s => s.doorStaffInvites);
   const setScreen = useStore(s => s.setScreen);
+  const [editing, setEditing] = useState(false);
+  const [editForm, setEditForm] = useState({});
+
   if (!viewingOrgEvent) return null;
   const ev = viewingOrgEvent;
   const revenue = Math.round(ev.ticketsSold * ev.price * 0.95);
@@ -314,14 +384,52 @@ export function OrganizerEventDetail() {
   const invites = doorStaffInvites[ev.id] || [];
   const coverImage = ev.image || categoryImages[ev.category] || categoryImages.other;
 
+  const startEdit = () => {
+    setEditForm({ name: ev.name, venue: ev.venue, date: ev.date, time: ev.time, price: ev.price, description: ev.description || "" });
+    setEditing(true);
+  };
+
+  const saveEdit = () => {
+    setViewingOrgEvent({ ...ev, ...editForm, price: parseFloat(editForm.price) });
+    setEditing(false);
+  };
+
+  if (editing) return (
+    <div style={{ background: BG, minHeight: "100%", paddingBottom: "40px" }}>
+      <div style={{ display: "flex", alignItems: "center", padding: "20px", gap: "14px" }}>
+        <button onClick={() => setEditing(false)} style={{ width: "36px", height: "36px", borderRadius: "50%", background: "rgba(245,166,35,0.15)", border: "none", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", color: "#f5a623", fontSize: "18px" }}>←</button>
+        <div style={{ fontSize: "18px", fontWeight: 800, color: "#fff" }}>Edit Event</div>
+      </div>
+      <div style={{ padding: "0 20px" }}>
+        {[
+          ["name", "Event Name", "text"],
+          ["venue", "Venue", "text"],
+          ["date", "Date", "date"],
+          ["time", "Time", "time"],
+          ["price", "Ticket Price (Ghc)", "number"],
+          ["description", "Description", "text"],
+        ].map(([key, label, type]) => (
+          <div key={key} style={{ marginBottom: "16px" }}>
+            <div style={{ fontSize: "13px", color: "rgba(255,255,255,0.5)", fontWeight: 600, marginBottom: "8px" }}>{label}</div>
+            <input type={type} value={editForm[key] || ""} onChange={e => setEditForm({ ...editForm, [key]: e.target.value })}
+              style={{ ...darkInput, colorScheme: "dark" }} />
+          </div>
+        ))}
+        <button onClick={saveEdit} style={darkBtn}>💾 SAVE CHANGES</button>
+      </div>
+    </div>
+  );
+
   return (
     <div style={{ background: BG, minHeight: "100%", paddingBottom: "40px" }}>
       <div style={{ height: "200px", position: "relative" }}>
         <img src={coverImage} alt={ev.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} onError={e => { e.target.src = categoryImages.other; }} />
         <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to bottom, rgba(17,9,0,0.3), rgba(17,9,0,0.85))" }} />
         <button onClick={() => setScreen("app")} style={{ position: "absolute", top: "16px", left: "16px", width: "36px", height: "36px", borderRadius: "50%", background: "rgba(0,0,0,0.4)", border: "1px solid rgba(245,166,35,0.3)", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", color: "#f5a623", fontSize: "18px" }}>←</button>
-        <div style={{ position: "absolute", top: "16px", right: "16px", background: "rgba(245,166,35,0.9)", color: "#000", fontSize: "10px", fontWeight: 800, padding: "4px 12px", borderRadius: "20px", letterSpacing: "1px" }}>{ev.category?.toUpperCase()}</div>
+        {/* ✅ Edit button */}
+        <button onClick={startEdit} style={{ position: "absolute", top: "16px", right: "16px", padding: "6px 14px", background: "rgba(245,166,35,0.9)", border: "none", borderRadius: "20px", color: "#000", fontSize: "12px", fontWeight: 800, cursor: "pointer" }}>✏️ Edit</button>
         <div style={{ position: "absolute", bottom: "16px", left: "20px", right: "20px" }}>
+          <div style={{ color: "#f5a623", fontSize: "10px", fontWeight: 700, letterSpacing: "1px", marginBottom: "4px" }}>{ev.category?.toUpperCase()}</div>
           <div style={{ color: "#fff", fontWeight: 900, fontSize: "20px" }}>{ev.name}</div>
           <div style={{ color: "rgba(255,255,255,0.7)", fontSize: "12px", marginTop: "4px" }}>📍 {ev.venue} · {ev.date}</div>
         </div>

@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useRef } from "react";
 import useStore from "../../store/useStore";
-import { Html5Qrcode } from "html5-qrcode";
 
 const BG = "linear-gradient(160deg, #1a0e00 0%, #110900 60%, #1a0e00 100%)";
 const CARD = "rgba(255,255,255,0.05)";
 const BORDER = "rgba(245,166,35,0.15)";
+const API = "https://master-events-backend.onrender.com";
 
 const darkBtn = {
   width: "100%", padding: "16px",
@@ -17,7 +17,7 @@ const darkBtn = {
 async function verifyTicketAPI(qr_data, event_id) {
   try {
     const token = localStorage.getItem("access_token");
-    const res = await fetch("http://localhost:8000/api/tickets/verify/", {
+    const res = await fetch(`${API}/api/tickets/verify/`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -48,48 +48,129 @@ async function verifyTicketAPI(qr_data, event_id) {
 }
 
 function QRScanner({ onScan }) {
-  const scannerRef = useRef(null);
-  const html5QrRef = useRef(null);
-  const [camError, setCamError] = useState(false);
+  const videoRef = useRef(null);
+  const canvasRef = useRef(null);
+  const streamRef = useRef(null);
+  const animRef = useRef(null);
   const onScanRef = useRef(onScan);
   onScanRef.current = onScan;
+  const [camError, setCamError] = useState(false);
+  const [errorMsg, setErrorMsg] = useState("");
+  const [scanning, setScanning] = useState(false);
 
   useEffect(() => {
-    const scannerId = "qr-" + Math.random().toString(36).substr(2, 5);
-    if (scannerRef.current) scannerRef.current.id = scannerId;
-    const scanner = new Html5Qrcode(scannerId);
-    html5QrRef.current = scanner;
-    scanner.start(
-      { facingMode: "environment" },
-      { fps: 10, qrbox: { width: 200, height: 200 } },
-      (text) => { onScanRef.current(text); },
-      () => {}
-    ).catch(() => setCamError(true));
-    return () => {
-      if (html5QrRef.current && html5QrRef.current.isScanning) {
-        html5QrRef.current.stop().catch(() => {});
-      }
-    };
+    startCamera();
+    return () => stopCamera();
   }, []);
 
+  const startCamera = async () => {
+    try {
+      setCamError(false);
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: {
+          facingMode: { ideal: "environment" },
+          width: { ideal: 1280 },
+          height: { ideal: 720 }
+        }
+      });
+      streamRef.current = stream;
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+        await videoRef.current.play();
+        requestAnimationFrame(scanFrame);
+      }
+    } catch (err) {
+      console.error("Camera error:", err);
+      if (err.name === "NotAllowedError") {
+        setErrorMsg("Camera permission denied. Please allow camera access in your browser settings.");
+      } else if (err.name === "NotFoundError") {
+        setErrorMsg("No camera found on this device.");
+      } else {
+        setErrorMsg("Camera unavailable. Use manual entry below.");
+      }
+      setCamError(true);
+    }
+  };
+
+  const stopCamera = () => {
+    if (animRef.current) cancelAnimationFrame(animRef.current);
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach(t => t.stop());
+    }
+  };
+
+  const scanFrame = () => {
+    const video = videoRef.current;
+    const canvas = canvasRef.current;
+    if (!video || !canvas) return;
+
+    if (video.readyState === video.HAVE_ENOUGH_DATA) {
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      const ctx = canvas.getContext("2d");
+      ctx.drawImage(video, 0, 0);
+
+      // Try BarcodeDetector API (Chrome on Android)
+      if ('BarcodeDetector' in window) {
+        const detector = new window.BarcodeDetector({ formats: ['qr_code'] });
+        detector.detect(canvas).then(codes => {
+          if (codes.length > 0) {
+            onScanRef.current(codes[0].rawValue);
+          }
+        }).catch(() => {});
+      }
+    }
+    animRef.current = requestAnimationFrame(scanFrame);
+  };
+
   if (camError) return (
-    <div style={{ background: "rgba(255,255,255,0.04)", border: "1px solid " + BORDER, borderRadius: "16px", padding: "40px 20px", textAlign: "center" }}>
-      <div style={{ fontSize: "40px", marginBottom: "12px" }}>📷</div>
-      <div style={{ color: "rgba(255,255,255,0.4)", fontSize: "13px" }}>Camera unavailable. Use manual entry below.</div>
+    <div style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(245,166,35,0.2)", borderRadius: "16px", padding: "32px 20px", textAlign: "center" }}>
+      <div style={{ fontSize: "48px", marginBottom: "12px" }}>📷</div>
+      <div style={{ color: "rgba(255,255,255,0.7)", fontSize: "14px", fontWeight: 600, marginBottom: "8px" }}>Camera Unavailable</div>
+      <div style={{ color: "rgba(255,255,255,0.4)", fontSize: "12px", marginBottom: "20px", lineHeight: 1.6 }}>{errorMsg}</div>
+      <button onClick={startCamera} style={{ padding: "12px 24px", background: "rgba(245,166,35,0.15)", color: "#f5a623", border: "1px solid rgba(245,166,35,0.3)", borderRadius: "20px", cursor: "pointer", fontSize: "13px", fontWeight: 700 }}>
+        🔄 Try Again
+      </button>
+      <div style={{ marginTop: "16px", color: "rgba(255,255,255,0.3)", fontSize: "12px" }}>
+        Use Manual entry tab below to type the ticket ID
+      </div>
     </div>
   );
 
   return (
-    <div style={{ borderRadius: "16px", overflow: "hidden", position: "relative" }}>
-      <div ref={scannerRef} style={{ width: "100%", background: "#000" }} />
+    <div style={{ borderRadius: "16px", overflow: "hidden", position: "relative", background: "#000", minHeight: "280px" }}>
+      <video
+        ref={videoRef}
+        style={{ width: "100%", display: "block", minHeight: "280px", objectFit: "cover" }}
+        playsInline
+        muted
+        autoPlay
+      />
+      <canvas ref={canvasRef} style={{ display: "none" }} />
       <div style={{
         position: "absolute", top: "50%", left: "50%",
         transform: "translate(-50%,-50%)",
-        width: "200px", height: "200px",
-        border: "3px solid #f5a623", borderRadius: "12px",
+        width: "220px", height: "220px",
+        border: "3px solid #f5a623",
+        borderRadius: "16px",
         pointerEvents: "none",
-        boxShadow: "0 0 0 9999px rgba(0,0,0,0.6)"
-      }} />
+        boxShadow: "0 0 0 9999px rgba(0,0,0,0.55)"
+      }}>
+        {/* Corner accents */}
+        {[
+          { top: -3, left: -3, borderTop: "4px solid #f5a623", borderLeft: "4px solid #f5a623" },
+          { top: -3, right: -3, borderTop: "4px solid #f5a623", borderRight: "4px solid #f5a623" },
+          { bottom: -3, left: -3, borderBottom: "4px solid #f5a623", borderLeft: "4px solid #f5a623" },
+          { bottom: -3, right: -3, borderBottom: "4px solid #f5a623", borderRight: "4px solid #f5a623" },
+        ].map((s, i) => (
+          <div key={i} style={{ position: "absolute", width: "20px", height: "20px", borderRadius: "2px", ...s }} />
+        ))}
+      </div>
+      <div style={{ position: "absolute", bottom: "16px", left: 0, right: 0, textAlign: "center" }}>
+        <span style={{ color: "rgba(255,255,255,0.7)", fontSize: "13px", background: "rgba(0,0,0,0.6)", padding: "6px 16px", borderRadius: "20px" }}>
+          📷 Point camera at QR code
+        </span>
+      </div>
     </div>
   );
 }
@@ -117,11 +198,12 @@ function ResultCard({ result }) {
       background: result.color + "15",
       border: "2px solid " + result.color + "44",
       borderRadius: "20px", padding: "20px",
-      marginBottom: "14px", textAlign: "center"
+      marginBottom: "14px", textAlign: "center",
+      animation: "fadeSlideUp 0.3s ease"
     }}>
-      <div style={{ fontSize: "48px", marginBottom: "10px" }}>{result.icon}</div>
-      <div style={{ color: result.color, fontWeight: 800, fontSize: "20px", marginBottom: "6px" }}>{result.title}</div>
-      {result.holder && <div style={{ color: "rgba(255,255,255,0.7)", fontSize: "14px", marginBottom: "4px" }}>👤 {result.holder}</div>}
+      <div style={{ fontSize: "56px", marginBottom: "10px" }}>{result.icon}</div>
+      <div style={{ color: result.color, fontWeight: 800, fontSize: "22px", marginBottom: "6px" }}>{result.title}</div>
+      {result.holder && <div style={{ color: "rgba(255,255,255,0.8)", fontSize: "15px", marginBottom: "4px" }}>👤 {result.holder}</div>}
       {result.seat && <div style={{ color: "#f5a623", fontSize: "13px", fontWeight: 700, marginBottom: "4px" }}>🎫 {result.seat}</div>}
       <div style={{ color: "rgba(255,255,255,0.4)", fontSize: "12px" }}>{result.msg}</div>
     </div>
@@ -137,19 +219,19 @@ export function DoorStaffLogin() {
 
   return (
     <div style={{ minHeight: "100%", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "40px 28px", background: BG }}>
-      <div style={{ fontSize: "64px", marginBottom: "16px" }}>🎫</div>
-      <div style={{ fontSize: "24px", fontWeight: 900, color: "#fff", marginBottom: "8px" }}>Door Staff Access</div>
+      <div style={{ fontSize: "72px", marginBottom: "16px" }}>🎫</div>
+      <div style={{ fontSize: "26px", fontWeight: 900, color: "#fff", marginBottom: "8px" }}>Door Staff Access</div>
       <div style={{ fontSize: "13px", color: "rgba(255,255,255,0.4)", marginBottom: "32px", textAlign: "center" }}>Enter your invite code from the event organizer</div>
       <input
         value={doorCode}
         onChange={e => setDoorCode(e.target.value.toUpperCase())}
         placeholder="e.g. DOOR-A7K9M2"
         style={{
-          width: "100%", padding: "16px 20px", outline: "none", marginBottom: "12px",
+          width: "100%", padding: "18px 20px", outline: "none", marginBottom: "12px",
           border: "2px solid " + (doorCodeError ? "#e74c3c" : "rgba(245,166,35,0.5)"),
-          borderRadius: "14px", fontSize: "18px", fontWeight: 700,
+          borderRadius: "16px", fontSize: "20px", fontWeight: 700,
           textAlign: "center", fontFamily: "monospace", boxSizing: "border-box",
-          letterSpacing: "2px", background: "rgba(255,255,255,0.06)",
+          letterSpacing: "3px", background: "rgba(255,255,255,0.06)",
           color: "#fff", caretColor: "#f5a623",
         }}
       />
@@ -191,7 +273,7 @@ export function DoorStaffScan() {
 
   return (
     <div style={{ background: "linear-gradient(160deg, #0d0700 0%, #080500 100%)", minHeight: "100%", paddingBottom: "40px" }}>
-      <div style={{ background: "rgba(0,0,0,0.4)", borderBottom: "1px solid rgba(245,166,35,0.2)", padding: "16px 20px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+      <div style={{ background: "rgba(0,0,0,0.5)", borderBottom: "1px solid rgba(245,166,35,0.2)", padding: "16px 20px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <div>
           <div style={{ color: "#f5a623", fontWeight: 800, fontSize: "16px" }}>🔍 Door Scanner</div>
           <div style={{ color: "rgba(255,255,255,0.4)", fontSize: "12px" }}>{doorStaffUser?.eventName || "Event"} · {admittedList.length} admitted</div>
@@ -205,18 +287,22 @@ export function DoorStaffScan() {
         {cameraMode ? (
           <div style={{ marginBottom: "14px" }}>
             <QRScanner onScan={processId} />
-            {verifying && <div style={{ color: "#f5a623", textAlign: "center", marginTop: "12px", fontSize: "13px" }}>⛓ Verifying on blockchain...</div>}
+            {verifying && (
+              <div style={{ color: "#f5a623", textAlign: "center", marginTop: "12px", fontSize: "13px", fontWeight: 600 }}>
+                ⛓ Verifying on blockchain...
+              </div>
+            )}
           </div>
         ) : (
           <div style={{ background: CARD, borderRadius: "16px", padding: "16px", marginBottom: "14px", border: "1px solid " + BORDER }}>
             <div style={{ fontSize: "12px", color: "rgba(255,255,255,0.4)", marginBottom: "8px" }}>
-              Paste the full QR data from the ticket
+              Enter ticket ID or paste QR data
             </div>
             <input
               value={scanInput}
               onChange={e => setScanInput(e.target.value)}
               onKeyDown={e => e.key === "Enter" && processId(scanInput)}
-              placeholder="MASTER-EVENTS:uuid:event_id:user_id"
+              placeholder="TKT-XXXXXXXX or MASTER-EVENTS:..."
               style={{ width: "100%", padding: "14px", background: "rgba(255,255,255,0.06)", border: "2px solid rgba(245,166,35,0.4)", borderRadius: "12px", color: "#fff", fontSize: "13px", fontFamily: "monospace", outline: "none", boxSizing: "border-box", marginBottom: "10px", caretColor: "#f5a623" }}
             />
             <button onClick={() => processId(scanInput)} style={{ ...darkBtn, opacity: verifying ? 0.7 : 1 }}>
@@ -285,13 +371,13 @@ export function OrganizerScan() {
         ) : (
           <div style={{ background: CARD, border: "1px solid " + BORDER, borderRadius: "16px", padding: "16px", marginBottom: "14px" }}>
             <div style={{ fontSize: "12px", color: "rgba(255,255,255,0.4)", marginBottom: "8px" }}>
-              Paste the full QR data from the ticket
+              Enter ticket ID or paste QR data
             </div>
             <input
               value={scanInput}
               onChange={e => setScanInput(e.target.value)}
               onKeyDown={e => e.key === "Enter" && processId(scanInput)}
-              placeholder="MASTER-EVENTS:uuid:event_id:user_id"
+              placeholder="TKT-XXXXXXXX or MASTER-EVENTS:..."
               style={{ width: "100%", padding: "14px", background: "rgba(255,255,255,0.06)", border: "2px solid rgba(245,166,35,0.4)", borderRadius: "12px", color: "#fff", fontSize: "13px", fontFamily: "monospace", outline: "none", boxSizing: "border-box", marginBottom: "10px", caretColor: "#f5a623" }}
             />
             <button onClick={() => processId(scanInput)} style={{ ...darkBtn, opacity: verifying ? 0.7 : 1 }}>

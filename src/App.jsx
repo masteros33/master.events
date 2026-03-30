@@ -38,10 +38,10 @@ function AppTabs() {
         {renderTab()}
       </div>
       {role === "organizer" && (
-        <div onClick={() => setScreen("addEvent")}
-          style={{ position: "absolute", bottom: "90px", right: "16px", width: "52px", height: "52px", borderRadius: "50%", background: "#f5a623", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "28px", cursor: "pointer", boxShadow: "0 4px 20px rgba(245,166,35,0.5)", color: "#fff", zIndex: 50 }}>
-          +
-        </div>
+  <div onClick={() => setScreen("addEvent")}
+    style={{ position: "fixed", bottom: "90px", right: "16px", width: "52px", height: "52px", borderRadius: "50%", background: "linear-gradient(135deg, #f5a623, #e8920f)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "28px", cursor: "pointer", boxShadow: "0 4px 20px rgba(245,166,35,0.5)", color: "#fff", zIndex: 50 }}>
+    +
+  </div> 
       )}
       <BottomNav />
     </div>
@@ -67,7 +67,11 @@ function AppContent() {
     doorStaffLogin: <DoorStaffLogin />,
     doorStaffScan:  <DoorStaffScan />,
   };
-  return routes[screen] || <Login />;
+  return (
+    <div key={screen} className="screen-enter" style={{ height: "100%", display: "flex", flexDirection: "column" }}>
+      {routes[screen] || <Login />}
+    </div>
+  );
 }
 
 export default function App() {

@@ -224,12 +224,12 @@ export default function AttendeeHome() {
       </div>
 
       <div style={{ padding: "0 20px" }}>
-        {loading && (
+       {loading && (
           <div style={{ textAlign: "center", padding: "60px 20px", color: "rgba(255,255,255,0.3)" }}>
             <div style={{ fontSize: "32px", marginBottom: "12px" }}>🎪</div>
             <div>Loading events...</div>
-          </div>
-        )}
+  </div>
+)}
         {!loading && filtered.length === 0 && (
           <div style={{ textAlign: "center", padding: "60px 20px", color: "rgba(255,255,255,0.3)" }}>
             <div style={{ fontSize: "48px", marginBottom: "12px" }}>🔍</div>

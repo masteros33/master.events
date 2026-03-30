@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import toast from "react-hot-toast";
 import { DEMO_ORG_EVENTS } from "../constants/data";
 
 // Keep backend alive - ping every 14 minutes
@@ -51,6 +52,7 @@ const useStore = create((set, get) => ({
           isLoggedIn: true,
           loginError: "",
         });
+        toast.success(`Welcome back, ${user.first_name}! 👋`);
         if (user.role === "organizer") {
           set({ orgEvents: DEMO_ORG_EVENTS.map(e => ({ ...e })) });
         }
@@ -94,6 +96,7 @@ const useStore = create((set, get) => ({
           activeTab: firstTab,
           isLoggedIn: true,
         });
+        toast.success(`Welcome to Master Events, ${user.first_name}! 🎉`);
       } else {
         set({ signupError: data.email?.[0] || data.password?.[0] || "Registration failed" });
       }
@@ -110,6 +113,7 @@ const useStore = create((set, get) => ({
   handleLogout: () => {
     localStorage.removeItem("access_token");
     localStorage.removeItem("refresh_token");
+    toast.success("Logged out successfully");
     set({
       screen: "login", currentUser: null, role: null,
       isLoggedIn: false, menuOpen: false,
@@ -149,6 +153,7 @@ const useStore = create((set, get) => ({
   handleBuyTicket: async () => {
     const { ticketsAPI } = await import('../api');
     const { checkoutEvent, ticketQty, payMethod, myTickets } = get();
+    const loadingToast = toast.loading("Processing payment...");
     try {
       const reference = "PAY-" + Math.random().toString(36).substr(2, 9).toUpperCase();
       const data = await ticketsAPI.purchase({
@@ -177,11 +182,15 @@ const useStore = create((set, get) => ({
           screen: "ticketView",
           viewingTicket: ticket,
         });
+        toast.dismiss(loadingToast);
+        toast.success("🎟️ Ticket purchased! NFT minting on Polygon...");
       } else {
-        alert(data.error || "Purchase failed. Try again.");
+        toast.dismiss(loadingToast);
+        toast.error(data.error || "Purchase failed. Try again.");
       }
     } catch (e) {
-      alert("Connection error. Please try again.");
+      toast.dismiss(loadingToast);
+      toast.error("Connection error. Please try again.");
     }
   },
 
@@ -202,9 +211,10 @@ const useStore = create((set, get) => ({
     if (price < orig * 0.3) { set({ resaleError: `Minimum resale price: Ghc ${Math.floor(orig * 0.3)}.` }); return; }
     set({
       myTickets: myTickets.map(t => t.id === resaleTicket.id ? { ...t, status: "resale", resalePrice: price } : t),
-      resaleListings: [...resaleListings, { ...resaleTicket, resalePrice: price, listedAt: new Date().toLocaleDateString(), seller: currentUser.name }],
+      resaleListings: [...resaleListings, { ...resaleTicket, resalePrice: price, listedAt: new Date().toLocaleDateString(), seller: currentUser?.first_name }],
       resaleTicket: null, resalePrice: "", resaleError: "", screen: "resaleSuccess",
     });
+    toast.success("🏷️ Ticket listed for resale!");
   },
 
   handleCancelResale: (ticketId) => {
@@ -213,6 +223,7 @@ const useStore = create((set, get) => ({
       myTickets: myTickets.map(t => t.id === ticketId ? { ...t, status: "active", resalePrice: null } : t),
       resaleListings: resaleListings.filter(l => l.id !== ticketId),
     });
+    toast.success("Resale listing cancelled");
   },
 
   // ── Transfer ─────────────────────────────────────────────────
@@ -228,7 +239,8 @@ const useStore = create((set, get) => ({
   handleTransfer: async () => {
     const { ticketsAPI } = await import('../api');
     const { transferEmail, transferTicket, myTickets } = get();
-    if (!transferEmail) { alert("Please enter recipient email."); return; }
+    if (!transferEmail) { toast.error("Please enter recipient email."); return; }
+    const loadingToast = toast.loading("Transferring ticket...");
     try {
       const data = await ticketsAPI.transfer({
         ticket_id: transferTicket.id,
@@ -239,11 +251,15 @@ const useStore = create((set, get) => ({
           myTickets: myTickets.filter(t => t.id !== transferTicket.id),
           transferDone: true,
         });
+        toast.dismiss(loadingToast);
+        toast.success("✅ Ticket transferred successfully!");
       } else {
-        alert(data.error || "Transfer failed.");
+        toast.dismiss(loadingToast);
+        toast.error(data.error || "Transfer failed.");
       }
     } catch (e) {
-      alert("Connection error.");
+      toast.dismiss(loadingToast);
+      toast.error("Connection error.");
     }
   },
 
@@ -259,9 +275,10 @@ const useStore = create((set, get) => ({
     const { eventsAPI } = await import('../api');
     const { addEventForm, orgEvents } = get();
     if (!addEventForm.name || !addEventForm.date || !addEventForm.price) {
-      alert("Please fill Event Name, Date and Price");
+      toast.error("Please fill Event Name, Date and Price");
       return;
     }
+    const loadingToast = toast.loading("Creating event...");
     try {
       const data = await eventsAPI.create({
         name: addEventForm.name,
@@ -290,11 +307,15 @@ const useStore = create((set, get) => ({
           addEventForm: { name: "", subtitle: "", date: "", time: "", venue: "", price: "", description: "" },
           screen: "app", activeTab: "events",
         });
+        toast.dismiss(loadingToast);
+        toast.success("🎪 Event created successfully!");
       } else {
-        alert(data.error || "Failed to create event.");
+        toast.dismiss(loadingToast);
+        toast.error(data.error || "Failed to create event.");
       }
     } catch (e) {
-      alert("Connection error.");
+      toast.dismiss(loadingToast);
+      toast.error("Connection error.");
     }
   },
 
@@ -306,6 +327,7 @@ const useStore = create((set, get) => ({
       const updated = orgEvents.map(e => e.id === eventId ? { ...e, salesOpen: data.sales_open } : e);
       const updatedEvent = updated.find(e => e.id === eventId);
       set({ orgEvents: updated, viewingOrgEvent: updatedEvent });
+      toast.success(data.sales_open ? "✅ Ticket sales resumed!" : "⏸ Ticket sales paused");
     } catch (e) {
       const updated = orgEvents.map(e => e.id === eventId ? { ...e, salesOpen: !e.salesOpen } : e);
       set({ orgEvents: updated });
@@ -322,6 +344,7 @@ const useStore = create((set, get) => ({
 
   generateDoorCode: async (eventId, eventName) => {
     const { ticketsAPI } = await import('../api');
+    const loadingToast = toast.loading("Generating code...");
     try {
       const data = await ticketsAPI.generateDoorCode(eventId);
       if (data.code) {
@@ -332,6 +355,8 @@ const useStore = create((set, get) => ({
             [eventId]: [...(state.doorStaffInvites[eventId] || []), invite],
           },
         }));
+        toast.dismiss(loadingToast);
+        toast.success(`Code generated: ${data.code}`);
       }
     } catch (e) {
       const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
@@ -344,6 +369,8 @@ const useStore = create((set, get) => ({
           [eventId]: [...(state.doorStaffInvites[eventId] || []), invite],
         },
       }));
+      toast.dismiss(loadingToast);
+      toast.success(`Code generated: ${code}`);
     }
   },
 
@@ -360,6 +387,7 @@ const useStore = create((set, get) => ({
           screen: "doorStaffScan",
           doorCodeError: "",
         });
+        toast.success(`Access granted: ${data.event_name}`);
         return;
       }
     } catch (e) {}

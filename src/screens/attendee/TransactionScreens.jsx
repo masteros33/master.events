@@ -23,8 +23,8 @@ const btn = {
   marginBottom: "12px",
 };
 
-const backBtn = (onClick) => (
-  <div onClick={onClick} style={{ width: "38px", height: "38px", borderRadius: "12px", background: "#fff", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", fontSize: "18px", boxShadow: "0 2px 10px rgba(0,0,0,0.08)", color: "#1a1a1a" }}>←</div>
+const BackBtn = ({ onClick }) => (
+  <div onClick={onClick} style={{ width: "38px", height: "38px", borderRadius: "12px", background: "#fff", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", fontSize: "18px", boxShadow: "0 2px 10px rgba(0,0,0,0.08)", color: "#1a1a1a", flexShrink: 0 }}>←</div>
 );
 
 export function Checkout() {
@@ -49,14 +49,12 @@ export function Checkout() {
   };
 
   return (
-    <div style={{ background: BG, minHeight: "100%", paddingBottom: "40px" }}>
-      {/* Header */}
+    <div style={{ background: BG, minHeight: "100%", paddingBottom: "100px" }}>
       <div style={{ display: "flex", alignItems: "center", padding: "20px", gap: "14px", background: "#fff", borderBottom: "1px solid #f0f0f0" }}>
-        {backBtn(() => setScreen("app"))}
+        <BackBtn onClick={() => setScreen("app")} />
         <div style={{ fontSize: "17px", fontWeight: 700, color: "#1a1a1a" }}>Checkout</div>
       </div>
 
-      {/* Event banner */}
       <div style={{ margin: "16px 20px", borderRadius: "20px", overflow: "hidden", boxShadow: "0 4px 20px rgba(0,0,0,0.1)" }}>
         <div style={{ height: "140px", position: "relative" }}>
           {checkoutEvent.image
@@ -72,7 +70,6 @@ export function Checkout() {
       </div>
 
       <div style={{ padding: "0 20px" }}>
-        {/* Quantity */}
         <div style={{ background: CARD, borderRadius: "20px", padding: "18px", marginBottom: "14px", boxShadow: "0 2px 12px rgba(0,0,0,0.05)" }}>
           <div style={{ fontWeight: 700, fontSize: "14px", color: "#1a1a1a", marginBottom: "14px" }}>Quantity</div>
           <div style={{ display: "flex", alignItems: "center", gap: "20px" }}>
@@ -84,7 +81,6 @@ export function Checkout() {
           </div>
         </div>
 
-        {/* Payment method */}
         <div style={{ background: CARD, borderRadius: "20px", padding: "18px", marginBottom: "14px", boxShadow: "0 2px 12px rgba(0,0,0,0.05)" }}>
           <div style={{ fontWeight: 700, fontSize: "14px", color: "#1a1a1a", marginBottom: "14px" }}>Payment Method</div>
           <div style={{ display: "flex", gap: "10px" }}>
@@ -99,7 +95,6 @@ export function Checkout() {
           </div>
         </div>
 
-        {/* Summary */}
         <div style={{ background: CARD, borderRadius: "20px", padding: "18px", marginBottom: "20px", boxShadow: "0 2px 12px rgba(0,0,0,0.05)" }}>
           <div style={{ fontWeight: 700, fontSize: "14px", color: "#1a1a1a", marginBottom: "14px" }}>Order Summary</div>
           {[
@@ -155,20 +150,24 @@ export function TicketView() {
   const qrSrc = viewingTicket.qr_base64
     ? `data:image/png;base64,${viewingTicket.qr_base64}`
     : viewingTicket.qr_image
-      ? (viewingTicket.qr_image.startsWith('http') ? viewingTicket.qr_image : `${API}${viewingTicket.qr_image}`)
+      ? (viewingTicket.qr_image.startsWith('http')
+        ? viewingTicket.qr_image
+        : `${API}${viewingTicket.qr_image}`)
       : null;
 
   return (
     <div style={{ background: BG, minHeight: "100%", paddingBottom: "40px" }}>
-      {/* Hero image */}
+      {/* Hero */}
       <div style={{ height: "220px", position: "relative" }}>
         {ev.image
           ? <img src={ev.image} alt={ev.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
           : <div style={{ width: "100%", height: "100%", background: "linear-gradient(135deg, #f5a623, #e8920f)" }} />
         }
         <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to bottom, rgba(0,0,0,0.25) 0%, rgba(0,0,0,0.8) 100%)" }} />
-        {backBtn(() => { setScreen("app"); setActiveTab("tickets"); })}
-        <div style={{ position: "absolute", top: "16px", left: "16px" }}>{backBtn(() => { setScreen("app"); setActiveTab("tickets"); })}</div>
+        {/* Single back button only */}
+        <div style={{ position: "absolute", top: "16px", left: "16px" }}>
+          <BackBtn onClick={() => { setScreen("app"); setActiveTab("tickets"); }} />
+        </div>
         <div style={{ position: "absolute", bottom: "20px", left: "20px" }}>
           <div style={{ color: "rgba(255,255,255,0.7)", fontSize: "11px", fontWeight: 600, letterSpacing: "2px", marginBottom: "4px" }}>YOUR TICKET</div>
           <div style={{ color: "#fff", fontSize: "22px", fontWeight: 800 }}>{ev.name}</div>
@@ -177,12 +176,13 @@ export function TicketView() {
 
       {/* Ticket card */}
       <div style={{ background: "#fff", margin: "16px", borderRadius: "24px", overflow: "hidden", boxShadow: "0 8px 40px rgba(0,0,0,0.1)" }}>
+
         {/* Info row */}
         <div style={{ padding: "20px", display: "flex", justifyContent: "space-around", borderBottom: "1px dashed #f0f0f0" }}>
           {[
             ["📅 DATE", ev.date || "TBA"],
             ["🕐 TIME", formatTime(ev.time || viewingTicket.event?.time)],
-            ["💺 QTY", viewingTicket.qty || 1]
+            ["💺 QTY", viewingTicket.qty || 1],
           ].map(([k, v]) => (
             <div key={k} style={{ textAlign: "center" }}>
               <div style={{ fontSize: "10px", color: "#bbb", fontWeight: 600, marginBottom: "6px", letterSpacing: "1px" }}>{k}</div>
@@ -191,16 +191,16 @@ export function TicketView() {
           ))}
         </div>
 
-        {/* QR code */}
+        {/* QR Code */}
         <div style={{ padding: "24px 20px", display: "flex", flexDirection: "column", alignItems: "center", gap: "14px" }}>
           {qrSrc ? (
             <div style={{ position: "relative" }}>
               {!qrLoaded && !qrError && (
-                <div style={{ width: "200px", height: "200px", borderRadius: "16px", background: "#f8f8f6", display: "flex", alignItems: "center", justifyContent: "center", position: "absolute", top: 0, left: 0 }}>
-                  <div className="skeleton" style={{ width: "200px", height: "200px", borderRadius: "16px" }} />
-                </div>
+                <div className="skeleton" style={{ width: "200px", height: "200px", borderRadius: "16px", position: "absolute", top: 0, left: 0 }} />
               )}
-              <img src={qrSrc} alt="QR Code"
+              <img
+                src={qrSrc}
+                alt="QR Code"
                 onLoad={() => setQrLoaded(true)}
                 onError={() => setQrError(true)}
                 style={{ width: "200px", height: "200px", borderRadius: "16px", border: "3px solid #f5a623", padding: "6px", background: "#fff", display: qrError ? "none" : "block", boxShadow: "0 4px 20px rgba(245,166,35,0.2)" }}
@@ -219,14 +219,29 @@ export function TicketView() {
             </div>
           )}
 
+          {/* Ticket ID */}
           <div style={{ background: "#f8f8f6", padding: "8px 16px", borderRadius: "20px" }}>
-            <span style={{ fontFamily: "monospace", fontSize: "12px", color: "#aaa", letterSpacing: "1px" }}>{viewingTicket.id}</span>
+            <span style={{ fontFamily: "monospace", fontSize: "12px", color: "#aaa", letterSpacing: "1px" }}>
+              {viewingTicket.id}
+            </span>
           </div>
 
-          <div style={{ background: "rgba(39,174,96,0.08)", border: "1px solid rgba(39,174,96,0.2)", padding: "8px 20px", borderRadius: "20px", display: "flex", alignItems: "center", gap: "6px" }}>
-            <span style={{ color: "#27ae60", fontSize: "14px" }}>✓</span>
-            <span style={{ color: "#27ae60", fontSize: "12px", fontWeight: 700 }}>Verified on Polygon Blockchain</span>
-          </div>
+          {/* Blockchain badge — clickable if tx hash exists */}
+          {viewingTicket.nft_tx_hash ? (
+            
+              href={`https://polygonscan.com/tx/${viewingTicket.nft_tx_hash}`}
+              target="_blank"
+              rel="noreferrer"
+              style={{ background: "rgba(39,174,96,0.08)", border: "1px solid rgba(39,174,96,0.2)", padding: "8px 20px", borderRadius: "20px", display: "flex", alignItems: "center", gap: "6px", textDecoration: "none" }}>
+              <span style={{ color: "#27ae60", fontSize: "14px" }}>✓</span>
+              <span style={{ color: "#27ae60", fontSize: "12px", fontWeight: 700 }}>View on Polygonscan ↗</span>
+            </a>
+          ) : (
+            <div style={{ background: "rgba(39,174,96,0.08)", border: "1px solid rgba(39,174,96,0.2)", padding: "8px 20px", borderRadius: "20px", display: "flex", alignItems: "center", gap: "6px" }}>
+              <span style={{ color: "#27ae60", fontSize: "14px" }}>✓</span>
+              <span style={{ color: "#27ae60", fontSize: "12px", fontWeight: 700 }}>Verified on Polygon Blockchain</span>
+            </div>
+          )}
         </div>
 
         {/* Actions */}
@@ -265,14 +280,13 @@ export function Resale() {
   const payout = Math.round((price - fee) * 100) / 100;
 
   return (
-    <div style={{ background: BG, minHeight: "100%", paddingBottom: "40px" }}>
+    <div style={{ background: BG, minHeight: "100%", paddingBottom: "100px" }}>
       <div style={{ display: "flex", alignItems: "center", padding: "20px", gap: "14px", background: "#fff", borderBottom: "1px solid #f0f0f0" }}>
-        {backBtn(() => setScreen("ticketView"))}
+        <BackBtn onClick={() => setScreen("ticketView")} />
         <div style={{ fontSize: "17px", fontWeight: 700, color: "#1a1a1a" }}>List for Resale</div>
       </div>
 
       <div style={{ padding: "16px 20px" }}>
-        {/* Event info */}
         <div style={{ background: CARD, borderRadius: "16px", padding: "16px", marginBottom: "14px", boxShadow: "0 2px 12px rgba(0,0,0,0.05)" }}>
           <div style={{ fontWeight: 700, fontSize: "15px", color: "#1a1a1a" }}>{ev.name}</div>
           <div style={{ color: "#aaa", fontSize: "12px", marginTop: "4px" }}>
@@ -280,22 +294,23 @@ export function Resale() {
           </div>
         </div>
 
-        {/* Fee info */}
         <div style={{ background: "rgba(39,174,96,0.06)", border: "1px solid rgba(39,174,96,0.15)", borderRadius: "14px", padding: "12px 16px", marginBottom: "14px" }}>
           <div style={{ fontSize: "13px", color: "#27ae60", fontWeight: 700 }}>✅ Only 2% platform fee on resales</div>
           <div style={{ fontSize: "12px", color: "#aaa", marginTop: "4px" }}>You keep 98% of your resale price</div>
         </div>
 
-        {/* Price input */}
         <div style={{ background: CARD, borderRadius: "20px", padding: "18px", marginBottom: "14px", boxShadow: "0 2px 12px rgba(0,0,0,0.05)" }}>
           <div style={{ fontWeight: 700, fontSize: "14px", color: "#1a1a1a", marginBottom: "12px" }}>Your Resale Price (Ghc)</div>
-          <input value={resalePrice} onChange={e => setResalePrice(e.target.value)} type="number"
+          <input
+            value={resalePrice}
+            onChange={e => setResalePrice(e.target.value)}
+            type="number"
             placeholder={`Max: Ghc ${ev.price - 1}`}
-            style={{ ...input, fontSize: "22px", fontWeight: 800, border: "2px solid " + (resaleError ? "#e74c3c" : "#f5a623") }} />
+            style={{ ...input, fontSize: "22px", fontWeight: 800, border: "2px solid " + (resaleError ? "#e74c3c" : "#f5a623") }}
+          />
           {resaleError && <div style={{ color: "#e74c3c", fontSize: "12px", marginTop: "-4px" }}>⚠️ {resaleError}</div>}
         </div>
 
-        {/* Breakdown */}
         {price > 0 && (
           <div style={{ background: CARD, borderRadius: "20px", padding: "18px", marginBottom: "16px", boxShadow: "0 2px 12px rgba(0,0,0,0.05)" }}>
             <div style={{ fontWeight: 700, fontSize: "14px", color: "#1a1a1a", marginBottom: "12px" }}>Fee Breakdown</div>
@@ -372,17 +387,21 @@ export function Transfer() {
   );
 
   return (
-    <div style={{ background: BG, minHeight: "100%", paddingBottom: "40px" }}>
+    <div style={{ background: BG, minHeight: "100%", paddingBottom: "100px" }}>
       <div style={{ display: "flex", alignItems: "center", padding: "20px", gap: "14px", background: "#fff", borderBottom: "1px solid #f0f0f0" }}>
-        {backBtn(() => setScreen("ticketView"))}
+        <BackBtn onClick={() => setScreen("ticketView")} />
         <div style={{ fontSize: "17px", fontWeight: 700, color: "#1a1a1a" }}>Transfer Ticket</div>
       </div>
 
       <div style={{ padding: "16px 20px" }}>
-        {/* Info box */}
         <div style={{ background: "rgba(41,128,185,0.05)", border: "1px solid rgba(41,128,185,0.15)", borderRadius: "16px", padding: "16px 18px", marginBottom: "20px" }}>
           <div style={{ fontWeight: 700, fontSize: "13px", color: "#2980b9", marginBottom: "10px" }}>ℹ️ About Transfers</div>
-          {["Free — no platform fee", "Permanent — you lose ownership forever", "Recipient must have a Master Events account", "Your current QR becomes void instantly"].map((info, i) => (
+          {[
+            "Free — no platform fee",
+            "Permanent — you lose ownership forever",
+            "Recipient must have a Master Events account",
+            "Your current QR becomes void instantly",
+          ].map((info, i) => (
             <div key={i} style={{ display: "flex", gap: "8px", marginBottom: "6px", fontSize: "13px", color: "#6b6b6b" }}>
               <span style={{ color: "#2980b9" }}>•</span><span>{info}</span>
             </div>
@@ -395,7 +414,6 @@ export function Transfer() {
         <div style={{ fontSize: "13px", fontWeight: 600, color: "#6b6b6b", marginBottom: "8px" }}>Recipient Email</div>
         <input placeholder="e.g. kwame@email.com" value={transferEmail} onChange={e => setTransferEmail(e.target.value)} style={input} />
 
-        {/* Warning */}
         <div style={{ background: "#fff5f5", border: "1px solid #ffd6d6", borderRadius: "12px", padding: "12px 16px", marginBottom: "24px" }}>
           <div style={{ fontSize: "12px", color: "#e74c3c", fontWeight: 700, marginBottom: "4px" }}>⚠️ This cannot be undone</div>
           <div style={{ fontSize: "12px", color: "#aaa" }}>Make sure the email address is correct before confirming.</div>

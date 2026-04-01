@@ -2,6 +2,8 @@ import React, { useEffect } from "react";
 import useStore from "../../store/useStore";
 import { ticketsAPI } from "../../api";
 
+const API = "https://master-events-backend.onrender.com";
+
 export function AttendeeTickets() {
   const myTickets = useStore(s => s.myTickets);
   const setViewingTicket = useStore(s => s.setViewingTicket);
@@ -22,15 +24,27 @@ export function AttendeeTickets() {
           myTickets: data.map(t => ({
             id: t.ticket_id,
             event: {
-              id: t.event?.id, name: t.event?.name, date: t.event?.date,
-              venue: t.event?.venue, time: t.event?.time,
+              id: t.event?.id,
+              name: t.event?.name,
+              date: t.event?.date,
+              venue: t.event?.venue,
+              time: t.event?.time,
               price: parseFloat(t.event?.price || 0),
               image: t.event?.image || "https://images.unsplash.com/photo-1492684223066-81342ee5ff30?w=600",
             },
-            qty: t.quantity, status: t.status,
-            qr_data: t.qr_data, qr_image: t.qr_image,
-            purchasedAt: new Date(t.created_at).toLocaleDateString(),
-            owner: t.owner?.first_name + " " + t.owner?.last_name,
+            qty: t.quantity,
+            status: t.status,
+            qr_data: t.qr_data,
+            qr_base64: t.qr_base64 || null,
+            qr_image: t.qr_image
+              ? (t.qr_image.startsWith('http')
+                ? t.qr_image
+                : `${API}${t.qr_image}`)
+              : null,
+            purchasedAt: t.created_at
+              ? new Date(t.created_at).toLocaleDateString()
+              : "Recently",
+            owner: (t.owner?.first_name || "") + " " + (t.owner?.last_name || ""),
             ownerEmail: t.owner?.email,
           }))
         });
@@ -52,27 +66,25 @@ export function AttendeeTickets() {
       {myTickets.map(t => (
         <div key={t.id} style={{ background: "#fff", borderRadius: "20px", marginBottom: "16px", overflow: "hidden", boxShadow: "0 4px 24px rgba(0,0,0,0.08)" }}>
           <div style={{ height: "120px", position: "relative" }}>
-            <img src={t.event.image} alt={t.event.name} style={{ width: "100%", height: "100%", objectFit: "cover" }}
+            <img src={t.event.image} alt={t.event.name}
+              style={{ width: "100%", height: "100%", objectFit: "cover" }}
               onError={e => { e.target.src = "https://images.unsplash.com/photo-1492684223066-81342ee5ff30?w=600"; }} />
             <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to bottom, transparent 20%, rgba(0,0,0,0.72))" }} />
-            <div style={{ position: "absolute", bottom: "10px", left: "14px", right: "70px" }}>
+            <div style={{ position: "absolute", bottom: "10px", left: "14px", right: "80px" }}>
               <div style={{ color: "#fff", fontWeight: 800, fontSize: "15px" }}>{t.event.name}</div>
               <div style={{ color: "rgba(255,255,255,0.75)", fontSize: "11px", marginTop: "2px" }}>{t.event.date} · {t.event.venue}</div>
             </div>
-            {t.status === "resale" && (
-              <div style={{ position: "absolute", top: "10px", right: "10px", background: "#e74c3c", color: "#fff", fontSize: "10px", fontWeight: 700, padding: "4px 10px", borderRadius: "20px" }}>RESALE</div>
-            )}
-            {t.status === "redeemed" && (
-              <div style={{ position: "absolute", top: "10px", right: "10px", background: "#aaa", color: "#fff", fontSize: "10px", fontWeight: 700, padding: "4px 10px", borderRadius: "20px" }}>USED</div>
-            )}
-            {t.status === "active" && (
-              <div style={{ position: "absolute", top: "10px", right: "10px", background: "#27ae60", color: "#fff", fontSize: "10px", fontWeight: 700, padding: "4px 10px", borderRadius: "20px" }}>ACTIVE</div>
-            )}
+            <div style={{ position: "absolute", top: "10px", right: "10px" }}>
+              {t.status === "resale" && <div style={{ background: "#e74c3c", color: "#fff", fontSize: "10px", fontWeight: 700, padding: "4px 10px", borderRadius: "20px" }}>RESALE</div>}
+              {t.status === "redeemed" && <div style={{ background: "#aaa", color: "#fff", fontSize: "10px", fontWeight: 700, padding: "4px 10px", borderRadius: "20px" }}>USED</div>}
+              {t.status === "active" && <div style={{ background: "#27ae60", color: "#fff", fontSize: "10px", fontWeight: 700, padding: "4px 10px", borderRadius: "20px" }}>ACTIVE</div>}
+            </div>
           </div>
-
           <div style={{ padding: "14px" }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "12px" }}>
-              <span style={{ color: "#bbb", fontSize: "11px", fontFamily: "monospace", letterSpacing: "1px" }}>{t.id?.toString().substring(0, 16)}</span>
+              <span style={{ color: "#bbb", fontSize: "11px", fontFamily: "monospace", letterSpacing: "1px" }}>
+                {t.id?.toString().substring(0, 16)}
+              </span>
               <span style={{ color: "#f5a623", fontWeight: 700, fontSize: "13px" }}>Qty: {t.qty}</span>
             </div>
             <div style={{ display: "flex", gap: "8px" }}>

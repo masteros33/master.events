@@ -37,10 +37,8 @@ function AppTabs() {
       <div style={{ flex: 1, overflowY: "auto", overflowX: "hidden" }}>
         {renderTab()}
       </div>
-      {/* Floating + button for organizer */}
       {role === "organizer" && (
-        <div
-          onClick={() => setScreen("addEvent")}
+        <div onClick={() => setScreen("addEvent")}
           style={{
             position: "fixed", bottom: "100px", right: "20px",
             width: "52px", height: "52px", borderRadius: "50%",
@@ -49,9 +47,7 @@ function AppTabs() {
             fontSize: "28px", cursor: "pointer",
             boxShadow: "0 4px 20px rgba(245,166,35,0.5)",
             color: "#fff", zIndex: 200,
-          }}>
-          +
-        </div>
+          }}>+</div>
       )}
       <BottomNav />
     </div>
@@ -61,16 +57,11 @@ function AppTabs() {
 function AppContent() {
   const screen = useStore(s => s.screen);
 
-  const fullScreenRoutes = {
+  const routes = {
     onboarding:     <Onboarding />,
     login:          <Login />,
     signup:         <Signup />,
     role:           <RoleSelect />,
-    doorStaffLogin: <DoorStaffLogin />,
-    doorStaffScan:  <DoorStaffScan />,
-  };
-
-  const appRoutes = {
     app:            <AppTabs />,
     checkout:       <Checkout />,
     ticketView:     <TicketView />,
@@ -80,16 +71,14 @@ function AppContent() {
     addEvent:       <AddEvent />,
     orgEventDetail: <OrganizerEventDetail />,
     scanTicket:     <OrganizerScan />,
+    doorStaffLogin: <DoorStaffLogin />,
+    doorStaffScan:  <DoorStaffScan />,
   };
 
-  const content = fullScreenRoutes[screen] || appRoutes[screen] || <Login />;
-
   return (
-    <div
-      key={screen}
-      className="screen-enter"
+    <div key={screen} className="screen-enter"
       style={{ height: "100%", display: "flex", flexDirection: "column", background: "#f8f8f6" }}>
-      {content}
+      {routes[screen] || <Login />}
     </div>
   );
 }

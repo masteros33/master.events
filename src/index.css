@@ -8,33 +8,31 @@
 html, body, #root {
   height: 100%;
   width: 100%;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', 'Roboto', sans-serif;
   -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
   overscroll-behavior: none;
+  background: #f8f8f6;
 }
 
 ::-webkit-scrollbar { display: none; }
 scrollbar-width: none;
 
-/* Smooth transitions */
-* {
-  transition: background 0.15s ease, border-color 0.15s ease, opacity 0.15s ease;
+button { font-family: inherit; }
+input { font-family: inherit; }
+
+input:focus {
+  box-shadow: 0 0 0 3px rgba(245,166,35,0.15) !important;
+  border-color: #f5a623 !important;
 }
 
-/* Button press effect */
-button:active, [role="button"]:active {
+button:active {
   transform: scale(0.97);
   transition: transform 0.1s ease;
 }
 
-/* Input focus glow */
-input:focus {
-  box-shadow: 0 0 0 3px rgba(245,166,35,0.15) !important;
-}
-
-/* Page animations */
 @keyframes fadeSlideUp {
-  from { opacity: 0; transform: translateY(20px); }
+  from { opacity: 0; transform: translateY(16px); }
   to { opacity: 1; transform: translateY(0); }
 }
 
@@ -43,45 +41,26 @@ input:focus {
   to { opacity: 1; }
 }
 
-@keyframes slideInLeft {
-  from { opacity: 0; transform: translateX(-20px); }
-  to { opacity: 1; transform: translateX(0); }
-}
-
-@keyframes slideInRight {
-  from { opacity: 0; transform: translateX(20px); }
-  to { opacity: 1; transform: translateX(0); }
-}
-
-@keyframes pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.5; }
-}
-
 @keyframes shimmer {
   0% { background-position: -200% 0; }
   100% { background-position: 200% 0; }
 }
 
-/* Apply fade animation to all screens */
 .screen-enter {
-  animation: fadeSlideUp 0.3s ease forwards;
+  animation: fadeSlideUp 0.25s ease forwards;
 }
 
-/* Skeleton loader */
 .skeleton {
-  background: linear-gradient(90deg, 
-    rgba(255,255,255,0.05) 25%, 
-    rgba(255,255,255,0.1) 50%, 
-    rgba(255,255,255,0.05) 75%
+  background: linear-gradient(90deg,
+    #f0f0f0 25%,
+    #e8e8e8 50%,
+    #f0f0f0 75%
   );
   background-size: 200% 100%;
-  animation: shimmer 1.5s infinite;
-  border-radius: 8px;
+  animation: shimmer 1.4s infinite;
+  border-radius: 10px;
 }
 
-/* Card hover on mobile - subtle glow */
 .event-card:active {
   transform: scale(0.98);
-  box-shadow: 0 0 20px rgba(245,166,35,0.2) !important;
 }

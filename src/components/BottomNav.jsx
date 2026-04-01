@@ -24,31 +24,28 @@ export default function BottomNav() {
 
   return (
     <div style={{
-      position: "fixed",
-      bottom: 0, left: 0, right: 0,
-      zIndex: 300,
-      background: "rgba(20,13,3,0.97)",
-      backdropFilter: "blur(16px)",
-      WebkitBackdropFilter: "blur(16px)",
-      borderTop: "1px solid rgba(245,166,35,0.2)",
-      display: "flex",
-      justifyContent: "space-around",
-      padding: "10px 0 env(safe-area-inset-bottom, 20px)",
-      boxShadow: "0 -4px 24px rgba(0,0,0,0.4)",
+      position: "fixed", bottom: 0, left: 0, right: 0, zIndex: 300,
+      background: "rgba(255,255,255,0.97)",
+      backdropFilter: "blur(20px)",
+      WebkitBackdropFilter: "blur(20px)",
+      borderTop: "1px solid #f0f0f0",
+      display: "flex", justifyContent: "space-around",
+      padding: "10px 0 env(safe-area-inset-bottom, 16px)",
+      boxShadow: "0 -4px 24px rgba(0,0,0,0.06)",
     }}>
       {tabs.map(item => (
         <div key={item.id} onClick={() => { setActiveTab(item.id); setScreen("app"); }}
           style={{
             display: "flex", flexDirection: "column", alignItems: "center",
             cursor: "pointer", padding: "6px 20px", borderRadius: "16px",
-            background: activeTab === item.id ? "rgba(245,166,35,0.12)" : "transparent",
+            background: activeTab === item.id ? "rgba(245,166,35,0.1)" : "transparent",
             minWidth: "60px",
           }}>
           <div style={{ fontSize: "22px", marginBottom: "2px" }}>{item.icon}</div>
           <div style={{
-            fontSize: "10px",
-            fontWeight: activeTab === item.id ? 700 : 500,
-            color: activeTab === item.id ? "#f5a623" : "#6b5a3e",
+            fontSize: "10px", fontWeight: activeTab === item.id ? 700 : 500,
+            color: activeTab === item.id ? "#f5a623" : "#aaa",
+            letterSpacing: "0.3px",
           }}>{item.label}</div>
           {activeTab === item.id && (
             <div style={{ width: "4px", height: "4px", borderRadius: "50%", background: "#f5a623", marginTop: "3px" }} />

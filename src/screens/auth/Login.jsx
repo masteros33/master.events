@@ -82,7 +82,7 @@ export default function Login() {
   if (showForgot) return <ForgotPassword onBack={() => setShowForgot(false)} />;
 
   return (
-    <div className="min-h-fit bg-gradient-to-br from-white to-gray-100 pt-8 px-6">
+    <div className="min-h-screen bg-gradient-to-br from-white to-gray-100 pt-8 px-6">
 
       {/* ── Left — Branding ── 
       <div className="hidden lg:flex flex-col justify-center px-16 py-12"
@@ -132,7 +132,7 @@ export default function Login() {
       </div>
       */}
       {/* ── Right — Login Form ── */}
-      <div className="flex justify-center px-6  w-full">
+      <div className="flex justify-center px-6 py-5">
         <div className="w-full max-w-md">
 
           {/* Mobile logo */}
@@ -144,12 +144,12 @@ export default function Login() {
           </div>
 
           {/* Card */}
-     {/*  <div className="bg-white rounded-2xl shadow-xl border-2 border-gray-100 p-8"> */}
-            <h2 className="text-center text-5xl font-black text-gray-900 mb-1">LOGIN</h2>
-    {/*      <p className="text-gray-400 text-sm mb-6">Enter your username and password to continue</p> */}
+          {/* <div className="bg-white rounded-2xl shadow-xl border-2 border-gray-100 p-8"> */}
+            <h2 className="text-center text-4xl font-black text-gray-900 mb-1">LOGIN</h2>
+            {/* <p className="text-gray-400 text-sm mb-6">Enter your username and password to continue</p> */}
 
             {/* Username */}
-            <div className="mb-4 pt-8">
+            <div className="mb-4 pt-5">
               <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">
                 Username or Email
               </label>
@@ -179,7 +179,7 @@ export default function Login() {
                 className="w-full px-4 py-3.5 rounded-xl border-2 border-gray-100 text-sm outline-none bg-gray-50 transition-all"
                 style={{ caretColor: "#f5a623" }}
               />
-       {/*  </div> */}
+            </div>
 
             {/* Errors */}
             {loginError && (
@@ -213,13 +213,13 @@ export default function Login() {
                 Sign up free
               </span>
             </p>
-            <p className="text-center text-xs text-gray-300">
+            <p className="text-center text-xs text-gray-400">
               Door staff?{" "}
-              <span onClick={() => setScreen("doorStaffLogin")} className="font-semibold text-gray-400 cursor-pointer">
+              <span onClick={() => setScreen("doorStaffLogin")} className="font-semibold cursor-pointer" style={{ color: "#f5a620" }}>
                 Enter with invite code
               </span>
             </p>
-          </div> 
+          {/* </div> */}
 
           {/* Dev quick login */}
           <div className="mt-4 bg-white rounded-xl border-2 border-gray-100 p-4 shadow-sm">

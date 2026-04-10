@@ -89,21 +89,30 @@ export function Signup() {
       <div className="flex justify-center px-6 py-2 ">
         <div className="w-full max-w-md">
 
-          {/* Mobile logo */}
+          {/* Mobile logo 
           <div className="lg:hidden text-center mb-8">
             <div className="w-16 h-16 rounded-2xl flex items-center justify-center text-3xl mx-auto mb-3 shadow-lg"
               style={{ background: "linear-gradient(135deg, #f5a623, #e8920f)" }}>🎫</div>
             <h1 className="text-2xl font-black text-gray-900">Create Account</h1>
             <p className="text-gray-400 text-xs mt-1">Join thousands of event-goers in Ghana</p>
           </div>
+            */}
+          {/* Mobile logo */}
+          <div className="lg:hidden text-center mb-8">
+            <div className="w-16 h-16 rounded-2xl flex items-center justify-center text-3xl mx-auto mb-3 shadow-lg"
+              style={{ background: "linear-gradient(135deg, #f5a623, #e8920f)" }}>🎟️</div>
+            <h1 className="text-2xl font-black text-gray-900">Master Events</h1>
+            <p className="text-gray-400 text-xs tracking-widest mt-1">Join thousands of event-goers in Ghana</p>
+          </div>
 
           {/* Card */}
-   {/*    <div className="bg-white rounded-2xl shadow-xl border-2 border-gray-100 p-8"> */}
-            <h2 className="text-center text-5xl font-black text-gray-900 mb-1">SIGNUP</h2>
-            <p className="text-center text-gray-400 text-sm mb-5">Join Ghana's #1 blockchain ticketing platform — it's free</p>
+    {/*   <div className="bg-white rounded-2xl shadow-xl border-2 border-gray-100 p-8"> */}
+            <h2 className="text-center text-4xl font-black text-gray-900 mb-1">SIGNUP</h2>
+          {/*  <p className="text-center text-gray-400 text-sm mb-5">Join Ghana's 
+          #1 blockchain ticketing platform — it's free</p> */}
 
             {/* Name + Username row */}
-            <div className="grid grid-cols-2 gap-4 mb-4">
+            <div className="grid grid-cols-2 gap-4 mb-4 pt-8">
               <div>
                 <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Full Name</label>
                 <input placeholder="Kwame Mensah" value={fullName} onChange={e => setFullName(e.target.value)}
@@ -144,7 +153,7 @@ export function Signup() {
                   </div>
                 ))}
               </div>
-        {/*  </div> */}
+          {/*  </div> */}
 
             {/* Role selector */}
             <div className="mb-5">

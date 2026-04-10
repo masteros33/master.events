@@ -175,12 +175,16 @@ export function DoorStaffLogin() {
   const desktop = isDesktop();
 
   return (
-    <div style={{ minHeight: "100%", background: "linear-gradient(160deg, #1a0e00 0%, #110900 60%, #1a0e00 100%)", display: "flex", alignItems: "center", justifyContent: "center", padding: "40px 28px" }}>
-      <div style={{ width: "100%", maxWidth: desktop ? "440px" : "100%" }}>
+    // <div style={{ minHeight: "100%", background: "linear-gradient(160deg, #1a0e00 0%, #110900 60%, #1a0e00 100%)", display: "flex", alignItems: "center", justifyContent: "center", padding: "40px 28px" }}>
+    <div className="min-h-screen bg-gradient-to-br from-white to-gray-100 pt-4 px-6">
+
+      <div style={{ width: "100%", maxWidth: desktop ? "440px" : "100%", }} >
         <div style={{ textAlign: "center", marginBottom: "32px" }}>
-          <div style={{ fontSize: "64px", marginBottom: "16px" }}>🎫</div>
-          <div style={{ fontSize: "26px", fontWeight: 900, color: "#fff", marginBottom: "8px" }}>Door Staff Access</div>
-          <div style={{ fontSize: "13px", color: "rgba(255,255,255,0.4)" }}>Enter your invite code from the event organizer</div>
+          {/* <div style={{ fontSize: "60px" }}>🎟️</div> */}
+          {/* <div className="text-2xl font-bold tracking-widest mb-3" style={{ color: "#000000" }}>MASTER EVENTS</div> */}
+          <h2 className="text-center text-4xl font-black text-gray-900 mb-0 px-6 py-8 ">LOGIN</h2>
+          <div style={{ fontSize: "26px", fontWeight: 900, color: "#000000", marginBottom: "5px" }}>Door Staff Access</div>
+          <div style={{ fontSize: "13px", color: "#000000" }}>Enter your invite code from the event organizer</div>
         </div>
 
         <div style={{ background: "rgba(255,255,255,0.05)", borderRadius: "24px", padding: "32px", border: "1px solid rgba(245,166,35,0.15)", boxShadow: desktop ? "0 20px 60px rgba(0,0,0,0.4)" : "none" }}>

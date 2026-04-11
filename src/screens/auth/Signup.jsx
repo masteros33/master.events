@@ -54,7 +54,10 @@ export function Signup() {
   return (
     <div style={{ minHeight: "100%", background: "#f8f8f6", padding: "50px 28px 40px", overflowY: "auto" }}>
       <div style={{ textAlign: "center", marginBottom: "28px" }}>
-        <div style={{ width: "64px", height: "64px", borderRadius: "18px", background: "linear-gradient(135deg, #f5a623, #e8920f)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "30px", margin: "0 auto 14px", boxShadow: "0 8px 24px rgba(245,166,35,0.3)" }}>🎫</div>
+        <div style={{ width: "64px", height: "64px", borderRadius: "18px", background: 
+          "linear-gradient(135deg, #f5a623, #e8920f)", display: "flex", alignItems: "center", 
+          justifyContent: "center", fontSize: "30px", margin: "0 auto 14px", 
+          boxShadow: "0 8px 24px rgba(245,166,35,0.3)" }}>🎟️</div>
         <h1 style={{ color: "#1a1a1a", fontSize: "26px", fontWeight: 800, marginBottom: "6px", letterSpacing: "-0.3px" }}>Create Account</h1>
         <p style={{ color: "#aaa", fontSize: "13px" }}>Join thousands of event-goers in Ghana</p>
       </div>

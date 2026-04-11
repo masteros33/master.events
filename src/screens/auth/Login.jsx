@@ -86,9 +86,12 @@ export default function Login() {
   return (
     <div style={{ minHeight: "100%", background: "#f8f8f6", padding: "60px 28px 40px", display: "flex", flexDirection: "column" }}>
       <div style={{ textAlign: "center", marginBottom: "40px" }}>
-        <div style={{ width: "72px", height: "72px", borderRadius: "20px", background: "linear-gradient(135deg, #f5a623, #e8920f)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "36px", margin: "0 auto 16px", boxShadow: "0 8px 24px rgba(245,166,35,0.3)" }}>🎟️</div>
+        <div style={{ width: "72px", height: "72px", borderRadius: "20px", 
+          background: "linear-gradient(135deg, #f5a623, #e8920f)", display: "flex", 
+          alignItems: "center", justifyContent: "center", fontSize: "36px", margin: "0 auto 16px", 
+          boxShadow: "0 8px 24px rgba(245,166,35,0.3)" }}>🎟️</div>
         <h1 style={{ color: "#1a1a1a", fontSize: "28px", fontWeight: 800, marginBottom: "4px", letterSpacing: "-0.5px" }}>Master Events</h1>
-        <p style={{ color: "#aaa", fontSize: "13px", letterSpacing: "2px", fontWeight: 500 }}>IF NOT NOW, WHEN?</p>
+        <p style={{ color: "#aaa", fontSize: "13px", letterSpacing: "2px", fontWeight: 500 }}>LOGIN</p>
       </div>
 
       <div style={{ fontSize: "13px", fontWeight: 600, color: "#6b6b6b", marginBottom: "8px" }}>Email</div>
@@ -124,7 +127,7 @@ export default function Login() {
       </p>
       <p style={{ color: "#bbb", fontSize: "12px", marginTop: "10px", textAlign: "center" }}>
         Door staff?{" "}
-        <span onClick={() => setScreen("doorStaffLogin")} style={{ color: "#6b6b6b", fontWeight: 600, cursor: "pointer" }}>Enter with invite code</span>
+        <span onClick={() => setScreen("doorStaffLogin")} style={{ color: "#f5a623", fontWeight: 600, cursor: "pointer" }}>Enter with invite code</span>
       </p>
 
       <div style={{ marginTop: "32px", background: "#fff", border: "1px solid #f0f0f0", borderRadius: "16px", padding: "16px", boxShadow: "0 2px 12px rgba(0,0,0,0.04)" }}>

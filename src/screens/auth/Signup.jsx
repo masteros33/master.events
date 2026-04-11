@@ -45,40 +45,36 @@ export function Signup() {
   ];
 
   return (
-    <div className="min-h-screen grid lg:grid-cols-2 bg-gradient-to-br from-white to-gray-100">
+    <div style={{ width: "100vw", minHeight: "100vh", display: "flex", background: "#fff" }}>
 
-      {/* ── Left — Branding ── */}
-      <div className="hidden lg:flex flex-col justify-center px-16 py-12"
-        style={{ background: "linear-gradient(160deg, #fffcf5 0%, #fff8f0 60%, #fff 100%)" }}>
-        <div className="w-14 h-14 rounded-2xl flex items-center justify-center text-2xl mb-6 shadow-lg"
-          style={{ background: "linear-gradient(135deg, #f5a623, #e8920f)" }}>🎫</div>
+      {/* ── Left — Branding (desktop only) ── */}
+      <div style={{ flex: "0 0 50%", display: "none", flexDirection: "column", justifyContent: "center", padding: "64px", background: "linear-gradient(160deg, #fffcf5 0%, #fff8f0 60%, #fff 100%)" }}
+        className="signup-left-panel">
+        <div style={{ width: 56, height: 56, borderRadius: 16, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 24, marginBottom: 24, boxShadow: "0 8px 24px rgba(245,166,35,0.3)", background: "linear-gradient(135deg, #f5a623, #e8920f)" }}>🎫</div>
 
-        <div className="text-xs font-bold tracking-widest mb-3" style={{ color: "#f5a623" }}>MASTER EVENTS GHANA</div>
+        <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.15em", marginBottom: 12, color: "#f5a623" }}>MASTER EVENTS GHANA</div>
 
-        <h1 className="font-black text-gray-900 leading-none mb-4" style={{ fontSize: "52px", letterSpacing: "-2px" }}>
+        <h1 style={{ fontWeight: 900, color: "#111", lineHeight: 1, marginBottom: 16, fontSize: 52, letterSpacing: "-2px" }}>
           Ghana's<br />
-          <span style={{ background: "linear-gradient(135deg, #f5a623, #e8920f)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
-            best tickets.
-          </span>
+          <span style={{ background: "linear-gradient(135deg, #f5a623, #e8920f)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>best tickets.</span>
         </h1>
 
-        <p className="text-gray-500 text-base leading-relaxed mb-10 max-w-sm">
+        <p style={{ color: "#888", fontSize: 15, lineHeight: 1.7, marginBottom: 40, maxWidth: 340 }}>
           Buy, sell and transfer blockchain-verified tickets to Ghana's best events. Join thousands of event-goers.
         </p>
 
-        <div className="space-y-4">
+        <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
           {[
-            ["⛓️", "NFT on Polygon",    "Unfakeable blockchain tickets"],
-            ["💰", "95% to organizers", "Only 5% platform fee"],
-            ["🔍", "QR door scanning",  "Fast and fraud-proof entry"],
-            ["📱", "MoMo & VISA",       "Pay the Ghanaian way"],
+            ["⛓️", "NFT on Polygon",   "Unfakeable blockchain tickets"],
+            ["💰", "95% to organizers","Only 5% platform fee"],
+            ["🔍", "QR door scanning", "Fast and fraud-proof entry"],
+            ["📱", "MoMo & VISA",      "Pay the Ghanaian way"],
           ].map(([icon, title, sub]) => (
-            <div key={title} className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-xl flex items-center justify-center text-base flex-shrink-0 border"
-                style={{ background: "rgba(245,166,35,0.1)", borderColor: "rgba(245,166,35,0.2)" }}>{icon}</div>
+            <div key={title} style={{ display: "flex", alignItems: "center", gap: 12 }}>
+              <div style={{ width: 36, height: 36, borderRadius: 10, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16, flexShrink: 0, background: "rgba(245,166,35,0.1)", border: "1px solid rgba(245,166,35,0.2)" }}>{icon}</div>
               <div>
-                <div className="font-bold text-sm text-gray-900">{title}</div>
-                <div className="text-xs text-gray-400">{sub}</div>
+                <div style={{ fontWeight: 700, fontSize: 13, color: "#111" }}>{title}</div>
+                <div style={{ fontSize: 12, color: "#aaa" }}>{sub}</div>
               </div>
             </div>
           ))}
@@ -86,60 +82,58 @@ export function Signup() {
       </div>
 
       {/* ── Right — Signup Form ── */}
-      <div className="flex items-center justify-center px-6 py-10 lg:px-16">
-        <div className="w-full max-w-md">
+      <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", padding: "40px 24px", background: "linear-gradient(135deg, #fffcf5 0%, #fafafa 100%)", minHeight: "100vh" }}>
+        <div style={{ width: "100%", maxWidth: 460 }}>
 
           {/* Mobile logo */}
-          <div className="lg:hidden text-center mb-8">
-            <div className="w-16 h-16 rounded-2xl flex items-center justify-center text-3xl mx-auto mb-3 shadow-lg"
-              style={{ background: "linear-gradient(135deg, #f5a623, #e8920f)" }}>🎫</div>
-            <h1 className="text-2xl font-black text-gray-900">Create Account</h1>
-            <p className="text-gray-400 text-xs mt-1">Join thousands of event-goers in Ghana</p>
+          <div style={{ textAlign: "center", marginBottom: 32 }} className="signup-mobile-logo">
+            <div style={{ width: 64, height: 64, borderRadius: 20, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 28, margin: "0 auto 12px", boxShadow: "0 8px 24px rgba(245,166,35,0.3)", background: "linear-gradient(135deg, #f5a623, #e8920f)" }}>🎫</div>
+            <h1 style={{ fontSize: 22, fontWeight: 900, color: "#111", margin: 0 }}>Create Account</h1>
+            <p style={{ color: "#aaa", fontSize: 12, marginTop: 4 }}>Join thousands of event-goers in Ghana</p>
           </div>
 
           {/* Card */}
-          <div className="bg-white rounded-2xl shadow-xl border-2 border-gray-100 p-8">
-            <h2 className="text-2xl font-black text-gray-900 mb-1">Create your account</h2>
-            <p className="text-gray-400 text-sm mb-6">Join Ghana's #1 blockchain ticketing platform — it's free</p>
+          <div style={{ background: "#fff", borderRadius: 24, boxShadow: "0 8px 48px rgba(0,0,0,0.1)", border: "1.5px solid #f0f0f0", padding: "36px 40px" }}>
+            <h2 style={{ fontSize: 22, fontWeight: 900, color: "#111", margin: "0 0 6px" }}>Create your account</h2>
+            <p style={{ color: "#aaa", fontSize: 13, margin: "0 0 28px" }}>Join Ghana's #1 blockchain ticketing platform — it's free</p>
 
             {/* Name + Username row */}
-            <div className="grid grid-cols-2 gap-4 mb-4">
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 20 }}>
               <div>
-                <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Full Name</label>
+                <label style={{ display: "block", fontSize: 11, fontWeight: 700, color: "#888", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 8 }}>Full Name</label>
                 <input placeholder="Kwame Mensah" value={fullName} onChange={e => setFullName(e.target.value)}
-                  className="w-full px-4 py-3 rounded-xl border-2 border-gray-100 text-sm outline-none bg-gray-50"
-                  style={{ caretColor: "#f5a623" }} />
+                  style={{ width: "100%", padding: "13px 14px", borderRadius: 12, border: "2px solid #f0f0f0", fontSize: 13, outline: "none", background: "#fafafa", boxSizing: "border-box", caretColor: "#f5a623" }} />
               </div>
               <div>
-                <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Username</label>
+                <label style={{ display: "block", fontSize: 11, fontWeight: 700, color: "#888", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 8 }}>Username</label>
                 <input placeholder="kwame23" value={username}
                   onChange={e => setUsername(e.target.value.toLowerCase().replace(/\s/g, ""))}
-                  className="w-full px-4 py-3 rounded-xl border-2 border-gray-100 text-sm outline-none bg-gray-50"
-                  style={{ caretColor: "#f5a623" }} autoCapitalize="none" />
+                  style={{ width: "100%", padding: "13px 14px", borderRadius: 12, border: "2px solid #f0f0f0", fontSize: 13, outline: "none", background: "#fafafa", boxSizing: "border-box", caretColor: "#f5a623" }}
+                  autoCapitalize="none" />
               </div>
             </div>
 
             {/* Email */}
-            <div className="mb-4">
-              <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Email Address</label>
+            <div style={{ marginBottom: 20 }}>
+              <label style={{ display: "block", fontSize: 11, fontWeight: 700, color: "#888", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 8 }}>Email Address</label>
               <input placeholder="you@email.com" value={signupEmail} onChange={e => setSignupEmail(e.target.value)}
-                className="w-full px-4 py-3 rounded-xl border-2 border-gray-100 text-sm outline-none bg-gray-50"
-                style={{ caretColor: "#f5a623" }} autoComplete="email" />
+                style={{ width: "100%", padding: "14px 16px", borderRadius: 12, border: "2px solid #f0f0f0", fontSize: 14, outline: "none", background: "#fafafa", boxSizing: "border-box", caretColor: "#f5a623" }}
+                autoComplete="email" />
             </div>
 
             {/* Password */}
-            <div className="mb-4">
-              <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Password</label>
-              <input placeholder="Min 8 chars, uppercase, number, special" type="password"
+            <div style={{ marginBottom: 20 }}>
+              <label style={{ display: "block", fontSize: 11, fontWeight: 700, color: "#888", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 8 }}>Password</label>
+              <input
+                placeholder="Min 8 chars, uppercase, number, special"
+                type="password"
                 value={signupPassword}
                 onChange={e => { setSignupPassword(e.target.value); if (pwErrors.length) setPwErrors(validatePassword(e.target.value)); }}
-                className="w-full px-4 py-3 rounded-xl border-2 text-sm outline-none bg-gray-50 mb-2"
-                style={{ borderColor: pwErrors.length ? "#e74c3c" : "#f0f0f0", caretColor: "#f5a623" }} />
-              {/* Password checks */}
-              <div className="flex flex-wrap gap-1.5">
+                style={{ width: "100%", padding: "14px 16px", borderRadius: 12, border: `2px solid ${pwErrors.length ? "#fecaca" : "#f0f0f0"}`, fontSize: 14, outline: "none", background: "#fafafa", boxSizing: "border-box", marginBottom: 10, caretColor: "#f5a623" }}
+              />
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
                 {pwChecks.map(([label, met]) => (
-                  <div key={label} className="px-2.5 py-1 rounded-full text-xs font-semibold"
-                    style={{ background: met ? "rgba(39,174,96,0.1)" : "#f0f0f0", color: met ? "#27ae60" : "#bbb" }}>
+                  <div key={label} style={{ padding: "4px 10px", borderRadius: 20, fontSize: 11, fontWeight: 600, background: met ? "rgba(39,174,96,0.1)" : "#f5f5f5", color: met ? "#27ae60" : "#bbb" }}>
                     {met ? "✓" : "·"} {label}
                   </div>
                 ))}
@@ -147,49 +141,55 @@ export function Signup() {
             </div>
 
             {/* Role selector */}
-            <div className="mb-5">
-              <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-3">I am joining as</label>
-              <div className="grid grid-cols-2 gap-3">
+            <div style={{ marginBottom: 24 }}>
+              <label style={{ display: "block", fontSize: 11, fontWeight: 700, color: "#888", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 12 }}>I am joining as</label>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
                 {[
                   { role: "attendee",  icon: "🎟️", label: "Attendee",  sub: "Buy & transfer tickets" },
                   { role: "organizer", icon: "🎪", label: "Organizer", sub: "Create & manage events" },
                 ].map(item => (
                   <div key={item.role} onClick={() => setSelectedRole(item.role)}
-                    className="p-3 rounded-xl cursor-pointer text-center border-2 transition-all"
                     style={{
-                      borderColor: selectedRole === item.role ? "#f5a623" : "#f0f0f0",
+                      padding: "14px 12px", borderRadius: 14, cursor: "pointer", textAlign: "center",
+                      border: `2px solid ${selectedRole === item.role ? "#f5a623" : "#f0f0f0"}`,
                       background: selectedRole === item.role ? "rgba(245,166,35,0.06)" : "#fff",
                       boxShadow: selectedRole === item.role ? "0 4px 16px rgba(245,166,35,0.15)" : "none",
+                      transition: "all 0.15s ease",
                     }}>
-                    <div className="text-2xl mb-1">{item.icon}</div>
-                    <div className="font-bold text-sm" style={{ color: selectedRole === item.role ? "#f5a623" : "#1a1a1a" }}>{item.label}</div>
-                    <div className="text-xs text-gray-400 mt-0.5">{item.sub}</div>
+                    <div style={{ fontSize: 22, marginBottom: 6 }}>{item.icon}</div>
+                    <div style={{ fontWeight: 700, fontSize: 13, color: selectedRole === item.role ? "#f5a623" : "#111" }}>{item.label}</div>
+                    <div style={{ fontSize: 11, color: "#aaa", marginTop: 2 }}>{item.sub}</div>
                   </div>
                 ))}
               </div>
             </div>
 
             {signupError && (
-              <div className="bg-red-50 border border-red-200 rounded-xl px-4 py-3 text-red-600 text-sm mb-4">
+              <div style={{ background: "#fff5f5", border: "1px solid #fecaca", borderRadius: 10, padding: "12px 16px", color: "#dc2626", fontSize: 13, marginBottom: 16 }}>
                 ⚠️ {signupError}
               </div>
             )}
 
             <button onClick={handleCreate} disabled={loading}
-              className="w-full py-4 rounded-xl font-bold text-white text-base border-none cursor-pointer mb-4"
-              style={{ background: "linear-gradient(135deg, #f5a623, #e8920f)", boxShadow: "0 8px 28px rgba(245,166,35,0.35)", opacity: loading ? 0.7 : 1 }}>
+              style={{ width: "100%", padding: "15px", borderRadius: 14, fontWeight: 700, color: "#fff", fontSize: 15, border: "none", cursor: "pointer", marginBottom: 20, background: "linear-gradient(135deg, #f5a623, #e8920f)", boxShadow: "0 8px 28px rgba(245,166,35,0.35)", opacity: loading ? 0.7 : 1 }}>
               {loading ? "⏳ Creating account..." : "Create Account →"}
             </button>
 
-            <p className="text-center text-sm text-gray-400">
+            <p style={{ textAlign: "center", fontSize: 14, color: "#aaa", margin: 0 }}>
               Already have an account?{" "}
-              <span onClick={() => setScreen("login")} className="font-bold cursor-pointer" style={{ color: "#f5a623" }}>
-                Log in
-              </span>
+              <span onClick={() => setScreen("login")} style={{ fontWeight: 700, cursor: "pointer", color: "#f5a623" }}>Log in</span>
             </p>
           </div>
         </div>
       </div>
+
+      {/* Responsive styles */}
+      <style>{`
+        @media (min-width: 1024px) {
+          .signup-left-panel { display: flex !important; }
+          .signup-mobile-logo { display: none !important; }
+        }
+      `}</style>
     </div>
   );
 }
@@ -198,31 +198,29 @@ export function RoleSelect() {
   const handleSelectRole = useStore(s => s.handleSelectRole);
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-white to-gray-100 p-6">
-      <div className="w-full max-w-md">
-        <div className="text-center mb-8">
-          <div className="w-16 h-16 rounded-2xl flex items-center justify-center text-3xl mx-auto mb-4 shadow-lg"
-            style={{ background: "linear-gradient(135deg, #f5a623, #e8920f)" }}>🎉</div>
-          <h2 className="text-2xl font-black text-gray-900 mb-2">You're in!</h2>
-          <p className="text-gray-400 text-sm">How will you use Master Events?</p>
+    <div style={{ width: "100vw", minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: "linear-gradient(135deg, #fffcf5 0%, #fafafa 100%)", padding: "24px", boxSizing: "border-box" }}>
+      <div style={{ width: "100%", maxWidth: 420 }}>
+        <div style={{ textAlign: "center", marginBottom: 32 }}>
+          <div style={{ width: 64, height: 64, borderRadius: 20, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 28, margin: "0 auto 16px", boxShadow: "0 8px 24px rgba(245,166,35,0.3)", background: "linear-gradient(135deg, #f5a623, #e8920f)" }}>🎉</div>
+          <h2 style={{ fontSize: 22, fontWeight: 900, color: "#111", margin: "0 0 8px" }}>You're in!</h2>
+          <p style={{ color: "#aaa", fontSize: 13, margin: 0 }}>How will you use Master Events?</p>
         </div>
 
-        <div className="space-y-3">
+        <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
           {[
             { role: "attendee",  icon: "🎟️", title: "I'm an Attendee",  sub: "Browse events, buy tickets, resell and transfer" },
             { role: "organizer", icon: "🎪", title: "I'm an Organizer", sub: "Create events, sell tickets, manage door access" },
           ].map(item => (
             <div key={item.role} onClick={() => handleSelectRole(item.role)}
-              className="bg-white rounded-2xl p-5 cursor-pointer flex gap-4 items-center border-2 border-gray-100 shadow-md transition-all"
+              style={{ background: "#fff", borderRadius: 20, padding: "20px", cursor: "pointer", display: "flex", gap: 16, alignItems: "center", border: "1.5px solid #f0f0f0", boxShadow: "0 4px 16px rgba(0,0,0,0.06)", transition: "all 0.15s ease" }}
               onMouseEnter={e => { e.currentTarget.style.borderColor = "#f5a623"; e.currentTarget.style.boxShadow = "0 8px 32px rgba(245,166,35,0.15)"; }}
-              onMouseLeave={e => { e.currentTarget.style.borderColor = "#f0f0f0"; e.currentTarget.style.boxShadow = ""; }}>
-              <div className="w-12 h-12 rounded-xl flex items-center justify-center text-2xl flex-shrink-0"
-                style={{ background: "rgba(245,166,35,0.1)" }}>{item.icon}</div>
-              <div>
-                <div className="font-bold text-base text-gray-900">{item.title}</div>
-                <div className="text-xs text-gray-400 mt-0.5">{item.sub}</div>
+              onMouseLeave={e => { e.currentTarget.style.borderColor = "#f0f0f0"; e.currentTarget.style.boxShadow = "0 4px 16px rgba(0,0,0,0.06)"; }}>
+              <div style={{ width: 48, height: 48, borderRadius: 14, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 22, flexShrink: 0, background: "rgba(245,166,35,0.1)" }}>{item.icon}</div>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontWeight: 700, fontSize: 15, color: "#111" }}>{item.title}</div>
+                <div style={{ fontSize: 12, color: "#aaa", marginTop: 2 }}>{item.sub}</div>
               </div>
-              <div className="ml-auto text-xl" style={{ color: "#f5a623" }}>→</div>
+              <div style={{ fontSize: 18, color: "#f5a623" }}>→</div>
             </div>
           ))}
         </div>

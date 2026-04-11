@@ -175,12 +175,19 @@ export function DoorStaffLogin() {
   const desktop = isDesktop();
 
   return (
-    <div style={{ minHeight: "100%", background: "linear-gradient(160deg, #1a0e00 0%, #110900 60%, #1a0e00 100%)", display: "flex", alignItems: "center", justifyContent: "center", padding: "40px 28px" }}>
-      <div style={{ width: "100%", maxWidth: desktop ? "440px" : "100%" }}>
-        <div style={{ textAlign: "center", marginBottom: "32px" }}>
-          <div style={{ fontSize: "64px", marginBottom: "16px" }}>🎫</div>
-          <div style={{ fontSize: "26px", fontWeight: 900, color: "#fff", marginBottom: "8px" }}>Door Staff Access</div>
-          <div style={{ fontSize: "13px", color: "rgba(255,255,255,0.4)" }}>Enter your invite code from the event organizer</div>
+    // <div style={{ minHeight: "100%", background: "linear-gradient(160deg, #1a0e00 0%, #110900 60%, #1a0e00 100%)", display: "flex", alignItems: "center", justifyContent: "center", padding: "40px 28px" }}>
+    <div className="min-h-screen bg-gradient-to-br from-white to-gray-100 pt-4 px-6">
+
+      <div style={{ width: "100%", maxWidth: desktop ? "440px" : "100%", padding: "50px 20px 30px", display: "flex", flexDirection: "column" }} >
+        <div style={{ textAlign: "center", marginBottom: "40px" }}>
+           <div style={{ width: "72px", height: "72px", borderRadius: "20px", 
+          background: "linear-gradient(135deg, #f5a623, #e8920f)", display: "flex", 
+          alignItems: "center", justifyContent: "center", fontSize: "36px", margin: "0 auto 16px", 
+          boxShadow: "0 8px 24px rgba(245,166,35,0.3)" }}>🎟️</div> 
+           <div className="text-2xl font-bold tracking-widest mb-3" style={{ color: "#000000" }}>MASTER EVENTS</div> 
+          {/* <h2 className="text-center text-4xl font-black text-gray-900 mb-0 px-6 py-8 ">LOGIN</h2> */}
+          <div style={{ fontSize: "26px", fontWeight: 600, color: "#000000", marginBottom: "5px" }}>Door Staff </div>
+          <div style={{ fontSize: "13px", color: "#aaa" }}>Enter your invite code from the event organizer</div>
         </div>
 
         <div style={{ background: "rgba(255,255,255,0.05)", borderRadius: "24px", padding: "32px", border: "1px solid rgba(245,166,35,0.15)", boxShadow: desktop ? "0 20px 60px rgba(0,0,0,0.4)" : "none" }}>
@@ -197,9 +204,14 @@ export function DoorStaffLogin() {
             style={{ width: "100%", padding: "16px", background: "linear-gradient(135deg, #f5a623, #e8920f)", color: "#fff", border: "none", borderRadius: "50px", fontSize: "15px", fontWeight: 800, cursor: "pointer", boxShadow: "0 8px 24px rgba(245,166,35,0.35)", marginBottom: "16px" }}>
             ENTER EVENT
           </button>
-          <div onClick={() => setScreen("login")} style={{ fontSize: "13px", color: "#f5a623", fontWeight: 600, cursor: "pointer", textAlign: "center" }}>
+          <p style={{ color: "#bbb", fontSize: "12px", marginTop: "10px", textAlign: "center" }}>
+            Attendee?{" "}
+            <span onClick={() => setScreen("ogin")} 
+            style={{ color: "#f5a623", fontWeight: 600, cursor: "pointer" }}>Login in here</span>
+          </p>
+          {/* <div onClick={() => setScreen("login")} style={{ fontSize: "13px", color: "#f5a623", fontWeight: 600, cursor: "pointer", textAlign: "center" }}>
             Are you an attendee? Log in here
-          </div>
+          </div> */}
         </div>
       </div>
     </div>

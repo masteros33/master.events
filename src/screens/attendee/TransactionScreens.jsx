@@ -44,30 +44,21 @@ function BackBtn({ onClick }) {
 
 // ── Payment Success ───────────────────────────────────────────
 export function PaymentSuccess() {
-  const setScreen       = useStore(s => s.setScreen);
-  const setActiveTab    = useStore(s => s.setActiveTab);
-  const viewingTicket   = useStore(s => s.viewingTicket);
-  const checkoutEvent   = useStore(s => s.checkoutEvent);
+  const setScreen     = useStore(s => s.setScreen);
+  const setActiveTab  = useStore(s => s.setActiveTab);
+  const viewingTicket = useStore(s => s.viewingTicket);
+  const checkoutEvent = useStore(s => s.checkoutEvent);
   const desktop = isDesktop();
   const event = viewingTicket?.event || checkoutEvent;
 
   return (
     <PageWrap maxW="480px">
       <div style={{ background: "#fff", borderRadius: "24px", padding: desktop ? "56px 48px" : "40px 28px", textAlign: "center", boxShadow: desktop ? "0 8px 40px rgba(0,0,0,0.08)" : "none", margin: desktop ? 0 : "20px" }}>
-
-        {/* Success icon */}
-        <div style={{ width: "96px", height: "96px", borderRadius: "50%", background: "linear-gradient(135deg, #27ae60, #2ecc71)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "48px", margin: "0 auto 24px", boxShadow: "0 8px 32px rgba(39,174,96,0.35)" }}>
-          ✅
-        </div>
-
-        <div style={{ fontSize: "28px", fontWeight: 900, color: "#1a1a1a", marginBottom: "8px", letterSpacing: "-0.5px" }}>
-          Payment Successful!
-        </div>
+        <div style={{ width: "96px", height: "96px", borderRadius: "50%", background: "linear-gradient(135deg, #27ae60, #2ecc71)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "48px", margin: "0 auto 24px", boxShadow: "0 8px 32px rgba(39,174,96,0.35)" }}>✅</div>
+        <div style={{ fontSize: "28px", fontWeight: 900, color: "#1a1a1a", marginBottom: "8px", letterSpacing: "-0.5px" }}>Payment Successful!</div>
         <div style={{ color: "#6b6b6b", fontSize: "15px", lineHeight: 1.7, marginBottom: "32px" }}>
           Your ticket is confirmed and your NFT is being minted on Polygon blockchain.
         </div>
-
-        {/* Event info */}
         {event && (
           <div style={{ background: "#f8f8f6", borderRadius: "16px", padding: "20px", marginBottom: "24px", textAlign: "left", border: "1px solid #f0f0f0" }}>
             <div style={{ fontSize: "11px", color: "#f5a623", fontWeight: 700, marginBottom: "8px", letterSpacing: "1px" }}>EVENT</div>
@@ -75,17 +66,11 @@ export function PaymentSuccess() {
             <div style={{ fontSize: "13px", color: "#aaa" }}>📅 {event.date} · 📍 {event.venue}</div>
           </div>
         )}
-
-        {/* NFT minting badge */}
         <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "8px", background: "rgba(39,174,96,0.06)", border: "1px solid rgba(39,174,96,0.2)", padding: "10px 20px", borderRadius: "20px", marginBottom: "28px" }}>
           <span style={{ fontSize: "16px" }}>⛓️</span>
           <span style={{ color: "#27ae60", fontSize: "12px", fontWeight: 700 }}>NFT minting on Polygon...</span>
         </div>
-
-        <button onClick={() => setScreen("ticketView")}
-          style={{ ...btnStyle, marginBottom: "12px" }}>
-          🎟️ View My Ticket
-        </button>
+        <button onClick={() => setScreen("ticketView")} style={{ ...btnStyle, marginBottom: "12px" }}>🎟️ View My Ticket</button>
         <button onClick={() => { setScreen("app"); setActiveTab("home"); }}
           style={{ width: "100%", padding: "14px", background: "#f8f8f6", color: "#6b6b6b", border: "1.5px solid #f0f0f0", borderRadius: "14px", fontWeight: 600, fontSize: "14px", cursor: "pointer" }}>
           Back to Events
@@ -126,9 +111,7 @@ export function Checkout() {
           <BackBtn onClick={() => setScreen("app")} />
           <div style={{ fontSize: "17px", fontWeight: 700, color: "#1a1a1a" }}>Checkout</div>
         </div>
-
         <div style={{ padding: "20px 24px 32px" }}>
-          {/* Event banner */}
           <div style={{ borderRadius: "16px", overflow: "hidden", boxShadow: "0 4px 20px rgba(0,0,0,0.1)", marginBottom: "20px" }}>
             <div style={{ height: "150px", position: "relative" }}>
               {checkoutEvent.image
@@ -138,14 +121,10 @@ export function Checkout() {
               <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to bottom, rgba(0,0,0,0.1), rgba(0,0,0,0.65))" }} />
               <div style={{ position: "absolute", bottom: "14px", left: "16px", right: "16px" }}>
                 <div style={{ color: "#fff", fontWeight: 800, fontSize: "18px" }}>{checkoutEvent.name}</div>
-                <div style={{ color: "rgba(255,255,255,0.8)", fontSize: "12px", marginTop: "4px" }}>
-                  {"📅 " + checkoutEvent.date + " · 📍 " + checkoutEvent.venue}
-                </div>
+                <div style={{ color: "rgba(255,255,255,0.8)", fontSize: "12px", marginTop: "4px" }}>{"📅 " + checkoutEvent.date + " · 📍 " + checkoutEvent.venue}</div>
               </div>
             </div>
           </div>
-
-          {/* Quantity */}
           <div style={{ background: "#f8f8f6", borderRadius: "16px", padding: "18px", marginBottom: "14px", border: "1px solid #f0f0f0" }}>
             <div style={{ fontWeight: 700, fontSize: "14px", color: "#1a1a1a", marginBottom: "14px" }}>Quantity</div>
             <div style={{ display: "flex", alignItems: "center", gap: "20px" }}>
@@ -156,29 +135,24 @@ export function Checkout() {
                 style={{ width: "44px", height: "44px", borderRadius: "14px", background: "#fff", color: "#f5a623", border: "1.5px solid #f5a623", fontSize: "22px", fontWeight: 700, cursor: "pointer" }}>+</button>
             </div>
           </div>
-
-          {/* Payment method */}
           <div style={{ background: "#f8f8f6", borderRadius: "16px", padding: "18px", marginBottom: "14px", border: "1px solid #f0f0f0" }}>
             <div style={{ fontWeight: 700, fontSize: "14px", color: "#1a1a1a", marginBottom: "14px" }}>Payment Method</div>
             <div style={{ display: "flex", gap: "10px" }}>
               {[["momo", "📱 MoMo"], ["visa", "💳 VISA"]].map(([id, label]) => (
                 <button key={id} onClick={() => setPayMethod(id)} style={{
-                  flex: 1, padding: "14px", borderRadius: "14px", cursor: "pointer",
-                  fontWeight: 700, fontSize: "14px",
-                  border:      payMethod === id ? "2px solid #f5a623"       : "1.5px solid #f0f0f0",
-                  background:  payMethod === id ? "rgba(245,166,35,0.08)"   : "#fff",
-                  color:       payMethod === id ? "#f5a623"                 : "#aaa",
+                  flex: 1, padding: "14px", borderRadius: "14px", cursor: "pointer", fontWeight: 700, fontSize: "14px",
+                  border:     payMethod === id ? "2px solid #f5a623"     : "1.5px solid #f0f0f0",
+                  background: payMethod === id ? "rgba(245,166,35,0.08)" : "#fff",
+                  color:      payMethod === id ? "#f5a623"               : "#aaa",
                 }}>{label}</button>
               ))}
             </div>
           </div>
-
-          {/* Order summary */}
           <div style={{ background: "#f8f8f6", borderRadius: "16px", padding: "18px", marginBottom: "20px", border: "1px solid #f0f0f0" }}>
             <div style={{ fontWeight: 700, fontSize: "14px", color: "#1a1a1a", marginBottom: "14px" }}>Order Summary</div>
             {[
-              ["Tickets",            ticketQty + " x Ghc " + checkoutEvent.price],
-              ["Platform Fee (5%)",  "Ghc " + fee],
+              ["Tickets",           ticketQty + " x Ghc " + checkoutEvent.price],
+              ["Platform Fee (5%)", "Ghc " + fee],
             ].map(([k, v]) => (
               <div key={k} style={{ display: "flex", justifyContent: "space-between", paddingBottom: "10px", marginBottom: "10px", borderBottom: "1px solid #f0f0f0" }}>
                 <span style={{ color: "#aaa", fontSize: "14px" }}>{k}</span>
@@ -190,7 +164,6 @@ export function Checkout() {
               <span style={{ color: "#f5a623", fontWeight: 900, fontSize: "26px" }}>Ghc {total}</span>
             </div>
           </div>
-
           {paying && (
             <div style={{ background: "rgba(245,166,35,0.06)", border: "1px solid rgba(245,166,35,0.2)", borderRadius: "16px", padding: "20px", marginBottom: "16px", textAlign: "center" }}>
               <div style={{ fontSize: "36px", marginBottom: "8px" }}>⏳</div>
@@ -198,9 +171,7 @@ export function Checkout() {
               <div style={{ color: "#aaa", fontSize: "12px" }}>Minting your NFT ticket on Polygon</div>
             </div>
           )}
-
-          <button onClick={onPay} disabled={paying}
-            style={{ ...btnStyle, opacity: paying ? 0.6 : 1 }}>
+          <button onClick={onPay} disabled={paying} style={{ ...btnStyle, opacity: paying ? 0.6 : 1 }}>
             {paying ? "Processing..." : checkoutEvent.price === 0 ? "Get Free Ticket" : "Pay Ghc " + total}
           </button>
         </div>
@@ -222,18 +193,17 @@ export function TicketView() {
   const setTransferName   = useStore(s => s.setTransferName);
   const setTransferDone   = useStore(s => s.setTransferDone);
 
-  // ── Dynamic QR state ─────────────────────────────────────
-  const [dynamicQR,   setDynamicQR]   = useState(viewingTicket?.dynamic_qr || viewingTicket?.qr_base64 || null);
-  const [timeLeft,    setTimeLeft]     = useState(30 - (Math.floor(Date.now() / 1000) % 30));
-  const [qrLoaded,    setQrLoaded]     = useState(false);
-  const [qrError,     setQrError]      = useState(false);
-  const [refreshing,  setRefreshing]   = useState(false);
+  const [dynamicQR,  setDynamicQR]  = useState(viewingTicket?.dynamic_qr || null);
+  const [timeLeft,   setTimeLeft]   = useState(30);
+  const [qrLoaded,   setQrLoaded]   = useState(false);
+  const [qrError,    setQrError]    = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
   const desktop = isDesktop();
 
-  // ── Refresh QR every 30 seconds ──────────────────────────
+  // ── Countdown + auto-refresh every 30s ───────────────────
   useEffect(() => {
     if (!viewingTicket?.ticket_id) return;
-    const timer = setInterval(() => {
+    const tick = () => {
       const sLeft = 30 - (Math.floor(Date.now() / 1000) % 30);
       setTimeLeft(sLeft);
       if (sLeft === 30) {
@@ -247,7 +217,9 @@ export function TicketView() {
           setRefreshing(false);
         }).catch(() => setRefreshing(false));
       }
-    }, 1000);
+    };
+    tick();
+    const timer = setInterval(tick, 1000);
     return () => clearInterval(timer);
   }, [viewingTicket?.ticket_id]);
 
@@ -255,11 +227,10 @@ export function TicketView() {
   const ev = viewingTicket.event;
   const formatTime = (t) => { if (!t) return "TBA"; return t.substring(0, 5); };
 
-  // ── QR source — priority order ────────────────────────────
-  // 1. Dynamic HMAC (changes every 30s) — most secure
-  // 2. qr_base64 from purchase response
-  // 3. Cloudinary URL
-  // 4. Backend URL
+  // ── QR source priority ────────────────────────────────────
+  // 1. dynamic_qr (HMAC, refreshes every 30s) ← THIS IS THE ONE FROM BACKEND
+  // 2. qr_image_url (Cloudinary)
+  // 3. qr_image (backend URL)
   const qrSrc = dynamicQR
     ? "data:image/png;base64," + dynamicQR
     : viewingTicket.qr_image_url
@@ -326,10 +297,18 @@ export function TicketView() {
                     <div style={{ fontSize: "32px" }}>🔄</div>
                   </div>
                 )}
-                <img src={qrSrc} alt="QR Code"
+                <img
+                  src={qrSrc}
+                  alt="QR Code"
                   onLoad={() => setQrLoaded(true)}
-                  onError={() => { setQrError(true); }}
-                  style={{ width: "200px", height: "200px", borderRadius: "16px", border: `3px solid ${progressColor}`, padding: "6px", background: "#fff", display: qrError ? "none" : "block", boxShadow: `0 4px 20px ${progressColor}33`, transition: "border-color 0.3s, box-shadow 0.3s" }}
+                  onError={() => setQrError(true)}
+                  style={{
+                    width: "200px", height: "200px", borderRadius: "16px",
+                    border: `3px solid ${progressColor}`, padding: "6px",
+                    background: "#fff", display: qrError ? "none" : "block",
+                    boxShadow: `0 4px 20px ${progressColor}33`,
+                    transition: "border-color 0.3s, box-shadow 0.3s"
+                  }}
                 />
                 {qrError && (
                   <div style={{ width: "200px", height: "200px", borderRadius: "16px", background: "#f8f8f6", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", border: "2px dashed #f0f0f0", gap: "8px" }}>
@@ -345,7 +324,7 @@ export function TicketView() {
               </div>
             )}
 
-            {/* Countdown timer */}
+            {/* Countdown */}
             {viewingTicket.status === "active" && (
               <div style={{ display: "flex", alignItems: "center", gap: "8px", background: isExpiringSoon ? "rgba(231,76,60,0.08)" : "rgba(39,174,96,0.08)", border: `1px solid ${isExpiringSoon ? "rgba(231,76,60,0.2)" : "rgba(39,174,96,0.2)"}`, padding: "8px 16px", borderRadius: "20px", transition: "all 0.3s" }}>
                 <div style={{ width: "8px", height: "8px", borderRadius: "50%", background: progressColor }} />
@@ -417,9 +396,9 @@ export function Resale() {
   const desktop = isDesktop();
 
   if (!resaleTicket) return null;
-  const ev     = resaleTicket.event;
-  const price  = parseFloat(resalePrice) || 0;
-  const fee    = Math.round(price * 0.02 * 100) / 100;
+  const ev    = resaleTicket.event;
+  const price = parseFloat(resalePrice) || 0;
+  const fee   = Math.round(price * 0.02 * 100) / 100;
   const payout = Math.round((price - fee) * 100) / 100;
 
   return (
@@ -451,9 +430,9 @@ export function Resale() {
             <div style={{ background: "#f8f8f6", borderRadius: "16px", padding: "18px", marginBottom: "16px", border: "1px solid #f0f0f0" }}>
               <div style={{ fontWeight: 700, fontSize: "14px", color: "#1a1a1a", marginBottom: "12px" }}>Fee Breakdown</div>
               {[
-                ["Listing Price",     "Ghc " + price,  "#1a1a1a"],
-                ["Platform Fee (2%)", "- Ghc " + fee,  "#e74c3c"],
-                ["Your Payout",       "Ghc " + payout, "#27ae60"],
+                ["Listing Price",     "Ghc " + price,   "#1a1a1a"],
+                ["Platform Fee (2%)", "- Ghc " + fee,   "#e74c3c"],
+                ["Your Payout",       "Ghc " + payout,  "#27ae60"],
               ].map(([k, v, c], i) => (
                 <div key={k} style={{ display: "flex", justifyContent: "space-between", padding: "10px 0", borderBottom: i < 2 ? "1px solid #f0f0f0" : "none" }}>
                   <span style={{ color: "#aaa", fontSize: "14px" }}>{k}</span>

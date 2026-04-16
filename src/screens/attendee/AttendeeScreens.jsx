@@ -23,6 +23,7 @@ export function AttendeeTickets() {
         useStore.setState({
           myTickets: data.map(t => ({
             id: t.ticket_id,
+            ticket_id: t.ticket_id,
             event: {
               id: t.event?.id,
               name: t.event?.name,
@@ -33,15 +34,15 @@ export function AttendeeTickets() {
               image: t.event?.image || "https://images.unsplash.com/photo-1492684223066-81342ee5ff30?w=600",
             },
             qty: t.quantity,
+            quantity: t.quantity,
             status: t.status,
             qr_data: t.qr_data,
             qr_base64: t.qr_base64 || null,
-            // ✅ Fix QR URL — always absolute
+            dynamic_qr: t.dynamic_qr || null,
             qr_image: t.qr_image
-              ? (t.qr_image.startsWith("http")
-                ? t.qr_image
-                : API + t.qr_image)
+              ? (t.qr_image.startsWith("http") ? t.qr_image : API + t.qr_image)
               : null,
+            qr_image_url: t.qr_image_url || null,
             nft_tx_hash: t.nft_tx_hash || null,
             nft_token_id: t.nft_token_id || null,
             purchasedAt: t.created_at

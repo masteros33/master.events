@@ -42,6 +42,59 @@ function BackBtn({ onClick }) {
   );
 }
 
+// ── Payment Success ───────────────────────────────────────────
+export function PaymentSuccess() {
+  const setScreen       = useStore(s => s.setScreen);
+  const setActiveTab    = useStore(s => s.setActiveTab);
+  const viewingTicket   = useStore(s => s.viewingTicket);
+  const checkoutEvent   = useStore(s => s.checkoutEvent);
+  const desktop = isDesktop();
+  const event = viewingTicket?.event || checkoutEvent;
+
+  return (
+    <PageWrap maxW="480px">
+      <div style={{ background: "#fff", borderRadius: "24px", padding: desktop ? "56px 48px" : "40px 28px", textAlign: "center", boxShadow: desktop ? "0 8px 40px rgba(0,0,0,0.08)" : "none", margin: desktop ? 0 : "20px" }}>
+
+        {/* Success icon */}
+        <div style={{ width: "96px", height: "96px", borderRadius: "50%", background: "linear-gradient(135deg, #27ae60, #2ecc71)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "48px", margin: "0 auto 24px", boxShadow: "0 8px 32px rgba(39,174,96,0.35)" }}>
+          ✅
+        </div>
+
+        <div style={{ fontSize: "28px", fontWeight: 900, color: "#1a1a1a", marginBottom: "8px", letterSpacing: "-0.5px" }}>
+          Payment Successful!
+        </div>
+        <div style={{ color: "#6b6b6b", fontSize: "15px", lineHeight: 1.7, marginBottom: "32px" }}>
+          Your ticket is confirmed and your NFT is being minted on Polygon blockchain.
+        </div>
+
+        {/* Event info */}
+        {event && (
+          <div style={{ background: "#f8f8f6", borderRadius: "16px", padding: "20px", marginBottom: "24px", textAlign: "left", border: "1px solid #f0f0f0" }}>
+            <div style={{ fontSize: "11px", color: "#f5a623", fontWeight: 700, marginBottom: "8px", letterSpacing: "1px" }}>EVENT</div>
+            <div style={{ fontWeight: 800, fontSize: "16px", color: "#1a1a1a", marginBottom: "4px" }}>{event.name}</div>
+            <div style={{ fontSize: "13px", color: "#aaa" }}>📅 {event.date} · 📍 {event.venue}</div>
+          </div>
+        )}
+
+        {/* NFT minting badge */}
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "8px", background: "rgba(39,174,96,0.06)", border: "1px solid rgba(39,174,96,0.2)", padding: "10px 20px", borderRadius: "20px", marginBottom: "28px" }}>
+          <span style={{ fontSize: "16px" }}>⛓️</span>
+          <span style={{ color: "#27ae60", fontSize: "12px", fontWeight: 700 }}>NFT minting on Polygon...</span>
+        </div>
+
+        <button onClick={() => setScreen("ticketView")}
+          style={{ ...btnStyle, marginBottom: "12px" }}>
+          🎟️ View My Ticket
+        </button>
+        <button onClick={() => { setScreen("app"); setActiveTab("home"); }}
+          style={{ width: "100%", padding: "14px", background: "#f8f8f6", color: "#6b6b6b", border: "1.5px solid #f0f0f0", borderRadius: "14px", fontWeight: 600, fontSize: "14px", cursor: "pointer" }}>
+          Back to Events
+        </button>
+      </div>
+    </PageWrap>
+  );
+}
+
 // ── Checkout ─────────────────────────────────────────────────
 export function Checkout() {
   const checkoutEvent   = useStore(s => s.checkoutEvent);
@@ -112,9 +165,9 @@ export function Checkout() {
                 <button key={id} onClick={() => setPayMethod(id)} style={{
                   flex: 1, padding: "14px", borderRadius: "14px", cursor: "pointer",
                   fontWeight: 700, fontSize: "14px",
-                  border: payMethod === id ? "2px solid #f5a623" : "1.5px solid #f0f0f0",
-                  background: payMethod === id ? "rgba(245,166,35,0.08)" : "#fff",
-                  color: payMethod === id ? "#f5a623" : "#aaa",
+                  border:      payMethod === id ? "2px solid #f5a623"       : "1.5px solid #f0f0f0",
+                  background:  payMethod === id ? "rgba(245,166,35,0.08)"   : "#fff",
+                  color:       payMethod === id ? "#f5a623"                 : "#aaa",
                 }}>{label}</button>
               ))}
             </div>
@@ -124,8 +177,8 @@ export function Checkout() {
           <div style={{ background: "#f8f8f6", borderRadius: "16px", padding: "18px", marginBottom: "20px", border: "1px solid #f0f0f0" }}>
             <div style={{ fontWeight: 700, fontSize: "14px", color: "#1a1a1a", marginBottom: "14px" }}>Order Summary</div>
             {[
-              ["Tickets", ticketQty + " x Ghc " + checkoutEvent.price],
-              ["Platform Fee (5%)", "Ghc " + fee],
+              ["Tickets",            ticketQty + " x Ghc " + checkoutEvent.price],
+              ["Platform Fee (5%)",  "Ghc " + fee],
             ].map(([k, v]) => (
               <div key={k} style={{ display: "flex", justifyContent: "space-between", paddingBottom: "10px", marginBottom: "10px", borderBottom: "1px solid #f0f0f0" }}>
                 <span style={{ color: "#aaa", fontSize: "14px" }}>{k}</span>
@@ -169,71 +222,60 @@ export function TicketView() {
   const setTransferName   = useStore(s => s.setTransferName);
   const setTransferDone   = useStore(s => s.setTransferDone);
 
-  // ── Dynamic QR state ──────────────────────────────────────
-  const [dynamicQR, setDynamicQR]   = useState(viewingTicket?.dynamic_qr || null);
-  const [timeLeft, setTimeLeft]     = useState(30 - (Math.floor(Date.now() / 1000) % 30));
-  const [qrLoaded, setQrLoaded]     = useState(false);
-  const [qrError, setQrError]       = useState(false);
-  const [refreshing, setRefreshing] = useState(false);
+  // ── Dynamic QR state ─────────────────────────────────────
+  const [dynamicQR,   setDynamicQR]   = useState(viewingTicket?.dynamic_qr || viewingTicket?.qr_base64 || null);
+  const [timeLeft,    setTimeLeft]     = useState(30 - (Math.floor(Date.now() / 1000) % 30));
+  const [qrLoaded,    setQrLoaded]     = useState(false);
+  const [qrError,     setQrError]      = useState(false);
+  const [refreshing,  setRefreshing]   = useState(false);
   const desktop = isDesktop();
 
   // ── Refresh QR every 30 seconds ──────────────────────────
   useEffect(() => {
     if (!viewingTicket?.ticket_id) return;
-
     const timer = setInterval(() => {
       const sLeft = 30 - (Math.floor(Date.now() / 1000) % 30);
       setTimeLeft(sLeft);
-
-      // At the start of a new window — fetch fresh QR
       if (sLeft === 30) {
         setRefreshing(true);
         setQrLoaded(false);
         ticketsAPI.myTickets().then(data => {
           if (Array.isArray(data)) {
             const updated = data.find(t => t.ticket_id === viewingTicket.ticket_id);
-            if (updated?.dynamic_qr) {
-              setDynamicQR(updated.dynamic_qr);
-            }
+            if (updated?.dynamic_qr) setDynamicQR(updated.dynamic_qr);
           }
           setRefreshing(false);
         }).catch(() => setRefreshing(false));
       }
     }, 1000);
-
     return () => clearInterval(timer);
   }, [viewingTicket?.ticket_id]);
 
   if (!viewingTicket) return null;
   const ev = viewingTicket.event;
-
   const formatTime = (t) => { if (!t) return "TBA"; return t.substring(0, 5); };
 
-  // ── QR source priority ────────────────────────────────────
-  // 1. Dynamic HMAC QR (most secure — changes every 30s)
-  // 2. Base64 from purchase response
+  // ── QR source — priority order ────────────────────────────
+  // 1. Dynamic HMAC (changes every 30s) — most secure
+  // 2. qr_base64 from purchase response
   // 3. Cloudinary URL
-  // 4. Backend relative URL
+  // 4. Backend URL
   const qrSrc = dynamicQR
     ? "data:image/png;base64," + dynamicQR
-    : viewingTicket.qr_base64
-      ? "data:image/png;base64," + viewingTicket.qr_base64
-      : viewingTicket.qr_image_url
-        ? viewingTicket.qr_image_url
-        : viewingTicket.qr_image
-          ? (viewingTicket.qr_image.startsWith("http")
-              ? viewingTicket.qr_image
-              : API + viewingTicket.qr_image)
-          : null;
+    : viewingTicket.qr_image_url
+      ? viewingTicket.qr_image_url
+      : viewingTicket.qr_image
+        ? (viewingTicket.qr_image.startsWith("http")
+            ? viewingTicket.qr_image
+            : API + viewingTicket.qr_image)
+        : null;
 
   const polygonscanUrl = viewingTicket.nft_tx_hash
     ? "https://polygonscan.com/tx/" + viewingTicket.nft_tx_hash
     : null;
 
-  // ── Progress ring color ───────────────────────────────────
   const isExpiringSoon = timeLeft <= 5;
   const progressColor  = isExpiringSoon ? "#e74c3c" : "#27ae60";
-  const progressPct    = (timeLeft / 30) * 100;
 
   return (
     <div style={{ background: "#f8f8f6", minHeight: "100%", paddingBottom: "40px" }}>
@@ -263,7 +305,7 @@ export function TicketView() {
             {[
               ["DATE", ev.date || "TBA"],
               ["TIME", formatTime(ev.time)],
-              ["QTY",  viewingTicket.qty || 1],
+              ["QTY",  viewingTicket.qty || viewingTicket.quantity || 1],
             ].map(([k, v]) => (
               <div key={k} style={{ textAlign: "center" }}>
                 <div style={{ fontSize: "10px", color: "#bbb", fontWeight: 600, marginBottom: "6px", letterSpacing: "1px" }}>{k}</div>
@@ -272,10 +314,8 @@ export function TicketView() {
             ))}
           </div>
 
-          {/* QR Code section */}
+          {/* QR code */}
           <div style={{ padding: "28px 20px", display: "flex", flexDirection: "column", alignItems: "center", gap: "14px" }}>
-
-            {/* QR image */}
             {qrSrc ? (
               <div style={{ position: "relative" }}>
                 {(!qrLoaded && !qrError) && (
@@ -286,11 +326,9 @@ export function TicketView() {
                     <div style={{ fontSize: "32px" }}>🔄</div>
                   </div>
                 )}
-                <img
-                  src={qrSrc}
-                  alt="QR Code"
+                <img src={qrSrc} alt="QR Code"
                   onLoad={() => setQrLoaded(true)}
-                  onError={() => setQrError(true)}
+                  onError={() => { setQrError(true); }}
                   style={{ width: "200px", height: "200px", borderRadius: "16px", border: `3px solid ${progressColor}`, padding: "6px", background: "#fff", display: qrError ? "none" : "block", boxShadow: `0 4px 20px ${progressColor}33`, transition: "border-color 0.3s, box-shadow 0.3s" }}
                 />
                 {qrError && (
@@ -307,14 +345,12 @@ export function TicketView() {
               </div>
             )}
 
-            {/* ✅ Dynamic QR countdown */}
+            {/* Countdown timer */}
             {viewingTicket.status === "active" && (
               <div style={{ display: "flex", alignItems: "center", gap: "8px", background: isExpiringSoon ? "rgba(231,76,60,0.08)" : "rgba(39,174,96,0.08)", border: `1px solid ${isExpiringSoon ? "rgba(231,76,60,0.2)" : "rgba(39,174,96,0.2)"}`, padding: "8px 16px", borderRadius: "20px", transition: "all 0.3s" }}>
-                <div style={{ width: "8px", height: "8px", borderRadius: "50%", background: progressColor, animation: "pulse 1s infinite" }} />
+                <div style={{ width: "8px", height: "8px", borderRadius: "50%", background: progressColor }} />
                 <span style={{ fontSize: "12px", fontWeight: 700, color: progressColor }}>
-                  {isExpiringSoon
-                    ? `⚡ Refreshing in ${timeLeft}s`
-                    : `🔒 QR refreshes in ${timeLeft}s`}
+                  {isExpiringSoon ? `⚡ Refreshing in ${timeLeft}s` : `🔒 QR refreshes in ${timeLeft}s`}
                 </span>
               </div>
             )}
@@ -327,10 +363,12 @@ export function TicketView() {
 
             {/* Ticket ID */}
             <div style={{ background: "#f8f8f6", padding: "8px 16px", borderRadius: "20px" }}>
-              <span style={{ fontFamily: "monospace", fontSize: "12px", color: "#aaa", letterSpacing: "1px" }}>{viewingTicket.ticket_id}</span>
+              <span style={{ fontFamily: "monospace", fontSize: "12px", color: "#aaa", letterSpacing: "1px" }}>
+                {viewingTicket.ticket_id || viewingTicket.id}
+              </span>
             </div>
 
-            {/* Polygonscan link */}
+            {/* Blockchain link */}
             {polygonscanUrl ? (
               <a href={polygonscanUrl} target="_blank" rel="noreferrer"
                 style={{ background: "rgba(39,174,96,0.08)", border: "1px solid rgba(39,174,96,0.2)", padding: "8px 20px", borderRadius: "20px", display: "flex", alignItems: "center", gap: "6px", textDecoration: "none" }}>

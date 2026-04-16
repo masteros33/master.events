@@ -7,14 +7,20 @@ import Login from "./screens/auth/Login";
 import { Signup, RoleSelect } from "./screens/auth/Signup";
 import AttendeeHome from "./screens/attendee/AttendeeHome";
 import { AttendeeTickets, AttendeeAlerts } from "./screens/attendee/AttendeeScreens";
-import { Checkout, TicketView, Resale, ResaleSuccess, Transfer } from "./screens/attendee/TransactionScreens";
-import { OrganizerHome, OrganizerEvents, OrganizerAlerts, AddEvent, OrganizerEventDetail } from "./screens/organizer/OrganizerScreens";
+import {
+  Checkout, TicketView, Resale, ResaleSuccess,
+  Transfer, PaymentSuccess
+} from "./screens/attendee/TransactionScreens";
+import {
+  OrganizerHome, OrganizerEvents, OrganizerAlerts,
+  AddEvent, OrganizerEventDetail
+} from "./screens/organizer/OrganizerScreens";
 import OrganizerWallet from "./screens/organizer/OrganizerWallet";
 import { DoorStaffLogin, DoorStaffScan, OrganizerScan } from "./screens/doorstaff/DoorStaffScreens";
 
-// ── Mobile app tabs (unchanged) ──────────────────────────────
+// ── Mobile app tabs ───────────────────────────────────────────
 function AppTabs() {
-  const role = useStore(s => s.role);
+  const role      = useStore(s => s.role);
   const activeTab = useStore(s => s.activeTab);
   const setScreen = useStore(s => s.setScreen);
 
@@ -39,21 +45,22 @@ function AppTabs() {
         {renderTab()}
       </div>
       {role === "organizer" && (
-        <div onClick={() => setScreen("addEvent")} style={{ position: "fixed", bottom: "80px", right: "20px", width: "52px", height: "52px", borderRadius: "50%", background: "linear-gradient(135deg, #f5a623, #e8920f)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "28px", cursor: "pointer", boxShadow: "0 4px 20px rgba(245,166,35,0.5)", color: "#fff", zIndex: 200 }}>+</div>
+        <div onClick={() => setScreen("addEvent")}
+          style={{ position: "fixed", bottom: "80px", right: "20px", width: "52px", height: "52px", borderRadius: "50%", background: "linear-gradient(135deg, #f5a623, #e8920f)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "28px", cursor: "pointer", boxShadow: "0 4px 20px rgba(245,166,35,0.5)", color: "#fff", zIndex: 200 }}>+</div>
       )}
       <BottomNav />
     </div>
   );
 }
 
-// ── Desktop app layout — full website with sidebar ───────────
+// ── Desktop app layout ────────────────────────────────────────
 function DesktopAppLayout() {
-  const screen = useStore(s => s.screen);
-  const role = useStore(s => s.role);
-  const activeTab = useStore(s => s.activeTab);
+  const screen       = useStore(s => s.screen);
+  const role         = useStore(s => s.role);
+  const activeTab    = useStore(s => s.activeTab);
   const setActiveTab = useStore(s => s.setActiveTab);
-  const setScreen = useStore(s => s.setScreen);
-  const currentUser = useStore(s => s.currentUser);
+  const setScreen    = useStore(s => s.setScreen);
+  const currentUser  = useStore(s => s.currentUser);
   const handleLogout = useStore(s => s.handleLogout);
 
   const attendeeNav = [
@@ -71,8 +78,12 @@ function DesktopAppLayout() {
 
   const navItems = role === "organizer" ? orgNav : attendeeNav;
 
-  // Screens that take over full content area (no tabs)
-  const isFullScreen = ["checkout","ticketView","resale","resaleSuccess","transfer","addEvent","orgEventDetail","scanTicket","doorStaffLogin","doorStaffScan"].includes(screen);
+  // ✅ paymentSuccess added here
+  const isFullScreen = [
+    "checkout", "ticketView", "resale", "resaleSuccess",
+    "transfer", "paymentSuccess", "addEvent", "orgEventDetail",
+    "scanTicket", "doorStaffLogin", "doorStaffScan"
+  ].includes(screen);
 
   const renderContent = () => {
     if (isFullScreen) {
@@ -82,6 +93,7 @@ function DesktopAppLayout() {
         resale:         <Resale />,
         resaleSuccess:  <ResaleSuccess />,
         transfer:       <Transfer />,
+        paymentSuccess: <PaymentSuccess />,   // ✅
         addEvent:       <AddEvent />,
         orgEventDetail: <OrganizerEventDetail />,
         scanTicket:     <OrganizerScan />,
@@ -105,6 +117,20 @@ function DesktopAppLayout() {
     return null;
   };
 
+  const screenTitles = {
+    checkout:       "Checkout",
+    ticketView:     "Your Ticket",
+    resale:         "Resell Ticket",
+    resaleSuccess:  "Listed!",
+    transfer:       "Transfer Ticket",
+    paymentSuccess: "Payment Successful",   // ✅
+    addEvent:       "Create Event",
+    orgEventDetail: "Event Details",
+    scanTicket:     "Scan Tickets",
+    doorStaffLogin: "Door Staff",
+    doorStaffScan:  "Door Scanner",
+  };
+
   return (
     <div className="flex min-h-screen bg-gray-50 font-sans">
 
@@ -119,7 +145,9 @@ function DesktopAppLayout() {
               style={{ background: "linear-gradient(135deg, #f5a623, #e8920f)", boxShadow: "0 4px 12px rgba(245,166,35,0.3)" }}>🎟️</div>
             <div>
               <div className="font-extrabold text-gray-900 text-sm tracking-tight leading-none">Master Events</div>
-              <div className="text-xs text-amber-500 font-semibold mt-0.5">{role === "organizer" ? "Organizer" : "Attendee"}</div>
+              <div className="text-xs text-amber-500 font-semibold mt-0.5">
+                {role === "organizer" ? "Organizer" : "Attendee"}
+              </div>
             </div>
           </div>
         </div>
@@ -132,7 +160,9 @@ function DesktopAppLayout() {
               {currentUser?.first_name?.[0] || "U"}
             </div>
             <div className="min-w-0">
-              <div className="font-bold text-sm text-gray-900 truncate">{currentUser?.first_name} {currentUser?.last_name}</div>
+              <div className="font-bold text-sm text-gray-900 truncate">
+                {currentUser?.first_name} {currentUser?.last_name}
+              </div>
               <div className="text-xs text-gray-400 truncate">{currentUser?.email}</div>
             </div>
           </div>
@@ -149,7 +179,7 @@ function DesktopAppLayout() {
                 className="flex items-center gap-3 px-3 py-2.5 rounded-xl mb-1 cursor-pointer transition-all"
                 style={{
                   background: isActive ? "rgba(245,166,35,0.1)" : "transparent",
-                  color: isActive ? "#f5a623" : "#6b6b6b",
+                  color:      isActive ? "#f5a623" : "#6b6b6b",
                 }}
                 onMouseEnter={e => { if (!isActive) e.currentTarget.style.background = "#f9f9f9"; }}
                 onMouseLeave={e => { if (!isActive) e.currentTarget.style.background = "transparent"; }}>
@@ -173,7 +203,7 @@ function DesktopAppLayout() {
           )}
         </nav>
 
-        {/* Bottom */}
+        {/* Logout */}
         <div className="px-3 py-4 border-t border-gray-100">
           <div className="flex items-center gap-3 px-3 py-2.5 rounded-xl cursor-pointer hover:bg-red-50 transition-all"
             style={{ color: "#e74c3c" }}
@@ -193,7 +223,7 @@ function DesktopAppLayout() {
           <div>
             <h1 className="font-extrabold text-xl text-gray-900 tracking-tight">
               {isFullScreen
-                ? { checkout: "Checkout", ticketView: "Your Ticket", resale: "Resell Ticket", transfer: "Transfer Ticket", addEvent: "Create Event", orgEventDetail: "Event Details", scanTicket: "Scan Tickets", doorStaffLogin: "Door Staff", resaleSuccess: "Listed!" }[screen] || "Master Events"
+                ? screenTitles[screen] || "Master Events"
                 : navItems.find(n => n.id === activeTab)?.label || "Master Events"
               }
             </h1>
@@ -207,7 +237,7 @@ function DesktopAppLayout() {
           </div>
         </div>
 
-        {/* Page content — full width, scrollable */}
+        {/* Page content */}
         <div className="flex-1 overflow-y-auto">
           <div key={screen + activeTab} className="screen-enter" style={{ minHeight: "100%" }}>
             {renderContent()}
@@ -218,7 +248,7 @@ function DesktopAppLayout() {
   );
 }
 
-// ── Mobile app content ───────────────────────────────────────
+// ── Mobile content ────────────────────────────────────────────
 function MobileAppContent() {
   const screen = useStore(s => s.screen);
 
@@ -233,6 +263,7 @@ function MobileAppContent() {
     resale:         <Resale />,
     resaleSuccess:  <ResaleSuccess />,
     transfer:       <Transfer />,
+    paymentSuccess: <PaymentSuccess />,   // ✅
     addEvent:       <AddEvent />,
     orgEventDetail: <OrganizerEventDetail />,
     scanTicket:     <OrganizerScan />,
@@ -250,7 +281,7 @@ function MobileAppContent() {
 
 // ── Root ─────────────────────────────────────────────────────
 export default function App() {
-  const screen = useStore(s => s.screen);
+  const screen     = useStore(s => s.screen);
   const isLoggedIn = useStore(s => s.isLoggedIn);
   const [isMobile, setIsMobile] = React.useState(window.innerWidth <= 768);
 
@@ -260,7 +291,6 @@ export default function App() {
     return () => window.removeEventListener("resize", handler);
   }, []);
 
-  // Desktop + logged in = full desktop layout, no frame
   if (!isMobile && isLoggedIn) {
     return (
       <>
@@ -293,13 +323,13 @@ export default function App() {
           @keyframes fadeIn { from { opacity:0; } to { opacity:1; } }
           .slide-in-left { animation: slideInLeft 0.25s cubic-bezier(0.16,1,0.3,1) forwards; }
           @keyframes slideInLeft { from { opacity:0; transform:translateX(-20px); } to { opacity:1; transform:translateX(0); } }
+          .overlay-fade { animation: fadeIn 0.2s ease forwards; }
         `}</style>
         <DesktopAppLayout />
       </>
     );
   }
 
-  // Mobile OR not logged in = PhoneFrame (landing, auth, onboarding)
   return (
     <PhoneFrame>
       <MobileAppContent />

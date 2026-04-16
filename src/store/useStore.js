@@ -2,7 +2,6 @@ import { create } from "zustand";
 import toast from "react-hot-toast";
 import { DEMO_ORG_EVENTS } from "../constants/data";
 
-// ── Keep Render backend alive — ping every 5 minutes ─────────
 const BACKEND = "https://master-events-backend.onrender.com";
 const ping = () => fetch(BACKEND + "/api/events/").catch(() => {});
 ping();
@@ -20,29 +19,29 @@ const categoryImages = {
 
 const useStore = create((set, get) => ({
   // ── Navigation ──────────────────────────────────────────────
-  screen: "onboarding",
+  screen:    "onboarding",
   activeTab: "home",
-  setScreen: (screen) => set({ screen }),
+  setScreen:    (screen)    => set({ screen }),
   setActiveTab: (activeTab) => set({ activeTab }),
 
   // ── Auth ────────────────────────────────────────────────────
-  currentUser: null,
-  role: null,
-  isLoggedIn: false,
-  email: "",
-  password: "",
-  loginError: "",
-  signupData: {},
-  fullName: "",
-  signupEmail: "",
-  signupPassword: "",
-  signupError: "",
-  setEmail: (email) => set({ email }),
-  setPassword: (password) => set({ password }),
-  setFullName: (fullName) => set({ fullName }),
-  setSignupEmail: (signupEmail) => set({ signupEmail }),
-  setSignupPassword: (signupPassword) => set({ signupPassword }),
-  setSignupData: (signupData) => set({ signupData }),
+  currentUser:     null,
+  role:            null,
+  isLoggedIn:      false,
+  email:           "",
+  password:        "",
+  loginError:      "",
+  signupData:      {},
+  fullName:        "",
+  signupEmail:     "",
+  signupPassword:  "",
+  signupError:     "",
+  setEmail:           (email)          => set({ email }),
+  setPassword:        (password)       => set({ password }),
+  setFullName:        (fullName)       => set({ fullName }),
+  setSignupEmail:     (signupEmail)    => set({ signupEmail }),
+  setSignupPassword:  (signupPassword) => set({ signupPassword }),
+  setSignupData:      (signupData)     => set({ signupData }),
 
   handleLogin: async () => {
     const { authAPI } = await import("../api");
@@ -51,21 +50,17 @@ const useStore = create((set, get) => ({
     try {
       const data = await authAPI.login({ email, password });
       if (data.tokens) {
-        localStorage.setItem("access_token", data.tokens.access);
+        localStorage.setItem("access_token",  data.tokens.access);
         localStorage.setItem("refresh_token", data.tokens.refresh);
-        const user = data.user;
+        const user     = data.user;
         const firstTab = user.role === "organizer" ? "dashboard" : "home";
         set({
-          currentUser: user,
-          role: user.role,
-          screen: "app",
-          activeTab: firstTab,
-          isLoggedIn: true,
-          loginError: "",
+          currentUser: user, role: user.role,
+          screen: "app", activeTab: firstTab,
+          isLoggedIn: true, loginError: "",
         });
         toast.success("Welcome back, " + user.first_name + "!");
         if (user.role === "organizer") {
-          // ✅ Load real events from backend on login
           try {
             const { eventsAPI } = await import("../api");
             const events = await eventsAPI.myEvents();
@@ -95,7 +90,7 @@ const useStore = create((set, get) => ({
       } else {
         set({ loginError: data.detail || "Invalid email or password" });
       }
-    } catch (e) {
+    } catch {
       set({ loginError: "Connection error. Please try again." });
     }
   },
@@ -113,31 +108,27 @@ const useStore = create((set, get) => ({
     }
     try {
       const data = await authAPI.register({
-        first_name,
-        last_name,
+        first_name, last_name,
         email:    signupEmail,
         password: signupPassword,
         phone:    signupData.phone || "",
-        role:     signupData.role || "attendee",
+        role:     signupData.role  || "attendee",
       });
       if (data.tokens) {
-        localStorage.setItem("access_token", data.tokens.access);
+        localStorage.setItem("access_token",  data.tokens.access);
         localStorage.setItem("refresh_token", data.tokens.refresh);
-        const user = data.user;
+        const user     = data.user;
         const firstTab = user.role === "organizer" ? "dashboard" : "home";
         set({
-          currentUser: user,
-          role:        user.role,
-          screen:      "app",
-          activeTab:   firstTab,
-          isLoggedIn:  true,
-          signupError: "",
+          currentUser: user, role: user.role,
+          screen: "app", activeTab: firstTab,
+          isLoggedIn: true, signupError: "",
         });
         toast.success("Welcome to Master Events, " + user.first_name + "!");
       } else {
         set({ signupError: data.email?.[0] || data.password?.[0] || "Registration failed" });
       }
-    } catch (e) {
+    } catch {
       set({ signupError: "Connection error. Please try again." });
     }
   },
@@ -166,25 +157,25 @@ const useStore = create((set, get) => ({
   setOnboardSlide: (onboardSlide) => set({ onboardSlide }),
 
   // ── UI ──────────────────────────────────────────────────────
-  menuOpen: false,
+  menuOpen:    false,
   setMenuOpen: (menuOpen) => set({ menuOpen }),
 
   // ── Events / Search ─────────────────────────────────────────
-  searchQ: "",
-  setSearchQ: (searchQ) => set({ searchQ }),
-  overlayEvent: null,
+  searchQ:         "",
+  setSearchQ:      (searchQ)      => set({ searchQ }),
+  overlayEvent:    null,
   setOverlayEvent: (overlayEvent) => set({ overlayEvent }),
 
   // ── Tickets ─────────────────────────────────────────────────
-  myTickets: [],
-  resaleListings: [],
-  checkoutEvent: null,
-  ticketQty: 1,
-  payMethod: "momo",
-  viewingTicket: null,
+  myTickets:        [],
+  resaleListings:   [],
+  checkoutEvent:    null,
+  ticketQty:        1,
+  payMethod:        "momo",
+  viewingTicket:    null,
   setCheckoutEvent: (checkoutEvent) => set({ checkoutEvent }),
-  setTicketQty: (ticketQty) => set({ ticketQty }),
-  setPayMethod: (payMethod) => set({ payMethod }),
+  setTicketQty:     (ticketQty)     => set({ ticketQty }),
+  setPayMethod:     (payMethod)     => set({ payMethod }),
   setViewingTicket: (viewingTicket) => set({ viewingTicket }),
 
   handleBuyTicket: async () => {
@@ -200,52 +191,51 @@ const useStore = create((set, get) => ({
       });
       if (data.ticket_id) {
         const ticket = {
-          id:          data.ticket_id,
-          ticket_id:   data.ticket_id,
-          event:       checkoutEvent,
-          qty:         ticketQty,
-          quantity:    ticketQty,
+          id:           data.ticket_id,
+          ticket_id:    data.ticket_id,
+          event:        checkoutEvent,
+          qty:          ticketQty,
+          quantity:     ticketQty,
           payMethod,
-          purchasedAt: new Date().toLocaleDateString(),
-          owner:       (data.owner?.first_name || "") + " " + (data.owner?.last_name || ""),
-          ownerEmail:  data.owner?.email,
-          status:      "active",
-          qr_data:     data.qr_data,
-          // ✅ dynamic_qr from serializer — used for HMAC countdown display
-          dynamic_qr:  data.dynamic_qr || null,
-          qr_base64:   data.qr_base64 || null,
-          // ✅ qr_image_url is the Cloudinary absolute URL
+          purchasedAt:  new Date().toLocaleDateString(),
+          owner:        (data.owner?.first_name || "") + " " + (data.owner?.last_name || ""),
+          ownerEmail:   data.owner?.email,
+          status:       "active",
+          qr_data:      data.qr_data,
+          // ✅ dynamic_qr is the live HMAC QR base64
+          dynamic_qr:   data.dynamic_qr  || null,
+          qr_base64:    data.dynamic_qr  || null,
           qr_image_url: data.qr_image_url || null,
-          qr_image:    data.qr_image
+          qr_image:     data.qr_image
             ? (data.qr_image.startsWith("http") ? data.qr_image : BACKEND + data.qr_image)
             : null,
-          nft_tx_hash:  data.nft_tx_hash || null,
+          nft_tx_hash:  data.nft_tx_hash  || null,
           nft_token_id: data.nft_token_id || null,
         };
         set({
-          myTickets:    [...myTickets, ticket],
+          myTickets:     [...myTickets, ticket],
           checkoutEvent: null,
           overlayEvent:  null,
           activeTab:     "tickets",
-          screen:        "ticketView",
+          screen:        "paymentSuccess", // ✅ show success screen
           viewingTicket: ticket,
         });
         toast.dismiss(loadingToast);
-        toast.success("🎉 Ticket purchased! NFT minting on Polygon...");
+        toast.success("🎉 Payment successful!");
       } else {
         toast.dismiss(loadingToast);
         toast.error(data.error || "Purchase failed. Try again.");
       }
-    } catch (e) {
+    } catch {
       toast.dismiss(loadingToast);
       toast.error("Connection error. Please try again.");
     }
   },
 
   // ── Resale ───────────────────────────────────────────────────
-  resaleTicket: null,
-  resalePrice:  "",
-  resaleError:  "",
+  resaleTicket:    null,
+  resalePrice:     "",
+  resaleError:     "",
   setResaleTicket: (resaleTicket) => set({ resaleTicket }),
   setResalePrice:  (resalePrice)  => set({ resalePrice }),
   setResaleError:  (resaleError)  => set({ resaleError }),
@@ -254,18 +244,17 @@ const useStore = create((set, get) => ({
     const { resaleTicket, resalePrice, myTickets, resaleListings, currentUser } = get();
     const price = parseFloat(resalePrice);
     const orig  = resaleTicket.event.price;
-    if (!price || isNaN(price)) { set({ resaleError: "Please enter a valid price." }); return; }
-    if (price >= orig)           { set({ resaleError: "Must be less than original price (Ghc " + orig + ")." }); return; }
-    if (price < orig * 0.3)      { set({ resaleError: "Minimum resale price: Ghc " + Math.floor(orig * 0.3) + "." }); return; }
+    if (!price || isNaN(price))  { set({ resaleError: "Please enter a valid price." }); return; }
+    if (price >= orig)            { set({ resaleError: "Must be less than original price (Ghc " + orig + ")." }); return; }
+    if (price < orig * 0.3)       { set({ resaleError: "Minimum resale price: Ghc " + Math.floor(orig * 0.3) + "." }); return; }
     set({
       myTickets: myTickets.map(t =>
         t.id === resaleTicket.id ? { ...t, status: "resale", resalePrice: price } : t
       ),
       resaleListings: [...resaleListings, {
-        ...resaleTicket,
-        resalePrice: price,
+        ...resaleTicket, resalePrice: price,
         listedAt: new Date().toLocaleDateString(),
-        seller: currentUser?.first_name,
+        seller:   currentUser?.first_name,
       }],
       resaleTicket: null, resalePrice: "", resaleError: "",
       screen: "resaleSuccess",
@@ -283,10 +272,10 @@ const useStore = create((set, get) => ({
   },
 
   // ── Transfer ─────────────────────────────────────────────────
-  transferTicket: null,
-  transferEmail:  "",
-  transferName:   "",
-  transferDone:   false,
+  transferTicket:    null,
+  transferEmail:     "",
+  transferName:      "",
+  transferDone:      false,
   setTransferTicket: (transferTicket) => set({ transferTicket }),
   setTransferEmail:  (transferEmail)  => set({ transferEmail }),
   setTransferName:   (transferName)   => set({ transferName }),
@@ -313,56 +302,49 @@ const useStore = create((set, get) => ({
         toast.dismiss(loadingToast);
         toast.error(data.error || "Transfer failed.");
       }
-    } catch (e) {
+    } catch {
       toast.dismiss(loadingToast);
       toast.error("Connection error.");
     }
   },
 
   // ── Organizer ────────────────────────────────────────────────
-  orgEvents:        [],
-  viewingOrgEvent:  null,
+  orgEvents:       [],
+  viewingOrgEvent: null,
   addEventForm: {
     name: "", subtitle: "", date: "", time: "",
     venue: "", city: "", price: "", description: "",
     category: "", totalTickets: "", image: "",
   },
-  setOrgEvents:        (orgEvents)        => set({ orgEvents }),
-  setViewingOrgEvent:  (viewingOrgEvent)  => set({ viewingOrgEvent }),
-  setAddEventForm:     (addEventForm)     => set({ addEventForm }),
+  setOrgEvents:       (orgEvents)       => set({ orgEvents }),
+  setViewingOrgEvent: (viewingOrgEvent) => set({ viewingOrgEvent }),
+  setAddEventForm:    (addEventForm)    => set({ addEventForm }),
 
   handleAddEvent: async () => {
     const { eventsAPI } = await import("../api");
     const { addEventForm, orgEvents } = get();
-
     if (!addEventForm.name || !addEventForm.date || !addEventForm.price) {
       toast.error("Please fill Event Name, Date and Price");
       return;
     }
-
     const loadingToast = toast.loading("Creating event...");
     try {
-      // ✅ Clean payload — only send image if it has a real value
       const payload = {
         name:          addEventForm.name.trim(),
         description:   addEventForm.description?.trim() || "No description provided.",
-        category:      addEventForm.category || "other",
+        category:      addEventForm.category  || "other",
         venue:         addEventForm.venue?.trim() || "TBA",
-        city:          addEventForm.city?.trim() || "Accra",
+        city:          addEventForm.city?.trim()  || "Accra",
         date:          addEventForm.date,
         time:          addEventForm.time || "20:00:00",
         price:         parseFloat(addEventForm.price) || 0,
         total_tickets: parseInt(addEventForm.totalTickets) || 100,
         sales_open:    true,
       };
-
-      // Only include image if it has a real value
       if (addEventForm.image && addEventForm.image.trim() !== "") {
         payload.image = addEventForm.image.trim();
       }
-
       const data = await eventsAPI.create(payload);
-
       if (data.id) {
         const cat = data.category || addEventForm.category || "other";
         set({
@@ -377,10 +359,8 @@ const useStore = create((set, get) => ({
             ticketsSold:  data.tickets_sold || 0,
             salesOpen:    data.sales_open,
             description:  data.description,
-            // ✅ Use Cloudinary URL if returned, else category fallback
-            image: data.image || categoryImages[cat] || categoryImages.other,
+            image:        data.image || categoryImages[cat] || categoryImages.other,
           }],
-          // ✅ Reset form completely
           addEventForm: {
             name: "", subtitle: "", date: "", time: "",
             venue: "", city: "", price: "", description: "",
@@ -393,7 +373,6 @@ const useStore = create((set, get) => ({
         toast.success("🎉 Event created successfully!");
       } else {
         toast.dismiss(loadingToast);
-        // ✅ Show actual validation error from backend
         const errMsg = typeof data === "object"
           ? Object.entries(data).map(([k, v]) => `${k}: ${Array.isArray(v) ? v.join(", ") : v}`).join(" | ")
           : "Failed to create event.";
@@ -410,12 +389,12 @@ const useStore = create((set, get) => ({
     const { eventsAPI } = await import("../api");
     const { orgEvents } = get();
     try {
-      const data = await eventsAPI.toggleSales(eventId);
+      const data         = await eventsAPI.toggleSales(eventId);
       const updated      = orgEvents.map(e => e.id === eventId ? { ...e, salesOpen: data.sales_open } : e);
       const updatedEvent = updated.find(e => e.id === eventId);
       set({ orgEvents: updated, viewingOrgEvent: updatedEvent });
       toast.success(data.sales_open ? "Ticket sales resumed!" : "Ticket sales paused");
-    } catch (e) {
+    } catch {
       const updated = orgEvents.map(e => e.id === eventId ? { ...e, salesOpen: !e.salesOpen } : e);
       set({ orgEvents: updated });
     }
@@ -445,11 +424,10 @@ const useStore = create((set, get) => ({
         toast.dismiss(loadingToast);
         toast.success("Code generated: " + data.code);
       }
-    } catch (e) {
-      // Fallback — generate locally
-      const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-      const rand  = Array.from({ length: 6 }, () => chars[Math.floor(Math.random() * chars.length)]).join("");
-      const code  = "DOOR-" + rand;
+    } catch {
+      const chars  = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+      const rand   = Array.from({ length: 6 }, () => chars[Math.floor(Math.random() * chars.length)]).join("");
+      const code   = "DOOR-" + rand;
       const invite = { code, eventId, eventName, used: false, createdAt: new Date().toLocaleTimeString() };
       set(state => ({
         doorStaffInvites: {
@@ -480,16 +458,13 @@ const useStore = create((set, get) => ({
         toast.success("Access granted: " + data.event_name);
         return;
       }
-    } catch (e) {}
-
-    // Fallback — check local invites
+    } catch {}
     let found = null;
     Object.values(doorStaffInvites).forEach(invites => {
       invites.forEach(inv => { if (inv.code === trimmed) found = inv; });
     });
-    if (!found)      { set({ doorCodeError: "Invalid code. Ask your organizer for a valid door staff code." }); return; }
-    if (found.used)  { set({ doorCodeError: "This code has already been used. Ask for a new one." }); return; }
-
+    if (!found)     { set({ doorCodeError: "Invalid code. Ask your organizer for a valid door staff code." }); return; }
+    if (found.used) { set({ doorCodeError: "This code has already been used. Ask for a new one." }); return; }
     set(state => {
       const updated = { ...state.doorStaffInvites };
       updated[found.eventId] = updated[found.eventId].map(inv =>
@@ -531,7 +506,6 @@ const useStore = create((set, get) => ({
     }
     set(updates);
   },
-
 }));
 
 export default useStore;

@@ -1,96 +1,150 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
+import { motion, AnimatePresence, useScroll, useTransform } from "framer-motion";
 import useStore from "../store/useStore";
+import ThemeToggle from "./ThemeToggle";
+import { useTheme } from "../hooks/useTheme";
 
-// ── Floating event cards background ─────────────────────────
+// ── Animation variants ────────────────────────────────────────
+const fadeUp = {
+  hidden: { opacity: 0, y: 24 },
+  show:   { opacity: 1, y: 0, transition: { duration: 0.6, ease: [0.16, 1, 0.3, 1] } },
+};
+const stagger = {
+  show: { transition: { staggerChildren: 0.1 } },
+};
+const fadeIn = {
+  hidden: { opacity: 0 },
+  show:   { opacity: 1, transition: { duration: 0.5 } },
+};
+
+// ── Floating background cards ─────────────────────────────────
 function FloatingCards() {
   const cards = [
-    { name: "Afrobeats Night",  price: "Ghc 80",  color: "#f5a623", icon: "🎵", cls: "top-[12%] left-[3%]",  delay: "0s",   dur: "8s"  },
-    { name: "Tech Summit GH",   price: "Ghc 150", color: "#5dade2", icon: "💻", cls: "top-[6%] right-[4%]",  delay: "1.5s", dur: "9s"  },
-    { name: "Food Fest Accra",  price: "FREE",    color: "#27ae60", icon: "🍔", cls: "top-[55%] right-[3%]", delay: "3s",   dur: "10s" },
-    { name: "Art Exhibition",   price: "Ghc 40",  color: "#a29bfe", icon: "🎨", cls: "top-[60%] left-[2%]",  delay: "2s",   dur: "7s"  },
-    { name: "GCTU Sports Day",  price: "FREE",    color: "#e17055", icon: "⚽", cls: "top-[78%] right-[6%]", delay: "4s",   dur: "11s" },
-    { name: "Blockchain Talk",  price: "Ghc 50",  color: "#00cec9", icon: "⛓️", cls: "top-[80%] left-[5%]",  delay: "0.5s", dur: "9s"  },
+    { name: "Afrobeats Night",  price: "Ghc 80",  color: "#f5a623", icon: "🎵", style: { top: "12%", left: "3%" },  delay: 0,   dur: 8  },
+    { name: "Tech Summit GH",   price: "Ghc 150", color: "#5dade2", icon: "💻", style: { top: "6%",  right: "4%" }, delay: 1.5, dur: 9  },
+    { name: "Food Fest Accra",  price: "FREE",    color: "#16a34a", icon: "🍔", style: { top: "55%", right: "3%" }, delay: 3,   dur: 10 },
+    { name: "Art Exhibition",   price: "Ghc 40",  color: "#a29bfe", icon: "🎨", style: { top: "60%", left: "2%" },  delay: 2,   dur: 7  },
+    { name: "GCTU Sports Day",  price: "FREE",    color: "#e17055", icon: "⚽", style: { top: "78%", right: "6%" }, delay: 4,   dur: 11 },
+    { name: "Blockchain Talk",  price: "Ghc 50",  color: "#00cec9", icon: "⛓️", style: { top: "80%", left: "5%" },  delay: 0.5, dur: 9  },
   ];
 
   return (
-    <>
-      <style>{`
-        @keyframes floatCard {
-          0%,100% { transform: translateY(0px) rotate(-1deg); opacity: 0.13; }
-          50%      { transform: translateY(-20px) rotate(1deg); opacity: 0.2; }
-        }
-        @keyframes floatCardAlt {
-          0%,100% { transform: translateY(0px) rotate(1deg); opacity: 0.1; }
-          50%      { transform: translateY(-16px) rotate(-1.5deg); opacity: 0.17; }
-        }
-        @keyframes heroFadeUp {
-          from { opacity: 0; transform: translateY(28px); }
-          to   { opacity: 1; transform: translateY(0); }
-        }
-        @keyframes badgePulse {
-          0%,100% { opacity: 1; } 50% { opacity: 0.5; }
-        }
-        .hero-anim-1 { animation: heroFadeUp 0.6s 0.1s both; }
-        .hero-anim-2 { animation: heroFadeUp 0.6s 0.25s both; }
-        .hero-anim-3 { animation: heroFadeUp 0.6s 0.4s both; }
-        .hero-anim-4 { animation: heroFadeUp 0.6s 0.55s both; }
-        .float-even  { animation: floatCard 8s ease-in-out infinite; }
-        .float-odd   { animation: floatCardAlt 9s ease-in-out infinite; }
-        .nav-link { position: relative; transition: color 0.15s; }
-        .nav-link::after { content:''; position:absolute; bottom:-3px; left:0; right:0; height:2px; background:#f5a623; border-radius:1px; transform:scaleX(0); transition:transform 0.2s; }
-        .nav-link:hover { color: #f5a623 !important; }
-        .nav-link:hover::after { transform: scaleX(1); }
-        .btn-primary { transition: transform 0.15s, box-shadow 0.15s; }
-        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 14px 36px rgba(245,166,35,0.45) !important; }
-        .btn-primary:active { transform: scale(0.97); }
-        .ev-card { transition: transform 0.22s cubic-bezier(0.16,1,0.3,1), box-shadow 0.22s; }
-        .ev-card:hover { transform: translateY(-6px); box-shadow: 0 20px 48px rgba(0,0,0,0.13) !important; }
-        .grad-text {
-          background: linear-gradient(135deg, #f5a623, #e8920f);
-          -webkit-background-clip: text;
-          -webkit-text-fill-color: transparent;
-          background-clip: text;
-        }
-      `}</style>
-
+    <div className="absolute inset-0 pointer-events-none overflow-hidden">
       {cards.map((c, i) => (
-        <div key={i} className={`absolute ${c.cls} w-44 pointer-events-none z-0 ${i % 2 === 0 ? "float-even" : "float-odd"}`}
-          style={{ animationDelay: c.delay, animationDuration: c.dur, background: "#fff", borderRadius: "14px", padding: "10px 13px", boxShadow: "0 8px 28px rgba(0,0,0,0.07)", border: "1px solid #f0f0f0", display: "flex", gap: "9px", alignItems: "center" }}>
-          <div style={{ width: "34px", height: "34px", borderRadius: "9px", background: c.color + "18", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "17px", flexShrink: 0 }}>{c.icon}</div>
-          <div style={{ minWidth: 0 }}>
-            <div style={{ fontWeight: 700, fontSize: "11px", color: "#1a1a1a", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{c.name}</div>
-            <div style={{ fontSize: "10px", color: c.color, fontWeight: 700, marginTop: "2px" }}>{c.price}</div>
+        <motion.div key={i}
+          className="absolute"
+          style={{ ...c.style, width: "176px" }}
+          animate={{ y: [0, -16, 0], rotate: [i % 2 === 0 ? -1 : 1, i % 2 === 0 ? 1 : -1, i % 2 === 0 ? -1 : 1] }}
+          transition={{ duration: c.dur, delay: c.delay, repeat: Infinity, ease: "easeInOut" }}>
+          <div style={{
+            background: "var(--bg-card)", borderRadius: "14px", padding: "10px 13px",
+            boxShadow: "var(--shadow-md)", border: "1px solid var(--border)",
+            display: "flex", gap: "9px", alignItems: "center", opacity: 0.18,
+          }}>
+            <div style={{ width: "34px", height: "34px", borderRadius: "9px", background: c.color + "20", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "17px", flexShrink: 0 }}>{c.icon}</div>
+            <div style={{ minWidth: 0 }}>
+              <div style={{ fontWeight: 700, fontSize: "11px", color: "var(--text-primary)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{c.name}</div>
+              <div style={{ fontSize: "10px", color: c.color, fontWeight: 700, marginTop: "2px" }}>{c.price}</div>
+            </div>
           </div>
-        </div>
+        </motion.div>
       ))}
-    </>
+    </div>
   );
 }
 
-// ── Navbar ───────────────────────────────────────────────────
+// ── Navbar ────────────────────────────────────────────────────
 function NavBar({ onNavigate, active }) {
+  const [scrolled, setScrolled] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  useEffect(() => {
+    const handler = () => setScrolled(window.scrollY > 20);
+    window.addEventListener("scroll", handler);
+    return () => window.removeEventListener("scroll", handler);
+  }, []);
+
   return (
-    <nav className="sticky top-0 z-50 flex items-center justify-between px-16 h-16 bg-white/90 backdrop-blur-md border-b border-black/5 shadow-sm">
-      <div onClick={() => onNavigate("home")} className="flex items-center gap-3 cursor-pointer">
-        <div className="w-9 h-9 rounded-xl flex items-center justify-center text-lg shadow-md" style={{ background: "linear-gradient(135deg, #f5a623, #e8920f)" }}>🎟️</div>
-        <span className="font-extrabold text-lg text-gray-900 tracking-tight">Master Events</span>
+    <motion.nav
+      initial={{ y: -20, opacity: 0 }}
+      animate={{ y: 0, opacity: 1 }}
+      transition={{ duration: 0.5 }}
+      style={{
+        position: "sticky", top: 0, zIndex: 50,
+        background: scrolled ? "var(--bg-card)" : "transparent",
+        backdropFilter: "blur(20px)",
+        WebkitBackdropFilter: "blur(20px)",
+        borderBottom: scrolled ? "1px solid var(--border)" : "1px solid transparent",
+        boxShadow: scrolled ? "var(--shadow-sm)" : "none",
+        transition: "all 0.3s ease",
+      }}>
+      <div style={{ maxWidth: "1200px", margin: "0 auto", padding: "0 32px", height: "68px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+
+        {/* Logo */}
+        <motion.div whileHover={{ scale: 1.02 }} onClick={() => onNavigate("home")}
+          style={{ display: "flex", alignItems: "center", gap: "10px", cursor: "pointer" }}>
+          <div style={{ width: "38px", height: "38px", borderRadius: "12px", background: "linear-gradient(135deg, #f5a623, #e8920f)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "18px", boxShadow: "0 4px 14px rgba(245,166,35,0.35)" }}>🎟️</div>
+          <span style={{ fontWeight: 800, fontSize: "17px", color: "var(--text-primary)", letterSpacing: "-0.3px" }}>Master Events</span>
+        </motion.div>
+
+        {/* Desktop nav */}
+        <div className="hidden md:flex" style={{ alignItems: "center", gap: "32px" }}>
+          {[["Events", "#events"], ["About", "about"], ["Pricing", "#pricing"]].map(([label, href]) => (
+            <motion.span key={label} whileHover={{ color: "#f5a623" }}
+              onClick={() => href.startsWith("#") ? document.querySelector(href)?.scrollIntoView({ behavior: "smooth" }) : onNavigate(href)}
+              style={{ fontSize: "14px", fontWeight: 500, color: "var(--text-secondary)", cursor: "pointer", transition: "color 0.2s" }}>
+              {label}
+            </motion.span>
+          ))}
+        </div>
+
+        {/* Right actions */}
+        <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+          <ThemeToggle compact={true} />
+          <motion.span whileHover={{ color: "#f5a623" }}
+            onClick={() => onNavigate("login")}
+            style={{ fontSize: "14px", fontWeight: 600, color: "var(--text-secondary)", cursor: "pointer", transition: "color 0.2s" }}
+            className="hidden md:block">
+            Log in
+          </motion.span>
+          <motion.button whileHover={{ scale: 1.03, boxShadow: "0 8px 28px rgba(245,166,35,0.45)" }}
+            whileTap={{ scale: 0.97 }}
+            onClick={() => onNavigate("signup")}
+            style={{ padding: "10px 22px", borderRadius: "12px", background: "linear-gradient(135deg, #f5a623, #e8920f)", color: "#fff", fontWeight: 700, fontSize: "14px", border: "none", cursor: "pointer", boxShadow: "0 4px 16px rgba(245,166,35,0.35)" }}>
+            Sign up free
+          </motion.button>
+        </div>
       </div>
-      <div className="flex items-center gap-8">
-        <a href="#events" className="nav-link text-sm font-medium text-gray-500 no-underline">Events</a>
-        <span onClick={() => onNavigate("about")} className={`nav-link text-sm font-medium cursor-pointer ${active === "about" ? "text-amber-500" : "text-gray-500"}`}>About</span>
-        <span onClick={() => onNavigate("login")} className="nav-link text-sm font-semibold text-gray-900 cursor-pointer">Log in</span>
-        <span onClick={() => onNavigate("signup")} className="btn-primary px-5 py-2.5 rounded-xl text-sm font-bold text-white cursor-pointer shadow-lg"
-          style={{ background: "linear-gradient(135deg, #f5a623, #e8920f)", boxShadow: "0 4px 14px rgba(245,166,35,0.35)" }}>
-          Sign up free
-        </span>
-      </div>
-    </nav>
+    </motion.nav>
   );
 }
 
-// ── Landing Page ─────────────────────────────────────────────
+// ── Stats ticker ──────────────────────────────────────────────
+function StatsTicker() {
+  const stats = ["10K+ Tickets Sold", "50+ Events", "100% Verified", "0% Fake Tickets", "Ghana's #1 Platform", "NFT Powered", "MoMo Payments"];
+  return (
+    <div style={{ background: "var(--brand)", padding: "10px 0", overflow: "hidden" }}>
+      <motion.div
+        animate={{ x: ["0%", "-50%"] }}
+        transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+        style={{ display: "flex", gap: "48px", whiteSpace: "nowrap" }}>
+        {[...stats, ...stats].map((s, i) => (
+          <span key={i} style={{ fontSize: "12px", fontWeight: 700, color: "#fff", letterSpacing: "0.5px" }}>
+            {s} <span style={{ opacity: 0.5 }}>·</span>
+          </span>
+        ))}
+      </motion.div>
+    </div>
+  );
+}
+
+// ── Landing Page ──────────────────────────────────────────────
 function LandingPage({ onNavigate }) {
   const [events, setEvents] = useState([]);
+  const heroRef = useRef(null);
+  const { scrollYProgress } = useScroll({ target: heroRef });
+  const heroY = useTransform(scrollYProgress, [0, 1], ["0%", "30%"]);
+
   useEffect(() => {
     fetch("https://master-events-backend.onrender.com/api/events/")
       .then(r => r.json())
@@ -109,360 +163,313 @@ function LandingPage({ onNavigate }) {
   };
 
   return (
-    <div className="min-h-screen bg-white font-sans text-gray-900">
+    <div style={{ minHeight: "100vh", background: "var(--bg)", fontFamily: "var(--font-sans)" }}>
       <NavBar onNavigate={onNavigate} active="home" />
+      <StatsTicker />
 
       {/* ── Hero ── */}
-      <div className="relative overflow-hidden text-center py-24 px-6 border-b border-gray-100"
-        style={{ background: "linear-gradient(160deg, #fffdf9 0%, #fff8f0 45%, #fff 100%)" }}>
+      <section ref={heroRef} style={{ position: "relative", overflow: "hidden", padding: "100px 32px 120px", textAlign: "center", background: "linear-gradient(160deg, var(--bg) 0%, var(--brand-light) 50%, var(--bg) 100%)" }}>
         <FloatingCards />
+        <motion.div style={{ y: heroY }} className="relative" style={{ position: "relative", zIndex: 10, maxWidth: "760px", margin: "0 auto" }}>
+          <motion.div variants={stagger} initial="hidden" animate="show">
+            <motion.div variants={fadeUp}>
+              <motion.div
+                animate={{ opacity: [0.7, 1, 0.7] }}
+                transition={{ duration: 2, repeat: Infinity }}
+                style={{ display: "inline-flex", alignItems: "center", gap: "8px", padding: "6px 16px", borderRadius: "99px", background: "rgba(245,166,35,0.1)", border: "1px solid rgba(245,166,35,0.25)", color: "#f5a623", fontSize: "11px", fontWeight: 700, letterSpacing: "1.5px", marginBottom: "28px" }}>
+                <span style={{ width: "6px", height: "6px", borderRadius: "50%", background: "#f5a623", display: "inline-block" }} />
+                AFRICA'S BLOCKCHAIN TICKETING PLATFORM
+              </motion.div>
+            </motion.div>
 
-        <div className="relative z-10 max-w-2xl mx-auto">
-          <div className="hero-anim-1 inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-bold tracking-widest mb-7 border"
-            style={{ background: "rgba(245,166,35,0.08)", borderColor: "rgba(245,166,35,0.25)", color: "#f5a623" }}>
-            <span className="w-1.5 h-1.5 rounded-full bg-amber-400 inline-block" style={{ animation: "badgePulse 2s infinite" }} />
-            GHANA'S PREMIER TICKETING PLATFORM
-          </div>
+            <motion.h1 variants={fadeUp}
+              style={{ fontSize: "clamp(44px, 6vw, 80px)", fontWeight: 900, lineHeight: 1.05, letterSpacing: "-2.5px", color: "var(--text-primary)", marginBottom: "24px" }}>
+              Find events that<br />
+              <span style={{ background: "linear-gradient(135deg, #f5a623, #ff6b35)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text" }}>
+                move you.
+              </span>
+            </motion.h1>
 
-          <h1 className="hero-anim-2 font-black leading-none mb-5" style={{ fontSize: "clamp(42px, 5vw, 68px)", letterSpacing: "-2px" }}>
-            Find events that<br />
-            <span className="grad-text">move you</span>
-          </h1>
+            <motion.p variants={fadeUp}
+              style={{ fontSize: "18px", color: "var(--text-secondary)", lineHeight: 1.7, marginBottom: "40px", maxWidth: "520px", margin: "0 auto 40px" }}>
+              From Afrobeats concerts in Accra to tech summits in Kumasi — discover, buy and own your tickets as NFTs on the blockchain.
+            </motion.p>
 
-          <p className="hero-anim-3 text-gray-500 text-lg leading-relaxed mb-10 max-w-lg mx-auto">
-            Discover and buy tickets to the best events in Ghana. Every ticket is an NFT — unfakeable and yours forever.
-          </p>
+            <motion.div variants={fadeUp} style={{ display: "flex", gap: "14px", justifyContent: "center", flexWrap: "wrap" }}>
+              <motion.button whileHover={{ scale: 1.03, boxShadow: "0 16px 48px rgba(245,166,35,0.45)" }}
+                whileTap={{ scale: 0.97 }}
+                onClick={() => document.querySelector("#events")?.scrollIntoView({ behavior: "smooth" })}
+                style={{ padding: "16px 36px", borderRadius: "16px", background: "linear-gradient(135deg, #f5a623, #e8920f)", color: "#fff", fontWeight: 700, fontSize: "16px", border: "none", cursor: "pointer", boxShadow: "0 8px 32px rgba(245,166,35,0.4)" }}>
+                Browse Events →
+              </motion.button>
+              <motion.button whileHover={{ scale: 1.02, borderColor: "#f5a623", color: "#f5a623" }}
+                whileTap={{ scale: 0.97 }}
+                onClick={() => onNavigate("signup")}
+                style={{ padding: "16px 36px", borderRadius: "16px", background: "var(--bg-card)", color: "var(--text-primary)", fontWeight: 700, fontSize: "16px", border: "1.5px solid var(--border)", cursor: "pointer", transition: "all 0.2s" }}>
+                Create Event
+              </motion.button>
+            </motion.div>
+          </motion.div>
+        </motion.div>
 
-          <div className="hero-anim-4 flex gap-4 justify-center flex-wrap">
-            <a href="#events" className="btn-primary px-9 py-4 rounded-2xl font-bold text-base text-white no-underline shadow-xl"
-              style={{ background: "linear-gradient(135deg, #f5a623, #e8920f)", boxShadow: "0 8px 28px rgba(245,166,35,0.4)" }}>
-              Browse Events
-            </a>
-            <span onClick={() => onNavigate("signup")}
-              className="px-9 py-4 rounded-2xl font-bold text-base text-gray-900 cursor-pointer border border-gray-200 bg-white shadow-sm hover:border-amber-400 hover:text-amber-500 transition-all">
-              Create Event
-            </span>
-          </div>
-        </div>
-
-        {/* Stats */}
-        <div className="hero-anim-4 relative z-10 flex gap-14 justify-center mt-16">
-          {[["10K+", "Tickets Sold"], ["50+", "Events"], ["99%", "Verified"], ["0%", "Fakes"]].map(([val, label]) => (
-            <div key={label} className="text-center">
-              <div className="grad-text font-black text-3xl">{val}</div>
-              <div className="text-gray-400 text-sm mt-1 font-medium">{label}</div>
-            </div>
+        {/* Stats row */}
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.6, duration: 0.6 }}
+          style={{ display: "flex", gap: "48px", justifyContent: "center", marginTop: "72px", flexWrap: "wrap", position: "relative", zIndex: 10 }}>
+          {[["10K+", "Tickets Sold", "#f5a623"], ["50+", "Live Events", "#16a34a"], ["100%", "NFT Verified", "#2563eb"], ["0%", "Fake Tickets", "#dc2626"]].map(([val, label, color]) => (
+            <motion.div key={label} whileHover={{ scale: 1.05 }} style={{ textAlign: "center" }}>
+              <div style={{ fontSize: "clamp(28px, 3vw, 40px)", fontWeight: 900, color, letterSpacing: "-1px" }}>{val}</div>
+              <div style={{ fontSize: "13px", color: "var(--text-muted)", marginTop: "4px", fontWeight: 500 }}>{label}</div>
+            </motion.div>
           ))}
-        </div>
-      </div>
+        </motion.div>
+      </section>
 
       {/* ── Events Grid ── */}
-      <div id="events" className="max-w-7xl mx-auto px-16 py-20">
-        <div className="flex justify-between items-end mb-9">
-          <div>
-            <div className="text-xs font-bold tracking-widest text-amber-500 mb-2">UPCOMING</div>
-            <h2 className="text-4xl font-extrabold text-gray-900 tracking-tight">Events near you</h2>
+      <section id="events" style={{ maxWidth: "1200px", margin: "0 auto", padding: "80px 32px" }}>
+        <motion.div initial="hidden" whileInView="show" viewport={{ once: true, amount: 0.2 }} variants={stagger}>
+          <motion.div variants={fadeUp} style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginBottom: "40px" }}>
+            <div>
+              <div style={{ fontSize: "11px", fontWeight: 700, letterSpacing: "2px", color: "#f5a623", marginBottom: "8px" }}>UPCOMING EVENTS</div>
+              <h2 style={{ fontSize: "clamp(28px, 3vw, 40px)", fontWeight: 900, letterSpacing: "-1px", color: "var(--text-primary)" }}>Happening across Africa</h2>
+            </div>
+            <motion.span whileHover={{ x: 4 }} onClick={() => onNavigate("signup")}
+              style={{ fontSize: "14px", fontWeight: 700, color: "#f5a623", cursor: "pointer" }}>
+              View all →
+            </motion.span>
+          </motion.div>
+
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))", gap: "20px" }}>
+            {(events.length > 0 ? events : Array(8).fill(null)).map((ev, i) => (
+              <motion.div key={i} variants={fadeUp}
+                whileHover={{ y: -6, boxShadow: "0 20px 48px rgba(0,0,0,0.12)" }}
+                onClick={() => onNavigate("signup")}
+                style={{ background: "var(--bg-card)", borderRadius: "20px", overflow: "hidden", cursor: "pointer", border: "1px solid var(--border)", boxShadow: "var(--shadow-sm)", transition: "box-shadow 0.2s" }}>
+                <div style={{ height: "180px", position: "relative", background: "var(--bg-subtle)" }}>
+                  {ev ? (
+                    <>
+                      <img src={ev.image || catImg[ev.category] || catImg.other} alt={ev.name}
+                        style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                        onError={e => { e.target.src = catImg.other; }} />
+                      <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to bottom, transparent 40%, rgba(0,0,0,0.55))" }} />
+                      <div style={{ position: "absolute", top: "12px", left: "12px", padding: "4px 10px", borderRadius: "99px", background: "#f5a623", color: "#fff", fontSize: "10px", fontWeight: 700, letterSpacing: "0.5px", textTransform: "uppercase" }}>{ev.category}</div>
+                      {parseFloat(ev.price) === 0 && (
+                        <div style={{ position: "absolute", top: "12px", right: "12px", padding: "4px 10px", borderRadius: "99px", background: "#16a34a", color: "#fff", fontSize: "10px", fontWeight: 700 }}>FREE</div>
+                      )}
+                    </>
+                  ) : (
+                    <div className="skeleton" style={{ position: "absolute", inset: 0, borderRadius: 0 }} />
+                  )}
+                </div>
+                <div style={{ padding: "16px" }}>
+                  {ev ? (
+                    <>
+                      <div style={{ fontWeight: 700, fontSize: "15px", color: "var(--text-primary)", marginBottom: "6px", lineHeight: 1.3 }}>{ev.name}</div>
+                      <div style={{ fontSize: "12px", color: "var(--text-muted)", marginBottom: "14px" }}>📅 {ev.date} · 📍 {ev.venue}</div>
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                        <span style={{ fontWeight: 800, fontSize: "16px", color: "#f5a623" }}>
+                          {parseFloat(ev.price) === 0 ? "FREE" : "Ghc " + ev.price}
+                        </span>
+                        <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
+                          style={{ padding: "8px 16px", borderRadius: "10px", background: "linear-gradient(135deg, #f5a623, #e8920f)", color: "#fff", fontSize: "12px", fontWeight: 700, border: "none", cursor: "pointer", boxShadow: "0 4px 12px rgba(245,166,35,0.3)" }}>
+                          Get Tickets
+                        </motion.button>
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <div className="skeleton" style={{ height: "16px", width: "80%", marginBottom: "8px" }} />
+                      <div className="skeleton" style={{ height: "12px", width: "60%", marginBottom: "14px" }} />
+                      <div className="skeleton" style={{ height: "14px", width: "40%" }} />
+                    </>
+                  )}
+                </div>
+              </motion.div>
+            ))}
           </div>
-          <span onClick={() => onNavigate("signup")} className="text-amber-500 font-bold text-sm cursor-pointer hover:opacity-70 transition-opacity">
-            See all →
-          </span>
-        </div>
+        </motion.div>
+      </section>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
-          {(events.length > 0 ? events : Array(8).fill(null)).map((ev, i) => (
-            <div key={i} onClick={() => onNavigate("signup")}
-              className="ev-card bg-white rounded-2xl overflow-hidden cursor-pointer border border-gray-100"
-              style={{ boxShadow: "0 4px 20px rgba(0,0,0,0.07)" }}>
-              <div className="h-44 relative bg-gray-100">
-                <img src={ev?.image || catImg[ev?.category] || catImg.other} alt={ev?.name || "Event"}
-                  className="w-full h-full object-cover"
-                  onError={e => { e.target.src = catImg.other; }} />
-                {!ev && <div className="skeleton absolute inset-0 rounded-none" />}
-                {ev && (
-                  <>
-                    <div className="absolute inset-0" style={{ background: "linear-gradient(to bottom, transparent 40%, rgba(0,0,0,0.5))" }} />
-                    <div className="absolute top-3 left-3 px-2.5 py-0.5 rounded-full text-white text-xs font-bold"
-                      style={{ background: "#f5a623" }}>{ev.category}</div>
-                    {parseFloat(ev.price) === 0 && (
-                      <div className="absolute top-3 right-3 px-2.5 py-0.5 rounded-full text-white text-xs font-bold"
-                        style={{ background: "#27ae60" }}>FREE</div>
-                    )}
-                  </>
-                )}
-              </div>
-              <div className="p-4">
-                {ev ? (
-                  <>
-                    <div className="font-bold text-sm text-gray-900 mb-1.5 leading-snug">{ev.name}</div>
-                    <div className="text-xs text-gray-400 mb-3">{"📅 " + ev.date + " · 📍 " + ev.venue}</div>
-                    <div className="flex justify-between items-center">
-                      <span className="font-extrabold text-base" style={{ color: "#f5a623" }}>
-                        {parseFloat(ev.price) === 0 ? "FREE" : "Ghc " + ev.price}
-                      </span>
-                      <button onClick={e => { e.stopPropagation(); onNavigate("signup"); }}
-                        className="btn-primary px-4 py-1.5 rounded-xl text-white text-xs font-bold border-none cursor-pointer"
-                        style={{ background: "linear-gradient(135deg, #f5a623, #e8920f)", boxShadow: "0 4px 10px rgba(245,166,35,0.3)" }}>
-                        Get Tickets
-                      </button>
-                    </div>
-                  </>
-                ) : (
-                  <>
-                    <div className="skeleton h-3.5 w-4/5 mb-2" />
-                    <div className="skeleton h-3 w-3/5 mb-3" />
-                    <div className="skeleton h-3.5 w-2/5" />
-                  </>
-                )}
-              </div>
+      {/* ── Features ── */}
+      <section style={{ background: "var(--bg-subtle)", padding: "80px 32px", borderTop: "1px solid var(--border)", borderBottom: "1px solid var(--border)" }}>
+        <div style={{ maxWidth: "1200px", margin: "0 auto" }}>
+          <motion.div initial="hidden" whileInView="show" viewport={{ once: true, amount: 0.2 }} variants={stagger}>
+            <motion.div variants={fadeUp} style={{ textAlign: "center", marginBottom: "56px" }}>
+              <div style={{ fontSize: "11px", fontWeight: 700, letterSpacing: "2px", color: "#f5a623", marginBottom: "12px" }}>WHY MASTER EVENTS</div>
+              <h2 style={{ fontSize: "clamp(28px, 3vw, 40px)", fontWeight: 900, letterSpacing: "-1px", color: "var(--text-primary)" }}>Built different. Built for Africa.</h2>
+            </motion.div>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: "24px" }}>
+              {[
+                { icon: "⛓️", title: "NFT Tickets on Polygon",   body: "Every ticket is minted on the blockchain — impossible to fake, permanently yours.", color: "#2563eb" },
+                { icon: "💰", title: "95% Payout to Organizers", body: "We charge only 5%. The rest goes straight to your MoMo wallet — withdraw anytime.", color: "#16a34a" },
+                { icon: "📱", title: "MoMo & VISA Payments",     body: "Pay the Ghanaian way. Mobile money, VISA, and more — fast and secure.", color: "#f5a623" },
+                { icon: "🔒", title: "HMAC-Secured QR Codes",    body: "Dynamic QR codes refresh every 30 seconds — screenshot-proof and forgery-resistant.", color: "#dc2626" },
+                { icon: "🔄", title: "Ticket Resale Market",     body: "List your ticket for resale at any price. Only 2% fee — you keep 98%.", color: "#7c3aed" },
+                { icon: "🚪", title: "Smart Door Scanning",      body: "Generate invite codes for door staff. Scan QR tickets in seconds at the gate.", color: "#0891b2" },
+              ].map((f, i) => (
+                <motion.div key={i} variants={fadeUp}
+                  whileHover={{ y: -4, boxShadow: "var(--shadow-md)" }}
+                  style={{ background: "var(--bg-card)", borderRadius: "20px", padding: "28px", border: "1px solid var(--border)", boxShadow: "var(--shadow-sm)", transition: "box-shadow 0.2s" }}>
+                  <div style={{ width: "52px", height: "52px", borderRadius: "16px", background: f.color + "15", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "24px", marginBottom: "16px", border: "1px solid " + f.color + "25" }}>{f.icon}</div>
+                  <div style={{ fontWeight: 700, fontSize: "15px", color: "var(--text-primary)", marginBottom: "8px" }}>{f.title}</div>
+                  <div style={{ fontSize: "13px", color: "var(--text-secondary)", lineHeight: 1.65 }}>{f.body}</div>
+                </motion.div>
+              ))}
             </div>
-          ))}
+          </motion.div>
         </div>
-      </div>
-
-      {/* ── Features Strip ── */}
-      <div className="border-y border-amber-100 py-14 px-16" style={{ background: "linear-gradient(135deg, #fffdf9, #fff8f0)" }}>
-        <div className="max-w-7xl mx-auto grid grid-cols-2 lg:grid-cols-4 gap-10">
-          {[
-            ["⛓️", "NFT Tickets",       "Every ticket minted on Polygon — 100% authentic"],
-            ["💰", "95% to Organizers", "Only 5% fee — withdraw via MoMo instantly"],
-            ["📱", "MoMo & VISA",       "Pay the Ghanaian way — mobile money or card"],
-            ["🔍", "QR Verification",   "Door staff scan tickets in seconds at the gate"],
-          ].map(([icon, title, sub]) => (
-            <div key={title} className="flex gap-4 items-start">
-              <div className="w-12 h-12 rounded-2xl flex items-center justify-center text-xl flex-shrink-0 border"
-                style={{ background: "rgba(245,166,35,0.1)", borderColor: "rgba(245,166,35,0.18)", fontSize: "22px" }}>{icon}</div>
-              <div>
-                <div className="font-bold text-sm text-gray-900 mb-1">{title}</div>
-                <div className="text-xs text-gray-400 leading-relaxed">{sub}</div>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
+      </section>
 
       {/* ── Organizer CTA ── */}
-      <div className="max-w-7xl mx-auto mx-16 my-20 rounded-3xl p-16 flex justify-between items-center relative overflow-hidden"
-        style={{ background: "#1a1a1a", margin: "80px 60px" }}>
-        <div className="absolute top-0 right-0 w-72 h-72 rounded-full pointer-events-none"
-          style={{ background: "radial-gradient(circle, rgba(245,166,35,0.15) 0%, transparent 70%)", transform: "translate(30%, -30%)" }} />
-        <div className="max-w-lg relative z-10">
-          <div className="text-xs font-bold tracking-widest text-amber-500 mb-4">FOR ORGANIZERS</div>
-          <h2 className="font-black text-white mb-4 leading-tight" style={{ fontSize: "clamp(28px,3vw,42px)", letterSpacing: "-0.8px" }}>
-            Ready to host<br />your event?
-          </h2>
-          <p className="text-white/50 text-base leading-relaxed mb-8">
-            Create events, sell blockchain-verified tickets, manage door staff, and receive 95% directly to your MoMo wallet.
-          </p>
-          <div className="flex gap-3">
-            <span onClick={() => onNavigate("signup")} className="btn-primary px-7 py-3.5 rounded-2xl font-bold text-white cursor-pointer"
-              style={{ background: "linear-gradient(135deg, #f5a623, #e8920f)", boxShadow: "0 6px 24px rgba(245,166,35,0.4)" }}>
-              Start Selling Tickets
-            </span>
-            <span onClick={() => onNavigate("about")}
-              className="px-7 py-3.5 rounded-2xl font-semibold text-white cursor-pointer border border-white/10 hover:bg-white/10 transition-all">
-              Learn More
-            </span>
-          </div>
-        </div>
-        <div className="grid grid-cols-2 gap-3 flex-shrink-0 relative z-10">
-          {[["95%", "Payout"], ["NFT", "Tickets"], ["MoMo", "Payments"], ["QR", "Scanning"]].map(([val, label]) => (
-            <div key={label} className="rounded-2xl p-5 text-center border border-white/8"
-              style={{ background: "rgba(255,255,255,0.06)", width: "115px" }}>
-              <div className="font-black text-xl text-amber-400 mb-1">{val}</div>
-              <div className="text-xs font-semibold text-white/40">{label}</div>
+      <section style={{ padding: "80px 32px" }}>
+        <div style={{ maxWidth: "1200px", margin: "0 auto" }}>
+          <motion.div initial="hidden" whileInView="show" viewport={{ once: true, amount: 0.3 }} variants={fadeUp}>
+            <div style={{ background: "#0e0e0e", borderRadius: "28px", padding: "64px", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "40px", position: "relative", overflow: "hidden" }}>
+              <div style={{ position: "absolute", top: 0, right: 0, width: "400px", height: "400px", borderRadius: "50%", background: "radial-gradient(circle, rgba(245,166,35,0.12) 0%, transparent 70%)", transform: "translate(30%, -30%)", pointerEvents: "none" }} />
+              <div style={{ maxWidth: "520px", position: "relative", zIndex: 1 }}>
+                <div style={{ fontSize: "11px", fontWeight: 700, letterSpacing: "2px", color: "#f5a623", marginBottom: "16px" }}>FOR EVENT ORGANIZERS</div>
+                <h2 style={{ fontSize: "clamp(28px, 3vw, 46px)", fontWeight: 900, color: "#fff", letterSpacing: "-1.5px", lineHeight: 1.1, marginBottom: "16px" }}>
+                  Ready to host<br />your next event?
+                </h2>
+                <p style={{ fontSize: "16px", color: "rgba(255,255,255,0.5)", lineHeight: 1.7, marginBottom: "32px" }}>
+                  Create events, sell blockchain-verified tickets, manage door staff, and receive 95% directly to your MoMo wallet. From Accra to Lagos.
+                </p>
+                <div style={{ display: "flex", gap: "12px", flexWrap: "wrap" }}>
+                  <motion.button whileHover={{ scale: 1.03, boxShadow: "0 16px 40px rgba(245,166,35,0.45)" }}
+                    whileTap={{ scale: 0.97 }}
+                    onClick={() => onNavigate("signup")}
+                    style={{ padding: "14px 28px", borderRadius: "14px", background: "linear-gradient(135deg, #f5a623, #e8920f)", color: "#fff", fontWeight: 700, fontSize: "15px", border: "none", cursor: "pointer", boxShadow: "0 8px 28px rgba(245,166,35,0.4)" }}>
+                    Start Selling Tickets
+                  </motion.button>
+                  <motion.button whileHover={{ background: "rgba(255,255,255,0.1)" }}
+                    onClick={() => onNavigate("about")}
+                    style={{ padding: "14px 28px", borderRadius: "14px", background: "rgba(255,255,255,0.06)", color: "rgba(255,255,255,0.7)", fontWeight: 600, fontSize: "15px", border: "1px solid rgba(255,255,255,0.1)", cursor: "pointer", transition: "background 0.2s" }}>
+                    Learn More
+                  </motion.button>
+                </div>
+              </div>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px", flexShrink: 0, position: "relative", zIndex: 1 }}>
+                {[["95%", "Payout Rate"], ["NFT", "Tickets"], ["MoMo", "Payments"], ["QR", "Scanning"]].map(([val, label]) => (
+                  <motion.div key={label} whileHover={{ scale: 1.04 }}
+                    style={{ padding: "20px", borderRadius: "16px", textAlign: "center", background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.08)", width: "110px" }}>
+                    <div style={{ fontWeight: 900, fontSize: "22px", color: "#f5a623", marginBottom: "4px" }}>{val}</div>
+                    <div style={{ fontSize: "11px", fontWeight: 600, color: "rgba(255,255,255,0.35)" }}>{label}</div>
+                  </motion.div>
+                ))}
+              </div>
             </div>
-          ))}
+          </motion.div>
         </div>
-      </div>
+      </section>
+
+      {/* ── Testimonials ── */}
+      <section style={{ background: "var(--bg-subtle)", padding: "80px 32px", borderTop: "1px solid var(--border)" }}>
+        <div style={{ maxWidth: "1200px", margin: "0 auto" }}>
+          <motion.div initial="hidden" whileInView="show" viewport={{ once: true, amount: 0.2 }} variants={stagger}>
+            <motion.div variants={fadeUp} style={{ textAlign: "center", marginBottom: "48px" }}>
+              <div style={{ fontSize: "11px", fontWeight: 700, letterSpacing: "2px", color: "#f5a623", marginBottom: "12px" }}>WHAT PEOPLE SAY</div>
+              <h2 style={{ fontSize: "clamp(24px, 3vw, 36px)", fontWeight: 900, letterSpacing: "-0.8px", color: "var(--text-primary)" }}>Trusted across Ghana</h2>
+            </motion.div>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: "20px" }}>
+              {[
+                { name: "Kwame Asante", role: "Event Organizer · Accra", quote: "Master Events gave us one place to manage tickets, door staff, and payments. We received 95% of revenue directly to MoMo — no delays.", avatar: "KA" },
+                { name: "Ama Owusu", role: "Concert Attendee · Kumasi", quote: "I love that my ticket is an NFT — I can transfer it to my friend and it just works. No more fake tickets at the gate.", avatar: "AO" },
+                { name: "Kofi Mensah", role: "Tech Conference Organizer", quote: "The blockchain verification at the door was seamless. Our door staff just scanned QR codes and it told them instantly if the ticket was valid.", avatar: "KM" },
+              ].map((t, i) => (
+                <motion.div key={i} variants={fadeUp}
+                  whileHover={{ y: -4, boxShadow: "var(--shadow-md)" }}
+                  style={{ background: "var(--bg-card)", borderRadius: "20px", padding: "28px", border: "1px solid var(--border)", boxShadow: "var(--shadow-sm)" }}>
+                  <div style={{ fontSize: "32px", color: "#f5a623", fontWeight: 900, lineHeight: 1, marginBottom: "16px" }}>"</div>
+                  <p style={{ fontSize: "14px", color: "var(--text-secondary)", lineHeight: 1.7, marginBottom: "20px" }}>{t.quote}</p>
+                  <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                    <div style={{ width: "40px", height: "40px", borderRadius: "50%", background: "linear-gradient(135deg, #f5a623, #e8920f)", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontWeight: 700, fontSize: "13px" }}>{t.avatar}</div>
+                    <div>
+                      <div style={{ fontWeight: 700, fontSize: "14px", color: "var(--text-primary)" }}>{t.name}</div>
+                      <div style={{ fontSize: "12px", color: "var(--text-muted)" }}>{t.role}</div>
+                    </div>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+          </motion.div>
+        </div>
+      </section>
 
       {/* ── Footer ── */}
-      <div className="bg-white border-t border-gray-100 px-16 py-9 flex justify-between items-center">
-        <div className="flex items-center gap-2.5">
-          <div className="w-7 h-7 rounded-lg flex items-center justify-center text-sm"
-            style={{ background: "linear-gradient(135deg, #f5a623, #e8920f)" }}>🎟️</div>
-          <span className="font-bold text-gray-900 text-sm">Master Events</span>
-        </div>
-        <div className="text-gray-300 text-xs">© 2026 Master Events Ghana · Secured by Polygon Blockchain</div>
-        <div className="flex gap-7">
-          <a href="mailto:mastereventgh@gmail.com" className="text-gray-400 no-underline text-sm hover:text-amber-500 transition-colors">Contact</a>
-          <span onClick={() => onNavigate("about")} className="text-gray-400 text-sm cursor-pointer hover:text-amber-500 transition-colors">About</span>
-          <span onClick={() => onNavigate("signup")} className="text-gray-400 text-sm cursor-pointer hover:text-amber-500 transition-colors">Sign up</span>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-// ── About Page ───────────────────────────────────────────────
-function AboutPage({ onNavigate }) {
-  return (
-    <div className="min-h-screen bg-white font-sans">
-      <NavBar onNavigate={onNavigate} active="about" />
-      <div className="max-w-3xl mx-auto px-10 py-20">
-        <div className="text-center mb-16">
-          <div className="w-20 h-20 rounded-3xl flex items-center justify-center text-4xl mx-auto mb-6 shadow-xl"
-            style={{ background: "linear-gradient(135deg, #f5a623, #e8920f)", boxShadow: "0 8px 28px rgba(245,166,35,0.3)" }}>🎟️</div>
-          <h1 className="text-5xl font-black text-gray-900 mb-4 tracking-tight">About Master Events</h1>
-          <p className="text-lg text-gray-500 leading-relaxed">Ghana's first blockchain-powered event ticketing platform.</p>
-        </div>
-        {[
-          { icon: "🎯", title: "Our Mission", body: "We believe every event experience should start with trust. Master Events uses blockchain technology to ensure every ticket is authentic, verifiable, and owned by the rightful buyer." },
-          { icon: "⛓️", title: "Blockchain Technology", body: "Every ticket purchased on Master Events is minted as an NFT on the Polygon blockchain — the same technology used by major global platforms, now available in Ghana." },
-          { icon: "💰", title: "Fair for Organizers", body: "We take only 5% per transaction. 95% goes directly to the organizer's wallet, withdrawable via MTN MoMo or VISA." },
-          { icon: "🇬🇭", title: "Built for Ghana", body: "From Afrobeats concerts in Accra to tech summits in Kumasi — Master Events is designed specifically for Ghana's vibrant events scene." },
-          { icon: "👥", title: "The Team", body: "Built by students at Ghana Communication Technology University (GCTU) as a final-year CS project — combining blockchain, mobile, and payments." },
-        ].map((item, i) => (
-          <div key={i} className="flex gap-5 bg-white rounded-2xl p-7 mb-4 border border-gray-100 transition-all hover:-translate-y-0.5"
-            style={{ boxShadow: "0 4px 20px rgba(0,0,0,0.05)" }}>
-            <div className="w-14 h-14 rounded-2xl flex items-center justify-center text-2xl flex-shrink-0"
-              style={{ background: "rgba(245,166,35,0.1)" }}>{item.icon}</div>
+      <footer style={{ background: "var(--bg-card)", borderTop: "1px solid var(--border)", padding: "48px 32px 32px" }}>
+        <div style={{ maxWidth: "1200px", margin: "0 auto" }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: "32px", marginBottom: "40px" }}>
             <div>
-              <div className="font-bold text-lg text-gray-900 mb-2">{item.title}</div>
-              <div className="text-gray-500 leading-relaxed text-sm">{item.body}</div>
+              <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "12px" }}>
+                <div style={{ width: "32px", height: "32px", borderRadius: "10px", background: "linear-gradient(135deg, #f5a623, #e8920f)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "16px" }}>🎟️</div>
+                <span style={{ fontWeight: 800, fontSize: "16px", color: "var(--text-primary)" }}>Master Events</span>
+              </div>
+              <p style={{ fontSize: "13px", color: "var(--text-muted)", maxWidth: "240px", lineHeight: 1.6 }}>Africa's blockchain-powered event ticketing platform. Built in Ghana.</p>
             </div>
-          </div>
-        ))}
-        <div className="text-center mt-12">
-          <p className="text-gray-400 mb-4">Have questions? Reach us at</p>
-          <a href="mailto:mastereventgh@gmail.com" className="text-amber-500 font-bold text-lg no-underline">mastereventgh@gmail.com</a>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-// ── Auth Pages (Login / Signup) ──────────────────────────────
-function DesktopAuthPage({ type, onNavigate }) {
-  const setScreen = useStore(s => s.setScreen);
-  const handleEnterApp = (s) => { setScreen(s); onNavigate("app"); };
-
-  return (
-    <div className="min-h-screen font-sans flex flex-col" style={{ background: "linear-gradient(160deg, #fffdf9 0%, #fff8f0 50%, #ffffff 100%)" }}>
-      <NavBar onNavigate={onNavigate} active={type} />
-
-      <div className="flex-1 flex items-center justify-center px-10 py-16 relative overflow-hidden">
-        <FloatingCards />
-
-        <div className="relative z-10 flex gap-20 items-center max-w-5xl w-full">
-
-          {/* Left branding */}
-          <div className="flex-1 hero-anim-1">
-            <div className="text-xs font-bold tracking-widest text-amber-500 mb-5">MASTER EVENTS GHANA</div>
-            <h1 className="font-black text-gray-900 leading-none mb-5" style={{ fontSize: "clamp(36px, 4vw, 58px)", letterSpacing: "-1.5px" }}>
-              {type === "login"
-                ? <><span>Welcome</span><br /><span className="grad-text">back.</span></>
-                : <><span>Ghana's</span><br /><span className="grad-text">best tickets.</span></>
-              }
-            </h1>
-            <p className="text-gray-500 text-base leading-relaxed mb-8 max-w-sm">
-              {type === "login"
-                ? "Your NFT tickets and events are waiting. Every ticket is secured on Polygon blockchain — yours forever."
-                : "Buy, sell and transfer blockchain-verified tickets. Join thousands of event-goers across Ghana."}
-            </p>
-            <div className="flex flex-col gap-3">
+            <div style={{ display: "flex", gap: "48px", flexWrap: "wrap" }}>
               {[
-                ["⛓️", "NFT on Polygon",    "Every ticket is blockchain-verified"],
-                ["💰", "95% to organizers", "Only 5% platform fee"],
-                ["📱", "MoMo & VISA",       "Pay the Ghanaian way"],
-              ].map(([icon, title, sub]) => (
-                <div key={title} className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl flex items-center justify-center text-base flex-shrink-0 border"
-                    style={{ background: "rgba(245,166,35,0.1)", borderColor: "rgba(245,166,35,0.18)" }}>{icon}</div>
-                  <div>
-                    <div className="font-bold text-sm text-gray-900">{title}</div>
-                    <div className="text-xs text-gray-400">{sub}</div>
-                  </div>
+                { title: "Platform", links: [["Browse Events", "#events"], ["Create Event", "signup"], ["Pricing", "#pricing"]] },
+                { title: "Company",  links: [["About", "about"], ["Contact", "mailto:mastereventgh@gmail.com"], ["Blog", "#"]] },
+                { title: "Legal",    links: [["Privacy", "#"], ["Terms", "#"], ["Security", "#"]] },
+              ].map(col => (
+                <div key={col.title}>
+                  <div style={{ fontWeight: 700, fontSize: "12px", letterSpacing: "1px", color: "var(--text-muted)", marginBottom: "14px", textTransform: "uppercase" }}>{col.title}</div>
+                  {col.links.map(([label, href]) => (
+                    <div key={label} style={{ marginBottom: "8px" }}>
+                      <motion.span whileHover={{ color: "#f5a623" }}
+                        onClick={() => href.startsWith("#") || href.startsWith("mailto") ? null : onNavigate(href)}
+                        style={{ fontSize: "13px", color: "var(--text-secondary)", cursor: "pointer", transition: "color 0.2s" }}>
+                        {label}
+                      </motion.span>
+                    </div>
+                  ))}
                 </div>
               ))}
             </div>
           </div>
-
-          {/* Right card */}
-          <div className="w-96 flex-shrink-0 hero-anim-2">
-            <div className="bg-white rounded-3xl p-12 border border-gray-100" style={{ boxShadow: "0 8px 60px rgba(0,0,0,0.12)" }}>
-              <div className="text-center mb-8">
-                <div className="w-14 h-14 rounded-2xl flex items-center justify-center text-2xl mx-auto mb-4 shadow-lg"
-                  style={{ background: "linear-gradient(135deg, #f5a623, #e8920f)", boxShadow: "0 8px 24px rgba(245,166,35,0.35)" }}>🎟️</div>
-                <h2 className="text-2xl font-extrabold text-gray-900 mb-1.5 tracking-tight">
-                  {type === "login" ? "Welcome back" : "Create your account"}
-                </h2>
-                <p className="text-gray-400 text-sm">
-                  {type === "login" ? "Log in to Master Events" : "Join Ghana's #1 ticketing platform"}
-                </p>
-              </div>
-
-              <div className="flex gap-1.5 flex-wrap justify-center mb-7">
-                {["NFT Tickets", "MoMo Payments", "Polygon"].map(tag => (
-                  <div key={tag} className="px-3 py-1 rounded-full text-xs font-semibold border"
-                    style={{ background: "rgba(245,166,35,0.08)", borderColor: "rgba(245,166,35,0.2)", color: "#f5a623" }}>{tag}</div>
-                ))}
-              </div>
-
-              <button onClick={() => handleEnterApp(type === "login" ? "login" : "signup")}
-                className="btn-primary w-full py-4 rounded-2xl font-bold text-base text-white border-none cursor-pointer mb-4"
-                style={{ background: "linear-gradient(135deg, #f5a623, #e8920f)", boxShadow: "0 8px 28px rgba(245,166,35,0.35)" }}>
-                {type === "login" ? "Log In to Master Events" : "Get Started — It's Free"}
-              </button>
-
-              <div className="text-center mb-6 text-sm">
-                <span className="text-gray-400">{type === "login" ? "No account yet? " : "Already have an account? "}</span>
-                <span onClick={() => onNavigate(type === "login" ? "signup" : "login")} className="text-amber-500 font-bold cursor-pointer">
-                  {type === "login" ? "Sign up free" : "Log in"}
-                </span>
-              </div>
-
-              <div className="flex items-center gap-3 mb-6">
-                <div className="flex-1 h-px bg-gray-100" />
-                <span className="text-gray-300 text-xs whitespace-nowrap">trusted across Ghana</span>
-                <div className="flex-1 h-px bg-gray-100" />
-              </div>
-
-              <div className="flex justify-around">
-                {[["10K+", "Tickets"], ["50+", "Events"], ["0%", "Fakes"]].map(([val, label]) => (
-                  <div key={label} className="text-center">
-                    <div className="grad-text font-black text-xl">{val}</div>
-                    <div className="text-gray-300 text-xs mt-0.5">{label}</div>
-                  </div>
-                ))}
-              </div>
-            </div>
+          <div style={{ borderTop: "1px solid var(--border)", paddingTop: "24px", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "12px" }}>
+            <span style={{ fontSize: "12px", color: "var(--text-muted)" }}>© 2026 Master Events Ghana · Secured by Polygon Blockchain</span>
+            <ThemeToggle compact={false} />
           </div>
         </div>
-      </div>
+      </footer>
     </div>
   );
 }
 
-// ── Desktop App View ─────────────────────────────────────────
-function DesktopAppView({ children, onNavigate }) {
+// ── About Page ────────────────────────────────────────────────
+function AboutPage({ onNavigate }) {
   return (
-    <div className="min-h-screen font-sans relative" style={{ background: "linear-gradient(160deg, #fffdf9 0%, #fff8f0 40%, #fff 100%)" }}>
-      {/* Floating bg */}
-      <div className="fixed inset-0 overflow-hidden pointer-events-none z-0">
-        <FloatingCards />
-      </div>
-
-      {/* Top nav */}
-      <div className="sticky top-0 z-50 flex justify-between items-center px-16 h-14 bg-white/90 backdrop-blur-md border-b border-black/5 shadow-sm">
-        <div onClick={() => onNavigate("home")} className="flex items-center gap-2.5 cursor-pointer">
-          <div className="w-8 h-8 rounded-xl flex items-center justify-center text-sm"
-            style={{ background: "linear-gradient(135deg, #f5a623, #e8920f)" }}>🎟️</div>
-          <span className="font-extrabold text-gray-900 text-base tracking-tight">Master Events</span>
-        </div>
-        <span onClick={() => onNavigate("home")} className="text-gray-400 text-sm cursor-pointer hover:text-amber-500 transition-colors font-medium">
-          ← Back to site
-        </span>
-      </div>
-
-      {/* App in centered max-width card */}
-      <div className="relative z-10 max-w-lg mx-auto px-5 py-10">
-        <div className="bg-white rounded-3xl overflow-hidden border border-gray-100"
-          style={{ boxShadow: "0 8px 60px rgba(0,0,0,0.1)", minHeight: "80vh" }}>
-          <div className="h-1 w-full" style={{ background: "linear-gradient(90deg, #f5a623, #e8920f)" }} />
-          <div className="overflow-y-auto overflow-x-hidden">
-            {children}
-          </div>
-        </div>
+    <div style={{ minHeight: "100vh", background: "var(--bg)", fontFamily: "var(--font-sans)" }}>
+      <NavBar onNavigate={onNavigate} active="about" />
+      <div style={{ maxWidth: "800px", margin: "0 auto", padding: "80px 32px" }}>
+        <motion.div initial="hidden" animate="show" variants={stagger}>
+          <motion.div variants={fadeUp} style={{ textAlign: "center", marginBottom: "64px" }}>
+            <div style={{ width: "80px", height: "80px", borderRadius: "24px", background: "linear-gradient(135deg, #f5a623, #e8920f)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "36px", margin: "0 auto 24px", boxShadow: "0 8px 32px rgba(245,166,35,0.3)" }}>🎟️</div>
+            <h1 style={{ fontSize: "clamp(36px, 4vw, 52px)", fontWeight: 900, letterSpacing: "-1.5px", color: "var(--text-primary)", marginBottom: "16px" }}>About Master Events</h1>
+            <p style={{ fontSize: "18px", color: "var(--text-secondary)", lineHeight: 1.7 }}>Africa's first blockchain-powered event ticketing platform.</p>
+          </motion.div>
+          {[
+            { icon: "🎯", title: "Our Mission",           body: "We believe every event experience should start with trust. Master Events uses blockchain technology to ensure every ticket is authentic, verifiable, and owned by the rightful buyer.", color: "#f5a623" },
+            { icon: "⛓️", title: "Blockchain Technology", body: "Every ticket purchased on Master Events is minted as an NFT on the Polygon blockchain — the same technology used by major global platforms, now available across Africa.", color: "#2563eb" },
+            { icon: "💰", title: "Fair for Organizers",   body: "We take only 5% per transaction. 95% goes directly to the organizer's wallet, withdrawable via MTN MoMo or VISA instantly.", color: "#16a34a" },
+            { icon: "🌍", title: "Built for Africa",      body: "From Afrobeats concerts in Accra to tech summits in Lagos — Master Events is designed for Africa's vibrant and growing events scene.", color: "#7c3aed" },
+            { icon: "👥", title: "The Team",              body: "Built by students at Ghana Communication Technology University (GCTU) as a final-year CS project — combining blockchain, mobile, and payments innovation.", color: "#0891b2" },
+          ].map((item, i) => (
+            <motion.div key={i} variants={fadeUp}
+              whileHover={{ y: -3, boxShadow: "var(--shadow-md)" }}
+              style={{ display: "flex", gap: "20px", background: "var(--bg-card)", borderRadius: "20px", padding: "28px", marginBottom: "16px", border: "1px solid var(--border)", boxShadow: "var(--shadow-sm)", transition: "box-shadow 0.2s" }}>
+              <div style={{ width: "56px", height: "56px", borderRadius: "16px", background: item.color + "15", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "26px", flexShrink: 0 }}>{item.icon}</div>
+              <div>
+                <div style={{ fontWeight: 700, fontSize: "17px", color: "var(--text-primary)", marginBottom: "8px" }}>{item.title}</div>
+                <div style={{ fontSize: "14px", color: "var(--text-secondary)", lineHeight: 1.7 }}>{item.body}</div>
+              </div>
+            </motion.div>
+          ))}
+          <motion.div variants={fadeUp} style={{ textAlign: "center", marginTop: "48px" }}>
+            <p style={{ color: "var(--text-muted)", marginBottom: "8px", fontSize: "14px" }}>Have questions? Reach us at</p>
+            <a href="mailto:mastereventgh@gmail.com" style={{ color: "#f5a623", fontWeight: 700, fontSize: "18px" }}>mastereventgh@gmail.com</a>
+          </motion.div>
+        </motion.div>
       </div>
     </div>
   );
@@ -470,60 +477,34 @@ function DesktopAppView({ children, onNavigate }) {
 
 // ── Main Export ───────────────────────────────────────────────
 export default function PhoneFrame({ children }) {
-  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
   const [desktopPage, setDesktopPage] = useState("home");
+  const setScreen = useStore(s => s.setScreen);
+  const isLoggedIn = useStore(s => s.isLoggedIn);
+  useTheme();
 
+  const handleNavigate = (page) => {
+    if (page === "login" || page === "signup") {
+      setScreen(page);
+      setDesktopPage("app");
+    } else if (page === "app") {
+      setDesktopPage("app");
+    } else {
+      setDesktopPage(page);
+    }
+  };
+
+  // If logged in always show app
   useEffect(() => {
-    const handleResize = () => setIsMobile(window.innerWidth <= 768);
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
-  }, []);
+    if (isLoggedIn) setDesktopPage("app");
+  }, [isLoggedIn]);
 
-  const handleNavigate = (page) => setDesktopPage(page);
+  if (desktopPage === "home")  return <LandingPage onNavigate={handleNavigate} />;
+  if (desktopPage === "about") return <AboutPage onNavigate={handleNavigate} />;
 
-  if (isMobile) {
-    return (
-      <>
-        <style>{`
-          * { box-sizing: border-box; margin: 0; padding: 0; }
-          html, body, #root { height: 100%; width: 100%; overflow: hidden; background: #f8f8f6; }
-        `}</style>
-        <div style={{ width: "100%", height: "100vh", background: "#f8f8f6", display: "flex", flexDirection: "column", fontFamily: "-apple-system, BlinkMacSystemFont, sans-serif", overflow: "hidden" }}>
-          <div style={{ flex: 1, overflowY: "auto", display: "flex", flexDirection: "column" }}>
-            {children}
-          </div>
-        </div>
-      </>
-    );
-  }
-
+  // App view — full responsive, no phone frame
   return (
-    <>
-      <style>{`
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { overflow-y: auto; }
-        ::-webkit-scrollbar { width: 6px; }
-        ::-webkit-scrollbar-track { background: #f8f8f6; }
-        ::-webkit-scrollbar-thumb { background: #f5a623; border-radius: 3px; }
-        .skeleton {
-          background: linear-gradient(90deg, #f0f0f0 25%, #e8e8e8 50%, #f0f0f0 75%);
-          background-size: 200% 100%;
-          animation: shimmer 1.4s infinite;
-          border-radius: 10px;
-        }
-        @keyframes shimmer { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
-      `}</style>
-
-      {desktopPage === "home"  && <LandingPage onNavigate={handleNavigate} />}
-      {desktopPage === "about" && <AboutPage onNavigate={handleNavigate} />}
-      {(desktopPage === "login" || desktopPage === "signup") && (
-        <DesktopAuthPage type={desktopPage} onNavigate={handleNavigate} />
-      )}
-      {desktopPage === "app" && (
-        <DesktopAppView onNavigate={handleNavigate}>
-          {children}
-        </DesktopAppView>
-      )}
-    </>
+    <div style={{ minHeight: "100vh", background: "var(--bg)", fontFamily: "var(--font-sans)" }}>
+      {children}
+    </div>
   );
 }

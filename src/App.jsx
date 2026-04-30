@@ -16,7 +16,8 @@ import {
 } from "./screens/organizer/OrganizerScreens";
 import OrganizerWallet from "./screens/organizer/OrganizerWallet";
 import { DoorStaffLogin, DoorStaffScan, OrganizerScan } from "./screens/doorstaff/DoorStaffScreens";
-import ThemeToggle from "./components/ThemeToggle";
+import { useTheme } from "./hooks/useTheme";
+import { motion } from "framer-motion";
 
 // ── Mobile app tabs ───────────────────────────────────────────
 function AppTabs() {
@@ -62,6 +63,9 @@ function DesktopAppLayout() {
   const setScreen    = useStore(s => s.setScreen);
   const currentUser  = useStore(s => s.currentUser);
   const handleLogout = useStore(s => s.handleLogout);
+  const { theme, setTheme } = useTheme();
+  const [collapsed, setCollapsed] = React.useState(false);
+  const [profileOpen, setProfileOpen] = React.useState(true);
 
   const attendeeNav = [
     { id: "home",    icon: "🏠", label: "Discover Events" },
@@ -86,17 +90,12 @@ function DesktopAppLayout() {
   const renderContent = () => {
     if (isFullScreen) {
       const fullRoutes = {
-        checkout:       <Checkout />,
-        ticketView:     <TicketView />,
-        resale:         <Resale />,
-        resaleSuccess:  <ResaleSuccess />,
-        transfer:       <Transfer />,
-        paymentSuccess: <PaymentSuccess />,
-        addEvent:       <AddEvent />,
-        orgEventDetail: <OrganizerEventDetail />,
-        scanTicket:     <OrganizerScan />,
-        doorStaffLogin: <DoorStaffLogin />,
-        doorStaffScan:  <DoorStaffScan />,
+        checkout: <Checkout />, ticketView: <TicketView />,
+        resale: <Resale />, resaleSuccess: <ResaleSuccess />,
+        transfer: <Transfer />, paymentSuccess: <PaymentSuccess />,
+        addEvent: <AddEvent />, orgEventDetail: <OrganizerEventDetail />,
+        scanTicket: <OrganizerScan />, doorStaffLogin: <DoorStaffLogin />,
+        doorStaffScan: <DoorStaffScan />,
       };
       return fullRoutes[screen];
     }
@@ -115,115 +114,195 @@ function DesktopAppLayout() {
   };
 
   const screenTitles = {
-    checkout:       "Checkout",
-    ticketView:     "Your Ticket",
-    resale:         "Resell Ticket",
-    resaleSuccess:  "Listed!",
-    transfer:       "Transfer Ticket",
-    paymentSuccess: "Payment Successful",
-    addEvent:       "Create Event",
-    orgEventDetail: "Event Details",
-    scanTicket:     "Scan Tickets",
-    doorStaffLogin: "Door Staff",
-    doorStaffScan:  "Door Scanner",
+    checkout: "Checkout", ticketView: "Your Ticket",
+    resale: "Resell Ticket", resaleSuccess: "Listed!",
+    transfer: "Transfer Ticket", paymentSuccess: "Payment Successful",
+    addEvent: "Create Event", orgEventDetail: "Event Details",
+    scanTicket: "Scan Tickets", doorStaffLogin: "Door Staff",
+    doorStaffScan: "Door Scanner",
   };
+
+  const themeIcons  = { light: "☀️", dark: "🌙", system: "💻" };
+  const themeOrder  = ["light", "dark", "system"];
+  const nextTheme   = themeOrder[(themeOrder.indexOf(theme) + 1) % 3];
+  const sidebarW    = collapsed ? "68px" : "256px";
 
   return (
     <div style={{ display: "flex", minHeight: "100vh", background: "var(--bg)", fontFamily: "var(--font-sans)" }}>
 
       {/* ── Sidebar ── */}
-      <aside style={{ width: "256px", flexShrink: 0, background: "var(--bg-card)", borderRight: "1px solid var(--border)", display: "flex", flexDirection: "column", position: "sticky", top: 0, height: "100vh", boxShadow: "2px 0 20px rgba(0,0,0,0.04)" }}>
+      <motion.aside
+        animate={{ width: sidebarW }}
+        transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
+        style={{ flexShrink: 0, background: "var(--bg-card)", borderRight: "1px solid var(--border)", display: "flex", flexDirection: "column", position: "sticky", top: 0, height: "100vh", overflow: "hidden", boxShadow: "2px 0 20px rgba(0,0,0,0.04)" }}>
 
-        {/* Logo */}
-        <div style={{ padding: "20px 24px", borderBottom: "1px solid var(--border)" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-            <div style={{ width: "36px", height: "36px", borderRadius: "12px", background: "linear-gradient(135deg, #f5a623, #e8920f)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "18px", boxShadow: "0 4px 12px rgba(245,166,35,0.3)", flexShrink: 0 }}>🎟️</div>
-            <div>
-              <div style={{ fontWeight: 800, fontSize: "14px", color: "var(--text-primary)", letterSpacing: "-0.3px" }}>Master Events</div>
-              <div style={{ fontSize: "11px", color: "#f5a623", fontWeight: 600, marginTop: "2px" }}>{role === "organizer" ? "Organizer" : "Attendee"}</div>
-            </div>
-          </div>
-        </div>
-
-        {/* User info */}
-        <div style={{ padding: "16px 24px", borderBottom: "1px solid var(--border)" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-            <div style={{ width: "40px", height: "40px", borderRadius: "50%", background: "linear-gradient(135deg, #f5a623, #e8920f)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "16px", fontWeight: 700, color: "#fff", flexShrink: 0 }}>
-              {currentUser?.first_name?.[0] || "U"}
-            </div>
-            <div style={{ minWidth: 0 }}>
-              <div style={{ fontWeight: 700, fontSize: "13px", color: "var(--text-primary)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                {currentUser?.first_name} {currentUser?.last_name}
+        {/* ── Brand ── */}
+        <div style={{ padding: "14px 12px", borderBottom: "1px solid var(--border)", display: "flex", alignItems: "center", justifyContent: collapsed ? "center" : "space-between", gap: "8px" }}>
+          {!collapsed && (
+            <div style={{ display: "flex", alignItems: "center", gap: "10px", overflow: "hidden" }}>
+              <div style={{ width: "32px", height: "32px", borderRadius: "10px", background: "linear-gradient(135deg, #f5a623, #e8920f)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "15px", flexShrink: 0, boxShadow: "0 4px 12px rgba(245,166,35,0.3)" }}>🎟️</div>
+              <div>
+                <div style={{ fontWeight: 800, fontSize: "13px", color: "var(--text-primary)", letterSpacing: "-0.3px", whiteSpace: "nowrap" }}>Master Events</div>
+                <div style={{ display: "flex", alignItems: "center", gap: "4px", marginTop: "2px" }}>
+                  <motion.div animate={{ scale: [1, 1.3, 1] }} transition={{ repeat: Infinity, duration: 2 }}
+                    style={{ width: "5px", height: "5px", borderRadius: "50%", background: "#16a34a" }} />
+                  <span style={{ fontSize: "9px", color: "#16a34a", fontWeight: 700, letterSpacing: "0.3px" }}>POLYGON LIVE</span>
+                </div>
               </div>
-              <div style={{ fontSize: "11px", color: "var(--text-muted)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{currentUser?.email}</div>
             </div>
-          </div>
+          )}
+          {collapsed && (
+            <div style={{ width: "32px", height: "32px", borderRadius: "10px", background: "linear-gradient(135deg, #f5a623, #e8920f)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "15px", boxShadow: "0 4px 12px rgba(245,166,35,0.3)" }}>🎟️</div>
+          )}
+          {!collapsed && (
+            <motion.button whileTap={{ scale: 0.9 }} onClick={() => setCollapsed(true)}
+              style={{ width: "26px", height: "26px", borderRadius: "8px", background: "var(--bg-subtle)", border: "1px solid var(--border)", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", fontSize: "11px", color: "var(--text-muted)", flexShrink: 0 }}>
+              ←
+            </motion.button>
+          )}
+          {collapsed && (
+            <div /> // spacer — expand button is in profile section
+          )}
         </div>
 
-        {/* Nav */}
-        <nav style={{ flex: 1, padding: "16px 12px", overflowY: "auto" }}>
-          <div style={{ fontSize: "10px", fontWeight: 700, color: "var(--text-muted)", letterSpacing: "1.5px", padding: "0 12px", marginBottom: "10px" }}>MENU</div>
+        {/* ── Profile — collapsible ── */}
+        <div style={{ borderBottom: "1px solid var(--border)", overflow: "hidden" }}>
+          {collapsed ? (
+            // Collapsed — just avatar, click to expand sidebar
+            <motion.div whileHover={{ background: "var(--bg-hover)" }} whileTap={{ scale: 0.95 }}
+              onClick={() => setCollapsed(false)}
+              title={currentUser?.first_name + " " + currentUser?.last_name}
+              style={{ padding: "12px 0", display: "flex", justifyContent: "center", cursor: "pointer", transition: "background 0.18s" }}>
+              <div style={{ width: "36px", height: "36px", borderRadius: "50%", background: "linear-gradient(135deg, #f5a623, #e8920f)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "15px", fontWeight: 700, color: "#fff" }}>
+                {currentUser?.first_name?.[0]?.toUpperCase() || "U"}
+              </div>
+            </motion.div>
+          ) : (
+            <motion.div
+              onClick={() => setProfileOpen(!profileOpen)}
+              style={{ padding: "12px 14px", cursor: "pointer", userSelect: "none" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                <div style={{ width: "36px", height: "36px", borderRadius: "50%", background: "linear-gradient(135deg, #f5a623, #e8920f)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "15px", fontWeight: 700, color: "#fff", flexShrink: 0 }}>
+                  {currentUser?.first_name?.[0]?.toUpperCase() || "U"}
+                </div>
+                <div style={{ minWidth: 0, flex: 1 }}>
+                  <div style={{ fontWeight: 700, fontSize: "13px", color: "var(--text-primary)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                    {currentUser?.first_name} {currentUser?.last_name}
+                  </div>
+                  <div style={{ fontSize: "11px", color: "var(--text-muted)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                    {currentUser?.email}
+                  </div>
+                </div>
+                <motion.span
+                  animate={{ rotate: profileOpen ? 180 : 0 }}
+                  transition={{ duration: 0.2 }}
+                  style={{ fontSize: "10px", color: "var(--text-muted)", flexShrink: 0 }}>
+                  ▼
+                </motion.span>
+              </div>
+              <motion.div
+                initial={false}
+                animate={{ height: profileOpen ? "auto" : 0, opacity: profileOpen ? 1 : 0 }}
+                transition={{ duration: 0.2 }}
+                style={{ overflow: "hidden" }}>
+                <div style={{ marginTop: "10px", display: "inline-flex", alignItems: "center", gap: "4px", padding: "3px 10px", borderRadius: "99px", background: "rgba(245,166,35,0.1)", border: "1px solid rgba(245,166,35,0.2)" }}>
+                  <span style={{ fontSize: "9px", fontWeight: 700, color: "#f5a623", letterSpacing: "0.5px" }}>
+                    {role === "organizer" ? "⚡ ORGANIZER" : "🎟️ ATTENDEE"}
+                  </span>
+                </div>
+              </motion.div>
+            </motion.div>
+          )}
+        </div>
+
+        {/* ── Nav ── */}
+        <nav style={{ flex: 1, padding: "10px 8px", overflowY: "auto" }}>
+          {!collapsed && (
+            <div style={{ fontSize: "9px", fontWeight: 700, color: "var(--text-muted)", letterSpacing: "1.5px", padding: "0 8px", marginBottom: "8px" }}>MENU</div>
+          )}
           {navItems.map(item => {
             const isActive = !isFullScreen && activeTab === item.id;
             return (
-              <div key={item.id}
+              <motion.div key={item.id} whileTap={{ scale: 0.94 }}
                 onClick={() => { setActiveTab(item.id); setScreen("app"); }}
-                style={{ display: "flex", alignItems: "center", gap: "12px", padding: "10px 12px", borderRadius: "12px", marginBottom: "2px", cursor: "pointer", background: isActive ? "rgba(245,166,35,0.1)" : "transparent", color: isActive ? "#f5a623" : "var(--text-secondary)", transition: "all 0.18s ease" }}
+                title={collapsed ? item.label : ""}
+                style={{ display: "flex", alignItems: "center", gap: "10px", padding: collapsed ? "10px 0" : "9px 10px", justifyContent: collapsed ? "center" : "flex-start", borderRadius: "12px", marginBottom: "2px", cursor: "pointer", background: isActive ? "rgba(245,166,35,0.1)" : "transparent", color: isActive ? "#f5a623" : "var(--text-secondary)", transition: "all 0.18s ease" }}
                 onMouseEnter={e => { if (!isActive) e.currentTarget.style.background = "var(--bg-hover)"; }}
                 onMouseLeave={e => { if (!isActive) e.currentTarget.style.background = "transparent"; }}>
-                <span style={{ fontSize: "18px", width: "24px", textAlign: "center" }}>{item.icon}</span>
-                <span style={{ fontWeight: 600, fontSize: "13px" }}>{item.label}</span>
-                {isActive && <div style={{ marginLeft: "auto", width: "6px", height: "6px", borderRadius: "50%", background: "#f5a623" }} />}
-              </div>
+                <span style={{ fontSize: "17px", flexShrink: 0 }}>{item.icon}</span>
+                {!collapsed && <span style={{ fontWeight: 600, fontSize: "13px", whiteSpace: "nowrap" }}>{item.label}</span>}
+                {!collapsed && isActive && <div style={{ marginLeft: "auto", width: "6px", height: "6px", borderRadius: "50%", background: "#f5a623" }} />}
+              </motion.div>
             );
           })}
 
           {role === "organizer" && (
-            <div style={{ marginTop: "16px" }}>
-              <div style={{ fontSize: "10px", fontWeight: 700, color: "var(--text-muted)", letterSpacing: "1.5px", padding: "0 12px", marginBottom: "10px" }}>ACTIONS</div>
-              <div onClick={() => setScreen("addEvent")}
-                style={{ display: "flex", alignItems: "center", gap: "12px", padding: "10px 12px", borderRadius: "12px", cursor: "pointer", border: "1.5px dashed rgba(245,166,35,0.3)", color: "#f5a623", transition: "all 0.18s ease" }}
-                onMouseEnter={e => { e.currentTarget.style.background = "rgba(245,166,35,0.06)"; e.currentTarget.style.borderColor = "#f5a623"; }}
-                onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.borderColor = "rgba(245,166,35,0.3)"; }}>
-                <span style={{ fontSize: "18px", width: "24px", textAlign: "center" }}>➕</span>
-                <span style={{ fontWeight: 600, fontSize: "13px" }}>Create Event</span>
-              </div>
+            <div style={{ marginTop: "12px" }}>
+              {!collapsed && (
+                <div style={{ fontSize: "9px", fontWeight: 700, color: "var(--text-muted)", letterSpacing: "1.5px", padding: "0 8px", marginBottom: "8px" }}>ACTIONS</div>
+              )}
+              <motion.div whileTap={{ scale: 0.94 }}
+                onClick={() => setScreen("addEvent")}
+                title={collapsed ? "Create Event" : ""}
+                style={{ display: "flex", alignItems: "center", gap: "10px", padding: collapsed ? "10px 0" : "9px 10px", justifyContent: collapsed ? "center" : "flex-start", borderRadius: "12px", cursor: "pointer", border: collapsed ? "none" : "1.5px dashed rgba(245,166,35,0.3)", color: "#f5a623", transition: "all 0.18s ease" }}
+                onMouseEnter={e => { e.currentTarget.style.background = "rgba(245,166,35,0.06)"; if (!collapsed) e.currentTarget.style.borderColor = "#f5a623"; }}
+                onMouseLeave={e => { e.currentTarget.style.background = "transparent"; if (!collapsed) e.currentTarget.style.borderColor = "rgba(245,166,35,0.3)"; }}>
+                <span style={{ fontSize: "17px", flexShrink: 0 }}>➕</span>
+                {!collapsed && <span style={{ fontWeight: 600, fontSize: "13px" }}>Create Event</span>}
+              </motion.div>
             </div>
           )}
         </nav>
 
-        {/* Bottom — theme + logout */}
-        <div style={{ padding: "12px", borderTop: "1px solid var(--border)" }}>
-          <div style={{ padding: "8px 12px", marginBottom: "4px" }}>
-            <ThemeToggle compact={false} />
-          </div>
-          <div onClick={handleLogout}
-            style={{ display: "flex", alignItems: "center", gap: "12px", padding: "10px 12px", borderRadius: "12px", cursor: "pointer", color: "var(--error)", transition: "background 0.18s ease" }}
+        {/* ── Bottom — theme + logout ── */}
+        <div style={{ padding: "8px", borderTop: "1px solid var(--border)" }}>
+          {/* Theme — single click to cycle */}
+          <motion.div whileTap={{ scale: 0.9 }}
+            onClick={() => setTheme(nextTheme)}
+            title={collapsed ? theme + " mode" : "Switch to " + nextTheme + " mode"}
+            style={{ display: "flex", alignItems: "center", gap: "10px", padding: collapsed ? "10px 0" : "9px 10px", justifyContent: collapsed ? "center" : "flex-start", borderRadius: "12px", cursor: "pointer", marginBottom: "4px", transition: "background 0.18s" }}
+            onMouseEnter={e => { e.currentTarget.style.background = "var(--bg-hover)"; }}
+            onMouseLeave={e => { e.currentTarget.style.background = "transparent"; }}>
+            <span style={{ fontSize: "17px" }}>{themeIcons[theme]}</span>
+            {!collapsed && (
+              <span style={{ fontSize: "13px", fontWeight: 600, color: "var(--text-secondary)" }}>
+                {theme.charAt(0).toUpperCase() + theme.slice(1)} mode
+              </span>
+            )}
+          </motion.div>
+
+          {/* Logout */}
+          <motion.div whileTap={{ scale: 0.9 }} onClick={handleLogout}
+            title={collapsed ? "Log Out" : ""}
+            style={{ display: "flex", alignItems: "center", gap: "10px", padding: collapsed ? "10px 0" : "9px 10px", justifyContent: collapsed ? "center" : "flex-start", borderRadius: "12px", cursor: "pointer", color: "var(--error)", transition: "background 0.18s" }}
             onMouseEnter={e => { e.currentTarget.style.background = "var(--error-bg)"; }}
             onMouseLeave={e => { e.currentTarget.style.background = "transparent"; }}>
-            <span style={{ fontSize: "18px", width: "24px", textAlign: "center" }}>🚪</span>
-            <span style={{ fontWeight: 600, fontSize: "13px" }}>Log Out</span>
-          </div>
+            <span style={{ fontSize: "17px" }}>🚪</span>
+            {!collapsed && <span style={{ fontWeight: 600, fontSize: "13px" }}>Log Out</span>}
+          </motion.div>
         </div>
-      </aside>
+      </motion.aside>
 
       {/* ── Main content ── */}
       <main style={{ flex: 1, display: "flex", flexDirection: "column", minWidth: 0, overflow: "hidden" }}>
 
         {/* Top bar */}
-        <div style={{ background: "var(--bg-card)", borderBottom: "1px solid var(--border)", padding: "16px 32px", display: "flex", justifyContent: "space-between", alignItems: "center", position: "sticky", top: 0, zIndex: 40, boxShadow: "var(--shadow-sm)" }}>
+        <div style={{ background: "var(--bg-card)", borderBottom: "1px solid var(--border)", padding: "14px 32px", display: "flex", justifyContent: "space-between", alignItems: "center", position: "sticky", top: 0, zIndex: 40, boxShadow: "var(--shadow-sm)" }}>
           <div>
-            <h1 style={{ fontWeight: 800, fontSize: "20px", color: "var(--text-primary)", letterSpacing: "-0.4px" }}>
+            <h1 style={{ fontWeight: 800, fontSize: "19px", color: "var(--text-primary)", letterSpacing: "-0.4px" }}>
               {isFullScreen
                 ? screenTitles[screen] || "Master Events"
                 : navItems.find(n => n.id === activeTab)?.label || "Master Events"
               }
             </h1>
-            <p style={{ fontSize: "11px", color: "var(--text-muted)", marginTop: "2px" }}>Master Events · Ghana Blockchain Ticketing</p>
+            <p style={{ fontSize: "11px", color: "var(--text-muted)", marginTop: "1px" }}>
+              {new Date().toLocaleDateString("en-GH", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}
+            </p>
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
             <div style={{ display: "flex", alignItems: "center", gap: "6px", padding: "6px 12px", borderRadius: "99px", border: "1px solid rgba(22,163,74,0.2)", background: "rgba(22,163,74,0.06)" }}>
-              <div style={{ width: "6px", height: "6px", borderRadius: "50%", background: "#16a34a" }} />
+              <motion.div animate={{ scale: [1, 1.3, 1] }} transition={{ repeat: Infinity, duration: 2 }}
+                style={{ width: "6px", height: "6px", borderRadius: "50%", background: "#16a34a" }} />
               <span style={{ fontSize: "11px", fontWeight: 700, color: "#16a34a" }}>Polygon Live</span>
             </div>
           </div>
@@ -274,6 +353,7 @@ function MobileAppContent() {
 export default function App() {
   const isLoggedIn = useStore(s => s.isLoggedIn);
   const [desktop, setDesktop] = React.useState(window.innerWidth > 768);
+  useTheme();
 
   React.useEffect(() => {
     const handler = () => setDesktop(window.innerWidth > 768);

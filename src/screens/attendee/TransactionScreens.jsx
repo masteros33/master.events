@@ -56,7 +56,8 @@ export function PaymentSuccess() {
       <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}
         transition={{ type: "spring", stiffness: 300, damping: 25 }}
         style={{ background: "var(--bg-card)", borderRadius: "24px", padding: desktop ? "56px 48px" : "40px 28px", textAlign: "center", boxShadow: desktop ? "var(--shadow-lg)" : "none", margin: desktop ? 0 : "20px", border: "1px solid var(--border)" }}>
-        <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: "spring", stiffness: 400, damping: 20, delay: 0.2 }}
+        <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }}
+          transition={{ type: "spring", stiffness: 400, damping: 20, delay: 0.2 }}
           style={{ width: "96px", height: "96px", borderRadius: "50%", background: "linear-gradient(135deg, #16a34a, #22c55e)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "48px", margin: "0 auto 24px", boxShadow: "0 8px 32px rgba(22,163,74,0.35)" }}>
           ✅
         </motion.div>
@@ -104,7 +105,6 @@ export function Checkout() {
   const subtotal = checkoutEvent.price * ticketQty;
   const fee      = Math.round(subtotal * 0.05);
   const total    = subtotal + fee;
-
   const onPay = async () => { setPaying(true); await handleBuyTicket(); setPaying(false); };
 
   return (
@@ -129,7 +129,6 @@ export function Checkout() {
             </div>
           </div>
 
-          {/* Quantity */}
           <div style={{ background: "var(--bg-subtle)", borderRadius: "16px", padding: "18px", marginBottom: "14px", border: "1px solid var(--border)" }}>
             <div style={{ fontWeight: 700, fontSize: "14px", color: "var(--text-primary)", marginBottom: "14px" }}>Quantity</div>
             <div style={{ display: "flex", alignItems: "center", gap: "20px" }}>
@@ -141,7 +140,6 @@ export function Checkout() {
             </div>
           </div>
 
-          {/* Payment method */}
           <div style={{ background: "var(--bg-subtle)", borderRadius: "16px", padding: "18px", marginBottom: "14px", border: "1px solid var(--border)" }}>
             <div style={{ fontWeight: 700, fontSize: "14px", color: "var(--text-primary)", marginBottom: "14px" }}>Payment Method</div>
             <div style={{ display: "flex", gap: "10px" }}>
@@ -154,7 +152,6 @@ export function Checkout() {
             </div>
           </div>
 
-          {/* Order summary */}
           <div style={{ background: "var(--bg-subtle)", borderRadius: "16px", padding: "18px", marginBottom: "20px", border: "1px solid var(--border)" }}>
             <div style={{ fontWeight: 700, fontSize: "14px", color: "var(--text-primary)", marginBottom: "14px" }}>Order Summary</div>
             {[["Tickets", ticketQty + " x Ghc " + checkoutEvent.price], ["Platform Fee (5%)", "Ghc " + fee]].map(([k, v]) => (
@@ -205,7 +202,7 @@ export function TicketView() {
   const setTransferDone   = useStore(s => s.setTransferDone);
 
   const [dynamicQR,  setDynamicQR]  = useState(viewingTicket?.dynamic_qr || null);
-  const [timeLeft,   setTimeLeft]   = useState(30);
+  const [timeLeft,   setTimeLeft]   = useState(10);
   const [qrLoaded,   setQrLoaded]   = useState(false);
   const [qrError,    setQrError]    = useState(false);
   const [refreshing, setRefreshing] = useState(false);
@@ -214,9 +211,9 @@ export function TicketView() {
   useEffect(() => {
     if (!viewingTicket?.ticket_id) return;
     const tick = () => {
-      const sLeft = 30 - (Math.floor(Date.now() / 1000) % 30);
+      const sLeft = 10 - (Math.floor(Date.now() / 1000) % 10);
       setTimeLeft(sLeft);
-      if (sLeft === 30) {
+      if (sLeft === 10) {
         setRefreshing(true); setQrLoaded(false);
         ticketsAPI.myTickets().then(data => {
           if (Array.isArray(data)) {
@@ -245,7 +242,7 @@ export function TicketView() {
         : null;
 
   const polygonscanUrl = viewingTicket.nft_tx_hash ? "https://polygonscan.com/tx/" + viewingTicket.nft_tx_hash : null;
-  const isExpiringSoon = timeLeft <= 5;
+  const isExpiringSoon = timeLeft <= 3;
   const progressColor  = isExpiringSoon ? "#dc2626" : "#16a34a";
 
   return (
@@ -292,7 +289,8 @@ export function TicketView() {
                   {refreshing && (
                     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
                       style={{ position: "absolute", inset: 0, background: "rgba(255,255,255,0.85)", borderRadius: "16px", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 10 }}>
-                      <div style={{ fontSize: "32px" }}>🔄</div>
+                      <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 0.8, ease: "linear" }}
+                        style={{ fontSize: "28px" }}>🔄</motion.div>
                     </motion.div>
                   )}
                 </AnimatePresence>
@@ -308,21 +306,32 @@ export function TicketView() {
               </div>
             ) : (
               <div style={{ width: "200px", height: "200px", borderRadius: "16px", background: "var(--bg-subtle)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", border: "2px dashed var(--border)", gap: "10px" }}>
-                <span style={{ fontSize: "48px" }}>📱</span>
+                <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 1, ease: "linear" }}
+                  style={{ fontSize: "40px" }}>⏳</motion.div>
                 <span style={{ fontSize: "12px", color: "var(--text-muted)" }}>Generating QR...</span>
               </div>
             )}
 
-            {/* Countdown */}
+            {/* Countdown bar */}
             {viewingTicket.status === "active" && (
-              <motion.div animate={{ backgroundColor: isExpiringSoon ? "rgba(220,38,38,0.08)" : "rgba(22,163,74,0.08)" }}
-                style={{ display: "flex", alignItems: "center", gap: "8px", border: `1px solid ${isExpiringSoon ? "rgba(220,38,38,0.2)" : "rgba(22,163,74,0.2)"}`, padding: "8px 16px", borderRadius: "20px", transition: "all 0.3s" }}>
-                <motion.div animate={{ scale: [1, 1.3, 1] }} transition={{ repeat: Infinity, duration: 1 }}
-                  style={{ width: "8px", height: "8px", borderRadius: "50%", background: progressColor }} />
-                <span style={{ fontSize: "12px", fontWeight: 700, color: progressColor }}>
-                  {isExpiringSoon ? `⚡ Refreshing in ${timeLeft}s` : `🔒 QR refreshes in ${timeLeft}s`}
-                </span>
-              </motion.div>
+              <div style={{ width: "200px" }}>
+                <div style={{ height: "4px", background: "var(--bg-subtle)", borderRadius: "2px", overflow: "hidden", marginBottom: "8px" }}>
+                  <motion.div
+                    key={timeLeft}
+                    initial={{ width: "100%" }}
+                    animate={{ width: (timeLeft / 10 * 100) + "%" }}
+                    transition={{ duration: 1, ease: "linear" }}
+                    style={{ height: "100%", background: isExpiringSoon ? "#dc2626" : "#16a34a", borderRadius: "2px" }} />
+                </div>
+                <motion.div animate={{ backgroundColor: isExpiringSoon ? "rgba(220,38,38,0.08)" : "rgba(22,163,74,0.08)" }}
+                  style={{ display: "flex", alignItems: "center", gap: "8px", border: `1px solid ${isExpiringSoon ? "rgba(220,38,38,0.2)" : "rgba(22,163,74,0.2)"}`, padding: "8px 16px", borderRadius: "20px", transition: "all 0.3s" }}>
+                  <motion.div animate={{ scale: [1, 1.3, 1] }} transition={{ repeat: Infinity, duration: 1 }}
+                    style={{ width: "8px", height: "8px", borderRadius: "50%", background: progressColor }} />
+                  <span style={{ fontSize: "12px", fontWeight: 700, color: progressColor }}>
+                    {isExpiringSoon ? `⚡ Refreshing in ${timeLeft}s` : `🔒 QR refreshes in ${timeLeft}s`}
+                  </span>
+                </motion.div>
+              </div>
             )}
 
             {/* Security badge */}
@@ -457,7 +466,8 @@ export function ResaleSuccess() {
     <PageWrap maxW="480px">
       <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}
         style={{ background: "var(--bg-card)", borderRadius: "24px", padding: desktop ? "60px 48px" : "40px 28px", textAlign: "center", boxShadow: desktop ? "var(--shadow-lg)" : "none", border: "1px solid var(--border)" }}>
-        <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: "spring", stiffness: 400, damping: 20, delay: 0.15 }}
+        <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }}
+          transition={{ type: "spring", stiffness: 400, damping: 20, delay: 0.15 }}
           style={{ width: "88px", height: "88px", borderRadius: "28px", background: "linear-gradient(135deg, #f5a623, #e8920f)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "40px", margin: "0 auto 24px", boxShadow: "var(--shadow-brand)" }}>🏷️</motion.div>
         <h1 style={{ fontSize: "28px", fontWeight: 800, color: "var(--text-primary)", marginBottom: "10px" }}>Listed for Resale!</h1>
         <p style={{ color: "var(--text-secondary)", fontSize: "15px", lineHeight: 1.7, marginBottom: "32px" }}>Your ticket is now on the resale market. You will be notified when it sells.</p>
@@ -498,7 +508,8 @@ export function Transfer() {
     <PageWrap maxW="480px">
       <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}
         style={{ background: "var(--bg-card)", borderRadius: "24px", padding: desktop ? "60px 48px" : "40px 28px", textAlign: "center", boxShadow: desktop ? "var(--shadow-lg)" : "none", border: "1px solid var(--border)" }}>
-        <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: "spring", stiffness: 400, damping: 20, delay: 0.15 }}
+        <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }}
+          transition={{ type: "spring", stiffness: 400, damping: 20, delay: 0.15 }}
           style={{ width: "88px", height: "88px", borderRadius: "28px", background: "rgba(22,163,74,0.1)", border: "2px solid rgba(22,163,74,0.2)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "40px", margin: "0 auto 24px" }}>✅</motion.div>
         <h1 style={{ fontSize: "28px", fontWeight: 800, color: "var(--text-primary)", marginBottom: "10px" }}>Ticket Transferred!</h1>
         <p style={{ color: "var(--text-secondary)", fontSize: "15px", lineHeight: 1.7, marginBottom: "24px" }}>
@@ -542,7 +553,8 @@ export function Transfer() {
             <div style={{ fontSize: "12px", color: "var(--error)", fontWeight: 700, marginBottom: "4px" }}>This cannot be undone</div>
             <div style={{ fontSize: "12px", color: "var(--text-muted)" }}>Make sure the email address is correct before confirming.</div>
           </div>
-          <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }} onClick={onTransfer} disabled={transferring}
+          <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}
+            onClick={onTransfer} disabled={transferring}
             style={{ ...primaryBtn, background: "linear-gradient(135deg, #2563eb, #1d4ed8)", opacity: transferring ? 0.6 : 1 }}>
             {transferring ? "Transferring..." : "Confirm Transfer"}
           </motion.button>

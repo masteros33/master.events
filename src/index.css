@@ -3,7 +3,10 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-/* ── Design tokens — Light mode ───────────────────────── */
+
+/* ══════════════════════════════════════════════════════════════
+   DESIGN TOKENS — LIGHT MODE
+══════════════════════════════════════════════════════════════ */
 :root {
   /* Brand */
   --brand:          #f5a623;
@@ -57,9 +60,15 @@
   /* Transitions */
   --ease-spring:    cubic-bezier(0.16, 1, 0.3, 1);
   --ease-smooth:    cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* PWA / Safe area nav height */
+  --nav-height:     56px;
+  --nav-total:      calc(var(--nav-height) + env(safe-area-inset-bottom, 0px));
 }
 
-/* ── Dark mode tokens ─────────────────────────────────── */
+/* ══════════════════════════════════════════════════════════════
+   DARK MODE TOKENS
+══════════════════════════════════════════════════════════════ */
 [data-theme="dark"] {
   --bg:             #0e0e0e;
   --bg-card:        #1a1a1a;
@@ -84,39 +93,68 @@
   --shadow-lg:      0 12px 40px rgba(0,0,0,0.5);
 }
 
-/* ── Base reset ───────────────────────────────────────── */
+/* ══════════════════════════════════════════════════════════════
+   RESET + BASE
+══════════════════════════════════════════════════════════════ */
 *, *::before, *::after {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
   -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
 }
 
+/* Fill entire screen on iOS including notch */
 html {
+  height: -webkit-fill-available;
   scroll-behavior: smooth;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
 }
 
-html, body, #root {
-  height: 100%;
+body {
+  min-height: 100vh;
+  min-height: -webkit-fill-available;
   width: 100%;
   font-family: var(--font-sans);
   background: var(--bg);
   color: var(--text-primary);
+  /* Prevent rubber-band / overscroll on iOS */
   overscroll-behavior: none;
+  -webkit-overflow-scrolling: touch;
+  /* Respect notch at top and sides — NOT bottom (nav handles it) */
+  padding-top: env(safe-area-inset-top, 0px);
+  padding-left: env(safe-area-inset-left, 0px);
+  padding-right: env(safe-area-inset-right, 0px);
 }
 
-/* ── Scrollbar ────────────────────────────────────────── */
-::-webkit-scrollbar { width: 5px; height: 5px; }
+#root {
+  height: 100%;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  /* Isolate stacking context */
+  isolation: isolate;
+}
+
+/* ══════════════════════════════════════════════════════════════
+   SCROLLBARS
+══════════════════════════════════════════════════════════════ */
+::-webkit-scrollbar { width: 4px; height: 4px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 99px; }
 ::-webkit-scrollbar-thumb:hover { background: var(--brand); }
 * { scrollbar-width: thin; scrollbar-color: var(--border-strong) transparent; }
 
-/* ── Typography ───────────────────────────────────────── */
-button, input, textarea, select { font-family: var(--font-sans); }
+/* ══════════════════════════════════════════════════════════════
+   TYPOGRAPHY
+══════════════════════════════════════════════════════════════ */
+button, input, textarea, select {
+  font-family: var(--font-sans);
+}
 
 h1, h2, h3, h4, h5, h6 {
   font-family: var(--font-sans);
@@ -129,7 +167,9 @@ p { color: var(--text-secondary); line-height: 1.7; }
 a { color: var(--brand); text-decoration: none; }
 a:hover { text-decoration: underline; }
 
-/* ── Focus ────────────────────────────────────────────── */
+/* ══════════════════════════════════════════════════════════════
+   FOCUS + INPUTS
+══════════════════════════════════════════════════════════════ */
 input:focus, textarea:focus, select:focus {
   outline: none;
   box-shadow: 0 0 0 3px var(--brand-glow) !important;
@@ -138,7 +178,9 @@ input:focus, textarea:focus, select:focus {
               box-shadow 0.2s var(--ease-smooth);
 }
 
-/* ── Buttons ──────────────────────────────────────────── */
+/* ══════════════════════════════════════════════════════════════
+   BUTTONS
+══════════════════════════════════════════════════════════════ */
 button {
   cursor: pointer;
   border: none;
@@ -149,7 +191,9 @@ button {
 button:active { transform: scale(0.97); }
 button:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
 
-/* ── Animations ───────────────────────────────────────── */
+/* ══════════════════════════════════════════════════════════════
+   ANIMATIONS
+══════════════════════════════════════════════════════════════ */
 @keyframes fadeSlideUp {
   from { opacity: 0; transform: translateY(16px); }
   to   { opacity: 1; transform: translateY(0); }
@@ -195,18 +239,27 @@ button:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
   50%  { background-position: 100% 50%; }
   100% { background-position: 0% 50%; }
 }
+@keyframes navPop {
+  0%   { transform: scale(1); }
+  50%  { transform: scale(1.18); }
+  100% { transform: scale(1.08); }
+}
 
-/* ── Utility classes ──────────────────────────────────── */
+/* ══════════════════════════════════════════════════════════════
+   UTILITY CLASSES
+══════════════════════════════════════════════════════════════ */
 .screen-enter  { animation: fadeSlideUp  0.28s var(--ease-spring) forwards; }
 .fade-in       { animation: fadeIn       0.3s  ease forwards; }
 .scale-in      { animation: scaleIn      0.22s var(--ease-spring) forwards; }
 .slide-up      { animation: slideUp      0.32s var(--ease-spring) forwards; }
 .slide-in-left { animation: slideInLeft  0.25s var(--ease-spring) forwards; }
-.float         { animation: float        3s ease-in-out infinite; }
-.pulse         { animation: pulse        2s ease-in-out infinite; }
-.spin          { animation: spin         1s linear infinite; }
+.float         { animation: float        3s    ease-in-out infinite; }
+.pulse         { animation: pulse        2s    ease-in-out infinite; }
+.spin          { animation: spin         1s    linear infinite; }
 
-/* ── Stagger children ─────────────────────────────────── */
+/* ══════════════════════════════════════════════════════════════
+   STAGGER CHILDREN
+══════════════════════════════════════════════════════════════ */
 .stagger > *:nth-child(1)  { animation: fadeSlideUp 0.28s 0.04s var(--ease-spring) both; }
 .stagger > *:nth-child(2)  { animation: fadeSlideUp 0.28s 0.08s var(--ease-spring) both; }
 .stagger > *:nth-child(3)  { animation: fadeSlideUp 0.28s 0.12s var(--ease-spring) both; }
@@ -218,7 +271,9 @@ button:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
 .stagger > *:nth-child(9)  { animation: fadeSlideUp 0.28s 0.36s var(--ease-spring) both; }
 .stagger > *:nth-child(10) { animation: fadeSlideUp 0.28s 0.40s var(--ease-spring) both; }
 
-/* ── Skeleton loader ──────────────────────────────────── */
+/* ══════════════════════════════════════════════════════════════
+   SKELETON LOADER
+══════════════════════════════════════════════════════════════ */
 .skeleton {
   background: linear-gradient(90deg,
     var(--bg-subtle) 25%,
@@ -230,7 +285,9 @@ button:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
   border-radius: var(--radius-md);
 }
 
-/* ── Card interactions ────────────────────────────────── */
+/* ══════════════════════════════════════════════════════════════
+   CARD INTERACTIONS
+══════════════════════════════════════════════════════════════ */
 .event-card {
   transition: transform 0.2s var(--ease-spring),
               box-shadow 0.2s var(--ease-smooth);
@@ -245,7 +302,9 @@ button:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
 }
 .stat-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-md) !important; }
 
-/* ── Nav ──────────────────────────────────────────────── */
+/* ══════════════════════════════════════════════════════════════
+   NAV ITEMS
+══════════════════════════════════════════════════════════════ */
 .nav-item {
   transition: background 0.18s var(--ease-smooth),
               color 0.18s var(--ease-smooth),
@@ -253,18 +312,24 @@ button:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
 }
 .nav-item:active { transform: scale(0.94); }
 
-/* ── Chip ─────────────────────────────────────────────── */
+/* ══════════════════════════════════════════════════════════════
+   CHIPS
+══════════════════════════════════════════════════════════════ */
 .chip {
   transition: all 0.18s var(--ease-spring);
   user-select: none;
 }
 .chip:active { transform: scale(0.94); }
 
-/* ── Bottom sheet ─────────────────────────────────────── */
+/* ══════════════════════════════════════════════════════════════
+   BOTTOM SHEET
+══════════════════════════════════════════════════════════════ */
 .bottom-sheet { animation: slideUp  0.32s var(--ease-spring) forwards; }
-.overlay-fade { animation: fadeIn   0.2s ease forwards; }
+.overlay-fade { animation: fadeIn   0.2s  ease forwards; }
 
-/* ── Gradient text ────────────────────────────────────── */
+/* ══════════════════════════════════════════════════════════════
+   GRADIENT TEXT
+══════════════════════════════════════════════════════════════ */
 .gradient-text {
   background: linear-gradient(135deg, #f5a623, #ff6b35);
   -webkit-background-clip: text;
@@ -272,7 +337,9 @@ button:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
   background-clip: text;
 }
 
-/* ── Glass effect ─────────────────────────────────────── */
+/* ══════════════════════════════════════════════════════════════
+   GLASS EFFECT
+══════════════════════════════════════════════════════════════ */
 .glass {
   background: rgba(255, 255, 255, 0.72);
   backdrop-filter: blur(20px);
@@ -281,17 +348,21 @@ button:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
 }
 [data-theme="dark"] .glass {
   background: rgba(26, 26, 26, 0.8);
-  border: 1px solid rgba(255,255,255,0.08);
+  border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
-/* ── Animated gradient bg ─────────────────────────────── */
+/* ══════════════════════════════════════════════════════════════
+   ANIMATED GRADIENT
+══════════════════════════════════════════════════════════════ */
 .animated-gradient {
   background: linear-gradient(270deg, #f5a623, #ff6b35, #f5a623, #e8920f);
   background-size: 400% 400%;
   animation: gradientShift 6s ease infinite;
 }
 
-/* ── Noise texture overlay ────────────────────────────── */
+/* ══════════════════════════════════════════════════════════════
+   NOISE TEXTURE
+══════════════════════════════════════════════════════════════ */
 .noise::after {
   content: '';
   position: absolute;
@@ -301,12 +372,72 @@ button:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
   border-radius: inherit;
 }
 
-/* ── PWA safe areas ───────────────────────────────────── */
-.safe-top    { padding-top:    env(safe-area-inset-top); }
-.safe-bottom { padding-bottom: env(safe-area-inset-bottom); }
-
-/* ── Selection ────────────────────────────────────────── */
+/* ══════════════════════════════════════════════════════════════
+   SELECTION
+══════════════════════════════════════════════════════════════ */
 ::selection {
   background: var(--brand-glow);
   color: var(--text-primary);
+}
+
+/* ══════════════════════════════════════════════════════════════
+   PWA SAFE AREAS + MOBILE NATIVE FEEL
+══════════════════════════════════════════════════════════════ */
+
+/* Safe area utility classes */
+.safe-top    { padding-top:    max(env(safe-area-inset-top, 0px), 0px); }
+.safe-bottom { padding-bottom: max(env(safe-area-inset-bottom, 0px), 0px); }
+
+/* ── The key class: content that sits above the bottom nav ── */
+/* Use this on any scrollable content container in mobile */
+.below-nav {
+  padding-bottom: calc(var(--nav-height) + env(safe-area-inset-bottom, 0px) + 16px);
+}
+
+/* Scroll containers — smooth iOS momentum */
+.scroll-y {
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: contain;
+}
+
+/* ── Fix iOS height bug — 100vh includes browser chrome ── */
+/* Use .full-height instead of height:100vh on mobile */
+.full-height {
+  height: 100vh;
+  height: -webkit-fill-available;
+  height: fill-available;
+}
+
+/* ── Mobile app shell — the outermost container ── */
+.app-shell {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  height: -webkit-fill-available;
+  width: 100%;
+  overflow: hidden;
+  position: relative;
+  background: var(--bg);
+  /* Ensure it never overflows the viewport */
+  max-height: 100dvh;
+}
+
+/* ── Tab content area — fills between header and nav ── */
+.tab-content {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: contain;
+  /* Space for bottom nav + safe area */
+  padding-bottom: calc(var(--nav-height) + env(safe-area-inset-bottom, 0px) + 16px);
+}
+
+/* ══════════════════════════════════════════════════════════════
+   PREVENT TEXT INFLATE ON MOBILE
+══════════════════════════════════════════════════════════════ */
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
 }

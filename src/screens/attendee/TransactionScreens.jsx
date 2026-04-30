@@ -33,13 +33,83 @@ function PageWrap({ children, maxW = "600px" }) {
   );
 }
 
-function BackBtn({ onClick, label }) {
+// ── Blockchain trust strip ────────────────────────────────────
+function ChainStrip({ txHash, tokenId, compact = false }) {
+  const url = txHash ? `https://polygonscan.com/tx/${txHash}` : null;
   return (
-    <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.92 }} onClick={onClick}
-      style={{ display: "flex", alignItems: "center", gap: "8px", cursor: "pointer", padding: "8px 14px", borderRadius: "12px", background: "var(--bg-subtle)", border: "1px solid var(--border)", width: "fit-content" }}>
-      <span style={{ fontSize: "16px", color: "var(--text-primary)" }}>←</span>
-      {label && <span style={{ fontSize: "13px", fontWeight: 600, color: "var(--text-secondary)" }}>{label}</span>}
-    </motion.div>
+    <div style={{
+      background: "linear-gradient(135deg, rgba(130,71,229,0.08), rgba(37,99,235,0.06))",
+      border: "1px solid rgba(130,71,229,0.2)",
+      borderRadius: "14px",
+      padding: compact ? "10px 14px" : "14px 16px",
+      display: "flex", alignItems: "center", justifyContent: "space-between",
+      gap: "10px",
+    }}>
+      <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+        <div style={{ width: compact ? "28px" : "32px", height: compact ? "28px" : "32px", borderRadius: "8px", background: "linear-gradient(135deg, #7c3aed, #2563eb)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+          <span style={{ fontSize: compact ? "13px" : "15px" }}>⛓️</span>
+        </div>
+        <div>
+          <div style={{ fontSize: compact ? "10px" : "11px", fontWeight: 700, color: "#7c3aed", letterSpacing: "0.5px" }}>
+            POLYGON BLOCKCHAIN
+          </div>
+          <div style={{ fontSize: compact ? "10px" : "11px", color: "var(--text-muted)", marginTop: "1px" }}>
+            {tokenId ? `NFT Token #${tokenId}` : "NFT minting in progress..."}
+          </div>
+        </div>
+      </div>
+      {url ? (
+        <a href={url} target="_blank" rel="noreferrer"
+          style={{ fontSize: "11px", fontWeight: 700, color: "#7c3aed", textDecoration: "none", background: "rgba(124,58,237,0.1)", padding: "4px 10px", borderRadius: "99px", whiteSpace: "nowrap", border: "1px solid rgba(124,58,237,0.2)" }}>
+          Verify ↗
+        </a>
+      ) : (
+        <motion.div animate={{ opacity: [0.5, 1, 0.5] }} transition={{ repeat: Infinity, duration: 1.5 }}
+          style={{ fontSize: "10px", fontWeight: 700, color: "#7c3aed", background: "rgba(124,58,237,0.1)", padding: "4px 10px", borderRadius: "99px", border: "1px solid rgba(124,58,237,0.2)", whiteSpace: "nowrap" }}>
+          Minting...
+        </motion.div>
+      )}
+    </div>
+  );
+}
+
+// ── Ownership proof badge ─────────────────────────────────────
+function OwnershipBadge({ owner, email }) {
+  return (
+    <div style={{ background: "rgba(22,163,74,0.06)", border: "1px solid rgba(22,163,74,0.18)", borderRadius: "12px", padding: "10px 14px", display: "flex", alignItems: "center", gap: "10px" }}>
+      <div style={{ width: "28px", height: "28px", borderRadius: "50%", background: "linear-gradient(135deg, #16a34a, #22c55e)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "13px", fontWeight: 700, color: "#fff", flexShrink: 0 }}>
+        {owner?.[0]?.toUpperCase() || "U"}
+      </div>
+      <div style={{ minWidth: 0 }}>
+        <div style={{ fontSize: "11px", fontWeight: 700, color: "#16a34a", letterSpacing: "0.3px" }}>VERIFIED OWNER</div>
+        <div style={{ fontSize: "12px", color: "var(--text-primary)", fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{owner}</div>
+      </div>
+      <div style={{ marginLeft: "auto", flexShrink: 0 }}>
+        <div style={{ width: "20px", height: "20px", borderRadius: "50%", background: "#16a34a", display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <span style={{ color: "#fff", fontSize: "11px" }}>✓</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── Security features row ─────────────────────────────────────
+function SecurityFeatures() {
+  return (
+    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px" }}>
+      {[
+        ["🔐", "HMAC Secured", "Changes every 10s"],
+        ["📵", "Screenshot-proof", "Dynamic QR only"],
+        ["⛓️", "NFT Ownership", "On Polygon chain"],
+        ["🚫", "Single-use scan", "Auto-invalidates"],
+      ].map(([icon, title, sub]) => (
+        <div key={title} style={{ background: "var(--bg-subtle)", borderRadius: "12px", padding: "10px 12px", border: "1px solid var(--border)" }}>
+          <div style={{ fontSize: "16px", marginBottom: "4px" }}>{icon}</div>
+          <div style={{ fontSize: "11px", fontWeight: 700, color: "var(--text-primary)" }}>{title}</div>
+          <div style={{ fontSize: "10px", color: "var(--text-muted)", marginTop: "1px" }}>{sub}</div>
+        </div>
+      ))}
+    </div>
   );
 }
 
@@ -53,36 +123,68 @@ export function PaymentSuccess() {
   const event = viewingTicket?.event || checkoutEvent;
 
   return (
-    <PageWrap maxW="480px">
+    <PageWrap maxW="520px">
       <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}
         transition={{ type: "spring", stiffness: 300, damping: 25 }}
-        style={{ background: "var(--bg-card)", borderRadius: "24px", padding: desktop ? "56px 48px" : "32px 24px", textAlign: "center", boxShadow: desktop ? "var(--shadow-lg)" : "var(--shadow-md)", border: "1px solid var(--border)" }}>
-        <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }}
-          transition={{ type: "spring", stiffness: 400, damping: 20, delay: 0.2 }}
-          style={{ width: "88px", height: "88px", borderRadius: "50%", background: "linear-gradient(135deg, #16a34a, #22c55e)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "44px", margin: "0 auto 20px", boxShadow: "0 8px 32px rgba(22,163,74,0.35)" }}>
-          ✅
-        </motion.div>
-        <h1 style={{ fontSize: desktop ? "28px" : "24px", fontWeight: 900, color: "var(--text-primary)", marginBottom: "8px", letterSpacing: "-0.5px" }}>Payment Successful!</h1>
-        <p style={{ color: "var(--text-secondary)", fontSize: "14px", lineHeight: 1.7, marginBottom: "24px" }}>
-          Your ticket is confirmed and your NFT is being minted on Polygon blockchain.
-        </p>
+        style={{ background: "var(--bg-card)", borderRadius: "24px", padding: desktop ? "48px 44px" : "28px 20px", boxShadow: desktop ? "var(--shadow-lg)" : "var(--shadow-md)", border: "1px solid var(--border)", overflow: "hidden", position: "relative" }}>
+
+        {/* Background glow */}
+        <div style={{ position: "absolute", top: 0, right: 0, width: "200px", height: "200px", borderRadius: "50%", background: "radial-gradient(circle, rgba(22,163,74,0.08) 0%, transparent 70%)", transform: "translate(30%,-30%)", pointerEvents: "none" }} />
+
+        <div style={{ textAlign: "center", position: "relative" }}>
+          {/* Success icon */}
+          <motion.div initial={{ scale: 0, rotate: -20 }} animate={{ scale: 1, rotate: 0 }}
+            transition={{ type: "spring", stiffness: 400, damping: 18, delay: 0.15 }}
+            style={{ width: "80px", height: "80px", borderRadius: "50%", background: "linear-gradient(135deg, #16a34a, #22c55e)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "40px", margin: "0 auto 16px", boxShadow: "0 8px 32px rgba(22,163,74,0.35)" }}>
+            ✅
+          </motion.div>
+
+          <h1 style={{ fontSize: desktop ? "26px" : "22px", fontWeight: 900, color: "var(--text-primary)", marginBottom: "6px", letterSpacing: "-0.5px" }}>
+            Payment Successful!
+          </h1>
+          <p style={{ color: "var(--text-secondary)", fontSize: "13px", lineHeight: 1.6, marginBottom: "20px" }}>
+            Your ticket is confirmed. Your NFT is being minted on Polygon.
+          </p>
+        </div>
+
+        {/* Event details */}
         {event && (
-          <div style={{ background: "var(--bg-subtle)", borderRadius: "16px", padding: "16px", marginBottom: "20px", textAlign: "left", border: "1px solid var(--border)" }}>
-            <div style={{ fontSize: "10px", color: "#f5a623", fontWeight: 700, marginBottom: "6px", letterSpacing: "1px" }}>EVENT</div>
+          <div style={{ background: "var(--bg-subtle)", borderRadius: "14px", padding: "14px", marginBottom: "14px", border: "1px solid var(--border)" }}>
+            <div style={{ fontSize: "9px", color: "#f5a623", fontWeight: 700, marginBottom: "6px", letterSpacing: "1.5px" }}>EVENT</div>
             <div style={{ fontWeight: 800, fontSize: "15px", color: "var(--text-primary)", marginBottom: "3px" }}>{event.name}</div>
             <div style={{ fontSize: "12px", color: "var(--text-muted)" }}>📅 {event.date} · 📍 {event.venue}</div>
           </div>
         )}
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "8px", background: "rgba(22,163,74,0.06)", border: "1px solid rgba(22,163,74,0.2)", padding: "10px 20px", borderRadius: "20px", marginBottom: "24px" }}>
-          <span style={{ fontSize: "14px" }}>⛓️</span>
-          <span style={{ color: "#16a34a", fontSize: "12px", fontWeight: 700 }}>NFT minting on Polygon...</span>
+
+        {/* Blockchain status */}
+        <div style={{ marginBottom: "14px" }}>
+          <ChainStrip txHash={viewingTicket?.nft_tx_hash} tokenId={viewingTicket?.nft_token_id} />
         </div>
+
+        {/* What this means */}
+        <div style={{ background: "rgba(124,58,237,0.04)", border: "1px solid rgba(124,58,237,0.12)", borderRadius: "14px", padding: "14px", marginBottom: "20px" }}>
+          <div style={{ fontSize: "11px", fontWeight: 700, color: "#7c3aed", marginBottom: "10px", letterSpacing: "0.3px" }}>WHAT THIS MEANS FOR YOU</div>
+          {[
+            ["⛓️", "Ownership recorded on Polygon blockchain forever"],
+            ["📵", "Dynamic QR refreshes every 10s — screenshots are useless"],
+            ["🔄", "Transfer or resell on the Master Events marketplace"],
+            ["🛡️", "Cryptographically signed — impossible to duplicate"],
+          ].map(([icon, text]) => (
+            <div key={text} style={{ display: "flex", gap: "10px", marginBottom: "7px", alignItems: "flex-start" }}>
+              <span style={{ fontSize: "13px", flexShrink: 0, marginTop: "1px" }}>{icon}</span>
+              <span style={{ fontSize: "12px", color: "var(--text-secondary)", lineHeight: 1.4 }}>{text}</span>
+            </div>
+          ))}
+        </div>
+
         <motion.button whileHover={{ scale: 1.02, boxShadow: "0 12px 32px rgba(245,166,35,0.4)" }}
           whileTap={{ scale: 0.97 }} onClick={() => setScreen("ticketView")}
-          style={{ ...primaryBtn, marginBottom: "10px" }}>🎟️ View My Ticket</motion.button>
+          style={{ ...primaryBtn, marginBottom: "10px" }}>
+          🎟️ View My NFT Ticket
+        </motion.button>
         <motion.button whileTap={{ scale: 0.97 }}
           onClick={() => { setScreen("app"); setActiveTab("home"); }}
-          style={{ width: "100%", padding: "14px", background: "var(--bg-subtle)", color: "var(--text-secondary)", border: "1.5px solid var(--border)", borderRadius: "14px", fontWeight: 600, fontSize: "14px", cursor: "pointer", fontFamily: "var(--font-sans)" }}>
+          style={{ width: "100%", padding: "13px", background: "var(--bg-subtle)", color: "var(--text-secondary)", border: "1.5px solid var(--border)", borderRadius: "14px", fontWeight: 600, fontSize: "14px", cursor: "pointer", fontFamily: "var(--font-sans)" }}>
           Back to Events
         </motion.button>
       </motion.div>
@@ -119,9 +221,16 @@ export function Checkout() {
               style={{ width: "36px", height: "36px", borderRadius: "10px", background: "var(--bg-subtle)", border: "1px solid var(--border)", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", fontSize: "17px", color: "var(--text-primary)", flexShrink: 0 }}>
               ←
             </motion.div>
-            <div>
-              <div style={{ fontSize: "16px", fontWeight: 700, color: "var(--text-primary)" }}>Checkout</div>
-              <div style={{ fontSize: "11px", color: "var(--text-muted)", marginTop: "1px" }}>Secure · Blockchain verified</div>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontSize: "16px", fontWeight: 700, color: "var(--text-primary)" }}>Secure Checkout</div>
+              <div style={{ fontSize: "11px", color: "var(--text-muted)", marginTop: "1px", display: "flex", alignItems: "center", gap: "4px" }}>
+                <span style={{ color: "#7c3aed" }}>⛓️</span> NFT ticket minted on Polygon after payment
+              </div>
+            </div>
+            {/* Trust badge */}
+            <div style={{ display: "flex", alignItems: "center", gap: "4px", padding: "4px 8px", borderRadius: "99px", background: "rgba(22,163,74,0.08)", border: "1px solid rgba(22,163,74,0.2)", flexShrink: 0 }}>
+              <span style={{ color: "#16a34a", fontSize: "10px" }}>🔒</span>
+              <span style={{ fontSize: "9px", fontWeight: 700, color: "#16a34a" }}>SECURED</span>
             </div>
           </div>
 
@@ -133,10 +242,15 @@ export function Checkout() {
                   ? <img src={checkoutEvent.image} alt={checkoutEvent.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
                   : <div style={{ width: "100%", height: "100%", background: "linear-gradient(135deg, #f5a623, #e8920f)" }} />
                 }
-                <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to bottom, rgba(0,0,0,0.05), rgba(0,0,0,0.65))" }} />
+                <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to bottom, rgba(0,0,0,0.05), rgba(0,0,0,0.7))" }} />
                 <div style={{ position: "absolute", bottom: "12px", left: "14px", right: "14px" }}>
                   <div style={{ color: "#fff", fontWeight: 800, fontSize: desktop ? "18px" : "16px" }}>{checkoutEvent.name}</div>
                   <div style={{ color: "rgba(255,255,255,0.8)", fontSize: "11px", marginTop: "3px" }}>📅 {checkoutEvent.date} · 📍 {checkoutEvent.venue}</div>
+                </div>
+                {/* NFT badge on image */}
+                <div style={{ position: "absolute", top: "10px", right: "10px", background: "rgba(124,58,237,0.9)", backdropFilter: "blur(8px)", padding: "4px 10px", borderRadius: "99px", display: "flex", alignItems: "center", gap: "4px" }}>
+                  <span style={{ fontSize: "10px" }}>⛓️</span>
+                  <span style={{ fontSize: "9px", fontWeight: 700, color: "#fff", letterSpacing: "0.5px" }}>NFT TICKET</span>
                 </div>
               </div>
             </div>
@@ -167,27 +281,33 @@ export function Checkout() {
             </div>
 
             {/* Order summary */}
-            <div style={{ background: "var(--bg-subtle)", borderRadius: "16px", padding: "16px", marginBottom: "16px", border: "1px solid var(--border)" }}>
+            <div style={{ background: "var(--bg-subtle)", borderRadius: "16px", padding: "16px", marginBottom: "14px", border: "1px solid var(--border)" }}>
               <div style={{ fontWeight: 700, fontSize: "13px", color: "var(--text-primary)", marginBottom: "12px" }}>Order Summary</div>
-              {[["Tickets", ticketQty + " x Ghc " + checkoutEvent.price], ["Platform Fee (5%)", "Ghc " + fee]].map(([k, v]) => (
-                <div key={k} style={{ display: "flex", justifyContent: "space-between", paddingBottom: "10px", marginBottom: "10px", borderBottom: "1px solid var(--border)" }}>
+              {[["Tickets", `${ticketQty} × Ghc ${checkoutEvent.price}`], ["Platform Fee (5%)", `Ghc ${fee}`]].map(([k, v]) => (
+                <div key={k} style={{ display: "flex", justifyContent: "space-between", paddingBottom: "8px", marginBottom: "8px", borderBottom: "1px solid var(--border)" }}>
                   <span style={{ color: "var(--text-muted)", fontSize: "13px" }}>{k}</span>
                   <span style={{ color: "var(--text-primary)", fontSize: "13px", fontWeight: 600 }}>{v}</span>
                 </div>
               ))}
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "10px" }}>
                 <span style={{ color: "var(--text-primary)", fontWeight: 700, fontSize: "15px" }}>Total</span>
                 <span style={{ color: "#f5a623", fontWeight: 900, fontSize: "24px" }}>Ghc {total}</span>
+              </div>
+              {/* NFT mention in summary */}
+              <div style={{ display: "flex", alignItems: "center", gap: "6px", padding: "8px 10px", borderRadius: "10px", background: "rgba(124,58,237,0.06)", border: "1px solid rgba(124,58,237,0.12)" }}>
+                <span style={{ fontSize: "12px" }}>⛓️</span>
+                <span style={{ fontSize: "11px", color: "#7c3aed", fontWeight: 600 }}>{ticketQty} NFT ticket{ticketQty > 1 ? "s" : ""} will be minted on Polygon</span>
               </div>
             </div>
 
             <AnimatePresence>
               {paying && (
                 <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
-                  style={{ background: "rgba(245,166,35,0.06)", border: "1px solid rgba(245,166,35,0.2)", borderRadius: "16px", padding: "16px", marginBottom: "14px", textAlign: "center" }}>
-                  <div style={{ fontSize: "32px", marginBottom: "6px" }}>⏳</div>
-                  <div style={{ color: "#f5a623", fontWeight: 700, fontSize: "14px", marginBottom: "3px" }}>Processing Payment...</div>
-                  <div style={{ color: "var(--text-muted)", fontSize: "11px" }}>Minting your NFT ticket on Polygon</div>
+                  style={{ background: "rgba(124,58,237,0.06)", border: "1px solid rgba(124,58,237,0.18)", borderRadius: "16px", padding: "16px", marginBottom: "14px", textAlign: "center" }}>
+                  <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 1.2, ease: "linear" }}
+                    style={{ fontSize: "28px", marginBottom: "8px", display: "inline-block" }}>⛓️</motion.div>
+                  <div style={{ color: "#7c3aed", fontWeight: 700, fontSize: "14px", marginBottom: "3px" }}>Minting your NFT ticket...</div>
+                  <div style={{ color: "var(--text-muted)", fontSize: "11px" }}>Recording ownership on Polygon blockchain</div>
                 </motion.div>
               )}
             </AnimatePresence>
@@ -195,7 +315,7 @@ export function Checkout() {
             <motion.button whileHover={{ scale: 1.02, boxShadow: "0 12px 36px rgba(245,166,35,0.4)" }}
               whileTap={{ scale: 0.97 }} onClick={onPay} disabled={paying}
               style={{ ...primaryBtn, marginBottom: 0, opacity: paying ? 0.6 : 1 }}>
-              {paying ? "Processing..." : checkoutEvent.price === 0 ? "Get Free Ticket" : "Pay Ghc " + total}
+              {paying ? "Minting NFT..." : checkoutEvent.price === 0 ? "🎟️ Mint Free NFT Ticket" : `🎟️ Pay Ghc ${total} · Get NFT Ticket`}
             </motion.button>
           </div>
         </div>
@@ -216,12 +336,14 @@ export function TicketView() {
   const setTransferEmail  = useStore(s => s.setTransferEmail);
   const setTransferName   = useStore(s => s.setTransferName);
   const setTransferDone   = useStore(s => s.setTransferDone);
+  const currentUser       = useStore(s => s.currentUser);
 
   const [dynamicQR,  setDynamicQR]  = useState(viewingTicket?.dynamic_qr || null);
   const [timeLeft,   setTimeLeft]   = useState(10);
   const [qrLoaded,   setQrLoaded]   = useState(false);
   const [qrError,    setQrError]    = useState(false);
   const [refreshing, setRefreshing] = useState(false);
+  const [showSecurity, setShowSecurity] = useState(false);
   const desktop = isDesktop();
 
   useEffect(() => {
@@ -248,18 +370,16 @@ export function TicketView() {
   if (!viewingTicket) return null;
   const ev = viewingTicket.event;
   const formatTime = t => (!t ? "TBA" : t.substring(0, 5));
+  const ownerName = viewingTicket.owner ||
+    `${currentUser?.first_name || ""} ${currentUser?.last_name || ""}`.trim() ||
+    currentUser?.email || "Ticket Holder";
 
   const qrSrc = dynamicQR
     ? "data:image/png;base64," + dynamicQR
-    : viewingTicket.qr_image_url
-      ? viewingTicket.qr_image_url
-      : viewingTicket.qr_image
+    : viewingTicket.qr_image_url || (viewingTicket.qr_image
         ? (viewingTicket.qr_image.startsWith("http") ? viewingTicket.qr_image : API + viewingTicket.qr_image)
-        : null;
+        : null);
 
-  const polygonscanUrl = viewingTicket.nft_tx_hash
-    ? "https://polygonscan.com/tx/" + viewingTicket.nft_tx_hash
-    : null;
   const isExpiringSoon = timeLeft <= 3;
   const progressColor  = isExpiringSoon ? "#dc2626" : "#16a34a";
 
@@ -267,45 +387,56 @@ export function TicketView() {
     <div style={{ background: "var(--bg)", height: "100%", overflowY: "auto", paddingBottom: desktop ? "40px" : "100px" }}>
       <div style={{ maxWidth: desktop ? "600px" : "100%", margin: "0 auto" }}>
 
-        {/* Hero image */}
+        {/* Hero */}
         <div style={{ height: desktop ? "260px" : "200px", position: "relative", borderRadius: desktop ? "20px 20px 0 0" : 0, overflow: "hidden", flexShrink: 0 }}>
           {ev.image
             ? <img src={ev.image} alt={ev.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
             : <div style={{ width: "100%", height: "100%", background: "linear-gradient(135deg, #f5a623, #e8920f)" }} />
           }
-          <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to bottom, rgba(0,0,0,0.3), rgba(0,0,0,0.85))" }} />
+          <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to bottom, rgba(0,0,0,0.3), rgba(0,0,0,0.88))" }} />
 
-          {/* Back button */}
-          <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}
+          {/* Back */}
+          <motion.div whileTap={{ scale: 0.9 }}
             onClick={() => { setScreen("app"); setActiveTab("tickets"); }}
-            style={{ position: "absolute", top: "14px", left: "14px", width: "36px", height: "36px", borderRadius: "10px", background: "rgba(255,255,255,0.18)", backdropFilter: "blur(12px)", border: "1px solid rgba(255,255,255,0.25)", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", fontSize: "17px", color: "#fff" }}>
+            style={{ position: "absolute", top: "14px", left: "14px", width: "36px", height: "36px", borderRadius: "10px", background: "rgba(255,255,255,0.15)", backdropFilter: "blur(12px)", border: "1px solid rgba(255,255,255,0.2)", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", fontSize: "17px", color: "#fff" }}>
             ←
           </motion.div>
 
+          {/* NFT badge on hero */}
+          <div style={{ position: "absolute", top: "14px", right: "14px", background: "rgba(124,58,237,0.85)", backdropFilter: "blur(8px)", padding: "5px 10px", borderRadius: "99px", display: "flex", alignItems: "center", gap: "4px", border: "1px solid rgba(255,255,255,0.15)" }}>
+            <span style={{ fontSize: "10px" }}>⛓️</span>
+            <span style={{ fontSize: "9px", fontWeight: 700, color: "#fff", letterSpacing: "0.5px" }}>NFT TICKET</span>
+          </div>
+
           <div style={{ position: "absolute", bottom: "16px", left: "16px", right: "16px" }}>
-            <div style={{ color: "rgba(255,255,255,0.65)", fontSize: "10px", fontWeight: 700, letterSpacing: "2px", marginBottom: "4px" }}>YOUR TICKET</div>
-            <div style={{ color: "#fff", fontSize: desktop ? "22px" : "18px", fontWeight: 800, lineHeight: 1.2 }}>{ev.name}</div>
-            <div style={{ color: "rgba(255,255,255,0.7)", fontSize: "12px", marginTop: "4px" }}>📅 {ev.date} · 📍 {ev.venue}</div>
+            <div style={{ color: "rgba(255,255,255,0.6)", fontSize: "9px", fontWeight: 700, letterSpacing: "2px", marginBottom: "4px" }}>YOUR TICKET</div>
+            <div style={{ color: "#fff", fontSize: desktop ? "22px" : "18px", fontWeight: 800, lineHeight: 1.2, marginBottom: "4px" }}>{ev.name}</div>
+            <div style={{ color: "rgba(255,255,255,0.65)", fontSize: "11px" }}>📅 {ev.date} · 📍 {ev.venue}</div>
           </div>
         </div>
 
-        {/* Ticket card */}
+        {/* Main card */}
         <div style={{ background: "var(--bg-card)", borderRadius: desktop ? "0 0 20px 20px" : 0, overflow: "hidden", boxShadow: desktop ? "var(--shadow-lg)" : "none", border: desktop ? "1px solid var(--border)" : "none" }}>
 
+          {/* Ownership proof — ALWAYS visible */}
+          <div style={{ padding: "14px 16px", borderBottom: "1px solid var(--border)", background: "rgba(22,163,74,0.03)" }}>
+            <OwnershipBadge owner={ownerName} email={viewingTicket.ownerEmail || currentUser?.email} />
+          </div>
+
           {/* Info row */}
-          <div style={{ padding: "16px 20px", display: "flex", justifyContent: "space-around", borderBottom: "1px dashed var(--border)" }}>
+          <div style={{ padding: "14px 16px", display: "flex", justifyContent: "space-around", borderBottom: "1px dashed var(--border)" }}>
             {[["DATE", ev.date || "TBA"], ["TIME", formatTime(ev.time)], ["QTY", viewingTicket.qty || viewingTicket.quantity || 1]].map(([k, v]) => (
               <div key={k} style={{ textAlign: "center" }}>
-                <div style={{ fontSize: "9px", color: "var(--text-muted)", fontWeight: 700, marginBottom: "5px", letterSpacing: "1.5px" }}>{k}</div>
+                <div style={{ fontSize: "9px", color: "var(--text-muted)", fontWeight: 700, marginBottom: "4px", letterSpacing: "1.5px" }}>{k}</div>
                 <div style={{ fontWeight: 800, fontSize: "14px", color: "var(--text-primary)" }}>{v}</div>
               </div>
             ))}
           </div>
 
           {/* QR section */}
-          <div style={{ padding: "24px 20px", display: "flex", flexDirection: "column", alignItems: "center", gap: "12px" }}>
+          <div style={{ padding: "20px 16px", display: "flex", flexDirection: "column", alignItems: "center", gap: "12px" }}>
 
-            {/* QR code */}
+            {/* QR */}
             {qrSrc ? (
               <div style={{ position: "relative" }}>
                 {(!qrLoaded && !qrError) && (
@@ -314,15 +445,16 @@ export function TicketView() {
                 <AnimatePresence>
                   {refreshing && (
                     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-                      style={{ position: "absolute", inset: 0, background: "rgba(255,255,255,0.88)", borderRadius: "14px", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 10 }}>
+                      style={{ position: "absolute", inset: 0, background: "rgba(255,255,255,0.9)", borderRadius: "14px", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", zIndex: 10, gap: "6px" }}>
                       <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 0.7, ease: "linear" }}
-                        style={{ fontSize: "26px" }}>🔄</motion.div>
+                        style={{ fontSize: "24px" }}>🔄</motion.div>
+                      <span style={{ fontSize: "10px", color: "#7c3aed", fontWeight: 700 }}>Generating new QR...</span>
                     </motion.div>
                   )}
                 </AnimatePresence>
                 <img src={qrSrc} alt="QR Code"
                   onLoad={() => setQrLoaded(true)} onError={() => setQrError(true)}
-                  style={{ width: "190px", height: "190px", borderRadius: "14px", border: `3px solid ${progressColor}`, padding: "6px", background: "#fff", display: qrError ? "none" : "block", boxShadow: `0 4px 24px ${progressColor}33`, transition: "border-color 0.3s, box-shadow 0.3s" }} />
+                  style={{ width: "190px", height: "190px", borderRadius: "14px", border: `3px solid ${progressColor}`, padding: "6px", background: "#fff", display: qrError ? "none" : "block", boxShadow: `0 4px 24px ${progressColor}33`, transition: "border-color 0.3s" }} />
                 {qrError && (
                   <div style={{ width: "190px", height: "190px", borderRadius: "14px", background: "var(--bg-subtle)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", border: "2px dashed var(--border)", gap: "8px" }}>
                     <span style={{ fontSize: "36px" }}>📱</span>
@@ -338,74 +470,77 @@ export function TicketView() {
               </div>
             )}
 
-            {/* Countdown progress bar */}
+            {/* Countdown */}
             {viewingTicket.status === "active" && (
               <div style={{ width: "190px" }}>
-                <div style={{ height: "4px", background: "var(--bg-subtle)", borderRadius: "2px", overflow: "hidden", marginBottom: "8px" }}>
-                  <motion.div
-                    key={timeLeft}
-                    initial={{ width: "100%" }}
+                <div style={{ height: "3px", background: "var(--bg-subtle)", borderRadius: "2px", overflow: "hidden", marginBottom: "7px" }}>
+                  <motion.div key={timeLeft} initial={{ width: "100%" }}
                     animate={{ width: (timeLeft / 10 * 100) + "%" }}
                     transition={{ duration: 1, ease: "linear" }}
                     style={{ height: "100%", background: isExpiringSoon ? "#dc2626" : "#16a34a", borderRadius: "2px" }} />
                 </div>
-                <motion.div
-                  animate={{ backgroundColor: isExpiringSoon ? "rgba(220,38,38,0.08)" : "rgba(22,163,74,0.08)" }}
-                  style={{ display: "flex", alignItems: "center", gap: "7px", border: `1px solid ${isExpiringSoon ? "rgba(220,38,38,0.22)" : "rgba(22,163,74,0.22)"}`, padding: "7px 14px", borderRadius: "20px", transition: "all 0.3s", justifyContent: "center" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "6px", justifyContent: "center", padding: "6px 12px", borderRadius: "99px", border: `1px solid ${isExpiringSoon ? "rgba(220,38,38,0.2)" : "rgba(22,163,74,0.2)"}`, background: isExpiringSoon ? "rgba(220,38,38,0.06)" : "rgba(22,163,74,0.06)" }}>
                   <motion.div animate={{ scale: [1, 1.4, 1] }} transition={{ repeat: Infinity, duration: 1 }}
-                    style={{ width: "7px", height: "7px", borderRadius: "50%", background: progressColor, flexShrink: 0 }} />
-                  <span style={{ fontSize: "11px", fontWeight: 700, color: progressColor }}>
-                    {isExpiringSoon ? `⚡ Refreshing in ${timeLeft}s` : `🔒 QR refreshes in ${timeLeft}s`}
+                    style={{ width: "6px", height: "6px", borderRadius: "50%", background: progressColor }} />
+                  <span style={{ fontSize: "10px", fontWeight: 700, color: progressColor }}>
+                    {isExpiringSoon ? `⚡ New QR in ${timeLeft}s` : `🔒 QR changes in ${timeLeft}s`}
                   </span>
-                </motion.div>
+                </div>
               </div>
             )}
-
-            {/* Security badge */}
-            <div style={{ background: "rgba(245,166,35,0.06)", border: "1px solid rgba(245,166,35,0.15)", padding: "5px 12px", borderRadius: "99px", display: "flex", alignItems: "center", gap: "5px" }}>
-              <span style={{ fontSize: "11px" }}>🔐</span>
-              <span style={{ color: "#f5a623", fontSize: "10px", fontWeight: 700 }}>HMAC-secured · Screenshot-proof</span>
-            </div>
 
             {/* Ticket ID */}
-            <div style={{ background: "var(--bg-subtle)", padding: "6px 14px", borderRadius: "99px", border: "1px solid var(--border)" }}>
-              <span style={{ fontFamily: "monospace", fontSize: "11px", color: "var(--text-muted)", letterSpacing: "0.5px" }}>
-                {(viewingTicket.ticket_id || viewingTicket.id || "").toString().substring(0, 20)}
+            <div style={{ background: "var(--bg-subtle)", padding: "5px 12px", borderRadius: "99px", border: "1px solid var(--border)" }}>
+              <span style={{ fontFamily: "monospace", fontSize: "10px", color: "var(--text-muted)", letterSpacing: "0.5px" }}>
+                {(viewingTicket.ticket_id || viewingTicket.id || "").toString().substring(0, 24)}
               </span>
             </div>
+          </div>
 
-            {/* Blockchain badge */}
-            {polygonscanUrl ? (
-              <a href={polygonscanUrl} target="_blank" rel="noreferrer"
-                style={{ background: "rgba(22,163,74,0.08)", border: "1px solid rgba(22,163,74,0.2)", padding: "7px 18px", borderRadius: "99px", display: "flex", alignItems: "center", gap: "6px", textDecoration: "none" }}>
-                <span style={{ color: "#16a34a", fontSize: "13px" }}>✓</span>
-                <span style={{ color: "#16a34a", fontSize: "11px", fontWeight: 700 }}>View on Polygonscan</span>
-              </a>
-            ) : (
-              <div style={{ background: "rgba(22,163,74,0.08)", border: "1px solid rgba(22,163,74,0.2)", padding: "7px 18px", borderRadius: "99px", display: "flex", alignItems: "center", gap: "6px" }}>
-                <span style={{ color: "#16a34a", fontSize: "13px" }}>✓</span>
-                <span style={{ color: "#16a34a", fontSize: "11px", fontWeight: 700 }}>Verified on Polygon Blockchain</span>
+          {/* Blockchain trust section */}
+          <div style={{ padding: "0 16px 14px" }}>
+            <ChainStrip txHash={viewingTicket.nft_tx_hash} tokenId={viewingTicket.nft_token_id} />
+          </div>
+
+          {/* Security details — expandable */}
+          <div style={{ padding: "0 16px 14px" }}>
+            <motion.div whileTap={{ scale: 0.98 }} onClick={() => setShowSecurity(!showSecurity)}
+              style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 14px", borderRadius: "12px", background: "var(--bg-subtle)", border: "1px solid var(--border)", cursor: "pointer" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                <span style={{ fontSize: "14px" }}>🛡️</span>
+                <span style={{ fontSize: "12px", fontWeight: 700, color: "var(--text-primary)" }}>Security & Verification</span>
               </div>
-            )}
+              <motion.span animate={{ rotate: showSecurity ? 180 : 0 }} transition={{ duration: 0.2 }}
+                style={{ fontSize: "12px", color: "var(--text-muted)" }}>▼</motion.span>
+            </motion.div>
+            <AnimatePresence>
+              {showSecurity && (
+                <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }}
+                  exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.2 }}
+                  style={{ overflow: "hidden" }}>
+                  <div style={{ paddingTop: "10px" }}>
+                    <SecurityFeatures />
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
 
           {/* Action buttons */}
-          <div style={{ padding: "0 16px 12px", display: "flex", gap: "10px" }}>
-            {viewingTicket.status === "active" && (
-              <>
-                <motion.button whileTap={{ scale: 0.95 }}
-                  onClick={() => { setResaleTicket(viewingTicket); setResalePrice(""); setResaleError(""); setScreen("resale"); }}
-                  style={{ flex: 1, padding: "13px", background: "var(--bg-subtle)", color: "#f5a623", border: "1.5px solid #f5a623", borderRadius: "13px", fontSize: "13px", fontWeight: 700, cursor: "pointer", fontFamily: "var(--font-sans)" }}>
-                  Resell
-                </motion.button>
-                <motion.button whileTap={{ scale: 0.95 }}
-                  onClick={() => { setTransferTicket(viewingTicket); setTransferEmail(""); setTransferName(""); setTransferDone(false); setScreen("transfer"); }}
-                  style={{ flex: 1, padding: "13px", background: "var(--bg-subtle)", color: "var(--text-secondary)", border: "1.5px solid var(--border)", borderRadius: "13px", fontSize: "13px", fontWeight: 700, cursor: "pointer", fontFamily: "var(--font-sans)" }}>
-                  Transfer
-                </motion.button>
-              </>
-            )}
-          </div>
+          {viewingTicket.status === "active" && (
+            <div style={{ padding: "0 16px 10px", display: "flex", gap: "10px" }}>
+              <motion.button whileTap={{ scale: 0.95 }}
+                onClick={() => { setResaleTicket(viewingTicket); setResalePrice(""); setResaleError(""); setScreen("resale"); }}
+                style={{ flex: 1, padding: "13px", background: "var(--bg-subtle)", color: "#f5a623", border: "1.5px solid #f5a623", borderRadius: "13px", fontSize: "13px", fontWeight: 700, cursor: "pointer", fontFamily: "var(--font-sans)" }}>
+                🏷️ Resell
+              </motion.button>
+              <motion.button whileTap={{ scale: 0.95 }}
+                onClick={() => { setTransferTicket(viewingTicket); setTransferEmail(""); setTransferName(""); setTransferDone(false); setScreen("transfer"); }}
+                style={{ flex: 1, padding: "13px", background: "var(--bg-subtle)", color: "var(--text-secondary)", border: "1.5px solid var(--border)", borderRadius: "13px", fontSize: "13px", fontWeight: 700, cursor: "pointer", fontFamily: "var(--font-sans)" }}>
+                📤 Transfer
+              </motion.button>
+            </div>
+          )}
           <div style={{ padding: "0 16px 20px" }}>
             <motion.button whileTap={{ scale: 0.97 }}
               onClick={() => { setScreen("app"); setActiveTab("home"); }}
@@ -441,12 +576,10 @@ export function Resale() {
         <div style={{ background: "var(--bg-card)", borderRadius: desktop ? "20px" : 0, overflow: "hidden", boxShadow: desktop ? "var(--shadow-lg)" : "none", border: desktop ? "1px solid var(--border)" : "none" }}>
           <div style={{ display: "flex", alignItems: "center", padding: "16px 20px", gap: "14px", borderBottom: "1px solid var(--border)", position: "sticky", top: 0, background: "var(--bg-card)", zIndex: 10 }}>
             <motion.div whileTap={{ scale: 0.9 }} onClick={() => setScreen("ticketView")}
-              style={{ width: "36px", height: "36px", borderRadius: "10px", background: "var(--bg-subtle)", border: "1px solid var(--border)", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", fontSize: "17px", color: "var(--text-primary)", flexShrink: 0 }}>
-              ←
-            </motion.div>
+              style={{ width: "36px", height: "36px", borderRadius: "10px", background: "var(--bg-subtle)", border: "1px solid var(--border)", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", fontSize: "17px", color: "var(--text-primary)", flexShrink: 0 }}>←</motion.div>
             <div>
               <div style={{ fontSize: "16px", fontWeight: 700, color: "var(--text-primary)" }}>List for Resale</div>
-              <div style={{ fontSize: "11px", color: "var(--text-muted)", marginTop: "1px" }}>2% platform fee · You keep 98%</div>
+              <div style={{ fontSize: "11px", color: "var(--text-muted)", marginTop: "1px" }}>NFT ownership transfers on-chain automatically</div>
             </div>
           </div>
           <div style={{ padding: desktop ? "24px" : "16px" }}>
@@ -456,9 +589,16 @@ export function Resale() {
                 Original: Ghc {ev.price} · Max: Ghc {ev.price - 1} · Min: Ghc {Math.floor(ev.price * 0.3)}
               </div>
             </div>
+            {/* Blockchain resale info */}
+            <div style={{ background: "rgba(124,58,237,0.05)", border: "1px solid rgba(124,58,237,0.15)", borderRadius: "13px", padding: "12px 14px", marginBottom: "14px" }}>
+              <div style={{ fontSize: "11px", fontWeight: 700, color: "#7c3aed", marginBottom: "6px" }}>⛓️ ON-CHAIN RESALE</div>
+              <div style={{ fontSize: "11px", color: "var(--text-secondary)", lineHeight: 1.5 }}>
+                When sold, NFT ownership transfers automatically on Polygon blockchain. The buyer gets a cryptographically verified ticket.
+              </div>
+            </div>
             <div style={{ background: "rgba(22,163,74,0.06)", border: "1px solid rgba(22,163,74,0.15)", borderRadius: "13px", padding: "12px 14px", marginBottom: "16px" }}>
-              <div style={{ fontSize: "13px", color: "#16a34a", fontWeight: 700 }}>Only 2% platform fee on resales</div>
-              <div style={{ fontSize: "11px", color: "var(--text-muted)", marginTop: "3px" }}>You keep 98% of your resale price</div>
+              <div style={{ fontSize: "13px", color: "#16a34a", fontWeight: 700 }}>Only 2% platform fee</div>
+              <div style={{ fontSize: "11px", color: "var(--text-muted)", marginTop: "2px" }}>You keep 98% · No hidden charges</div>
             </div>
             <div style={{ marginBottom: "14px" }}>
               <div style={{ fontWeight: 700, fontSize: "13px", color: "var(--text-primary)", marginBottom: "8px" }}>Your Resale Price (Ghc)</div>
@@ -475,9 +615,9 @@ export function Resale() {
             {price > 0 && (
               <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
                 style={{ background: "var(--bg-subtle)", borderRadius: "14px", padding: "16px", marginBottom: "14px", border: "1px solid var(--border)" }}>
-                <div style={{ fontWeight: 700, fontSize: "13px", color: "var(--text-primary)", marginBottom: "10px" }}>Fee Breakdown</div>
-                {[["Listing Price","Ghc " + price,"var(--text-primary)"], ["Platform Fee (2%)","- Ghc " + fee,"var(--error)"], ["Your Payout","Ghc " + payout,"#16a34a"]].map(([k, v, c], i) => (
-                  <div key={k} style={{ display: "flex", justifyContent: "space-between", padding: "8px 0", borderBottom: i < 2 ? "1px solid var(--border)" : "none" }}>
+                <div style={{ fontWeight: 700, fontSize: "13px", color: "var(--text-primary)", marginBottom: "10px" }}>Payout Breakdown</div>
+                {[["Listing Price", "Ghc " + price, "var(--text-primary)"], ["Platform Fee (2%)", "- Ghc " + fee, "var(--error)"], ["Your Payout", "Ghc " + payout, "#16a34a"]].map(([k, v, c], i) => (
+                  <div key={k} style={{ display: "flex", justifyContent: "space-between", padding: "7px 0", borderBottom: i < 2 ? "1px solid var(--border)" : "none" }}>
                     <span style={{ color: "var(--text-muted)", fontSize: "13px" }}>{k}</span>
                     <span style={{ color: c, fontWeight: i === 2 ? 800 : 600, fontSize: "13px" }}>{v}</span>
                   </div>
@@ -487,7 +627,7 @@ export function Resale() {
             <motion.button whileHover={{ scale: 1.02, boxShadow: "0 12px 32px rgba(245,166,35,0.4)" }}
               whileTap={{ scale: 0.97 }} onClick={handleListForResale}
               style={{ ...primaryBtn, marginBottom: 0 }}>
-              List for Resale
+              🏷️ List NFT for Resale
             </motion.button>
           </div>
         </div>
@@ -505,20 +645,23 @@ export function ResaleSuccess() {
   return (
     <PageWrap maxW="480px">
       <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}
-        style={{ background: "var(--bg-card)", borderRadius: "24px", padding: desktop ? "56px 48px" : "32px 24px", textAlign: "center", boxShadow: desktop ? "var(--shadow-lg)" : "var(--shadow-md)", border: "1px solid var(--border)" }}>
+        style={{ background: "var(--bg-card)", borderRadius: "24px", padding: desktop ? "48px 44px" : "28px 20px", textAlign: "center", boxShadow: desktop ? "var(--shadow-lg)" : "var(--shadow-md)", border: "1px solid var(--border)" }}>
         <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }}
           transition={{ type: "spring", stiffness: 400, damping: 20, delay: 0.15 }}
-          style={{ width: "80px", height: "80px", borderRadius: "24px", background: "linear-gradient(135deg, #f5a623, #e8920f)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "36px", margin: "0 auto 20px", boxShadow: "var(--shadow-brand)" }}>🏷️</motion.div>
-        <h1 style={{ fontSize: desktop ? "26px" : "22px", fontWeight: 800, color: "var(--text-primary)", marginBottom: "8px" }}>Listed for Resale!</h1>
-        <p style={{ color: "var(--text-secondary)", fontSize: "14px", lineHeight: 1.6, marginBottom: "24px" }}>Your ticket is now on the resale market. You will be notified when it sells.</p>
-        <div style={{ background: "var(--bg-subtle)", border: "1px solid var(--border)", borderRadius: "14px", padding: "16px", marginBottom: "24px", textAlign: "left" }}>
-          <div style={{ fontSize: "11px", color: "#16a34a", fontWeight: 700, marginBottom: "6px" }}>Listed on Marketplace</div>
-          <div style={{ fontFamily: "monospace", fontSize: "13px", color: "#f5a623", fontWeight: 700 }}>
+          style={{ width: "76px", height: "76px", borderRadius: "22px", background: "linear-gradient(135deg, #f5a623, #e8920f)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "34px", margin: "0 auto 16px", boxShadow: "var(--shadow-brand)" }}>🏷️</motion.div>
+        <h1 style={{ fontSize: desktop ? "24px" : "20px", fontWeight: 800, color: "var(--text-primary)", marginBottom: "6px" }}>Listed for Resale!</h1>
+        <p style={{ color: "var(--text-secondary)", fontSize: "13px", lineHeight: 1.6, marginBottom: "20px" }}>
+          Your NFT ticket is now on the marketplace. When it sells, ownership transfers automatically on-chain.
+        </p>
+        <div style={{ background: "rgba(124,58,237,0.05)", border: "1px solid rgba(124,58,237,0.15)", borderRadius: "14px", padding: "14px", marginBottom: "16px", textAlign: "left" }}>
+          <div style={{ fontSize: "10px", color: "#7c3aed", fontWeight: 700, marginBottom: "6px", letterSpacing: "0.5px" }}>⛓️ BLOCKCHAIN LISTING</div>
+          <div style={{ fontFamily: "monospace", fontSize: "12px", color: "#f5a623", fontWeight: 700 }}>
             REF: {Math.random().toString(36).substr(2, 12).toUpperCase()}
           </div>
+          <div style={{ fontSize: "11px", color: "var(--text-muted)", marginTop: "4px" }}>NFT ownership will transfer on Polygon when sold</div>
         </div>
-        <motion.button whileHover={{ scale: 1.02, boxShadow: "0 12px 32px rgba(245,166,35,0.4)" }}
-          whileTap={{ scale: 0.97 }} onClick={() => { setScreen("app"); setActiveTab("tickets"); }}
+        <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}
+          onClick={() => { setScreen("app"); setActiveTab("tickets"); }}
           style={{ ...primaryBtn, marginBottom: 0 }}>
           View My Tickets
         </motion.button>
@@ -548,18 +691,18 @@ export function Transfer() {
   if (transferDone) return (
     <PageWrap maxW="480px">
       <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}
-        style={{ background: "var(--bg-card)", borderRadius: "24px", padding: desktop ? "56px 48px" : "32px 24px", textAlign: "center", boxShadow: desktop ? "var(--shadow-lg)" : "var(--shadow-md)", border: "1px solid var(--border)" }}>
+        style={{ background: "var(--bg-card)", borderRadius: "24px", padding: desktop ? "48px 44px" : "28px 20px", textAlign: "center", boxShadow: desktop ? "var(--shadow-lg)" : "var(--shadow-md)", border: "1px solid var(--border)" }}>
         <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }}
           transition={{ type: "spring", stiffness: 400, damping: 20, delay: 0.15 }}
-          style={{ width: "80px", height: "80px", borderRadius: "24px", background: "rgba(22,163,74,0.1)", border: "2px solid rgba(22,163,74,0.25)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "36px", margin: "0 auto 20px" }}>✅</motion.div>
-        <h1 style={{ fontSize: desktop ? "26px" : "22px", fontWeight: 800, color: "var(--text-primary)", marginBottom: "8px" }}>Ticket Transferred!</h1>
-        <p style={{ color: "var(--text-secondary)", fontSize: "14px", lineHeight: 1.6, marginBottom: "20px" }}>
-          Your ticket for <strong style={{ color: "var(--text-primary)" }}>{ev.name}</strong> has been sent to{" "}
-          <span style={{ color: "#f5a623", fontWeight: 700 }}>{transferName || transferEmail}</span>
+          style={{ width: "76px", height: "76px", borderRadius: "22px", background: "rgba(22,163,74,0.1)", border: "2px solid rgba(22,163,74,0.25)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "34px", margin: "0 auto 16px" }}>✅</motion.div>
+        <h1 style={{ fontSize: desktop ? "24px" : "20px", fontWeight: 800, color: "var(--text-primary)", marginBottom: "6px" }}>Ticket Transferred!</h1>
+        <p style={{ color: "var(--text-secondary)", fontSize: "13px", lineHeight: 1.6, marginBottom: "18px" }}>
+          NFT ownership of <strong style={{ color: "var(--text-primary)" }}>{ev.name}</strong> has been transferred to{" "}
+          <span style={{ color: "#f5a623", fontWeight: 700 }}>{transferName || transferEmail}</span> on the blockchain.
         </p>
-        <div style={{ background: "var(--bg-subtle)", border: "1px solid var(--border)", borderRadius: "14px", padding: "16px", marginBottom: "24px", textAlign: "left" }}>
-          <div style={{ fontSize: "11px", color: "#16a34a", fontWeight: 700, marginBottom: "5px" }}>Transfer Complete on Blockchain</div>
-          <div style={{ fontSize: "12px", color: "var(--text-muted)" }}>Your old QR code is now void. Recipient has a new NFT ticket.</div>
+        <div style={{ background: "rgba(124,58,237,0.05)", border: "1px solid rgba(124,58,237,0.15)", borderRadius: "14px", padding: "14px", marginBottom: "14px", textAlign: "left" }}>
+          <div style={{ fontSize: "10px", color: "#7c3aed", fontWeight: 700, marginBottom: "6px", letterSpacing: "0.5px" }}>⛓️ ON-CHAIN TRANSFER COMPLETE</div>
+          <div style={{ fontSize: "11px", color: "var(--text-muted)", lineHeight: 1.5 }}>Your old QR code is permanently void. The recipient now holds a new cryptographically signed NFT ticket.</div>
         </div>
         <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}
           onClick={() => { setScreen("app"); setActiveTab("tickets"); }}
@@ -576,36 +719,35 @@ export function Transfer() {
         <div style={{ background: "var(--bg-card)", borderRadius: desktop ? "20px" : 0, overflow: "hidden", boxShadow: desktop ? "var(--shadow-lg)" : "none", border: desktop ? "1px solid var(--border)" : "none" }}>
           <div style={{ display: "flex", alignItems: "center", padding: "16px 20px", gap: "14px", borderBottom: "1px solid var(--border)", position: "sticky", top: 0, background: "var(--bg-card)", zIndex: 10 }}>
             <motion.div whileTap={{ scale: 0.9 }} onClick={() => setScreen("ticketView")}
-              style={{ width: "36px", height: "36px", borderRadius: "10px", background: "var(--bg-subtle)", border: "1px solid var(--border)", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", fontSize: "17px", color: "var(--text-primary)", flexShrink: 0 }}>
-              ←
-            </motion.div>
+              style={{ width: "36px", height: "36px", borderRadius: "10px", background: "var(--bg-subtle)", border: "1px solid var(--border)", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", fontSize: "17px", color: "var(--text-primary)", flexShrink: 0 }}>←</motion.div>
             <div>
-              <div style={{ fontSize: "16px", fontWeight: 700, color: "var(--text-primary)" }}>Transfer Ticket</div>
-              <div style={{ fontSize: "11px", color: "var(--text-muted)", marginTop: "1px" }}>Free · Permanent · Blockchain verified</div>
+              <div style={{ fontSize: "16px", fontWeight: 700, color: "var(--text-primary)" }}>Transfer NFT Ticket</div>
+              <div style={{ fontSize: "11px", color: "var(--text-muted)", marginTop: "1px" }}>Permanent on-chain ownership transfer</div>
             </div>
           </div>
           <div style={{ padding: desktop ? "24px" : "16px" }}>
-            <div style={{ background: "rgba(37,99,235,0.05)", border: "1px solid rgba(37,99,235,0.15)", borderRadius: "14px", padding: "14px", marginBottom: "18px" }}>
-              <div style={{ fontWeight: 700, fontSize: "12px", color: "#2563eb", marginBottom: "8px" }}>About Transfers</div>
-              {["Free — no platform fee", "Permanent — you lose ownership forever", "Recipient must have a Master Events account", "Your current QR becomes void instantly"].map((info, i) => (
+            {/* Blockchain transfer warning */}
+            <div style={{ background: "rgba(124,58,237,0.05)", border: "1px solid rgba(124,58,237,0.18)", borderRadius: "14px", padding: "14px", marginBottom: "14px" }}>
+              <div style={{ fontSize: "11px", fontWeight: 700, color: "#7c3aed", marginBottom: "8px" }}>⛓️ BLOCKCHAIN TRANSFER</div>
+              {["NFT ownership moves to recipient on Polygon", "Your QR code becomes invalid instantly", "Free — no platform fee applies", "Irreversible — cannot be undone after confirmation"].map((info, i) => (
                 <div key={i} style={{ display: "flex", gap: "8px", marginBottom: i < 3 ? "5px" : 0, fontSize: "12px", color: "var(--text-secondary)" }}>
-                  <span style={{ color: "#2563eb", flexShrink: 0 }}>•</span>
+                  <span style={{ color: "#7c3aed", flexShrink: 0 }}>•</span>
                   <span>{info}</span>
                 </div>
               ))}
             </div>
             <div style={{ fontSize: "12px", fontWeight: 600, color: "var(--text-secondary)", marginBottom: "6px" }}>Recipient Full Name</div>
             <input placeholder="e.g. Kwame Mensah" value={transferName} onChange={e => setTransferName(e.target.value)} style={inp} />
-            <div style={{ fontSize: "12px", fontWeight: 600, color: "var(--text-secondary)", marginBottom: "6px" }}>Recipient Email</div>
+            <div style={{ fontSize: "12px", fontWeight: 600, color: "var(--text-secondary)", marginBottom: "6px" }}>Recipient Email (Master Events account)</div>
             <input placeholder="e.g. kwame@email.com" value={transferEmail} onChange={e => setTransferEmail(e.target.value)} style={inp} />
             <div style={{ background: "var(--error-bg)", border: "1px solid rgba(220,38,38,0.2)", borderRadius: "12px", padding: "10px 14px", marginBottom: "20px" }}>
-              <div style={{ fontSize: "12px", color: "var(--error)", fontWeight: 700, marginBottom: "2px" }}>This cannot be undone</div>
-              <div style={{ fontSize: "11px", color: "var(--text-muted)" }}>Make sure the email address is correct before confirming.</div>
+              <div style={{ fontSize: "12px", color: "var(--error)", fontWeight: 700, marginBottom: "2px" }}>⚠️ This cannot be undone</div>
+              <div style={{ fontSize: "11px", color: "var(--text-muted)" }}>Double-check the email address. NFT ownership is permanent once transferred.</div>
             </div>
             <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}
               onClick={onTransfer} disabled={transferring}
-              style={{ ...primaryBtn, background: "linear-gradient(135deg, #2563eb, #1d4ed8)", marginBottom: 0, opacity: transferring ? 0.6 : 1 }}>
-              {transferring ? "Transferring..." : "Confirm Transfer"}
+              style={{ ...primaryBtn, background: "linear-gradient(135deg, #7c3aed, #2563eb)", marginBottom: 0, opacity: transferring ? 0.6 : 1 }}>
+              {transferring ? "⛓️ Transferring on chain..." : "⛓️ Confirm NFT Transfer"}
             </motion.button>
           </div>
         </div>

@@ -1,4 +1,5 @@
 import React from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import useStore from "./store/useStore";
 import PhoneFrame from "./components/PhoneFrame";
 import BottomNav from "./components/BottomNav";
@@ -17,7 +18,11 @@ import {
 import OrganizerWallet from "./screens/organizer/OrganizerWallet";
 import { DoorStaffLogin, DoorStaffScan, OrganizerScan } from "./screens/doorstaff/DoorStaffScreens";
 import { useTheme } from "./hooks/useTheme";
-import { motion } from "framer-motion";
+import {
+  Home, Ticket, Bell, LayoutDashboard, CalendarDays, Wallet,
+  LogOut, Sun, Moon, Monitor, ChevronLeft, ChevronRight,
+  PlusCircle, Zap, ScanLine, Settings
+} from "lucide-react";
 
 // ── Mobile app tabs ───────────────────────────────────────────
 function AppTabs() {
@@ -46,11 +51,27 @@ function AppTabs() {
         {renderTab()}
       </div>
       {role === "organizer" && (
-        <div onClick={() => setScreen("addEvent")}
-          style={{ position: "fixed", bottom: "80px", right: "20px", width: "52px", height: "52px", borderRadius: "50%", background: "linear-gradient(135deg, #f5a623, #e8920f)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "28px", cursor: "pointer", boxShadow: "0 4px 20px rgba(245,166,35,0.5)", color: "#fff", zIndex: 200 }}>+</div>
+        <motion.div whileTap={{ scale: 0.92 }} onClick={() => setScreen("addEvent")}
+          style={{ position: "fixed", bottom: "80px", right: "20px", width: "52px", height: "52px", borderRadius: "50%", background: "linear-gradient(135deg, #f5a623, #e8920f)", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", boxShadow: "0 4px 20px rgba(245,166,35,0.5)", zIndex: 200 }}>
+          <PlusCircle size={24} color="#fff" />
+        </motion.div>
       )}
       <BottomNav />
     </div>
+  );
+}
+
+// ── Sidebar nav item ──────────────────────────────────────────
+function NavItem({ icon: Icon, label, active, collapsed, onClick, title }) {
+  return (
+    <motion.div whileTap={{ scale: 0.94 }} onClick={onClick} title={title}
+      style={{ display: "flex", alignItems: "center", gap: "10px", padding: collapsed ? "10px 0" : "9px 10px", justifyContent: collapsed ? "center" : "flex-start", borderRadius: "12px", marginBottom: "2px", cursor: "pointer", background: active ? "rgba(245,166,35,0.1)" : "transparent", transition: "all 0.18s ease" }}
+      onMouseEnter={e => { if (!active) e.currentTarget.style.background = "var(--bg-hover)"; }}
+      onMouseLeave={e => { if (!active) e.currentTarget.style.background = active ? "rgba(245,166,35,0.1)" : "transparent"; }}>
+      <Icon size={17} strokeWidth={active ? 2.5 : 1.8} color={active ? "#f5a623" : "var(--text-secondary)"} style={{ flexShrink: 0 }} />
+      {!collapsed && <span style={{ fontWeight: 600, fontSize: "13px", whiteSpace: "nowrap", color: active ? "#f5a623" : "var(--text-secondary)" }}>{label}</span>}
+      {!collapsed && active && <div style={{ marginLeft: "auto", width: "6px", height: "6px", borderRadius: "50%", background: "#f5a623" }} />}
+    </motion.div>
   );
 }
 
@@ -64,21 +85,20 @@ function DesktopAppLayout() {
   const currentUser  = useStore(s => s.currentUser);
   const handleLogout = useStore(s => s.handleLogout);
   const { theme, setTheme } = useTheme();
-  const [collapsed, setCollapsed] = React.useState(false);
+  const [collapsed, setCollapsed]     = React.useState(false);
   const [profileOpen, setProfileOpen] = React.useState(true);
 
   const attendeeNav = [
-    { id: "home",    icon: "🏠", label: "Discover Events" },
-    { id: "tickets", icon: "🎟️", label: "My Tickets"      },
-    { id: "alerts",  icon: "🔔", label: "Alerts"           },
+    { id: "home",    Icon: Home,          label: "Discover Events" },
+    { id: "tickets", Icon: Ticket,        label: "My Tickets"      },
+    { id: "alerts",  Icon: Bell,          label: "Alerts"          },
   ];
   const orgNav = [
-    { id: "dashboard", icon: "📊", label: "Dashboard" },
-    { id: "events",    icon: "🎪", label: "My Events"  },
-    { id: "wallet",    icon: "💰", label: "Wallet"     },
-    { id: "alerts",    icon: "🔔", label: "Alerts"     },
+    { id: "dashboard", Icon: LayoutDashboard, label: "Dashboard" },
+    { id: "events",    Icon: CalendarDays,    label: "My Events"  },
+    { id: "wallet",    Icon: Wallet,          label: "Wallet"     },
+    { id: "alerts",    Icon: Bell,            label: "Alerts"     },
   ];
-
   const navItems = role === "organizer" ? orgNav : attendeeNav;
 
   const isFullScreen = [
@@ -122,10 +142,11 @@ function DesktopAppLayout() {
     doorStaffScan: "Door Scanner",
   };
 
-  const themeIcons  = { light: "☀️", dark: "🌙", system: "💻" };
-  const themeOrder  = ["light", "dark", "system"];
-  const nextTheme   = themeOrder[(themeOrder.indexOf(theme) + 1) % 3];
-  const sidebarW    = collapsed ? "68px" : "256px";
+  const themeOptions = { light: { Icon: Sun, label: "Light" }, dark: { Icon: Moon, label: "Dark" }, system: { Icon: Monitor, label: "System" } };
+  const themeOrder   = ["light", "dark", "system"];
+  const nextTheme    = themeOrder[(themeOrder.indexOf(theme) + 1) % 3];
+  const ThemeIcon    = themeOptions[theme].Icon;
+  const sidebarW     = collapsed ? "68px" : "256px";
 
   return (
     <div style={{ display: "flex", minHeight: "100vh", background: "var(--bg)", fontFamily: "var(--font-sans)" }}>
@@ -137,52 +158,49 @@ function DesktopAppLayout() {
         style={{ flexShrink: 0, background: "var(--bg-card)", borderRight: "1px solid var(--border)", display: "flex", flexDirection: "column", position: "sticky", top: 0, height: "100vh", overflow: "hidden", boxShadow: "2px 0 20px rgba(0,0,0,0.04)" }}>
 
         {/* ── Brand ── */}
-        <div style={{ padding: "14px 12px", borderBottom: "1px solid var(--border)", display: "flex", alignItems: "center", justifyContent: collapsed ? "center" : "space-between", gap: "8px" }}>
-          {!collapsed && (
-            <div style={{ display: "flex", alignItems: "center", gap: "10px", overflow: "hidden" }}>
-              <div style={{ width: "32px", height: "32px", borderRadius: "10px", background: "linear-gradient(135deg, #f5a623, #e8920f)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "15px", flexShrink: 0, boxShadow: "0 4px 12px rgba(245,166,35,0.3)" }}>🎟️</div>
-              <div>
-                <div style={{ fontWeight: 800, fontSize: "13px", color: "var(--text-primary)", letterSpacing: "-0.3px", whiteSpace: "nowrap" }}>Master Events</div>
-                <div style={{ display: "flex", alignItems: "center", gap: "4px", marginTop: "2px" }}>
-                  <motion.div animate={{ scale: [1, 1.3, 1] }} transition={{ repeat: Infinity, duration: 2 }}
-                    style={{ width: "5px", height: "5px", borderRadius: "50%", background: "#16a34a" }} />
-                  <span style={{ fontSize: "9px", color: "#16a34a", fontWeight: 700, letterSpacing: "0.3px" }}>POLYGON LIVE</span>
-                </div>
-              </div>
+        <div style={{ padding: "14px 12px", borderBottom: "1px solid var(--border)", display: "flex", alignItems: "center", justifyContent: collapsed ? "center" : "space-between", gap: "8px", minHeight: "60px" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "10px", overflow: "hidden", flex: 1 }}>
+            {/* Logo mark — always visible */}
+            <div style={{ width: "32px", height: "32px", borderRadius: "10px", background: "linear-gradient(135deg, #f5a623, #e8920f)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, boxShadow: "0 4px 12px rgba(245,166,35,0.3)" }}>
+              <Ticket size={16} color="#fff" strokeWidth={2.5} />
             </div>
-          )}
-          {collapsed && (
-            <div style={{ width: "32px", height: "32px", borderRadius: "10px", background: "linear-gradient(135deg, #f5a623, #e8920f)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "15px", boxShadow: "0 4px 12px rgba(245,166,35,0.3)" }}>🎟️</div>
-          )}
-          {!collapsed && (
-            <motion.button whileTap={{ scale: 0.9 }} onClick={() => setCollapsed(true)}
-              style={{ width: "26px", height: "26px", borderRadius: "8px", background: "var(--bg-subtle)", border: "1px solid var(--border)", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", fontSize: "11px", color: "var(--text-muted)", flexShrink: 0 }}>
-              ←
-            </motion.button>
-          )}
-          {collapsed && (
-            <div /> // spacer — expand button is in profile section
-          )}
+            <AnimatePresence>
+              {!collapsed && (
+                <motion.div initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -8 }}
+                  transition={{ duration: 0.18 }} style={{ overflow: "hidden", minWidth: 0 }}>
+                  <div style={{ fontWeight: 800, fontSize: "13px", color: "var(--text-primary)", letterSpacing: "-0.3px", whiteSpace: "nowrap" }}>Master Events</div>
+                  <div style={{ display: "flex", alignItems: "center", gap: "4px", marginTop: "2px" }}>
+                    <motion.div animate={{ scale: [1, 1.4, 1] }} transition={{ repeat: Infinity, duration: 2 }}
+                      style={{ width: "5px", height: "5px", borderRadius: "50%", background: "#16a34a" }} />
+                    <span style={{ fontSize: "9px", color: "#16a34a", fontWeight: 700, letterSpacing: "0.5px", whiteSpace: "nowrap" }}>POLYGON LIVE</span>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+          <motion.button whileTap={{ scale: 0.88 }}
+            onClick={() => setCollapsed(!collapsed)}
+            style={{ width: "26px", height: "26px", borderRadius: "8px", background: "var(--bg-subtle)", border: "1px solid var(--border)", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", flexShrink: 0 }}>
+            {collapsed ? <ChevronRight size={13} color="var(--text-muted)" /> : <ChevronLeft size={13} color="var(--text-muted)" />}
+          </motion.button>
         </div>
 
         {/* ── Profile — collapsible ── */}
-        <div style={{ borderBottom: "1px solid var(--border)", overflow: "hidden" }}>
+        <div style={{ borderBottom: "1px solid var(--border)" }}>
           {collapsed ? (
-            // Collapsed — just avatar, click to expand sidebar
             <motion.div whileHover={{ background: "var(--bg-hover)" }} whileTap={{ scale: 0.95 }}
               onClick={() => setCollapsed(false)}
               title={currentUser?.first_name + " " + currentUser?.last_name}
-              style={{ padding: "12px 0", display: "flex", justifyContent: "center", cursor: "pointer", transition: "background 0.18s" }}>
-              <div style={{ width: "36px", height: "36px", borderRadius: "50%", background: "linear-gradient(135deg, #f5a623, #e8920f)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "15px", fontWeight: 700, color: "#fff" }}>
+              style={{ padding: "12px 0", display: "flex", justifyContent: "center", cursor: "pointer" }}>
+              <div style={{ width: "34px", height: "34px", borderRadius: "50%", background: "linear-gradient(135deg, #f5a623, #e8920f)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "14px", fontWeight: 700, color: "#fff" }}>
                 {currentUser?.first_name?.[0]?.toUpperCase() || "U"}
               </div>
             </motion.div>
           ) : (
-            <motion.div
-              onClick={() => setProfileOpen(!profileOpen)}
+            <motion.div onClick={() => setProfileOpen(!profileOpen)}
               style={{ padding: "12px 14px", cursor: "pointer", userSelect: "none" }}>
               <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                <div style={{ width: "36px", height: "36px", borderRadius: "50%", background: "linear-gradient(135deg, #f5a623, #e8920f)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "15px", fontWeight: 700, color: "#fff", flexShrink: 0 }}>
+                <div style={{ width: "34px", height: "34px", borderRadius: "50%", background: "linear-gradient(135deg, #f5a623, #e8920f)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "14px", fontWeight: 700, color: "#fff", flexShrink: 0 }}>
                   {currentUser?.first_name?.[0]?.toUpperCase() || "U"}
                 </div>
                 <div style={{ minWidth: 0, flex: 1 }}>
@@ -193,24 +211,27 @@ function DesktopAppLayout() {
                     {currentUser?.email}
                   </div>
                 </div>
-                <motion.span
-                  animate={{ rotate: profileOpen ? 180 : 0 }}
-                  transition={{ duration: 0.2 }}
-                  style={{ fontSize: "10px", color: "var(--text-muted)", flexShrink: 0 }}>
-                  ▼
-                </motion.span>
+                <motion.div animate={{ rotate: profileOpen ? 180 : 0 }} transition={{ duration: 0.2 }}>
+                  <ChevronLeft size={12} color="var(--text-muted)" style={{ transform: "rotate(-90deg)" }} />
+                </motion.div>
               </div>
-              <motion.div
-                initial={false}
-                animate={{ height: profileOpen ? "auto" : 0, opacity: profileOpen ? 1 : 0 }}
-                transition={{ duration: 0.2 }}
-                style={{ overflow: "hidden" }}>
-                <div style={{ marginTop: "10px", display: "inline-flex", alignItems: "center", gap: "4px", padding: "3px 10px", borderRadius: "99px", background: "rgba(245,166,35,0.1)", border: "1px solid rgba(245,166,35,0.2)" }}>
-                  <span style={{ fontSize: "9px", fontWeight: 700, color: "#f5a623", letterSpacing: "0.5px" }}>
-                    {role === "organizer" ? "⚡ ORGANIZER" : "🎟️ ATTENDEE"}
-                  </span>
-                </div>
-              </motion.div>
+              <AnimatePresence>
+                {profileOpen && (
+                  <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.2 }}
+                    style={{ overflow: "hidden" }}>
+                    <div style={{ marginTop: "10px", display: "inline-flex", alignItems: "center", gap: "5px", padding: "3px 10px", borderRadius: "99px", background: "rgba(245,166,35,0.1)", border: "1px solid rgba(245,166,35,0.2)" }}>
+                      {role === "organizer"
+                        ? <Zap size={9} color="#f5a623" />
+                        : <Ticket size={9} color="#f5a623" />
+                      }
+                      <span style={{ fontSize: "9px", fontWeight: 700, color: "#f5a623", letterSpacing: "0.5px" }}>
+                        {role === "organizer" ? "ORGANIZER" : "ATTENDEE"}
+                      </span>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </motion.div>
           )}
         </div>
@@ -220,21 +241,13 @@ function DesktopAppLayout() {
           {!collapsed && (
             <div style={{ fontSize: "9px", fontWeight: 700, color: "var(--text-muted)", letterSpacing: "1.5px", padding: "0 8px", marginBottom: "8px" }}>MENU</div>
           )}
-          {navItems.map(item => {
-            const isActive = !isFullScreen && activeTab === item.id;
-            return (
-              <motion.div key={item.id} whileTap={{ scale: 0.94 }}
-                onClick={() => { setActiveTab(item.id); setScreen("app"); }}
-                title={collapsed ? item.label : ""}
-                style={{ display: "flex", alignItems: "center", gap: "10px", padding: collapsed ? "10px 0" : "9px 10px", justifyContent: collapsed ? "center" : "flex-start", borderRadius: "12px", marginBottom: "2px", cursor: "pointer", background: isActive ? "rgba(245,166,35,0.1)" : "transparent", color: isActive ? "#f5a623" : "var(--text-secondary)", transition: "all 0.18s ease" }}
-                onMouseEnter={e => { if (!isActive) e.currentTarget.style.background = "var(--bg-hover)"; }}
-                onMouseLeave={e => { if (!isActive) e.currentTarget.style.background = "transparent"; }}>
-                <span style={{ fontSize: "17px", flexShrink: 0 }}>{item.icon}</span>
-                {!collapsed && <span style={{ fontWeight: 600, fontSize: "13px", whiteSpace: "nowrap" }}>{item.label}</span>}
-                {!collapsed && isActive && <div style={{ marginLeft: "auto", width: "6px", height: "6px", borderRadius: "50%", background: "#f5a623" }} />}
-              </motion.div>
-            );
-          })}
+          {navItems.map(item => (
+            <NavItem key={item.id} icon={item.Icon} label={item.label}
+              active={!isFullScreen && activeTab === item.id}
+              collapsed={collapsed}
+              title={collapsed ? item.label : ""}
+              onClick={() => { setActiveTab(item.id); setScreen("app"); }} />
+          ))}
 
           {role === "organizer" && (
             <div style={{ marginTop: "12px" }}>
@@ -247,8 +260,18 @@ function DesktopAppLayout() {
                 style={{ display: "flex", alignItems: "center", gap: "10px", padding: collapsed ? "10px 0" : "9px 10px", justifyContent: collapsed ? "center" : "flex-start", borderRadius: "12px", cursor: "pointer", border: collapsed ? "none" : "1.5px dashed rgba(245,166,35,0.3)", color: "#f5a623", transition: "all 0.18s ease" }}
                 onMouseEnter={e => { e.currentTarget.style.background = "rgba(245,166,35,0.06)"; if (!collapsed) e.currentTarget.style.borderColor = "#f5a623"; }}
                 onMouseLeave={e => { e.currentTarget.style.background = "transparent"; if (!collapsed) e.currentTarget.style.borderColor = "rgba(245,166,35,0.3)"; }}>
-                <span style={{ fontSize: "17px", flexShrink: 0 }}>➕</span>
+                <PlusCircle size={17} style={{ flexShrink: 0 }} color="#f5a623" />
                 {!collapsed && <span style={{ fontWeight: 600, fontSize: "13px" }}>Create Event</span>}
+              </motion.div>
+
+              <motion.div whileTap={{ scale: 0.94 }}
+                onClick={() => setScreen("scanTicket")}
+                title={collapsed ? "Scan Tickets" : ""}
+                style={{ display: "flex", alignItems: "center", gap: "10px", padding: collapsed ? "10px 0" : "9px 10px", justifyContent: collapsed ? "center" : "flex-start", borderRadius: "12px", cursor: "pointer", marginTop: "4px", color: "var(--text-secondary)", transition: "all 0.18s ease" }}
+                onMouseEnter={e => { e.currentTarget.style.background = "var(--bg-hover)"; }}
+                onMouseLeave={e => { e.currentTarget.style.background = "transparent"; }}>
+                <ScanLine size={17} style={{ flexShrink: 0 }} color="var(--text-secondary)" />
+                {!collapsed && <span style={{ fontWeight: 600, fontSize: "13px" }}>Scan Tickets</span>}
               </motion.div>
             </div>
           )}
@@ -256,36 +279,33 @@ function DesktopAppLayout() {
 
         {/* ── Bottom — theme + logout ── */}
         <div style={{ padding: "8px", borderTop: "1px solid var(--border)" }}>
-          {/* Theme — single click to cycle */}
           <motion.div whileTap={{ scale: 0.9 }}
             onClick={() => setTheme(nextTheme)}
-            title={collapsed ? theme + " mode" : "Switch to " + nextTheme + " mode"}
-            style={{ display: "flex", alignItems: "center", gap: "10px", padding: collapsed ? "10px 0" : "9px 10px", justifyContent: collapsed ? "center" : "flex-start", borderRadius: "12px", cursor: "pointer", marginBottom: "4px", transition: "background 0.18s" }}
+            title={collapsed ? themeOptions[theme].label + " mode" : "Switch to " + nextTheme}
+            style={{ display: "flex", alignItems: "center", gap: "10px", padding: collapsed ? "10px 0" : "9px 10px", justifyContent: collapsed ? "center" : "flex-start", borderRadius: "12px", cursor: "pointer", marginBottom: "2px", transition: "background 0.18s" }}
             onMouseEnter={e => { e.currentTarget.style.background = "var(--bg-hover)"; }}
             onMouseLeave={e => { e.currentTarget.style.background = "transparent"; }}>
-            <span style={{ fontSize: "17px" }}>{themeIcons[theme]}</span>
+            <ThemeIcon size={17} color="var(--text-secondary)" style={{ flexShrink: 0 }} />
             {!collapsed && (
               <span style={{ fontSize: "13px", fontWeight: 600, color: "var(--text-secondary)" }}>
-                {theme.charAt(0).toUpperCase() + theme.slice(1)} mode
+                {themeOptions[theme].label} mode
               </span>
             )}
           </motion.div>
 
-          {/* Logout */}
           <motion.div whileTap={{ scale: 0.9 }} onClick={handleLogout}
             title={collapsed ? "Log Out" : ""}
-            style={{ display: "flex", alignItems: "center", gap: "10px", padding: collapsed ? "10px 0" : "9px 10px", justifyContent: collapsed ? "center" : "flex-start", borderRadius: "12px", cursor: "pointer", color: "var(--error)", transition: "background 0.18s" }}
+            style={{ display: "flex", alignItems: "center", gap: "10px", padding: collapsed ? "10px 0" : "9px 10px", justifyContent: collapsed ? "center" : "flex-start", borderRadius: "12px", cursor: "pointer", transition: "background 0.18s" }}
             onMouseEnter={e => { e.currentTarget.style.background = "var(--error-bg)"; }}
             onMouseLeave={e => { e.currentTarget.style.background = "transparent"; }}>
-            <span style={{ fontSize: "17px" }}>🚪</span>
-            {!collapsed && <span style={{ fontWeight: 600, fontSize: "13px" }}>Log Out</span>}
+            <LogOut size={17} color="var(--error)" style={{ flexShrink: 0 }} />
+            {!collapsed && <span style={{ fontWeight: 600, fontSize: "13px", color: "var(--error)" }}>Log Out</span>}
           </motion.div>
         </div>
       </motion.aside>
 
       {/* ── Main content ── */}
       <main style={{ flex: 1, display: "flex", flexDirection: "column", minWidth: 0, overflow: "hidden" }}>
-
         {/* Top bar */}
         <div style={{ background: "var(--bg-card)", borderBottom: "1px solid var(--border)", padding: "14px 32px", display: "flex", justifyContent: "space-between", alignItems: "center", position: "sticky", top: 0, zIndex: 40, boxShadow: "var(--shadow-sm)" }}>
           <div>
@@ -299,9 +319,9 @@ function DesktopAppLayout() {
               {new Date().toLocaleDateString("en-GH", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}
             </p>
           </div>
-          <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
             <div style={{ display: "flex", alignItems: "center", gap: "6px", padding: "6px 12px", borderRadius: "99px", border: "1px solid rgba(22,163,74,0.2)", background: "rgba(22,163,74,0.06)" }}>
-              <motion.div animate={{ scale: [1, 1.3, 1] }} transition={{ repeat: Infinity, duration: 2 }}
+              <motion.div animate={{ scale: [1, 1.4, 1] }} transition={{ repeat: Infinity, duration: 2 }}
                 style={{ width: "6px", height: "6px", borderRadius: "50%", background: "#16a34a" }} />
               <span style={{ fontSize: "11px", fontWeight: 700, color: "#16a34a" }}>Polygon Live</span>
             </div>

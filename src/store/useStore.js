@@ -246,7 +246,7 @@ const useStore = create((set, get) => ({
   setPayMethod:     (v) => set({ payMethod: v }),
   setViewingTicket: (v) => set({ viewingTicket: v }),
 
- handleBuyTicket: async () => {
+handleBuyTicket: async () => {
   const { ticketsAPI } = await import("../api");
   const { checkoutEvent, ticketQty, payMethod, myTickets } = get();
   const loadingToast = toast.loading("Processing payment...");
@@ -257,14 +257,16 @@ const useStore = create((set, get) => ({
       payment_reference: reference,
     });
 
-    // ✅ Accept any successful response — ticket_id OR id OR no error field
-    const ticketId = data.ticket_id || data.id || reference;
-    const isSuccess = data.ticket_id || data.id || (data && !data.error && !data.detail);
+    // ── Success detection — handle all backend response shapes ──
+    // Backend returns ticket_id at top level on success (HTTP 201)
+    // Also accept: id, or _status 200/201 with any ticket identifier
+    const ticketId = data.ticket_id || data.id || data.pk;
+    const isSuccess = ticketId || data._status === 201 || data._status === 200;
 
     if (isSuccess) {
       const ticket = {
-        id:           ticketId,
-        ticket_id:    ticketId,
+        id:           ticketId || reference,
+        ticket_id:    ticketId || reference,
         event:        checkoutEvent,
         qty:          ticketQty,
         quantity:     ticketQty,
@@ -272,10 +274,10 @@ const useStore = create((set, get) => ({
         purchasedAt:  new Date().toLocaleDateString(),
         owner:        (data.owner?.first_name || "") + " " + (data.owner?.last_name || ""),
         ownerEmail:   data.owner?.email,
-        status:       "active",
-        qr_data:      data.qr_data      || null,
-        dynamic_qr:   data.dynamic_qr   || null,
-        qr_base64:    data.dynamic_qr   || null,
+        status:       data.status || "active",
+        qr_data:      data.qr_data || null,
+        dynamic_qr:   data.dynamic_qr || null,
+        qr_base64:    data.dynamic_qr || null,
         qr_image_url: data.qr_image_url || null,
         qr_image:     data.qr_image
           ? (data.qr_image.startsWith("http") ? data.qr_image : BACKEND + data.qr_image)
@@ -295,7 +297,10 @@ const useStore = create((set, get) => ({
       toast.success("🎉 Payment successful!");
     } else {
       toast.dismiss(loadingToast);
-      toast.error(data.error || data.detail || "Purchase failed. Try again.");
+      // Show the actual backend error if available
+      const errMsg = data.error || data.detail || data.message ||
+        (typeof data === "object" ? Object.values(data).flat().join(" ") : "Purchase failed.");
+      toast.error(errMsg);
     }
   } catch (e) {
     console.error("Purchase error:", e);

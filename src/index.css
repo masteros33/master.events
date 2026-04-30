@@ -61,7 +61,7 @@
   --ease-spring:    cubic-bezier(0.16, 1, 0.3, 1);
   --ease-smooth:    cubic-bezier(0.4, 0, 0.2, 1);
 
-  /* PWA / Safe area nav height */
+  /* PWA — nav height + safe area */
   --nav-height:     56px;
   --nav-total:      calc(var(--nav-height) + env(safe-area-inset-bottom, 0px));
 }
@@ -104,8 +104,8 @@
   -webkit-touch-callout: none;
 }
 
-/* Fill entire screen on iOS including notch */
 html {
+  /* iOS full-height fix — use -webkit-fill-available only */
   height: -webkit-fill-available;
   scroll-behavior: smooth;
   text-rendering: optimizeLegibility;
@@ -117,17 +117,17 @@ html {
 
 body {
   min-height: 100vh;
+  /* iOS fix: only use -webkit-fill-available, NOT fill-available */
   min-height: -webkit-fill-available;
   width: 100%;
   font-family: var(--font-sans);
   background: var(--bg);
   color: var(--text-primary);
-  /* Prevent rubber-band / overscroll on iOS */
   overscroll-behavior: none;
   -webkit-overflow-scrolling: touch;
-  /* Respect notch at top and sides — NOT bottom (nav handles it) */
-  padding-top: env(safe-area-inset-top, 0px);
-  padding-left: env(safe-area-inset-left, 0px);
+  /* Respect notch at top/sides — NOT bottom (nav handles it) */
+  padding-top:   env(safe-area-inset-top,   0px);
+  padding-left:  env(safe-area-inset-left,  0px);
   padding-right: env(safe-area-inset-right, 0px);
 }
 
@@ -136,25 +136,22 @@ body {
   width: 100%;
   display: flex;
   flex-direction: column;
-  /* Isolate stacking context */
   isolation: isolate;
 }
 
 /* ══════════════════════════════════════════════════════════════
    SCROLLBARS
 ══════════════════════════════════════════════════════════════ */
-::-webkit-scrollbar { width: 4px; height: 4px; }
-::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 99px; }
+::-webkit-scrollbar          { width: 4px; height: 4px; }
+::-webkit-scrollbar-track    { background: transparent; }
+::-webkit-scrollbar-thumb    { background: var(--border-strong); border-radius: 99px; }
 ::-webkit-scrollbar-thumb:hover { background: var(--brand); }
-* { scrollbar-width: thin; scrollbar-color: var(--border-strong) transparent; }
+*                             { scrollbar-width: thin; scrollbar-color: var(--border-strong) transparent; }
 
 /* ══════════════════════════════════════════════════════════════
    TYPOGRAPHY
 ══════════════════════════════════════════════════════════════ */
-button, input, textarea, select {
-  font-family: var(--font-sans);
-}
+button, input, textarea, select { font-family: var(--font-sans); }
 
 h1, h2, h3, h4, h5, h6 {
   font-family: var(--font-sans);
@@ -163,8 +160,8 @@ h1, h2, h3, h4, h5, h6 {
   letter-spacing: -0.02em;
 }
 
-p { color: var(--text-secondary); line-height: 1.7; }
-a { color: var(--brand); text-decoration: none; }
+p  { color: var(--text-secondary); line-height: 1.7; }
+a  { color: var(--brand); text-decoration: none; }
 a:hover { text-decoration: underline; }
 
 /* ══════════════════════════════════════════════════════════════
@@ -175,7 +172,7 @@ input:focus, textarea:focus, select:focus {
   box-shadow: 0 0 0 3px var(--brand-glow) !important;
   border-color: var(--brand) !important;
   transition: border-color 0.2s var(--ease-smooth),
-              box-shadow 0.2s var(--ease-smooth);
+              box-shadow   0.2s var(--ease-smooth);
 }
 
 /* ══════════════════════════════════════════════════════════════
@@ -186,13 +183,13 @@ button {
   border: none;
   background: none;
   transition: transform 0.15s var(--ease-spring),
-              opacity 0.15s var(--ease-smooth);
+              opacity   0.15s var(--ease-smooth);
 }
-button:active { transform: scale(0.97); }
+button:active   { transform: scale(0.97); }
 button:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
 
 /* ══════════════════════════════════════════════════════════════
-   ANIMATIONS
+   KEYFRAMES
 ══════════════════════════════════════════════════════════════ */
 @keyframes fadeSlideUp {
   from { opacity: 0; transform: translateY(16px); }
@@ -235,9 +232,9 @@ button:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
   50%       { transform: translateY(-8px); }
 }
 @keyframes gradientShift {
-  0%   { background-position: 0% 50%; }
+  0%   { background-position: 0%   50%; }
   50%  { background-position: 100% 50%; }
-  100% { background-position: 0% 50%; }
+  100% { background-position: 0%   50%; }
 }
 @keyframes navPop {
   0%   { transform: scale(1); }
@@ -246,16 +243,16 @@ button:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
 }
 
 /* ══════════════════════════════════════════════════════════════
-   UTILITY CLASSES
+   UTILITY ANIMATION CLASSES
 ══════════════════════════════════════════════════════════════ */
 .screen-enter  { animation: fadeSlideUp  0.28s var(--ease-spring) forwards; }
-.fade-in       { animation: fadeIn       0.3s  ease forwards; }
+.fade-in       { animation: fadeIn       0.3s  ease            forwards; }
 .scale-in      { animation: scaleIn      0.22s var(--ease-spring) forwards; }
 .slide-up      { animation: slideUp      0.32s var(--ease-spring) forwards; }
 .slide-in-left { animation: slideInLeft  0.25s var(--ease-spring) forwards; }
-.float         { animation: float        3s    ease-in-out infinite; }
-.pulse         { animation: pulse        2s    ease-in-out infinite; }
-.spin          { animation: spin         1s    linear infinite; }
+.float         { animation: float        3s    ease-in-out  infinite; }
+.pulse         { animation: pulse        2s    ease-in-out  infinite; }
+.spin          { animation: spin         1s    linear       infinite; }
 
 /* ══════════════════════════════════════════════════════════════
    STAGGER CHILDREN
@@ -307,8 +304,8 @@ button:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
 ══════════════════════════════════════════════════════════════ */
 .nav-item {
   transition: background 0.18s var(--ease-smooth),
-              color 0.18s var(--ease-smooth),
-              transform 0.15s var(--ease-spring);
+              color      0.18s var(--ease-smooth),
+              transform  0.15s var(--ease-spring);
 }
 .nav-item:active { transform: scale(0.94); }
 
@@ -324,8 +321,8 @@ button:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
 /* ══════════════════════════════════════════════════════════════
    BOTTOM SHEET
 ══════════════════════════════════════════════════════════════ */
-.bottom-sheet { animation: slideUp  0.32s var(--ease-spring) forwards; }
-.overlay-fade { animation: fadeIn   0.2s  ease forwards; }
+.bottom-sheet { animation: slideUp 0.32s var(--ease-spring) forwards; }
+.overlay-fade { animation: fadeIn  0.2s  ease            forwards; }
 
 /* ══════════════════════════════════════════════════════════════
    GRADIENT TEXT
@@ -338,17 +335,17 @@ button:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
 }
 
 /* ══════════════════════════════════════════════════════════════
-   GLASS EFFECT
+   GLASS
 ══════════════════════════════════════════════════════════════ */
 .glass {
-  background: rgba(255, 255, 255, 0.72);
+  background: rgba(255,255,255,0.72);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.4);
+  border: 1px solid rgba(255,255,255,0.4);
 }
 [data-theme="dark"] .glass {
-  background: rgba(26, 26, 26, 0.8);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(26,26,26,0.8);
+  border: 1px solid rgba(255,255,255,0.08);
 }
 
 /* ══════════════════════════════════════════════════════════════
@@ -381,63 +378,52 @@ button:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
 }
 
 /* ══════════════════════════════════════════════════════════════
-   PWA SAFE AREAS + MOBILE NATIVE FEEL
+   PWA — SAFE AREAS + MOBILE NATIVE FEEL
 ══════════════════════════════════════════════════════════════ */
 
-/* Safe area utility classes */
-.safe-top    { padding-top:    max(env(safe-area-inset-top, 0px), 0px); }
+/* Safe area helpers */
+.safe-top    { padding-top:    max(env(safe-area-inset-top,    0px), 0px); }
 .safe-bottom { padding-bottom: max(env(safe-area-inset-bottom, 0px), 0px); }
 
-/* ── The key class: content that sits above the bottom nav ── */
-/* Use this on any scrollable content container in mobile */
+/* Content above bottom nav */
 .below-nav {
   padding-bottom: calc(var(--nav-height) + env(safe-area-inset-bottom, 0px) + 16px);
 }
 
-/* Scroll containers — smooth iOS momentum */
+/* Smooth scroll containers */
 .scroll-y {
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
   overscroll-behavior-y: contain;
 }
 
-/* ── Fix iOS height bug — 100vh includes browser chrome ── */
-/* Use .full-height instead of height:100vh on mobile */
+/* ── Full height — NO fill-available (causes PostCSS warning) ── */
 .full-height {
   height: 100vh;
   height: -webkit-fill-available;
-  height: fill-available;
+  /* NOTE: plain fill-available removed — caused PostCSS build warning */
 }
 
-/* ── Mobile app shell — the outermost container ── */
+/* ── Mobile app shell ── */
 .app-shell {
   display: flex;
   flex-direction: column;
   height: 100vh;
   height: -webkit-fill-available;
+  /* dvh is the modern standard — supported in all modern browsers */
+  max-height: 100dvh;
   width: 100%;
   overflow: hidden;
   position: relative;
   background: var(--bg);
-  /* Ensure it never overflows the viewport */
-  max-height: 100dvh;
 }
 
-/* ── Tab content area — fills between header and nav ── */
+/* ── Tab scrollable content (sits above bottom nav) ── */
 .tab-content {
   flex: 1;
   overflow-y: auto;
   overflow-x: hidden;
   -webkit-overflow-scrolling: touch;
   overscroll-behavior-y: contain;
-  /* Space for bottom nav + safe area */
   padding-bottom: calc(var(--nav-height) + env(safe-area-inset-bottom, 0px) + 16px);
-}
-
-/* ══════════════════════════════════════════════════════════════
-   PREVENT TEXT INFLATE ON MOBILE
-══════════════════════════════════════════════════════════════ */
-html {
-  -webkit-text-size-adjust: 100%;
-  text-size-adjust: 100%;
 }

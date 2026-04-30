@@ -17,27 +17,68 @@ const categoryImages = {
   other:    "https://images.unsplash.com/photo-1492684223066-81342ee5ff30?w=600",
 };
 
-// ── Session persistence helpers ──────────────────────────────
-function saveSession(data) {
-  try { localStorage.setItem("me_session", JSON.stringify(data)); } catch {}
-}
-function loadSession() {
+// ── Cookie helpers ────────────────────────────────────────────
+function setCookie(name, value, days = 30) {
   try {
-    const raw = localStorage.getItem("me_session");
-    return raw ? JSON.parse(raw) : null;
+    const expires = new Date(Date.now() + days * 864e5).toUTCString();
+    document.cookie = `${name}=${encodeURIComponent(value)};expires=${expires};path=/;SameSite=Lax`;
+  } catch {}
+}
+function getCookie(name) {
+  try {
+    const match = document.cookie.match(new RegExp("(^| )" + name + "=([^;]+)"));
+    return match ? decodeURIComponent(match[2]) : null;
   } catch { return null; }
 }
-function clearSession() {
+function removeCookie(name) {
   try {
-    localStorage.removeItem("me_session");
-    localStorage.removeItem("access_token");
-    localStorage.removeItem("refresh_token");
+    document.cookie = `${name}=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/`;
   } catch {}
 }
 
-// ── Boot — restore session ────────────────────────────────────
-const saved = loadSession();
-const token = localStorage.getItem("access_token");
+// ── Session persistence ───────────────────────────────────────
+function saveSession(data) {
+  try {
+    const json = JSON.stringify(data);
+    localStorage.setItem("me_session", json);
+    setCookie("me_session", json, 30);
+    setCookie("me_role",    data.role || "", 30);
+    setCookie("me_name",    data.currentUser?.first_name || "", 30);
+  } catch {}
+}
+
+function loadSession() {
+  try {
+    const raw = localStorage.getItem("me_session") || getCookie("me_session");
+    return raw ? JSON.parse(raw) : null;
+  } catch { return null; }
+}
+
+function saveTokens(access, refresh) {
+  try {
+    localStorage.setItem("access_token",  access);
+    localStorage.setItem("refresh_token", refresh);
+    setCookie("me_access",  access,  1);   // 1 day
+    setCookie("me_refresh", refresh, 30);  // 30 days
+  } catch {}
+}
+
+function getToken() {
+  try {
+    return localStorage.getItem("access_token") || getCookie("me_access") || null;
+  } catch { return null; }
+}
+
+function clearSession() {
+  try {
+    ["me_session","access_token","refresh_token"].forEach(k => localStorage.removeItem(k));
+    ["me_session","me_access","me_refresh","me_role","me_name"].forEach(removeCookie);
+  } catch {}
+}
+
+// ── Boot — restore session on page load ──────────────────────
+const saved    = loadSession();
+const token    = getToken();
 const bootState = saved && token ? {
   currentUser: saved.currentUser,
   role:        saved.role,
@@ -52,31 +93,33 @@ const bootState = saved && token ? {
   activeTab:   "home",
 };
 
+// ─────────────────────────────────────────────────────────────
 const useStore = create((set, get) => ({
-  // ── Navigation ──────────────────────────────────────────────
+
+  // ── Navigation ─────────────────────────────────────────────
   screen:       bootState.screen,
   activeTab:    bootState.activeTab,
   setScreen:    (screen)    => set({ screen }),
   setActiveTab: (activeTab) => set({ activeTab }),
 
-  // ── Auth ────────────────────────────────────────────────────
-  currentUser:     bootState.currentUser,
-  role:            bootState.role,
-  isLoggedIn:      bootState.isLoggedIn,
-  email:           "",
-  password:        "",
-  loginError:      "",
-  signupData:      {},
-  fullName:        "",
-  signupEmail:     "",
-  signupPassword:  "",
-  signupError:     "",
-  setEmail:           (email)          => set({ email }),
-  setPassword:        (password)       => set({ password }),
-  setFullName:        (fullName)       => set({ fullName }),
-  setSignupEmail:     (signupEmail)    => set({ signupEmail }),
-  setSignupPassword:  (signupPassword) => set({ signupPassword }),
-  setSignupData:      (signupData)     => set({ signupData }),
+  // ── Auth ───────────────────────────────────────────────────
+  currentUser:    bootState.currentUser,
+  role:           bootState.role,
+  isLoggedIn:     bootState.isLoggedIn,
+  email:          "",
+  password:       "",
+  loginError:     "",
+  signupData:     {},
+  fullName:       "",
+  signupEmail:    "",
+  signupPassword: "",
+  signupError:    "",
+  setEmail:           (v) => set({ email: v }),
+  setPassword:        (v) => set({ password: v }),
+  setFullName:        (v) => set({ fullName: v }),
+  setSignupEmail:     (v) => set({ signupEmail: v }),
+  setSignupPassword:  (v) => set({ signupPassword: v }),
+  setSignupData:      (v) => set({ signupData: v }),
 
   handleLogin: async () => {
     const { authAPI } = await import("../api");
@@ -85,8 +128,7 @@ const useStore = create((set, get) => ({
     try {
       const data = await authAPI.login({ email, password });
       if (data.tokens) {
-        localStorage.setItem("access_token",  data.tokens.access);
-        localStorage.setItem("refresh_token", data.tokens.refresh);
+        saveTokens(data.tokens.access, data.tokens.refresh);
         const user     = data.user;
         const firstTab = user.role === "organizer" ? "dashboard" : "home";
         saveSession({ currentUser: user, role: user.role });
@@ -128,9 +170,9 @@ const useStore = create((set, get) => ({
   handleSignup: async () => {
     const { authAPI } = await import("../api");
     const { fullName, signupEmail, signupPassword, signupData } = get();
-    const nameParts  = fullName.trim().split(" ");
-    const first_name = nameParts[0] || "";
-    const last_name  = nameParts.slice(1).join(" ") || "";
+    const parts      = fullName.trim().split(" ");
+    const first_name = parts[0] || "";
+    const last_name  = parts.slice(1).join(" ") || "";
     set({ signupError: "" });
     if (!fullName || !signupEmail || !signupPassword) {
       set({ signupError: "Please fill all fields" }); return;
@@ -142,8 +184,7 @@ const useStore = create((set, get) => ({
         phone: signupData.phone || "", role: signupData.role || "attendee",
       });
       if (data.tokens) {
-        localStorage.setItem("access_token",  data.tokens.access);
-        localStorage.setItem("refresh_token", data.tokens.refresh);
+        saveTokens(data.tokens.access, data.tokens.refresh);
         const user     = data.user;
         const firstTab = user.role === "organizer" ? "dashboard" : "home";
         saveSession({ currentUser: user, role: user.role });
@@ -179,87 +220,114 @@ const useStore = create((set, get) => ({
     });
   },
 
-  // ── Onboarding ──────────────────────────────────────────────
+  // ── Onboarding ─────────────────────────────────────────────
   onboardSlide: 0,
-  setOnboardSlide: (onboardSlide) => set({ onboardSlide }),
+  setOnboardSlide: (v) => set({ onboardSlide: v }),
 
-  // ── UI ──────────────────────────────────────────────────────
+  // ── UI ─────────────────────────────────────────────────────
   menuOpen:    false,
-  setMenuOpen: (menuOpen) => set({ menuOpen }),
+  setMenuOpen: (v) => set({ menuOpen: v }),
 
-  // ── Events / Search ─────────────────────────────────────────
+  // ── Events / Search ────────────────────────────────────────
   searchQ:         "",
-  setSearchQ:      (searchQ)      => set({ searchQ }),
+  setSearchQ:      (v) => set({ searchQ: v }),
   overlayEvent:    null,
-  setOverlayEvent: (overlayEvent) => set({ overlayEvent }),
+  setOverlayEvent: (v) => set({ overlayEvent: v }),
 
-  // ── Tickets ─────────────────────────────────────────────────
+  // ── Tickets ────────────────────────────────────────────────
   myTickets:        [],
   resaleListings:   [],
   checkoutEvent:    null,
   ticketQty:        1,
   payMethod:        "momo",
   viewingTicket:    null,
-  setCheckoutEvent: (checkoutEvent) => set({ checkoutEvent }),
-  setTicketQty:     (ticketQty)     => set({ ticketQty }),
-  setPayMethod:     (payMethod)     => set({ payMethod }),
-  setViewingTicket: (viewingTicket) => set({ viewingTicket }),
+  setCheckoutEvent: (v) => set({ checkoutEvent: v }),
+  setTicketQty:     (v) => set({ ticketQty: v }),
+  setPayMethod:     (v) => set({ payMethod: v }),
+  setViewingTicket: (v) => set({ viewingTicket: v }),
 
-  handleBuyTicket: async () => {
-    const { ticketsAPI } = await import("../api");
-    const { checkoutEvent, ticketQty, payMethod, myTickets } = get();
-    const loadingToast = toast.loading("Processing payment...");
-    try {
-      const reference = "PAY-" + Math.random().toString(36).substr(2, 9).toUpperCase();
-      const data = await ticketsAPI.purchase({
-        event_id: checkoutEvent.id, quantity: ticketQty, payment_reference: reference,
+ handleBuyTicket: async () => {
+  const { ticketsAPI } = await import("../api");
+  const { checkoutEvent, ticketQty, payMethod, myTickets } = get();
+  const loadingToast = toast.loading("Processing payment...");
+  try {
+    const reference = "PAY-" + Math.random().toString(36).substr(2, 9).toUpperCase();
+    const data = await ticketsAPI.purchase({
+      event_id: checkoutEvent.id, quantity: ticketQty,
+      payment_reference: reference,
+    });
+
+    // ✅ Accept any successful response — ticket_id OR id OR no error field
+    const ticketId = data.ticket_id || data.id || reference;
+    const isSuccess = data.ticket_id || data.id || (data && !data.error && !data.detail);
+
+    if (isSuccess) {
+      const ticket = {
+        id:           ticketId,
+        ticket_id:    ticketId,
+        event:        checkoutEvent,
+        qty:          ticketQty,
+        quantity:     ticketQty,
+        payMethod,
+        purchasedAt:  new Date().toLocaleDateString(),
+        owner:        (data.owner?.first_name || "") + " " + (data.owner?.last_name || ""),
+        ownerEmail:   data.owner?.email,
+        status:       "active",
+        qr_data:      data.qr_data      || null,
+        dynamic_qr:   data.dynamic_qr   || null,
+        qr_base64:    data.dynamic_qr   || null,
+        qr_image_url: data.qr_image_url || null,
+        qr_image:     data.qr_image
+          ? (data.qr_image.startsWith("http") ? data.qr_image : BACKEND + data.qr_image)
+          : null,
+        nft_tx_hash:  data.nft_tx_hash  || null,
+        nft_token_id: data.nft_token_id || null,
+      };
+      set({
+        myTickets:     [...myTickets, ticket],
+        checkoutEvent: null,
+        overlayEvent:  null,
+        activeTab:     "tickets",
+        screen:        "paymentSuccess",
+        viewingTicket: ticket,
       });
-      if (data.ticket_id) {
-        const ticket = {
-          id: data.ticket_id, ticket_id: data.ticket_id,
-          event: checkoutEvent, qty: ticketQty, quantity: ticketQty,
-          payMethod, purchasedAt: new Date().toLocaleDateString(),
-          owner: (data.owner?.first_name || "") + " " + (data.owner?.last_name || ""),
-          ownerEmail: data.owner?.email, status: "active",
-          qr_data: data.qr_data, dynamic_qr: data.dynamic_qr || null,
-          qr_base64: data.dynamic_qr || null, qr_image_url: data.qr_image_url || null,
-          qr_image: data.qr_image ? (data.qr_image.startsWith("http") ? data.qr_image : BACKEND + data.qr_image) : null,
-          nft_tx_hash: data.nft_tx_hash || null, nft_token_id: data.nft_token_id || null,
-        };
-        set({
-          myTickets: [...myTickets, ticket],
-          checkoutEvent: null, overlayEvent: null,
-          activeTab: "tickets", screen: "paymentSuccess", viewingTicket: ticket,
-        });
-        toast.dismiss(loadingToast);
-        toast.success("🎉 Payment successful!");
-      } else {
-        toast.dismiss(loadingToast);
-        toast.error(data.error || "Purchase failed. Try again.");
-      }
-    } catch {
       toast.dismiss(loadingToast);
-      toast.error("Connection error. Please try again.");
+      toast.success("🎉 Payment successful!");
+    } else {
+      toast.dismiss(loadingToast);
+      toast.error(data.error || data.detail || "Purchase failed. Try again.");
     }
-  },
+  } catch (e) {
+    console.error("Purchase error:", e);
+    toast.dismiss(loadingToast);
+    toast.error("Connection error. Please try again.");
+  }
+},
 
-  // ── Resale ───────────────────────────────────────────────────
+  // ── Resale ─────────────────────────────────────────────────
   resaleTicket: null, resalePrice: "", resaleError: "",
-  setResaleTicket: (resaleTicket) => set({ resaleTicket }),
-  setResalePrice:  (resalePrice)  => set({ resalePrice }),
-  setResaleError:  (resaleError)  => set({ resaleError }),
+  setResaleTicket: (v) => set({ resaleTicket: v }),
+  setResalePrice:  (v) => set({ resalePrice: v }),
+  setResaleError:  (v) => set({ resaleError: v }),
 
   handleListForResale: () => {
     const { resaleTicket, resalePrice, myTickets, resaleListings, currentUser } = get();
     const price = parseFloat(resalePrice);
     const orig  = resaleTicket.event.price;
-    if (!price || isNaN(price)) { set({ resaleError: "Please enter a valid price." }); return; }
-    if (price >= orig)           { set({ resaleError: "Must be less than original price (Ghc " + orig + ")." }); return; }
-    if (price < orig * 0.3)      { set({ resaleError: "Minimum resale price: Ghc " + Math.floor(orig * 0.3) + "." }); return; }
+    if (!price || isNaN(price))  { set({ resaleError: "Please enter a valid price." }); return; }
+    if (price >= orig)            { set({ resaleError: "Must be less than original price (Ghc " + orig + ")." }); return; }
+    if (price < orig * 0.3)       { set({ resaleError: "Minimum resale price: Ghc " + Math.floor(orig * 0.3) + "." }); return; }
     set({
-      myTickets: myTickets.map(t => t.id === resaleTicket.id ? { ...t, status: "resale", resalePrice: price } : t),
-      resaleListings: [...resaleListings, { ...resaleTicket, resalePrice: price, listedAt: new Date().toLocaleDateString(), seller: currentUser?.first_name }],
-      resaleTicket: null, resalePrice: "", resaleError: "", screen: "resaleSuccess",
+      myTickets: myTickets.map(t =>
+        t.id === resaleTicket.id ? { ...t, status: "resale", resalePrice: price } : t
+      ),
+      resaleListings: [...resaleListings, {
+        ...resaleTicket, resalePrice: price,
+        listedAt: new Date().toLocaleDateString(),
+        seller: currentUser?.first_name,
+      }],
+      resaleTicket: null, resalePrice: "", resaleError: "",
+      screen: "resaleSuccess",
     });
     toast.success("Ticket listed for resale!");
   },
@@ -273,12 +341,12 @@ const useStore = create((set, get) => ({
     toast.success("Resale listing cancelled");
   },
 
-  // ── Transfer ─────────────────────────────────────────────────
+  // ── Transfer ───────────────────────────────────────────────
   transferTicket: null, transferEmail: "", transferName: "", transferDone: false,
-  setTransferTicket: (transferTicket) => set({ transferTicket }),
-  setTransferEmail:  (transferEmail)  => set({ transferEmail }),
-  setTransferName:   (transferName)   => set({ transferName }),
-  setTransferDone:   (transferDone)   => set({ transferDone }),
+  setTransferTicket: (v) => set({ transferTicket: v }),
+  setTransferEmail:  (v) => set({ transferEmail: v }),
+  setTransferName:   (v) => set({ transferName: v }),
+  setTransferDone:   (v) => set({ transferDone: v }),
 
   handleTransfer: async () => {
     const { ticketsAPI } = await import("../api");
@@ -286,7 +354,9 @@ const useStore = create((set, get) => ({
     if (!transferEmail) { toast.error("Please enter recipient email."); return; }
     const loadingToast = toast.loading("Transferring ticket...");
     try {
-      const data = await ticketsAPI.transfer({ ticket_id: transferTicket.id, to_email: transferEmail });
+      const data = await ticketsAPI.transfer({
+        ticket_id: transferTicket.id, to_email: transferEmail,
+      });
       if (data.message) {
         set({ myTickets: myTickets.filter(t => t.id !== transferTicket.id), transferDone: true });
         toast.dismiss(loadingToast);
@@ -301,16 +371,16 @@ const useStore = create((set, get) => ({
     }
   },
 
-  // ── Organizer ────────────────────────────────────────────────
+  // ── Organizer ──────────────────────────────────────────────
   orgEvents: [], viewingOrgEvent: null,
   addEventForm: {
     name: "", subtitle: "", date: "", time: "",
     venue: "", city: "", price: "", description: "",
     category: "", totalTickets: "", image: "",
   },
-  setOrgEvents:       (orgEvents)       => set({ orgEvents }),
-  setViewingOrgEvent: (viewingOrgEvent) => set({ viewingOrgEvent }),
-  setAddEventForm:    (addEventForm)    => set({ addEventForm }),
+  setOrgEvents:       (v) => set({ orgEvents: v }),
+  setViewingOrgEvent: (v) => set({ viewingOrgEvent: v }),
+  setAddEventForm:    (v) => set({ addEventForm: v }),
 
   handleAddEvent: async () => {
     const { eventsAPI } = await import("../api");
@@ -321,15 +391,16 @@ const useStore = create((set, get) => ({
     const loadingToast = toast.loading("Creating event...");
     try {
       const payload = {
-        name: addEventForm.name.trim(),
-        description: addEventForm.description?.trim() || "No description provided.",
-        category: addEventForm.category || "other",
-        venue: addEventForm.venue?.trim() || "TBA",
-        city: addEventForm.city?.trim() || "Accra",
-        date: addEventForm.date, time: addEventForm.time || "20:00:00",
-        price: parseFloat(addEventForm.price) || 0,
+        name:          addEventForm.name.trim(),
+        description:   addEventForm.description?.trim() || "No description provided.",
+        category:      addEventForm.category || "other",
+        venue:         addEventForm.venue?.trim() || "TBA",
+        city:          addEventForm.city?.trim()  || "Accra",
+        date:          addEventForm.date,
+        time:          addEventForm.time || "20:00:00",
+        price:         parseFloat(addEventForm.price) || 0,
         total_tickets: parseInt(addEventForm.totalTickets) || 100,
-        sales_open: true,
+        sales_open:    true,
       };
       if (addEventForm.image?.trim()) payload.image = addEventForm.image.trim();
       const data = await eventsAPI.create(payload);
@@ -343,7 +414,10 @@ const useStore = create((set, get) => ({
             salesOpen: data.sales_open, description: data.description,
             image: data.image || categoryImages[cat] || categoryImages.other,
           }],
-          addEventForm: { name: "", subtitle: "", date: "", time: "", venue: "", city: "", price: "", description: "", category: "", totalTickets: "", image: "" },
+          addEventForm: {
+            name: "", subtitle: "", date: "", time: "", venue: "",
+            city: "", price: "", description: "", category: "", totalTickets: "", image: "",
+          },
           screen: "app", activeTab: "events",
         });
         toast.dismiss(loadingToast);
@@ -355,7 +429,7 @@ const useStore = create((set, get) => ({
           : "Failed to create event.";
         toast.error(errMsg);
       }
-    } catch (e) {
+    } catch {
       toast.dismiss(loadingToast);
       toast.error("Connection error. Please try again.");
     }
@@ -375,10 +449,11 @@ const useStore = create((set, get) => ({
     }
   },
 
-  // ── Door Staff ───────────────────────────────────────────────
-  doorStaffInvites: {}, doorStaffUser: null, doorCode: "", doorCodeError: "",
-  setDoorCode:      (doorCode)      => set({ doorCode: doorCode.toUpperCase(), doorCodeError: "" }),
-  setDoorCodeError: (doorCodeError) => set({ doorCodeError }),
+  // ── Door Staff ─────────────────────────────────────────────
+  doorStaffInvites: {}, doorStaffUser: null,
+  doorCode: "", doorCodeError: "",
+  setDoorCode:      (v) => set({ doorCode: v.toUpperCase(), doorCodeError: "" }),
+  setDoorCodeError: (v) => set({ doorCodeError: v }),
 
   generateDoorCode: async (eventId, eventName) => {
     const { ticketsAPI } = await import("../api");
@@ -387,16 +462,26 @@ const useStore = create((set, get) => ({
       const data = await ticketsAPI.generateDoorCode(eventId);
       if (data.code) {
         const invite = { code: data.code, eventId, eventName, used: false, createdAt: new Date().toLocaleTimeString() };
-        set(state => ({ doorStaffInvites: { ...state.doorStaffInvites, [eventId]: [...(state.doorStaffInvites[eventId] || []), invite] } }));
+        set(state => ({
+          doorStaffInvites: {
+            ...state.doorStaffInvites,
+            [eventId]: [...(state.doorStaffInvites[eventId] || []), invite],
+          },
+        }));
         toast.dismiss(loadingToast);
         toast.success("Code generated: " + data.code);
       }
     } catch {
-      const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-      const rand  = Array.from({ length: 6 }, () => chars[Math.floor(Math.random() * chars.length)]).join("");
-      const code  = "DOOR-" + rand;
+      const chars  = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+      const rand   = Array.from({ length: 6 }, () => chars[Math.floor(Math.random() * chars.length)]).join("");
+      const code   = "DOOR-" + rand;
       const invite = { code, eventId, eventName, used: false, createdAt: new Date().toLocaleTimeString() };
-      set(state => ({ doorStaffInvites: { ...state.doorStaffInvites, [eventId]: [...(state.doorStaffInvites[eventId] || []), invite] } }));
+      set(state => ({
+        doorStaffInvites: {
+          ...state.doorStaffInvites,
+          [eventId]: [...(state.doorStaffInvites[eventId] || []), invite],
+        },
+      }));
       toast.dismiss(loadingToast);
       toast.success("Code generated: " + code);
     }
@@ -409,28 +494,47 @@ const useStore = create((set, get) => ({
     try {
       const data = await ticketsAPI.doorStaffLogin(trimmed);
       if (data.valid) {
-        set({ doorStaffUser: { code: trimmed, eventId: data.event_id, eventName: data.event_name, name: "Door Staff" }, admittedList: [], scanInput: "", scanResult: null, screen: "doorStaffScan", doorCodeError: "" });
+        set({
+          doorStaffUser: {
+            code: trimmed, eventId: data.event_id,
+            eventName: data.event_name, name: "Door Staff",
+          },
+          admittedList: [], scanInput: "", scanResult: null,
+          screen: "doorStaffScan", doorCodeError: "",
+        });
         toast.success("Access granted: " + data.event_name);
         return;
       }
     } catch {}
     let found = null;
-    Object.values(doorStaffInvites).forEach(invites => { invites.forEach(inv => { if (inv.code === trimmed) found = inv; }); });
+    Object.values(doorStaffInvites).forEach(invites => {
+      invites.forEach(inv => { if (inv.code === trimmed) found = inv; });
+    });
     if (!found)     { set({ doorCodeError: "Invalid code. Ask your organizer for a valid door staff code." }); return; }
     if (found.used) { set({ doorCodeError: "This code has already been used. Ask for a new one." }); return; }
     set(state => {
       const updated = { ...state.doorStaffInvites };
-      updated[found.eventId] = updated[found.eventId].map(inv => inv.code === trimmed ? { ...inv, used: true } : inv);
-      return { doorStaffInvites: updated, doorStaffUser: { code: trimmed, eventId: found.eventId, eventName: found.eventName, name: "Door Staff" }, admittedList: [], scanInput: "", scanResult: null, screen: "doorStaffScan" };
+      updated[found.eventId] = updated[found.eventId].map(inv =>
+        inv.code === trimmed ? { ...inv, used: true } : inv
+      );
+      return {
+        doorStaffInvites: updated,
+        doorStaffUser: {
+          code: trimmed, eventId: found.eventId,
+          eventName: found.eventName, name: "Door Staff",
+        },
+        admittedList: [], scanInput: "", scanResult: null,
+        screen: "doorStaffScan",
+      };
     });
   },
 
-  // ── Scanner ──────────────────────────────────────────────────
+  // ── Scanner ────────────────────────────────────────────────
   scanInput: "", scanResult: null, verifying: false, admittedList: [],
-  setScanInput:    (scanInput)    => set({ scanInput, scanResult: null }),
-  setScanResult:   (scanResult)   => set({ scanResult }),
-  setVerifying:    (verifying)    => set({ verifying }),
-  setAdmittedList: (admittedList) => set({ admittedList }),
+  setScanInput:    (v) => set({ scanInput: v, scanResult: null }),
+  setScanResult:   (v) => set({ scanResult: v }),
+  setVerifying:    (v) => set({ verifying: v }),
+  setAdmittedList: (v) => set({ admittedList: v }),
 
   handleAdmit: (isDoorStaff = false) => {
     const { scanResult, admittedList, orgEvents, doorStaffUser } = get();
@@ -438,7 +542,11 @@ const useStore = create((set, get) => ({
     const newList = [...admittedList, scanResult.ticket.tokenId];
     const updates = { admittedList: newList, scanInput: "", scanResult: null };
     if (isDoorStaff && doorStaffUser?.eventId) {
-      updates.orgEvents = orgEvents.map(ev => ev.id === doorStaffUser.eventId ? { ...ev, admittedCount: (ev.admittedCount || 0) + 1 } : ev);
+      updates.orgEvents = orgEvents.map(ev =>
+        ev.id === doorStaffUser.eventId
+          ? { ...ev, admittedCount: (ev.admittedCount || 0) + 1 }
+          : ev
+      );
     }
     set(updates);
   },

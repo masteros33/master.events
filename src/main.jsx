@@ -9,14 +9,24 @@ import { useTheme } from './hooks/useTheme'
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime:  1000 * 60 * 2,   // 2 min cache
+      staleTime: 1000 * 60 * 2,
       retry: 1,
     },
   },
 });
 
+// ── Register service worker for PWA ──────────────────────────
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker
+      .register("/sw.js")
+      .then(reg => console.log("✅ SW registered:", reg.scope))
+      .catch(err => console.log("SW registration failed:", err));
+  });
+}
+
 function Root() {
-  useTheme(); // apply theme on mount
+  useTheme();
   return (
     <>
       <App />

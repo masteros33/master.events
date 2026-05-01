@@ -14,6 +14,7 @@ export default function OrganizerWallet() {
   const [loading, setLoading]           = useState(true);
   const [wallet, setWallet]             = useState(null);
   const [transactions, setTransactions] = useState([]);
+  const [amountError, setAmountError]   = useState("");
   const desktop = isDesktop();
 
   useEffect(() => {
@@ -23,20 +24,37 @@ export default function OrganizerWallet() {
     }).catch(() => setLoading(false));
   }, []);
 
-  const balance        = wallet ? parseFloat(wallet.balance)          : 0;
-  const totalEarned    = wallet ? parseFloat(wallet.total_earned)     : 0;
-  const totalWithdrawn = wallet ? parseFloat(wallet.total_withdrawn)  : 0;
-  const feesPaid       = wallet ? parseFloat(wallet.fees_paid || 0)   : 0;
+  const balance        = wallet ? parseFloat(wallet.balance)         : 0;
+  const totalEarned    = wallet ? parseFloat(wallet.total_earned)    : 0;
+  const totalWithdrawn = wallet ? parseFloat(wallet.total_withdrawn) : 0;
+  const feesPaid       = wallet ? parseFloat(wallet.fees_paid || 0)  : 0;
+
+  const validateWithdraw = () => {
+    const amt = parseFloat(amount);
+    if (!amount || isNaN(amt))  { setAmountError("Please enter an amount"); return false; }
+    if (amt < 10)                { setAmountError("Minimum withdrawal is Ghc 10"); return false; }
+    if (amt > balance)           { setAmountError("Amount exceeds your balance"); return false; }
+    if (!momoNumber)             { setAmountError("Please enter your account number"); return false; }
+    setAmountError(""); return true;
+  };
 
   const handleWithdraw = async () => {
     try {
       const data = await paymentsAPI.withdraw({ amount: parseFloat(amount), method, account: momoNumber });
-      if (data.reference) { setTxRef(data.reference); setWallet(prev => ({ ...prev, balance: data.new_balance })); setStep(3); }
-      else alert(data.error || "Withdrawal failed");
-    } catch { alert("Connection error."); }
+      if (data.reference) {
+        setTxRef(data.reference);
+        setWallet(prev => ({ ...prev, balance: data.new_balance }));
+        setStep(3);
+      } else {
+        setAmountError(data.error || "Withdrawal failed. Try again.");
+      }
+    } catch {
+      setAmountError("Connection error. Please try again.");
+    }
   };
 
   const getTxColor = t => t === "sale" ? "#16a34a" : t === "withdrawal" ? "#2563eb" : t === "fee" ? "#dc2626" : "var(--text-muted)";
+  const getTxIcon  = t => t === "sale" ? "💰" : t === "withdrawal" ? "💸" : t === "fee" ? "🔗" : "📋";
 
   const inp = {
     width: "100%", padding: "14px 18px", marginBottom: "14px",
@@ -50,168 +68,253 @@ export default function OrganizerWallet() {
     background: "linear-gradient(135deg, #f5a623, #e8920f)",
     color: "#fff", border: "none", borderRadius: "16px",
     fontSize: "15px", fontWeight: 700, cursor: "pointer",
-    boxShadow: "var(--shadow-brand)", marginBottom: "0",
+    boxShadow: "var(--shadow-brand)", marginBottom: 0,
     fontFamily: "var(--font-sans)",
   };
 
   return (
-    <div style={{ background: "var(--bg)", minHeight: "100%", padding: desktop ? "40px" : "20px 20px 100px" }}>
+    <div style={{ background: "var(--bg)", minHeight: "100%", padding: desktop ? "40px" : "20px 16px 100px" }}>
       <div style={{ maxWidth: desktop ? "900px" : "100%", margin: "0 auto" }}>
 
+        {/* Header */}
         {desktop && (
           <div style={{ marginBottom: "28px" }}>
             <div style={{ fontSize: "11px", color: "#f5a623", fontWeight: 700, letterSpacing: "2px", marginBottom: "6px" }}>WALLET</div>
             <div style={{ fontWeight: 900, fontSize: "28px", color: "var(--text-primary)", letterSpacing: "-0.8px" }}>Your Earnings</div>
-            <div style={{ color: "var(--text-muted)", fontSize: "14px", marginTop: "4px" }}>Track your revenue and withdraw funds</div>
+            <div style={{ color: "var(--text-muted)", fontSize: "14px", marginTop: "4px" }}>Track revenue and withdraw to MoMo or bank</div>
+          </div>
+        )}
+        {!desktop && (
+          <div style={{ marginBottom: "20px" }}>
+            <div style={{ fontWeight: 900, fontSize: "22px", color: "var(--text-primary)", letterSpacing: "-0.5px" }}>Wallet</div>
+            <div style={{ color: "var(--text-muted)", fontSize: "13px", marginTop: "2px" }}>Your earnings & withdrawals</div>
           </div>
         )}
 
         {loading ? (
-          <div>{[1,2,3].map(i => <div key={i} className="skeleton" style={{ height: "60px", marginBottom: "12px", borderRadius: "16px" }} />)}</div>
+          <div>{[1,2,3].map(i => <div key={i} className="skeleton" style={{ height: "64px", marginBottom: "12px", borderRadius: "16px" }} />)}</div>
         ) : (
           <div style={{ display: "grid", gridTemplateColumns: desktop ? "1fr 1fr" : "1fr", gap: desktop ? "24px" : "0" }}>
 
-            {/* Left */}
+            {/* ── Left — Balance card ── */}
             <div>
-              <div style={{ background: "linear-gradient(135deg, #f5a623, #e8920f)", borderRadius: "24px", padding: "28px", color: "#fff", boxShadow: "var(--shadow-brand)", marginBottom: "20px" }}>
-                <div style={{ fontSize: "11px", fontWeight: 700, opacity: 0.85, letterSpacing: "1.5px", marginBottom: "8px" }}>AVAILABLE BALANCE</div>
+              <div style={{ background: "linear-gradient(135deg, #f5a623, #e8920f)", borderRadius: "24px", padding: "28px", color: "#fff", boxShadow: "var(--shadow-brand)", marginBottom: "16px", position: "relative", overflow: "hidden" }}>
+                <div style={{ position: "absolute", top: 0, right: 0, width: "160px", height: "160px", borderRadius: "50%", background: "rgba(255,255,255,0.07)", transform: "translate(30%,-30%)", pointerEvents: "none" }} />
+                <div style={{ fontSize: "10px", fontWeight: 700, opacity: 0.85, letterSpacing: "2px", marginBottom: "8px" }}>AVAILABLE BALANCE</div>
                 <div style={{ fontSize: "44px", fontWeight: 900, marginBottom: "4px", letterSpacing: "-1.5px" }}>
                   Ghc {Math.round(balance).toLocaleString()}
                 </div>
-                <div style={{ fontSize: "12px", opacity: 0.7, marginBottom: "24px" }}>Updated live from sales</div>
-                <div style={{ display: "flex", justifyContent: "space-between", background: "rgba(255,255,255,0.15)", borderRadius: "14px", padding: "14px 16px", marginBottom: "16px" }}>
-                  {[["Lifetime","Ghc " + Math.round(totalEarned).toLocaleString()], ["Fees Paid","Ghc " + Math.round(feesPaid).toLocaleString()], ["Withdrawn","Ghc " + Math.round(totalWithdrawn).toLocaleString()]].map(([k, v]) => (
+                <div style={{ fontSize: "12px", opacity: 0.7, marginBottom: "20px" }}>Ready to withdraw · updated live</div>
+
+                {/* Stats row */}
+                <div style={{ display: "flex", justifyContent: "space-between", background: "rgba(255,255,255,0.15)", borderRadius: "14px", padding: "12px 14px", marginBottom: "14px" }}>
+                  {[["Lifetime", "Ghc " + Math.round(totalEarned).toLocaleString()], ["Fees", "Ghc " + Math.round(feesPaid).toLocaleString()], ["Withdrawn", "Ghc " + Math.round(totalWithdrawn).toLocaleString()]].map(([k, v]) => (
                     <div key={k} style={{ textAlign: "center" }}>
                       <div style={{ fontSize: "14px", fontWeight: 800 }}>{v}</div>
-                      <div style={{ fontSize: "10px", opacity: 0.75 }}>{k}</div>
+                      <div style={{ fontSize: "10px", opacity: 0.7, marginTop: "2px" }}>{k}</div>
                     </div>
                   ))}
                 </div>
-                <div style={{ background: "rgba(255,255,255,0.15)", borderRadius: "10px", padding: "10px 14px", marginBottom: "16px" }}>
-                  <div style={{ fontSize: "11px", opacity: 0.85, marginBottom: "6px" }}>Revenue Split</div>
-                  <div style={{ height: "8px", borderRadius: "4px", background: "rgba(255,255,255,0.25)", overflow: "hidden" }}>
-                    <div style={{ width: "95%", height: "100%", background: "#fff", borderRadius: "4px" }} />
-                  </div>
-                  <div style={{ display: "flex", justifyContent: "space-between", marginTop: "4px" }}>
+
+                {/* Revenue split */}
+                <div style={{ background: "rgba(255,255,255,0.12)", borderRadius: "10px", padding: "10px 14px", marginBottom: "16px" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "6px" }}>
                     <span style={{ fontSize: "11px", fontWeight: 700 }}>95% You</span>
-                    <span style={{ fontSize: "11px", opacity: 0.75 }}>5% Platform</span>
+                    <span style={{ fontSize: "11px", opacity: 0.7 }}>5% Platform</span>
+                  </div>
+                  <div style={{ height: "6px", borderRadius: "3px", background: "rgba(255,255,255,0.2)", overflow: "hidden" }}>
+                    <div style={{ width: "95%", height: "100%", background: "#fff", borderRadius: "3px" }} />
                   </div>
                 </div>
+
                 <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}
-                  onClick={() => { setShowModal(true); setStep(1); }}
-                  style={{ width: "100%", padding: "14px", background: "rgba(255,255,255,0.2)", color: "#fff", border: "2px solid rgba(255,255,255,0.4)", borderRadius: "14px", fontWeight: 700, fontSize: "15px", cursor: "pointer", fontFamily: "var(--font-sans)" }}>
+                  onClick={() => { setShowModal(true); setStep(1); setAmountError(""); }}
+                  style={{ width: "100%", padding: "14px", background: "rgba(255,255,255,0.22)", color: "#fff", border: "2px solid rgba(255,255,255,0.4)", borderRadius: "14px", fontWeight: 700, fontSize: "15px", cursor: "pointer", fontFamily: "var(--font-sans)" }}>
                   💸 Withdraw Funds
                 </motion.button>
               </div>
 
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
-                {[["💰","Total Earned","Ghc " + Math.round(totalEarned).toLocaleString(),"#16a34a"], ["💸","Withdrawn","Ghc " + Math.round(totalWithdrawn).toLocaleString(),"#2563eb"], ["🔗","Fees Paid","Ghc " + Math.round(feesPaid).toLocaleString(),"#dc2626"], ["📊","Balance","Ghc " + Math.round(balance).toLocaleString(),"#f5a623"]].map(([icon, label, value, color]) => (
-                  <motion.div key={label} whileHover={{ y: -3, boxShadow: "var(--shadow-md)" }}
-                    style={{ background: "var(--bg-card)", borderRadius: "16px", padding: "16px", border: "1px solid var(--border)", boxShadow: "var(--shadow-sm)", transition: "box-shadow 0.2s" }}>
-                    <div style={{ fontSize: "20px", marginBottom: "8px" }}>{icon}</div>
-                    <div style={{ fontSize: "18px", fontWeight: 800, color, letterSpacing: "-0.3px" }}>{value}</div>
-                    <div style={{ fontSize: "11px", color: "var(--text-muted)", marginTop: "2px" }}>{label}</div>
+              {/* Mini stat cards */}
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px", marginBottom: desktop ? 0 : "20px" }}>
+                {[
+                  ["💰", "Total Earned",  "Ghc " + Math.round(totalEarned).toLocaleString(),    "#16a34a"],
+                  ["💸", "Withdrawn",     "Ghc " + Math.round(totalWithdrawn).toLocaleString(), "#2563eb"],
+                  ["🔗", "Fees Paid",     "Ghc " + Math.round(feesPaid).toLocaleString(),       "#dc2626"],
+                  ["📊", "Current Bal",   "Ghc " + Math.round(balance).toLocaleString(),        "#f5a623"],
+                ].map(([icon, label, value, color]) => (
+                  <motion.div key={label} whileHover={{ y: -2, boxShadow: "var(--shadow-md)" }}
+                    style={{ background: "var(--bg-card)", borderRadius: "14px", padding: "14px", border: "1px solid var(--border)", boxShadow: "var(--shadow-sm)", transition: "box-shadow 0.2s" }}>
+                    <div style={{ fontSize: "18px", marginBottom: "6px" }}>{icon}</div>
+                    <div style={{ fontSize: "16px", fontWeight: 800, color, letterSpacing: "-0.3px" }}>{value}</div>
+                    <div style={{ fontSize: "10px", color: "var(--text-muted)", marginTop: "2px" }}>{label}</div>
                   </motion.div>
                 ))}
               </div>
             </div>
 
-            {/* Right */}
+            {/* ── Right — Transactions ── */}
             <div>
-              <div style={{ fontWeight: 700, fontSize: "16px", color: "var(--text-primary)", marginBottom: "14px" }}>Transaction History</div>
+              <div style={{ fontWeight: 700, fontSize: "15px", color: "var(--text-primary)", marginBottom: "14px" }}>
+                Transaction History
+              </div>
               {transactions.length === 0 ? (
-                <div style={{ textAlign: "center", padding: "40px", color: "var(--text-muted)", background: "var(--bg-card)", borderRadius: "16px", boxShadow: "var(--shadow-sm)", border: "1px solid var(--border)" }}>
+                <div style={{ textAlign: "center", padding: "40px 20px", color: "var(--text-muted)", background: "var(--bg-card)", borderRadius: "16px", border: "1px solid var(--border)" }}>
                   <div style={{ fontSize: "32px", marginBottom: "8px" }}>💸</div>
-                  <div>No transactions yet</div>
+                  <div style={{ fontWeight: 600, fontSize: "14px", color: "var(--text-primary)", marginBottom: "6px" }}>No transactions yet</div>
+                  <div style={{ fontSize: "12px" }}>Revenue will appear here when tickets are sold</div>
                 </div>
-              ) : transactions.map((t, i) => {
-                const color = getTxColor(t.type);
-                return (
-                  <motion.div key={i} whileHover={{ y: -2, boxShadow: "var(--shadow-md)" }}
-                    style={{ background: "var(--bg-card)", borderRadius: "16px", padding: "14px 16px", marginBottom: "10px", display: "flex", justifyContent: "space-between", alignItems: "center", boxShadow: "var(--shadow-sm)", border: "1px solid var(--border)", transition: "box-shadow 0.2s" }}>
-                    <div>
-                      <div style={{ fontWeight: 700, fontSize: "14px", color: "var(--text-primary)", marginBottom: "3px" }}>{t.description}</div>
-                      <div style={{ fontSize: "11px", color: "var(--text-muted)" }}>{new Date(t.created_at).toLocaleDateString()}</div>
-                    </div>
-                    <div style={{ textAlign: "right" }}>
-                      <div style={{ fontWeight: 800, fontSize: "14px", color }}>{t.type === "sale" ? "+" : "-"}Ghc {parseFloat(t.amount).toLocaleString()}</div>
-                      <div style={{ fontSize: "10px", color, fontWeight: 600, background: color + "18", padding: "2px 8px", borderRadius: "10px", marginTop: "3px" }}>{t.status}</div>
-                    </div>
-                  </motion.div>
-                );
-              })}
+              ) : (
+                transactions.map((t, i) => {
+                  const color = getTxColor(t.type);
+                  return (
+                    <motion.div key={i} whileHover={{ y: -2, boxShadow: "var(--shadow-md)" }}
+                      style={{ background: "var(--bg-card)", borderRadius: "14px", padding: "12px 14px", marginBottom: "8px", display: "flex", gap: "12px", alignItems: "center", boxShadow: "var(--shadow-sm)", border: "1px solid var(--border)", transition: "box-shadow 0.2s" }}>
+                      <div style={{ width: "38px", height: "38px", borderRadius: "10px", background: color + "15", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "17px", flexShrink: 0 }}>
+                        {getTxIcon(t.type)}
+                      </div>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontWeight: 700, fontSize: "13px", color: "var(--text-primary)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{t.description}</div>
+                        <div style={{ fontSize: "10px", color: "var(--text-muted)", marginTop: "2px" }}>{new Date(t.created_at).toLocaleDateString()}</div>
+                      </div>
+                      <div style={{ textAlign: "right", flexShrink: 0 }}>
+                        <div style={{ fontWeight: 800, fontSize: "13px", color }}>{t.type === "sale" ? "+" : "-"}Ghc {parseFloat(t.amount).toLocaleString()}</div>
+                        <div style={{ fontSize: "9px", color, fontWeight: 700, background: color + "15", padding: "2px 7px", borderRadius: "99px", marginTop: "3px" }}>{t.status}</div>
+                      </div>
+                    </motion.div>
+                  );
+                })
+              )}
             </div>
           </div>
         )}
       </div>
 
-      {/* Withdraw Modal */}
+      {/* ── Withdraw Modal ── */}
       <AnimatePresence>
         {showModal && (
           <>
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
               onClick={() => setShowModal(false)}
-              style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", zIndex: 200 }} />
+              style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.55)", zIndex: 200, backdropFilter: "blur(4px)" }} />
             <motion.div initial={{ y: "100%" }} animate={{ y: 0 }} exit={{ y: "100%" }}
-              transition={{ type: "spring", stiffness: 300, damping: 30 }}
-              style={{ position: "fixed", bottom: 0, left: "50%", transform: "translateX(-50%)", width: desktop ? "480px" : "100%", background: "var(--bg-card)", borderRadius: "28px 28px 0 0", zIndex: 201, padding: "28px 28px 48px", boxShadow: "0 -8px 40px rgba(0,0,0,0.2)", border: "1px solid var(--border)" }}>
+              transition={{ type: "spring", stiffness: 320, damping: 32 }}
+              style={{ position: "fixed", bottom: 0, left: "50%", transform: "translateX(-50%)", width: desktop ? "480px" : "100%", background: "var(--bg-card)", borderRadius: "28px 28px 0 0", zIndex: 201, padding: "8px 0 0", boxShadow: "0 -12px 48px rgba(0,0,0,0.2)", border: "1px solid var(--border)", paddingBottom: "env(safe-area-inset-bottom, 20px)" }}>
 
-              {step === 1 && (
-                <>
-                  <div style={{ fontWeight: 800, fontSize: "18px", color: "var(--text-primary)", marginBottom: "20px" }}>Withdraw Funds</div>
-                  <div style={{ fontSize: "13px", color: "var(--text-secondary)", fontWeight: 600, marginBottom: "8px" }}>Amount (Ghc)</div>
-                  <input type="number" placeholder="Min: Ghc 10" value={amount} onChange={e => setAmount(e.target.value)} style={inp} />
-                  <div style={{ fontSize: "13px", color: "var(--text-secondary)", fontWeight: 600, marginBottom: "8px" }}>Method</div>
-                  <div style={{ display: "flex", gap: "10px", marginBottom: "16px" }}>
-                    {[["momo","📱 MoMo"],["bank","🏦 Bank"]].map(([id, label]) => (
-                      <motion.button key={id} whileTap={{ scale: 0.95 }} onClick={() => setMethod(id)}
-                        style={{ flex: 1, padding: "12px", borderRadius: "12px", border: "1.5px solid " + (method === id ? "#f5a623" : "var(--border)"), background: method === id ? "rgba(245,166,35,0.08)" : "var(--bg)", color: method === id ? "#f5a623" : "var(--text-muted)", fontWeight: 700, fontSize: "13px", cursor: "pointer", fontFamily: "var(--font-sans)" }}>
-                        {label}
-                      </motion.button>
-                    ))}
-                  </div>
-                  <input placeholder={method === "momo" ? "MoMo number e.g. 0241234567" : "Bank account number"} value={momoNumber} onChange={e => setMomoNumber(e.target.value)} style={inp} />
-                  <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}
-                    onClick={() => { if (amount >= 10 && momoNumber) setStep(2); }}
-                    style={primaryBtn}>Continue</motion.button>
-                </>
-              )}
+              {/* Handle */}
+              <div style={{ display: "flex", justifyContent: "center", paddingBottom: "8px" }}>
+                <div style={{ width: "36px", height: "4px", borderRadius: "2px", background: "var(--border-strong)" }} />
+              </div>
 
-              {step === 2 && (
-                <>
-                  <div style={{ fontWeight: 800, fontSize: "18px", color: "var(--text-primary)", marginBottom: "20px" }}>Confirm Withdrawal</div>
-                  {[["Amount","Ghc " + amount],["Method",method === "momo" ? "MTN MoMo" : "Bank Transfer"],["To",momoNumber],["Processing","5–10 minutes"]].map(([k, v]) => (
-                    <div key={k} style={{ display: "flex", justifyContent: "space-between", padding: "12px 0", borderBottom: "1px solid var(--border)" }}>
-                      <span style={{ color: "var(--text-muted)", fontSize: "13px" }}>{k}</span>
-                      <span style={{ color: "var(--text-primary)", fontSize: "13px", fontWeight: 700 }}>{v}</span>
+              <div style={{ padding: "0 24px 24px" }}>
+                {step === 1 && (
+                  <>
+                    <div style={{ fontWeight: 800, fontSize: "18px", color: "var(--text-primary)", marginBottom: "4px" }}>Withdraw Funds</div>
+                    <div style={{ fontSize: "12px", color: "var(--text-muted)", marginBottom: "20px" }}>Available: Ghc {Math.round(balance).toLocaleString()}</div>
+
+                    <div style={{ fontSize: "13px", fontWeight: 600, color: "var(--text-secondary)", marginBottom: "8px" }}>Amount (Ghc)</div>
+                    <input type="number" placeholder="Min: Ghc 10" value={amount}
+                      onChange={e => { setAmount(e.target.value); setAmountError(""); }}
+                      style={{ ...inp, borderColor: amountError ? "var(--error)" : "var(--border)" }} />
+
+                    {/* Quick amounts */}
+                    <div style={{ display: "flex", gap: "8px", marginTop: "-8px", marginBottom: "16px" }}>
+                      {[50, 100, 200, 500].map(q => (
+                        <motion.div key={q} whileTap={{ scale: 0.93 }} onClick={() => { setAmount(String(q)); setAmountError(""); }}
+                          style={{ flex: 1, padding: "7px", borderRadius: "10px", background: amount === String(q) ? "rgba(245,166,35,0.1)" : "var(--bg-subtle)", border: "1px solid " + (amount === String(q) ? "#f5a623" : "var(--border)"), textAlign: "center", cursor: "pointer", fontSize: "12px", fontWeight: 700, color: amount === String(q) ? "#f5a623" : "var(--text-secondary)", transition: "all 0.18s" }}>
+                          {q}
+                        </motion.div>
+                      ))}
                     </div>
-                  ))}
-                  <div style={{ marginTop: "20px", display: "flex", gap: "10px" }}>
-                    <motion.button whileTap={{ scale: 0.97 }} onClick={() => setStep(1)}
-                      style={{ flex: 1, padding: "14px", background: "var(--bg-subtle)", color: "var(--text-secondary)", border: "1.5px solid var(--border)", borderRadius: "14px", fontWeight: 600, cursor: "pointer", fontFamily: "var(--font-sans)" }}>Back</motion.button>
-                    <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }} onClick={handleWithdraw}
-                      style={{ ...primaryBtn, flex: 2, marginBottom: 0 }}>Confirm</motion.button>
-                  </div>
-                </>
-              )}
 
-              {step === 3 && (
-                <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }}
-                  style={{ textAlign: "center" }}>
-                  <div style={{ width: "64px", height: "64px", borderRadius: "20px", background: "rgba(22,163,74,0.1)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "32px", margin: "0 auto 16px" }}>✅</div>
-                  <div style={{ fontWeight: 800, fontSize: "20px", color: "var(--text-primary)", marginBottom: "8px" }}>Withdrawal Initiated!</div>
-                  <div style={{ color: "var(--text-secondary)", fontSize: "14px", marginBottom: "20px" }}>
-                    Ghc {amount} will arrive in your {method === "momo" ? "MoMo" : "bank"} within 5–10 minutes.
-                  </div>
-                  <div style={{ background: "rgba(22,163,74,0.06)", border: "1px solid rgba(22,163,74,0.2)", borderRadius: "14px", padding: "14px", marginBottom: "20px" }}>
-                    <div style={{ fontSize: "11px", color: "#16a34a", fontWeight: 700, marginBottom: "4px" }}>Transaction Reference</div>
-                    <div style={{ fontFamily: "monospace", fontWeight: 700, color: "#f5a623" }}>{txRef}</div>
-                  </div>
-                  <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}
-                    onClick={() => { setShowModal(false); setStep(1); setAmount(""); setMomoNumber(""); }}
-                    style={primaryBtn}>Done</motion.button>
-                </motion.div>
-              )}
+                    <div style={{ fontSize: "13px", fontWeight: 600, color: "var(--text-secondary)", marginBottom: "8px" }}>Method</div>
+                    <div style={{ display: "flex", gap: "10px", marginBottom: "14px" }}>
+                      {[["momo","📱 MoMo"],["bank","🏦 Bank"]].map(([id, label]) => (
+                        <motion.button key={id} whileTap={{ scale: 0.95 }} onClick={() => setMethod(id)}
+                          style={{ flex: 1, padding: "12px", borderRadius: "12px", border: "1.5px solid " + (method === id ? "#f5a623" : "var(--border)"), background: method === id ? "rgba(245,166,35,0.08)" : "var(--bg)", color: method === id ? "#f5a623" : "var(--text-muted)", fontWeight: 700, fontSize: "13px", cursor: "pointer", fontFamily: "var(--font-sans)" }}>
+                          {label}
+                        </motion.button>
+                      ))}
+                    </div>
+
+                    <input placeholder={method === "momo" ? "MoMo number e.g. 0241234567" : "Bank account number"}
+                      value={momoNumber} onChange={e => { setMomoNumber(e.target.value); setAmountError(""); }}
+                      style={{ ...inp, borderColor: amountError ? "var(--error)" : "var(--border)" }} />
+
+                    <AnimatePresence>
+                      {amountError && (
+                        <motion.div initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
+                          style={{ color: "var(--error)", fontSize: "12px", marginTop: "-8px", marginBottom: "12px" }}>
+                          ⚠️ {amountError}
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+
+                    <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}
+                      onClick={() => { if (validateWithdraw()) setStep(2); }}
+                      style={primaryBtn}>
+                      Continue →
+                    </motion.button>
+                  </>
+                )}
+
+                {step === 2 && (
+                  <>
+                    <div style={{ fontWeight: 800, fontSize: "18px", color: "var(--text-primary)", marginBottom: "20px" }}>Confirm Withdrawal</div>
+
+                    {/* Security reminder */}
+                    <div style={{ background: "rgba(37,99,235,0.05)", border: "1px solid rgba(37,99,235,0.15)", borderRadius: "12px", padding: "10px 14px", marginBottom: "16px" }}>
+                      <div style={{ fontSize: "11px", color: "#2563eb", fontWeight: 700, marginBottom: "3px" }}>🔒 Verify your details before confirming</div>
+                      <div style={{ fontSize: "11px", color: "var(--text-muted)" }}>This action cannot be reversed once confirmed.</div>
+                    </div>
+
+                    {[
+                      ["Amount",     "Ghc " + amount],
+                      ["Method",     method === "momo" ? "MTN MoMo" : "Bank Transfer"],
+                      ["Send to",    momoNumber],
+                      ["Processing", "5–10 minutes"],
+                    ].map(([k, v]) => (
+                      <div key={k} style={{ display: "flex", justifyContent: "space-between", padding: "11px 0", borderBottom: "1px solid var(--border)" }}>
+                        <span style={{ color: "var(--text-muted)", fontSize: "13px" }}>{k}</span>
+                        <span style={{ color: "var(--text-primary)", fontSize: "13px", fontWeight: 700 }}>{v}</span>
+                      </div>
+                    ))}
+
+                    <div style={{ display: "flex", gap: "10px", marginTop: "20px" }}>
+                      <motion.button whileTap={{ scale: 0.97 }} onClick={() => setStep(1)}
+                        style={{ flex: 1, padding: "14px", background: "var(--bg-subtle)", color: "var(--text-secondary)", border: "1.5px solid var(--border)", borderRadius: "14px", fontWeight: 600, cursor: "pointer", fontFamily: "var(--font-sans)" }}>
+                        ← Back
+                      </motion.button>
+                      <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }} onClick={handleWithdraw}
+                        style={{ ...primaryBtn, flex: 2 }}>
+                        Confirm Withdrawal
+                      </motion.button>
+                    </div>
+                  </>
+                )}
+
+                {step === 3 && (
+                  <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }}
+                    style={{ textAlign: "center", paddingTop: "8px" }}>
+                    <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }}
+                      transition={{ type: "spring", stiffness: 400, damping: 20 }}
+                      style={{ width: "72px", height: "72px", borderRadius: "22px", background: "rgba(22,163,74,0.1)", border: "2px solid rgba(22,163,74,0.2)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "34px", margin: "0 auto 16px" }}>✅</motion.div>
+                    <div style={{ fontWeight: 800, fontSize: "20px", color: "var(--text-primary)", marginBottom: "8px" }}>Withdrawal Initiated!</div>
+                    <div style={{ color: "var(--text-secondary)", fontSize: "14px", marginBottom: "20px", lineHeight: 1.5 }}>
+                      Ghc {amount} will arrive in your {method === "momo" ? "MoMo" : "bank"} within 5–10 minutes.
+                    </div>
+                    <div style={{ background: "rgba(22,163,74,0.06)", border: "1px solid rgba(22,163,74,0.2)", borderRadius: "14px", padding: "14px", marginBottom: "20px", textAlign: "left" }}>
+                      <div style={{ fontSize: "10px", color: "#16a34a", fontWeight: 700, marginBottom: "4px", letterSpacing: "0.5px" }}>TRANSACTION REFERENCE</div>
+                      <div style={{ fontFamily: "monospace", fontWeight: 700, color: "#f5a623", fontSize: "14px" }}>{txRef}</div>
+                      <div style={{ fontSize: "11px", color: "var(--text-muted)", marginTop: "4px" }}>Save this for your records</div>
+                    </div>
+                    <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}
+                      onClick={() => { setShowModal(false); setStep(1); setAmount(""); setMomoNumber(""); setAmountError(""); }}
+                      style={primaryBtn}>
+                      Done
+                    </motion.button>
+                  </motion.div>
+                )}
+              </div>
             </motion.div>
           </>
         )}

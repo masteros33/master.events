@@ -19,7 +19,10 @@ export default function OrganizerWallet() {
 
   useEffect(() => {
     paymentsAPI.wallet().then(data => {
-      if (data.balance !== undefined) { setWallet(data); setTransactions(data.transactions || []); }
+      if (data.balance !== undefined) {
+        setWallet(data);
+        setTransactions(data.transactions || []);
+      }
       setLoading(false);
     }).catch(() => setLoading(false));
   }, []);
@@ -31,11 +34,12 @@ export default function OrganizerWallet() {
 
   const validateWithdraw = () => {
     const amt = parseFloat(amount);
-    if (!amount || isNaN(amt))  { setAmountError("Please enter an amount"); return false; }
-    if (amt < 10)                { setAmountError("Minimum withdrawal is Ghc 10"); return false; }
-    if (amt > balance)           { setAmountError("Amount exceeds your balance"); return false; }
-    if (!momoNumber)             { setAmountError("Please enter your account number"); return false; }
-    setAmountError(""); return true;
+    if (!amount || isNaN(amt)) { setAmountError("Please enter an amount"); return false; }
+    if (amt < 10)               { setAmountError("Minimum withdrawal is Ghc 10"); return false; }
+    if (amt > balance)          { setAmountError("Amount exceeds your balance"); return false; }
+    if (!momoNumber)            { setAmountError("Please enter your account number"); return false; }
+    setAmountError("");
+    return true;
   };
 
   const handleWithdraw = async () => {
@@ -96,7 +100,7 @@ export default function OrganizerWallet() {
         ) : (
           <div style={{ display: "grid", gridTemplateColumns: desktop ? "1fr 1fr" : "1fr", gap: desktop ? "24px" : "0" }}>
 
-            {/* ── Left — Balance card ── */}
+            {/* ── Left — balance ── */}
             <div>
               <div style={{ background: "linear-gradient(135deg, #f5a623, #e8920f)", borderRadius: "24px", padding: "28px", color: "#fff", boxShadow: "var(--shadow-brand)", marginBottom: "16px", position: "relative", overflow: "hidden" }}>
                 <div style={{ position: "absolute", top: 0, right: 0, width: "160px", height: "160px", borderRadius: "50%", background: "rgba(255,255,255,0.07)", transform: "translate(30%,-30%)", pointerEvents: "none" }} />
@@ -105,18 +109,14 @@ export default function OrganizerWallet() {
                   Ghc {Math.round(balance).toLocaleString()}
                 </div>
                 <div style={{ fontSize: "12px", opacity: 0.7, marginBottom: "20px" }}>Ready to withdraw · updated live</div>
-
-                {/* Stats row */}
                 <div style={{ display: "flex", justifyContent: "space-between", background: "rgba(255,255,255,0.15)", borderRadius: "14px", padding: "12px 14px", marginBottom: "14px" }}>
-                  {[["Lifetime", "Ghc " + Math.round(totalEarned).toLocaleString()], ["Fees", "Ghc " + Math.round(feesPaid).toLocaleString()], ["Withdrawn", "Ghc " + Math.round(totalWithdrawn).toLocaleString()]].map(([k, v]) => (
+                  {[["Lifetime","Ghc " + Math.round(totalEarned).toLocaleString()],["Fees","Ghc " + Math.round(feesPaid).toLocaleString()],["Withdrawn","Ghc " + Math.round(totalWithdrawn).toLocaleString()]].map(([k,v]) => (
                     <div key={k} style={{ textAlign: "center" }}>
                       <div style={{ fontSize: "14px", fontWeight: 800 }}>{v}</div>
                       <div style={{ fontSize: "10px", opacity: 0.7, marginTop: "2px" }}>{k}</div>
                     </div>
                   ))}
                 </div>
-
-                {/* Revenue split */}
                 <div style={{ background: "rgba(255,255,255,0.12)", borderRadius: "10px", padding: "10px 14px", marginBottom: "16px" }}>
                   <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "6px" }}>
                     <span style={{ fontSize: "11px", fontWeight: 700 }}>95% You</span>
@@ -126,7 +126,6 @@ export default function OrganizerWallet() {
                     <div style={{ width: "95%", height: "100%", background: "#fff", borderRadius: "3px" }} />
                   </div>
                 </div>
-
                 <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}
                   onClick={() => { setShowModal(true); setStep(1); setAmountError(""); }}
                   style={{ width: "100%", padding: "14px", background: "rgba(255,255,255,0.22)", color: "#fff", border: "2px solid rgba(255,255,255,0.4)", borderRadius: "14px", fontWeight: 700, fontSize: "15px", cursor: "pointer", fontFamily: "var(--font-sans)" }}>
@@ -134,14 +133,14 @@ export default function OrganizerWallet() {
                 </motion.button>
               </div>
 
-              {/* Mini stat cards */}
+              {/* Mini stats */}
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px", marginBottom: desktop ? 0 : "20px" }}>
                 {[
-                  ["💰", "Total Earned",  "Ghc " + Math.round(totalEarned).toLocaleString(),    "#16a34a"],
-                  ["💸", "Withdrawn",     "Ghc " + Math.round(totalWithdrawn).toLocaleString(), "#2563eb"],
-                  ["🔗", "Fees Paid",     "Ghc " + Math.round(feesPaid).toLocaleString(),       "#dc2626"],
-                  ["📊", "Current Bal",   "Ghc " + Math.round(balance).toLocaleString(),        "#f5a623"],
-                ].map(([icon, label, value, color]) => (
+                  ["💰","Total Earned","Ghc " + Math.round(totalEarned).toLocaleString(),"#16a34a"],
+                  ["💸","Withdrawn",   "Ghc " + Math.round(totalWithdrawn).toLocaleString(),"#2563eb"],
+                  ["🔗","Fees Paid",   "Ghc " + Math.round(feesPaid).toLocaleString(),"#dc2626"],
+                  ["📊","Balance",     "Ghc " + Math.round(balance).toLocaleString(),"#f5a623"],
+                ].map(([icon,label,value,color]) => (
                   <motion.div key={label} whileHover={{ y: -2, boxShadow: "var(--shadow-md)" }}
                     style={{ background: "var(--bg-card)", borderRadius: "14px", padding: "14px", border: "1px solid var(--border)", boxShadow: "var(--shadow-sm)", transition: "box-shadow 0.2s" }}>
                     <div style={{ fontSize: "18px", marginBottom: "6px" }}>{icon}</div>
@@ -152,63 +151,81 @@ export default function OrganizerWallet() {
               </div>
             </div>
 
-            {/* ── Right — Transactions ── */}
+            {/* ── Right — transactions ── */}
             <div>
-              <div style={{ fontWeight: 700, fontSize: "15px", color: "var(--text-primary)", marginBottom: "14px" }}>
-                Transaction History
-              </div>
+              <div style={{ fontWeight: 700, fontSize: "15px", color: "var(--text-primary)", marginBottom: "14px" }}>Transaction History</div>
               {transactions.length === 0 ? (
                 <div style={{ textAlign: "center", padding: "40px 20px", color: "var(--text-muted)", background: "var(--bg-card)", borderRadius: "16px", border: "1px solid var(--border)" }}>
                   <div style={{ fontSize: "32px", marginBottom: "8px" }}>💸</div>
                   <div style={{ fontWeight: 600, fontSize: "14px", color: "var(--text-primary)", marginBottom: "6px" }}>No transactions yet</div>
                   <div style={{ fontSize: "12px" }}>Revenue will appear here when tickets are sold</div>
                 </div>
-              ) : (
-                transactions.map((t, i) => {
-                  const color = getTxColor(t.type);
-                  return (
-                    <motion.div key={i} whileHover={{ y: -2, boxShadow: "var(--shadow-md)" }}
-                      style={{ background: "var(--bg-card)", borderRadius: "14px", padding: "12px 14px", marginBottom: "8px", display: "flex", gap: "12px", alignItems: "center", boxShadow: "var(--shadow-sm)", border: "1px solid var(--border)", transition: "box-shadow 0.2s" }}>
-                      <div style={{ width: "38px", height: "38px", borderRadius: "10px", background: color + "15", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "17px", flexShrink: 0 }}>
-                        {getTxIcon(t.type)}
-                      </div>
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ fontWeight: 700, fontSize: "13px", color: "var(--text-primary)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{t.description}</div>
-                        <div style={{ fontSize: "10px", color: "var(--text-muted)", marginTop: "2px" }}>{new Date(t.created_at).toLocaleDateString()}</div>
-                      </div>
-                      <div style={{ textAlign: "right", flexShrink: 0 }}>
-                        <div style={{ fontWeight: 800, fontSize: "13px", color }}>{t.type === "sale" ? "+" : "-"}Ghc {parseFloat(t.amount).toLocaleString()}</div>
-                        <div style={{ fontSize: "9px", color, fontWeight: 700, background: color + "15", padding: "2px 7px", borderRadius: "99px", marginTop: "3px" }}>{t.status}</div>
-                      </div>
-                    </motion.div>
-                  );
-                })
-              )}
+              ) : transactions.map((t, i) => {
+                const color = getTxColor(t.type);
+                return (
+                  <motion.div key={i} whileHover={{ y: -2, boxShadow: "var(--shadow-md)" }}
+                    style={{ background: "var(--bg-card)", borderRadius: "14px", padding: "12px 14px", marginBottom: "8px", display: "flex", gap: "12px", alignItems: "center", boxShadow: "var(--shadow-sm)", border: "1px solid var(--border)", transition: "box-shadow 0.2s" }}>
+                    <div style={{ width: "38px", height: "38px", borderRadius: "10px", background: color + "15", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "17px", flexShrink: 0 }}>
+                      {getTxIcon(t.type)}
+                    </div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontWeight: 700, fontSize: "13px", color: "var(--text-primary)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{t.description}</div>
+                      <div style={{ fontSize: "10px", color: "var(--text-muted)", marginTop: "2px" }}>{new Date(t.created_at).toLocaleDateString()}</div>
+                    </div>
+                    <div style={{ textAlign: "right", flexShrink: 0 }}>
+                      <div style={{ fontWeight: 800, fontSize: "13px", color }}>{t.type === "sale" ? "+" : "-"}Ghc {parseFloat(t.amount).toLocaleString()}</div>
+                      <div style={{ fontSize: "9px", color, fontWeight: 700, background: color + "15", padding: "2px 7px", borderRadius: "99px", marginTop: "3px" }}>{t.status}</div>
+                    </div>
+                  </motion.div>
+                );
+              })}
             </div>
           </div>
         )}
       </div>
 
-      {/* ── Withdraw Modal ── */}
+      {/* ── Withdraw Modal — FIXED MOBILE SCROLL ── */}
       <AnimatePresence>
         {showModal && (
           <>
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
               onClick={() => setShowModal(false)}
               style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.55)", zIndex: 200, backdropFilter: "blur(4px)" }} />
+
             <motion.div initial={{ y: "100%" }} animate={{ y: 0 }} exit={{ y: "100%" }}
               transition={{ type: "spring", stiffness: 320, damping: 32 }}
-              style={{ position: "fixed", bottom: 0, left: "50%", transform: "translateX(-50%)", width: desktop ? "480px" : "100%", background: "var(--bg-card)", borderRadius: "28px 28px 0 0", zIndex: 201, padding: "8px 0 0", boxShadow: "0 -12px 48px rgba(0,0,0,0.2)", border: "1px solid var(--border)", paddingBottom: "env(safe-area-inset-bottom, 20px)" }}>
+              style={{
+                position: "fixed", bottom: 0,
+                left: "50%", transform: "translateX(-50%)",
+                width: desktop ? "480px" : "100%",
+                background: "var(--bg-card)",
+                borderRadius: "28px 28px 0 0",
+                zIndex: 201,
+                boxShadow: "0 -12px 48px rgba(0,0,0,0.2)",
+                border: "1px solid var(--border)",
+                // KEY: limit height + flex column so inner content scrolls
+                maxHeight: "90vh",
+                display: "flex",
+                flexDirection: "column",
+              }}>
 
-              {/* Handle */}
-              <div style={{ display: "flex", justifyContent: "center", paddingBottom: "8px" }}>
+              {/* Drag handle — never scrolls */}
+              <div style={{ display: "flex", justifyContent: "center", padding: "12px 0 4px", flexShrink: 0 }}>
                 <div style={{ width: "36px", height: "4px", borderRadius: "2px", background: "var(--border-strong)" }} />
               </div>
 
-              <div style={{ padding: "0 24px 24px" }}>
+              {/* Scrollable content */}
+              <div style={{
+                flex: 1,
+                overflowY: "auto",
+                WebkitOverflowScrolling: "touch",
+                padding: "0 24px",
+                paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 28px)",
+              }}>
+
                 {step === 1 && (
                   <>
-                    <div style={{ fontWeight: 800, fontSize: "18px", color: "var(--text-primary)", marginBottom: "4px" }}>Withdraw Funds</div>
+                    <div style={{ fontWeight: 800, fontSize: "18px", color: "var(--text-primary)", marginBottom: "4px", paddingTop: "4px" }}>Withdraw Funds</div>
                     <div style={{ fontSize: "12px", color: "var(--text-muted)", marginBottom: "20px" }}>Available: Ghc {Math.round(balance).toLocaleString()}</div>
 
                     <div style={{ fontSize: "13px", fontWeight: 600, color: "var(--text-secondary)", marginBottom: "8px" }}>Amount (Ghc)</div>
@@ -218,8 +235,9 @@ export default function OrganizerWallet() {
 
                     {/* Quick amounts */}
                     <div style={{ display: "flex", gap: "8px", marginTop: "-8px", marginBottom: "16px" }}>
-                      {[50, 100, 200, 500].map(q => (
-                        <motion.div key={q} whileTap={{ scale: 0.93 }} onClick={() => { setAmount(String(q)); setAmountError(""); }}
+                      {[50,100,200,500].map(q => (
+                        <motion.div key={q} whileTap={{ scale: 0.93 }}
+                          onClick={() => { setAmount(String(q)); setAmountError(""); }}
                           style={{ flex: 1, padding: "7px", borderRadius: "10px", background: amount === String(q) ? "rgba(245,166,35,0.1)" : "var(--bg-subtle)", border: "1px solid " + (amount === String(q) ? "#f5a623" : "var(--border)"), textAlign: "center", cursor: "pointer", fontSize: "12px", fontWeight: 700, color: amount === String(q) ? "#f5a623" : "var(--text-secondary)", transition: "all 0.18s" }}>
                           {q}
                         </motion.div>
@@ -228,7 +246,7 @@ export default function OrganizerWallet() {
 
                     <div style={{ fontSize: "13px", fontWeight: 600, color: "var(--text-secondary)", marginBottom: "8px" }}>Method</div>
                     <div style={{ display: "flex", gap: "10px", marginBottom: "14px" }}>
-                      {[["momo","📱 MoMo"],["bank","🏦 Bank"]].map(([id, label]) => (
+                      {[["momo","📱 MoMo"],["bank","🏦 Bank"]].map(([id,label]) => (
                         <motion.button key={id} whileTap={{ scale: 0.95 }} onClick={() => setMethod(id)}
                           style={{ flex: 1, padding: "12px", borderRadius: "12px", border: "1.5px solid " + (method === id ? "#f5a623" : "var(--border)"), background: method === id ? "rgba(245,166,35,0.08)" : "var(--bg)", color: method === id ? "#f5a623" : "var(--text-muted)", fontWeight: 700, fontSize: "13px", cursor: "pointer", fontFamily: "var(--font-sans)" }}>
                           {label}
@@ -236,8 +254,10 @@ export default function OrganizerWallet() {
                       ))}
                     </div>
 
-                    <input placeholder={method === "momo" ? "MoMo number e.g. 0241234567" : "Bank account number"}
-                      value={momoNumber} onChange={e => { setMomoNumber(e.target.value); setAmountError(""); }}
+                    <input
+                      placeholder={method === "momo" ? "MoMo number e.g. 0241234567" : "Bank account number"}
+                      value={momoNumber}
+                      onChange={e => { setMomoNumber(e.target.value); setAmountError(""); }}
                       style={{ ...inp, borderColor: amountError ? "var(--error)" : "var(--border)" }} />
 
                     <AnimatePresence>
@@ -259,26 +279,17 @@ export default function OrganizerWallet() {
 
                 {step === 2 && (
                   <>
-                    <div style={{ fontWeight: 800, fontSize: "18px", color: "var(--text-primary)", marginBottom: "20px" }}>Confirm Withdrawal</div>
-
-                    {/* Security reminder */}
+                    <div style={{ fontWeight: 800, fontSize: "18px", color: "var(--text-primary)", marginBottom: "20px", paddingTop: "4px" }}>Confirm Withdrawal</div>
                     <div style={{ background: "rgba(37,99,235,0.05)", border: "1px solid rgba(37,99,235,0.15)", borderRadius: "12px", padding: "10px 14px", marginBottom: "16px" }}>
                       <div style={{ fontSize: "11px", color: "#2563eb", fontWeight: 700, marginBottom: "3px" }}>🔒 Verify your details before confirming</div>
                       <div style={{ fontSize: "11px", color: "var(--text-muted)" }}>This action cannot be reversed once confirmed.</div>
                     </div>
-
-                    {[
-                      ["Amount",     "Ghc " + amount],
-                      ["Method",     method === "momo" ? "MTN MoMo" : "Bank Transfer"],
-                      ["Send to",    momoNumber],
-                      ["Processing", "5–10 minutes"],
-                    ].map(([k, v]) => (
+                    {[["Amount","Ghc " + amount],["Method",method === "momo" ? "MTN MoMo" : "Bank Transfer"],["Send to",momoNumber],["Processing","5–10 minutes"]].map(([k,v]) => (
                       <div key={k} style={{ display: "flex", justifyContent: "space-between", padding: "11px 0", borderBottom: "1px solid var(--border)" }}>
                         <span style={{ color: "var(--text-muted)", fontSize: "13px" }}>{k}</span>
                         <span style={{ color: "var(--text-primary)", fontSize: "13px", fontWeight: 700 }}>{v}</span>
                       </div>
                     ))}
-
                     <div style={{ display: "flex", gap: "10px", marginTop: "20px" }}>
                       <motion.button whileTap={{ scale: 0.97 }} onClick={() => setStep(1)}
                         style={{ flex: 1, padding: "14px", background: "var(--bg-subtle)", color: "var(--text-secondary)", border: "1.5px solid var(--border)", borderRadius: "14px", fontWeight: 600, cursor: "pointer", fontFamily: "var(--font-sans)" }}>
@@ -314,6 +325,7 @@ export default function OrganizerWallet() {
                     </motion.button>
                   </motion.div>
                 )}
+
               </div>
             </motion.div>
           </>

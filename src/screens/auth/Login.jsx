@@ -5,7 +5,6 @@ import ThemeToggle from "../../components/ThemeToggle";
 
 const API = "https://master-events-backend.onrender.com";
 
-// ── Anti-bot honeypot + rate limiter ─────────────────────────
 function useRateLimit(maxAttempts = 5, windowMs = 60000) {
   const attempts = useRef([]);
   const check = () => {
@@ -49,7 +48,7 @@ function ForgotPassword({ onBack }) {
         <div style={{ width: "72px", height: "72px", borderRadius: "20px", background: "rgba(22,163,74,0.1)", border: "2px solid rgba(22,163,74,0.2)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "32px", margin: "0 auto 24px" }}>📧</div>
         <h2 style={{ fontSize: "24px", fontWeight: 800, color: "var(--text-primary)", marginBottom: "12px" }}>Check your email</h2>
         <p style={{ color: "var(--text-secondary)", fontSize: "15px", lineHeight: 1.6, marginBottom: "28px" }}>
-          We sent a password reset link to <strong style={{ color: "var(--text-primary)" }}>{email}</strong>
+          We sent a reset link to <strong style={{ color: "var(--text-primary)" }}>{email}</strong>
         </p>
         <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }} onClick={onBack}
           style={{ padding: "14px 32px", borderRadius: "14px", background: "linear-gradient(135deg, #f5a623, #e8920f)", color: "#fff", fontWeight: 700, fontSize: "15px", border: "none", cursor: "pointer", boxShadow: "var(--shadow-brand)" }}>
@@ -93,6 +92,9 @@ function ForgotPassword({ onBack }) {
   );
 }
 
+// ── Responsive helper — works at render time ──────────────────
+const isWide = () => typeof window !== "undefined" && window.innerWidth >= 1024;
+
 export default function Login() {
   const email       = useStore(s => s.email);
   const password    = useStore(s => s.password);
@@ -102,14 +104,21 @@ export default function Login() {
   const handleLogin = useStore(s => s.handleLogin);
   const setScreen   = useStore(s => s.setScreen);
 
+  const [wide, setWide]             = useState(isWide());
   const [loading, setLoading]       = useState(false);
   const [showForgot, setShowForgot] = useState(false);
   const [showPw, setShowPw]         = useState(false);
-  const [rateLock, setRateLock]     = useState(null); // seconds to wait
-  const [honeypot, setHoneypot]     = useState("");   // invisible bot trap
+  const [rateLock, setRateLock]     = useState(null);
+  const [honeypot, setHoneypot]     = useState("");
   const checkRate = useRateLimit(5, 60000);
 
-  // Auto-clear rate lock countdown
+  // Track window width reactively
+  useEffect(() => {
+    const onResize = () => setWide(window.innerWidth >= 1024);
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+  }, []);
+
   useEffect(() => {
     if (!rateLock) return;
     const t = setInterval(() => {
@@ -122,9 +131,7 @@ export default function Login() {
   }, [rateLock]);
 
   const onLogin = async () => {
-    // Honeypot — if filled, it's a bot
     if (honeypot) return;
-    // Rate limit
     const { blocked, wait } = checkRate();
     if (blocked) { setRateLock(wait); return; }
     setLoading(true);
@@ -137,59 +144,89 @@ export default function Login() {
   return (
     <div style={{ minHeight: "100vh", background: "var(--bg)", display: "flex", fontFamily: "var(--font-sans)" }}>
 
-      {/* ── Left panel (desktop only) ── */}
-      <div className="hidden lg:flex" style={{ flex: 1, background: "linear-gradient(160deg, #1a1a1a 0%, #0e0e0e 100%)", flexDirection: "column", justifyContent: "space-between", padding: "48px", position: "relative", overflow: "hidden" }}>
-        <div style={{ position: "absolute", top: 0, right: 0, width: "400px", height: "400px", borderRadius: "50%", background: "radial-gradient(circle, rgba(245,166,35,0.12) 0%, transparent 70%)", transform: "translate(30%, -30%)", pointerEvents: "none" }} />
-        <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-          <div style={{ width: "40px", height: "40px", borderRadius: "12px", background: "linear-gradient(135deg, #f5a623, #e8920f)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "20px" }}>🎟️</div>
-          <span style={{ fontWeight: 800, fontSize: "18px", color: "#fff" }}>Master Events</span>
-        </div>
-        <div style={{ position: "relative", zIndex: 1 }}>
-          <div style={{ fontSize: "11px", fontWeight: 700, letterSpacing: "2px", color: "#f5a623", marginBottom: "16px" }}>WELCOME BACK</div>
-          <h2 style={{ fontSize: "clamp(36px, 3vw, 52px)", fontWeight: 900, color: "#fff", letterSpacing: "-1.5px", lineHeight: 1.1, marginBottom: "20px" }}>
-            Your tickets<br />
-            <span style={{ background: "linear-gradient(135deg, #f5a623, #ff6b35)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text" }}>
-              are waiting.
-            </span>
-          </h2>
-          <p style={{ color: "rgba(255,255,255,0.5)", fontSize: "16px", lineHeight: 1.7, maxWidth: "340px", marginBottom: "36px" }}>
-            Every ticket is an NFT on Polygon — secured by blockchain, owned by you forever.
-          </p>
-          <div style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
-            {[
-              ["⛓️", "NFT on Polygon",    "Blockchain-verified ownership"],
-              ["🔒", "HMAC-secured QR",   "Screenshot-proof, refreshes every 10s"],
-              ["📱", "MoMo & VISA",       "Pay the Ghanaian way"],
-            ].map(([icon, title, sub]) => (
-              <div key={title} style={{ display: "flex", alignItems: "center", gap: "14px" }}>
-                <div style={{ width: "40px", height: "40px", borderRadius: "12px", background: "rgba(245,166,35,0.12)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "18px", flexShrink: 0 }}>{icon}</div>
-                <div>
-                  <div style={{ fontWeight: 700, fontSize: "14px", color: "#fff" }}>{title}</div>
-                  <div style={{ fontSize: "12px", color: "rgba(255,255,255,0.35)" }}>{sub}</div>
+      {/* ── Left panel — only on wide screens ── */}
+      {wide && (
+        <div style={{
+          flex: 1,
+          background: "linear-gradient(160deg, #1a1a1a 0%, #0e0e0e 100%)",
+          display: "flex", flexDirection: "column", justifyContent: "space-between",
+          padding: "48px", position: "relative", overflow: "hidden",
+        }}>
+          <div style={{ position: "absolute", top: 0, right: 0, width: "400px", height: "400px", borderRadius: "50%", background: "radial-gradient(circle, rgba(245,166,35,0.12) 0%, transparent 70%)", transform: "translate(30%, -30%)", pointerEvents: "none" }} />
+
+          {/* Logo */}
+          <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+            <div style={{ width: "40px", height: "40px", borderRadius: "12px", background: "linear-gradient(135deg, #f5a623, #e8920f)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "20px" }}>🎟️</div>
+            <span style={{ fontWeight: 800, fontSize: "18px", color: "#fff" }}>Master Events</span>
+          </div>
+
+          {/* Copy */}
+          <div style={{ position: "relative", zIndex: 1 }}>
+            <div style={{ fontSize: "11px", fontWeight: 700, letterSpacing: "2px", color: "#f5a623", marginBottom: "16px" }}>WELCOME BACK</div>
+            <h2 style={{ fontSize: "clamp(36px, 3vw, 52px)", fontWeight: 900, color: "#fff", letterSpacing: "-1.5px", lineHeight: 1.1, marginBottom: "20px" }}>
+              Your tickets<br />
+              <span style={{ background: "linear-gradient(135deg, #f5a623, #ff6b35)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text" }}>
+                are waiting.
+              </span>
+            </h2>
+            <p style={{ color: "rgba(255,255,255,0.5)", fontSize: "16px", lineHeight: 1.7, maxWidth: "340px", marginBottom: "36px" }}>
+              Every ticket is an NFT on Polygon — secured by blockchain, owned by you forever.
+            </p>
+            <div style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
+              {[
+                ["⛓️", "NFT on Polygon",  "Blockchain-verified ownership"],
+                ["🔒", "HMAC-secured QR", "Screenshot-proof, refreshes every 10s"],
+                ["📱", "MoMo & VISA",     "Pay the Ghanaian way"],
+              ].map(([icon, title, sub]) => (
+                <div key={title} style={{ display: "flex", alignItems: "center", gap: "14px" }}>
+                  <div style={{ width: "40px", height: "40px", borderRadius: "12px", background: "rgba(245,166,35,0.12)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "18px", flexShrink: 0 }}>{icon}</div>
+                  <div>
+                    <div style={{ fontWeight: 700, fontSize: "14px", color: "#fff" }}>{title}</div>
+                    <div style={{ fontSize: "12px", color: "rgba(255,255,255,0.35)" }}>{sub}</div>
+                  </div>
                 </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Stats */}
+          <div style={{ display: "flex", gap: "28px" }}>
+            {[["10K+","Tickets"],["50+","Events"],["0%","Fakes"]].map(([val, label]) => (
+              <div key={label}>
+                <div style={{ fontSize: "24px", fontWeight: 900, color: "#f5a623" }}>{val}</div>
+                <div style={{ fontSize: "12px", color: "rgba(255,255,255,0.35)", marginTop: "2px" }}>{label}</div>
               </div>
             ))}
           </div>
         </div>
-        {/* Stats */}
-        <div style={{ display: "flex", gap: "28px" }}>
-          {[["10K+", "Tickets"], ["50+", "Events"], ["0%", "Fakes"]].map(([val, label]) => (
-            <div key={label}>
-              <div style={{ fontSize: "24px", fontWeight: 900, color: "#f5a623" }}>{val}</div>
-              <div style={{ fontSize: "12px", color: "rgba(255,255,255,0.35)", marginTop: "2px" }}>{label}</div>
-            </div>
-          ))}
-        </div>
-      </div>
+      )}
 
       {/* ── Right panel — form ── */}
-      <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "48px 32px", maxWidth: "560px", margin: "0 auto", width: "100%" }}>
+      <div style={{
+        flex: 1,
+        display: "flex", flexDirection: "column",
+        alignItems: "center", justifyContent: "center",
+        padding: wide ? "48px 32px" : "40px 20px",
+        overflowY: "auto",
+        // On mobile takes full width; on desktop constrained
+        maxWidth: wide ? "560px" : "100%",
+        width: "100%",
+        margin: "0 auto",
+      }}>
         <div style={{ width: "100%", maxWidth: "400px" }}>
 
+          {/* Mobile logo */}
+          {!wide && (
+            <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "28px" }}>
+              <div style={{ width: "36px", height: "36px", borderRadius: "10px", background: "linear-gradient(135deg, #f5a623, #e8920f)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "18px" }}>🎟️</div>
+              <span style={{ fontWeight: 800, fontSize: "16px", color: "var(--text-primary)" }}>Master Events</span>
+            </div>
+          )}
+
           {/* Header */}
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "32px" }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "28px" }}>
             <div>
-              <h1 style={{ fontSize: "28px", fontWeight: 900, color: "var(--text-primary)", letterSpacing: "-0.8px", marginBottom: "4px" }}>Log in</h1>
+              <h1 style={{ fontSize: "26px", fontWeight: 900, color: "var(--text-primary)", letterSpacing: "-0.8px", marginBottom: "4px" }}>Log in</h1>
               <p style={{ fontSize: "14px", color: "var(--text-secondary)" }}>Welcome back to Master Events</p>
             </div>
             <ThemeToggle compact={true} />
@@ -201,7 +238,7 @@ export default function Login() {
             <span style={{ fontSize: "11px", fontWeight: 600, color: "#16a34a" }}>256-bit encrypted · Blockchain-secured · No ticket fraud</span>
           </div>
 
-          {/* Google OAuth */}
+          {/* Google OAuth placeholder */}
           <motion.button whileHover={{ scale: 1.02, boxShadow: "var(--shadow-md)" }} whileTap={{ scale: 0.97 }}
             style={{ width: "100%", padding: "14px", borderRadius: "14px", background: "var(--bg-card)", border: "1.5px solid var(--border)", color: "var(--text-primary)", fontWeight: 600, fontSize: "15px", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: "10px", marginBottom: "18px", boxShadow: "var(--shadow-sm)", fontFamily: "var(--font-sans)" }}>
             <svg width="18" height="18" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
@@ -215,7 +252,7 @@ export default function Login() {
             <div style={{ flex: 1, height: "1px", background: "var(--border)" }} />
           </div>
 
-          {/* ── HONEYPOT (invisible to humans, bots fill it) ── */}
+          {/* Honeypot */}
           <div style={{ position: "absolute", left: "-9999px", top: "-9999px", opacity: 0, pointerEvents: "none" }} aria-hidden="true">
             <input tabIndex={-1} autoComplete="off" value={honeypot} onChange={e => setHoneypot(e.target.value)} name="website" />
           </div>
@@ -223,9 +260,12 @@ export default function Login() {
           {/* Email */}
           <div style={{ marginBottom: "16px" }}>
             <label style={{ fontSize: "13px", fontWeight: 600, color: "var(--text-secondary)", marginBottom: "8px", display: "block" }}>Email</label>
-            <input placeholder="you@email.com" value={email} onChange={e => setEmail(e.target.value)}
+            <input
+              placeholder="you@email.com" value={email}
+              onChange={e => setEmail(e.target.value)}
+              type="email" autoComplete="email"
               style={{ width: "100%", padding: "14px 18px", background: "var(--bg)", border: "1.5px solid var(--border)", borderRadius: "14px", fontSize: "15px", color: "var(--text-primary)", outline: "none", boxSizing: "border-box", fontFamily: "var(--font-sans)" }}
-              autoComplete="email" type="email" />
+            />
           </div>
 
           {/* Password */}
@@ -238,11 +278,15 @@ export default function Login() {
               </motion.span>
             </div>
             <div style={{ position: "relative" }}>
-              <input placeholder="••••••••" type={showPw ? "text" : "password"} value={password}
+              <input
+                placeholder="••••••••"
+                type={showPw ? "text" : "password"}
+                value={password}
                 onChange={e => setPassword(e.target.value)}
-                onKeyDown={e => e.key === "Enter" && onLogin()}
+                onKeyDown={e => e.key === "Enter" && !loading && !rateLock && onLogin()}
+                autoComplete="current-password"
                 style={{ width: "100%", padding: "14px 48px 14px 18px", background: "var(--bg)", border: "1.5px solid var(--border)", borderRadius: "14px", fontSize: "15px", color: "var(--text-primary)", outline: "none", boxSizing: "border-box", fontFamily: "var(--font-sans)" }}
-                autoComplete="current-password" />
+              />
               <button onClick={() => setShowPw(!showPw)}
                 style={{ position: "absolute", right: "14px", top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", color: "var(--text-muted)", fontSize: "16px", padding: 0 }}>
                 {showPw ? "🙈" : "👁️"}
@@ -250,17 +294,17 @@ export default function Login() {
             </div>
           </div>
 
-          {/* Rate lock warning */}
+          {/* Rate lock */}
           <AnimatePresence>
             {rateLock && (
               <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
-                style={{ background: "var(--warning-bg)", border: "1px solid rgba(217,119,6,0.25)", borderRadius: "12px", padding: "12px 16px", marginBottom: "14px", color: "var(--warning)", fontSize: "13px", fontWeight: 600 }}>
+                style={{ background: "rgba(217,119,6,0.08)", border: "1px solid rgba(217,119,6,0.25)", borderRadius: "12px", padding: "12px 16px", marginBottom: "14px", color: "#d97706", fontSize: "13px", fontWeight: 600 }}>
                 🛡️ Too many attempts. Try again in {rateLock}s
               </motion.div>
             )}
           </AnimatePresence>
 
-          {/* Error */}
+          {/* Login error */}
           <AnimatePresence>
             {loginError && !rateLock && (
               <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
@@ -270,23 +314,49 @@ export default function Login() {
             )}
           </AnimatePresence>
 
-          {/* Loading */}
+          {/* Loading state — prominent so user knows to wait */}
           <AnimatePresence>
             {loading && (
-              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-                style={{ background: "rgba(245,166,35,0.06)", border: "1px solid rgba(245,166,35,0.2)", borderRadius: "14px", padding: "14px", marginBottom: "14px", textAlign: "center" }}>
-                <div style={{ color: "#f5a623", fontSize: "13px", fontWeight: 600 }}>⏳ Logging in...</div>
-                <div style={{ color: "var(--text-muted)", fontSize: "11px", marginTop: "4px" }}>First load may take ~30s (free server)</div>
+              <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
+                style={{ background: "rgba(245,166,35,0.06)", border: "1px solid rgba(245,166,35,0.2)", borderRadius: "14px", padding: "16px", marginBottom: "14px" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "10px" }}>
+                  <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 1, ease: "linear" }}
+                    style={{ fontSize: "20px", flexShrink: 0 }}>⏳</motion.div>
+                  <div style={{ color: "#f5a623", fontSize: "14px", fontWeight: 700 }}>Connecting to server...</div>
+                </div>
+                <div style={{ color: "var(--text-muted)", fontSize: "12px", lineHeight: 1.5, marginBottom: "10px" }}>
+                  Our server wakes up on first request — this takes <strong style={{ color: "var(--text-primary)" }}>up to 30 seconds.</strong> Please wait, do not click again.
+                </div>
+                {/* Animated progress bar */}
+                <div style={{ height: "3px", background: "var(--border)", borderRadius: "2px", overflow: "hidden" }}>
+                  <motion.div
+                    initial={{ width: "0%" }}
+                    animate={{ width: "92%" }}
+                    transition={{ duration: 28, ease: "easeOut" }}
+                    style={{ height: "100%", background: "linear-gradient(90deg, #f5a623, #e8920f)", borderRadius: "2px" }}
+                  />
+                </div>
               </motion.div>
             )}
           </AnimatePresence>
 
-          {/* Submit */}
+          {/* Submit button */}
           <motion.button
             whileHover={!loading && !rateLock ? { scale: 1.02, boxShadow: "0 12px 36px rgba(245,166,35,0.4)" } : {}}
             whileTap={!loading && !rateLock ? { scale: 0.97 } : {}}
-            onClick={onLogin} disabled={loading || !!rateLock}
-            style={{ width: "100%", padding: "16px", borderRadius: "14px", background: rateLock ? "var(--bg-subtle)" : "linear-gradient(135deg, #f5a623, #e8920f)", color: rateLock ? "var(--text-muted)" : "#fff", fontWeight: 700, fontSize: "16px", border: "none", cursor: loading || rateLock ? "not-allowed" : "pointer", opacity: loading ? 0.7 : 1, boxShadow: rateLock ? "none" : "var(--shadow-brand)", marginBottom: "20px", fontFamily: "var(--font-sans)", transition: "all 0.2s" }}>
+            onClick={onLogin}
+            disabled={loading || !!rateLock}
+            style={{
+              width: "100%", padding: "16px", borderRadius: "14px",
+              background: rateLock ? "var(--bg-subtle)" : "linear-gradient(135deg, #f5a623, #e8920f)",
+              color: rateLock ? "var(--text-muted)" : "#fff",
+              fontWeight: 700, fontSize: "16px", border: "none",
+              cursor: loading || rateLock ? "not-allowed" : "pointer",
+              opacity: loading ? 0.75 : 1,
+              boxShadow: rateLock ? "none" : "var(--shadow-brand)",
+              marginBottom: "20px", fontFamily: "var(--font-sans)",
+              transition: "all 0.2s",
+            }}>
             {rateLock ? `🛡️ Wait ${rateLock}s` : loading ? "Logging in..." : "Log In →"}
           </motion.button>
 
@@ -305,7 +375,6 @@ export default function Login() {
             </motion.span>
           </p>
 
-          {/* Dev quick login — only show in dev */}
           {import.meta.env.DEV && (
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.5 }}
               style={{ marginTop: "28px", background: "var(--bg-subtle)", border: "1px solid var(--border)", borderRadius: "16px", padding: "14px" }}>

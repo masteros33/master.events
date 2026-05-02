@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import useStore from "../../store/useStore";
 import ThemeToggle from "../../components/ThemeToggle";
@@ -10,7 +10,6 @@ const pwChecks = [
   { label: "Special char",     test: pw => /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(pw) },
 ];
 
-// ── Anti-bot rate limiter ─────────────────────────────────────
 function useRateLimit(max = 3, windowMs = 60000) {
   const attempts = useRef([]);
   return () => {
@@ -21,6 +20,8 @@ function useRateLimit(max = 3, windowMs = 60000) {
     return true;
   };
 }
+
+const isWide = () => typeof window !== "undefined" && window.innerWidth >= 1024;
 
 export function Signup() {
   const fullName          = useStore(s => s.fullName);
@@ -34,17 +35,24 @@ export function Signup() {
   const setScreen         = useStore(s => s.setScreen);
   const signupError       = useStore(s => s.signupError);
 
+  const [wide, setWide]               = useState(isWide());
   const [selectedRole, setSelectedRole] = useState("attendee");
   const [loading, setLoading]           = useState(false);
   const [showPw, setShowPw]             = useState(false);
   const [honeypot, setHoneypot]         = useState("");
   const checkRate = useRateLimit(3, 60000);
 
+  useEffect(() => {
+    const onResize = () => setWide(window.innerWidth >= 1024);
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+  }, []);
+
   const allPwMet = pwChecks.every(c => c.test(signupPassword));
 
   const handleCreate = async () => {
-    if (honeypot) return; // bot trap
-    if (!checkRate()) return; // rate limit
+    if (honeypot) return;
+    if (!checkRate()) return;
     if (!allPwMet) return;
     setLoading(true);
     setSignupData({ role: selectedRole });
@@ -55,57 +63,83 @@ export function Signup() {
   return (
     <div style={{ minHeight: "100vh", background: "var(--bg)", display: "flex", fontFamily: "var(--font-sans)" }}>
 
-      {/* Left panel */}
-      <div className="hidden lg:flex" style={{ flex: 1, background: "linear-gradient(160deg, #1a1a1a 0%, #0e0e0e 100%)", flexDirection: "column", justifyContent: "space-between", padding: "48px", position: "relative", overflow: "hidden" }}>
-        <div style={{ position: "absolute", top: 0, right: 0, width: "400px", height: "400px", borderRadius: "50%", background: "radial-gradient(circle, rgba(245,166,35,0.12) 0%, transparent 70%)", transform: "translate(30%, -30%)", pointerEvents: "none" }} />
-        <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-          <div style={{ width: "40px", height: "40px", borderRadius: "12px", background: "linear-gradient(135deg, #f5a623, #e8920f)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "20px" }}>🎟️</div>
-          <span style={{ fontWeight: 800, fontSize: "18px", color: "#fff" }}>Master Events</span>
-        </div>
-        <div style={{ position: "relative", zIndex: 1 }}>
-          <div style={{ fontSize: "11px", fontWeight: 700, letterSpacing: "2px", color: "#f5a623", marginBottom: "16px" }}>GET STARTED TODAY</div>
-          <h2 style={{ fontSize: "clamp(36px, 3vw, 52px)", fontWeight: 900, color: "#fff", letterSpacing: "-1.5px", lineHeight: 1.1, marginBottom: "20px" }}>
-            Ghana's best<br />
-            <span style={{ background: "linear-gradient(135deg, #f5a623, #ff6b35)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text" }}>
-              tickets.
-            </span>
-          </h2>
-          <p style={{ color: "rgba(255,255,255,0.5)", fontSize: "16px", lineHeight: 1.7, maxWidth: "340px", marginBottom: "36px" }}>
-            Join thousands of event-goers and organizers. Every ticket is an NFT — unfakeable, yours forever.
-          </p>
-          <div style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
-            {[
-              ["🎟️", "Buy & Own as NFT",   "Blockchain-verified on Polygon"],
-              ["🔄", "Resell & Transfer",   "Trade peer-to-peer, only 2% fee"],
-              ["🏟️", "Host Your Event",     "95% payout, MoMo withdrawals"],
-            ].map(([icon, title, sub]) => (
-              <div key={title} style={{ display: "flex", alignItems: "center", gap: "14px" }}>
-                <div style={{ width: "40px", height: "40px", borderRadius: "12px", background: "rgba(245,166,35,0.12)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "18px", flexShrink: 0 }}>{icon}</div>
-                <div>
-                  <div style={{ fontWeight: 700, fontSize: "14px", color: "#fff" }}>{title}</div>
-                  <div style={{ fontSize: "12px", color: "rgba(255,255,255,0.35)" }}>{sub}</div>
+      {/* ── Left panel — desktop only ── */}
+      {wide && (
+        <div style={{
+          flex: 1,
+          background: "linear-gradient(160deg, #1a1a1a 0%, #0e0e0e 100%)",
+          display: "flex", flexDirection: "column", justifyContent: "space-between",
+          padding: "48px", position: "relative", overflow: "hidden",
+        }}>
+          <div style={{ position: "absolute", top: 0, right: 0, width: "400px", height: "400px", borderRadius: "50%", background: "radial-gradient(circle, rgba(245,166,35,0.12) 0%, transparent 70%)", transform: "translate(30%, -30%)", pointerEvents: "none" }} />
+
+          <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+            <div style={{ width: "40px", height: "40px", borderRadius: "12px", background: "linear-gradient(135deg, #f5a623, #e8920f)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "20px" }}>🎟️</div>
+            <span style={{ fontWeight: 800, fontSize: "18px", color: "#fff" }}>Master Events</span>
+          </div>
+
+          <div style={{ position: "relative", zIndex: 1 }}>
+            <div style={{ fontSize: "11px", fontWeight: 700, letterSpacing: "2px", color: "#f5a623", marginBottom: "16px" }}>GET STARTED TODAY</div>
+            <h2 style={{ fontSize: "clamp(36px, 3vw, 52px)", fontWeight: 900, color: "#fff", letterSpacing: "-1.5px", lineHeight: 1.1, marginBottom: "20px" }}>
+              Ghana's best<br />
+              <span style={{ background: "linear-gradient(135deg, #f5a623, #ff6b35)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text" }}>
+                tickets.
+              </span>
+            </h2>
+            <p style={{ color: "rgba(255,255,255,0.5)", fontSize: "16px", lineHeight: 1.7, maxWidth: "340px", marginBottom: "36px" }}>
+              Join thousands of event-goers and organizers. Every ticket is an NFT — unfakeable, yours forever.
+            </p>
+            <div style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
+              {[
+                ["🎟️", "Buy & Own as NFT",  "Blockchain-verified on Polygon"],
+                ["🔄", "Resell & Transfer",  "Trade peer-to-peer, only 2% fee"],
+                ["🏟️", "Host Your Event",    "95% payout, MoMo withdrawals"],
+              ].map(([icon, title, sub]) => (
+                <div key={title} style={{ display: "flex", alignItems: "center", gap: "14px" }}>
+                  <div style={{ width: "40px", height: "40px", borderRadius: "12px", background: "rgba(245,166,35,0.12)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "18px", flexShrink: 0 }}>{icon}</div>
+                  <div>
+                    <div style={{ fontWeight: 700, fontSize: "14px", color: "#fff" }}>{title}</div>
+                    <div style={{ fontSize: "12px", color: "rgba(255,255,255,0.35)" }}>{sub}</div>
+                  </div>
                 </div>
+              ))}
+            </div>
+          </div>
+
+          <div style={{ display: "flex", gap: "28px" }}>
+            {[["10K+","Tickets"],["50+","Events"],["0%","Fakes"]].map(([val,label]) => (
+              <div key={label}>
+                <div style={{ fontSize: "24px", fontWeight: 900, color: "#f5a623" }}>{val}</div>
+                <div style={{ fontSize: "12px", color: "rgba(255,255,255,0.35)", marginTop: "2px" }}>{label}</div>
               </div>
             ))}
           </div>
         </div>
-        <div style={{ display: "flex", gap: "28px" }}>
-          {[["10K+", "Tickets"], ["50+", "Events"], ["0%", "Fakes"]].map(([val, label]) => (
-            <div key={label}>
-              <div style={{ fontSize: "24px", fontWeight: 900, color: "#f5a623" }}>{val}</div>
-              <div style={{ fontSize: "12px", color: "rgba(255,255,255,0.35)", marginTop: "2px" }}>{label}</div>
-            </div>
-          ))}
-        </div>
-      </div>
+      )}
 
-      {/* Right panel */}
-      <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "48px 32px", maxWidth: "560px", margin: "0 auto", width: "100%", overflowY: "auto" }}>
+      {/* ── Right panel — form ── */}
+      <div style={{
+        flex: 1,
+        display: "flex", flexDirection: "column",
+        alignItems: "center", justifyContent: "center",
+        padding: wide ? "48px 32px" : "40px 20px",
+        maxWidth: wide ? "560px" : "100%",
+        width: "100%", margin: "0 auto",
+        overflowY: "auto",
+      }}>
         <div style={{ width: "100%", maxWidth: "400px" }}>
 
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "28px" }}>
+          {/* Mobile logo */}
+          {!wide && (
+            <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "28px" }}>
+              <div style={{ width: "36px", height: "36px", borderRadius: "10px", background: "linear-gradient(135deg, #f5a623, #e8920f)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "18px" }}>🎟️</div>
+              <span style={{ fontWeight: 800, fontSize: "16px", color: "var(--text-primary)" }}>Master Events</span>
+            </div>
+          )}
+
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "24px" }}>
             <div>
-              <h1 style={{ fontSize: "28px", fontWeight: 900, color: "var(--text-primary)", letterSpacing: "-0.8px", marginBottom: "4px" }}>Create account</h1>
+              <h1 style={{ fontSize: "26px", fontWeight: 900, color: "var(--text-primary)", letterSpacing: "-0.8px", marginBottom: "4px" }}>Create account</h1>
               <p style={{ fontSize: "14px", color: "var(--text-secondary)" }}>Join Ghana's #1 NFT ticketing platform</p>
             </div>
             <ThemeToggle compact={true} />
@@ -154,7 +188,7 @@ export function Signup() {
             </div>
           </div>
 
-          {/* Fields */}
+          {/* Name + Email fields */}
           {[
             { label: "Full Name",     placeholder: "e.g. Kwame Mensah", value: fullName,    onChange: setFullName,    type: "text",  autoComplete: "name"  },
             { label: "Email Address", placeholder: "you@email.com",      value: signupEmail, onChange: setSignupEmail, type: "email", autoComplete: "email" },
@@ -171,12 +205,14 @@ export function Signup() {
           <div style={{ marginBottom: "16px" }}>
             <label style={{ fontSize: "13px", fontWeight: 600, color: "var(--text-secondary)", marginBottom: "8px", display: "block" }}>Password</label>
             <div style={{ position: "relative" }}>
-              <input placeholder="Min 8 chars, uppercase, number, special"
+              <input
+                placeholder="Min 8 chars, uppercase, number, special"
                 type={showPw ? "text" : "password"}
                 value={signupPassword}
                 onChange={e => setSignupPassword(e.target.value)}
                 onKeyDown={e => e.key === "Enter" && handleCreate()}
-                style={{ width: "100%", padding: "14px 48px 14px 18px", background: "var(--bg)", border: "1.5px solid " + (signupPassword && !allPwMet ? "var(--error)" : "var(--border)"), borderRadius: "14px", fontSize: "15px", color: "var(--text-primary)", outline: "none", boxSizing: "border-box", fontFamily: "var(--font-sans)" }} />
+                style={{ width: "100%", padding: "14px 48px 14px 18px", background: "var(--bg)", border: "1.5px solid " + (signupPassword && !allPwMet ? "var(--error)" : "var(--border)"), borderRadius: "14px", fontSize: "15px", color: "var(--text-primary)", outline: "none", boxSizing: "border-box", fontFamily: "var(--font-sans)" }}
+              />
               <button onClick={() => setShowPw(!showPw)}
                 style={{ position: "absolute", right: "14px", top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", color: "var(--text-muted)", fontSize: "16px", padding: 0 }}>
                 {showPw ? "🙈" : "👁️"}
@@ -206,15 +242,17 @@ export function Signup() {
             )}
           </AnimatePresence>
 
-          <motion.button whileHover={{ scale: 1.02, boxShadow: "0 12px 36px rgba(245,166,35,0.4)" }}
-            whileTap={{ scale: 0.97 }} onClick={handleCreate} disabled={loading || !allPwMet}
+          <motion.button
+            whileHover={{ scale: 1.02, boxShadow: "0 12px 36px rgba(245,166,35,0.4)" }}
+            whileTap={{ scale: 0.97 }}
+            onClick={handleCreate}
+            disabled={loading || !allPwMet}
             style={{ width: "100%", padding: "16px", borderRadius: "14px", background: allPwMet ? "linear-gradient(135deg, #f5a623, #e8920f)" : "var(--bg-subtle)", color: allPwMet ? "#fff" : "var(--text-muted)", fontWeight: 700, fontSize: "16px", border: "none", cursor: loading || !allPwMet ? "not-allowed" : "pointer", opacity: loading ? 0.7 : 1, boxShadow: allPwMet ? "var(--shadow-brand)" : "none", marginBottom: "18px", fontFamily: "var(--font-sans)", transition: "all 0.2s" }}>
             {loading ? "⏳ Creating account..." : "Create Account →"}
           </motion.button>
 
-          {/* Legal / trust */}
           <p style={{ fontSize: "11px", color: "var(--text-muted)", textAlign: "center", marginBottom: "14px", lineHeight: 1.5 }}>
-            By creating an account you agree to our Terms of Service and acknowledge our Privacy Policy. Your data is encrypted and never sold.
+            By creating an account you agree to our Terms of Service and Privacy Policy. Your data is encrypted and never sold.
           </p>
 
           <p style={{ fontSize: "14px", color: "var(--text-secondary)", textAlign: "center" }}>
@@ -258,7 +296,6 @@ export function RoleSelect() {
             </motion.div>
           ))}
         </div>
-        {/* Trust signal at bottom */}
         <div style={{ marginTop: "24px", display: "flex", alignItems: "center", justifyContent: "center", gap: "6px" }}>
           <span style={{ fontSize: "11px" }}>⛓️</span>
           <span style={{ fontSize: "11px", color: "var(--text-muted)" }}>All tickets secured by Polygon blockchain</span>

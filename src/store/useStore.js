@@ -58,8 +58,8 @@ function saveTokens(access, refresh) {
   try {
     localStorage.setItem("access_token",  access);
     localStorage.setItem("refresh_token", refresh);
-    setCookie("me_access",  access,  1);   // 1 day
-    setCookie("me_refresh", refresh, 30);  // 30 days
+    setCookie("me_access",  access,  1);
+    setCookie("me_refresh", refresh, 30);
   } catch {}
 }
 
@@ -77,8 +77,8 @@ function clearSession() {
 }
 
 // ── Boot — restore session on page load ──────────────────────
-const saved    = loadSession();
-const token    = getToken();
+const saved     = loadSession();
+const token     = getToken();
 const bootState = saved && token ? {
   currentUser: saved.currentUser,
   role:        saved.role,
@@ -114,12 +114,12 @@ const useStore = create((set, get) => ({
   signupEmail:    "",
   signupPassword: "",
   signupError:    "",
-  setEmail:           (v) => set({ email: v }),
-  setPassword:        (v) => set({ password: v }),
-  setFullName:        (v) => set({ fullName: v }),
-  setSignupEmail:     (v) => set({ signupEmail: v }),
-  setSignupPassword:  (v) => set({ signupPassword: v }),
-  setSignupData:      (v) => set({ signupData: v }),
+  setEmail:          (v) => set({ email: v }),
+  setPassword:       (v) => set({ password: v }),
+  setFullName:       (v) => set({ fullName: v }),
+  setSignupEmail:    (v) => set({ signupEmail: v }),
+  setSignupPassword: (v) => set({ signupPassword: v }),
+  setSignupData:     (v) => set({ signupData: v }),
 
   handleLogin: async () => {
     const { authAPI } = await import("../api");
@@ -246,68 +246,74 @@ const useStore = create((set, get) => ({
   setPayMethod:     (v) => set({ payMethod: v }),
   setViewingTicket: (v) => set({ viewingTicket: v }),
 
-handleBuyTicket: async () => {
-  const { ticketsAPI } = await import("../api");
-  const { checkoutEvent, ticketQty, payMethod, myTickets } = get();
-  const loadingToast = toast.loading("Processing payment...");
-  try {
-    const reference = "PAY-" + Math.random().toString(36).substr(2, 9).toUpperCase();
-    const data = await ticketsAPI.purchase({
-      event_id: checkoutEvent.id, quantity: ticketQty,
-      payment_reference: reference,
-    });
+  // ── handleBuyTicket — accepts real Paystack reference ──────
+  handleBuyTicket: async (paymentReference) => {
+    const { ticketsAPI } = await import("../api");
+    const { checkoutEvent, ticketQty, payMethod, myTickets } = get();
+    const loadingToast = toast.loading("Verifying payment...");
+    try {
+      // Use the real Paystack reference passed in from the popup.
+      // Only fall back to a generated one for free tickets.
+      const reference = paymentReference ||
+        ("PAY-" + Math.random().toString(36).substr(2, 9).toUpperCase());
 
-    // ── Success detection — handle all backend response shapes ──
-    // Backend returns ticket_id at top level on success (HTTP 201)
-    // Also accept: id, or _status 200/201 with any ticket identifier
-    const ticketId = data.ticket_id || data.id || data.pk;
-    const isSuccess = ticketId || data._status === 201 || data._status === 200;
-
-    if (isSuccess) {
-      const ticket = {
-        id:           ticketId || reference,
-        ticket_id:    ticketId || reference,
-        event:        checkoutEvent,
-        qty:          ticketQty,
-        quantity:     ticketQty,
-        payMethod,
-        purchasedAt:  new Date().toLocaleDateString(),
-        owner:        (data.owner?.first_name || "") + " " + (data.owner?.last_name || ""),
-        ownerEmail:   data.owner?.email,
-        status:       data.status || "active",
-        qr_data:      data.qr_data || null,
-        dynamic_qr:   data.dynamic_qr || null,
-        qr_base64:    data.dynamic_qr || null,
-        qr_image_url: data.qr_image_url || null,
-        qr_image:     data.qr_image
-          ? (data.qr_image.startsWith("http") ? data.qr_image : BACKEND + data.qr_image)
-          : null,
-        nft_tx_hash:  data.nft_tx_hash  || null,
-        nft_token_id: data.nft_token_id || null,
-      };
-      set({
-        myTickets:     [...myTickets, ticket],
-        checkoutEvent: null,
-        overlayEvent:  null,
-        activeTab:     "tickets",
-        screen:        "paymentSuccess",
-        viewingTicket: ticket,
+      const data = await ticketsAPI.purchase({
+        event_id:          checkoutEvent.id,
+        quantity:          ticketQty,
+        payment_reference: reference,
       });
+
+      // ── Success detection ────────────────────────────────
+      const ticketId = data.ticket_id || data.id || data.pk;
+      const isSuccess = ticketId || data._status === 201 || data._status === 200;
+
+      if (isSuccess) {
+        const ticket = {
+          id:           ticketId || reference,
+          ticket_id:    ticketId || reference,
+          event:        checkoutEvent,
+          qty:          ticketQty,
+          quantity:     ticketQty,
+          payMethod,
+          purchasedAt:  new Date().toLocaleDateString(),
+          owner:        (data.owner?.first_name || "") + " " + (data.owner?.last_name || ""),
+          ownerEmail:   data.owner?.email,
+          status:       data.status || "active",
+          qr_data:      data.qr_data      || null,
+          dynamic_qr:   data.dynamic_qr   || null,
+          qr_base64:    data.dynamic_qr   || null,
+          qr_image_url: data.qr_image_url || null,
+          qr_image:     data.qr_image
+            ? (data.qr_image.startsWith("http") ? data.qr_image : BACKEND + data.qr_image)
+            : null,
+          nft_tx_hash:  data.nft_tx_hash  || null,
+          nft_token_id: data.nft_token_id || null,
+          nft_minting:  data.nft_minting  || false,
+        };
+        set({
+          myTickets:     [...myTickets, ticket],
+          checkoutEvent: null,
+          overlayEvent:  null,
+          activeTab:     "tickets",
+          screen:        "paymentSuccess",
+          viewingTicket: ticket,
+        });
+        toast.dismiss(loadingToast);
+        toast.success("🎉 Payment successful! NFT minting on Polygon...");
+      } else {
+        toast.dismiss(loadingToast);
+        const errMsg = data.error || data.detail || data.message ||
+          (typeof data === "object"
+            ? Object.values(data).flat().join(" ")
+            : "Purchase failed.");
+        toast.error(errMsg);
+      }
+    } catch (e) {
+      console.error("Purchase error:", e);
       toast.dismiss(loadingToast);
-      toast.success("🎉 Payment successful!");
-    } else {
-      toast.dismiss(loadingToast);
-      // Show the actual backend error if available
-      const errMsg = data.error || data.detail || data.message ||
-        (typeof data === "object" ? Object.values(data).flat().join(" ") : "Purchase failed.");
-      toast.error(errMsg);
+      toast.error("Connection error. Please try again.");
     }
-  } catch (e) {
-    console.error("Purchase error:", e);
-    toast.dismiss(loadingToast);
-    toast.error("Connection error. Please try again.");
-  }
-},
+  },
 
   // ── Resale ─────────────────────────────────────────────────
   resaleTicket: null, resalePrice: "", resaleError: "",
@@ -319,9 +325,9 @@ handleBuyTicket: async () => {
     const { resaleTicket, resalePrice, myTickets, resaleListings, currentUser } = get();
     const price = parseFloat(resalePrice);
     const orig  = resaleTicket.event.price;
-    if (!price || isNaN(price))  { set({ resaleError: "Please enter a valid price." }); return; }
-    if (price >= orig)            { set({ resaleError: "Must be less than original price (Ghc " + orig + ")." }); return; }
-    if (price < orig * 0.3)       { set({ resaleError: "Minimum resale price: Ghc " + Math.floor(orig * 0.3) + "." }); return; }
+    if (!price || isNaN(price)) { set({ resaleError: "Please enter a valid price." }); return; }
+    if (price >= orig)           { set({ resaleError: "Must be less than original price (Ghc " + orig + ")." }); return; }
+    if (price < orig * 0.3)      { set({ resaleError: "Minimum resale price: Ghc " + Math.floor(orig * 0.3) + "." }); return; }
     set({
       myTickets: myTickets.map(t =>
         t.id === resaleTicket.id ? { ...t, status: "resale", resalePrice: price } : t
@@ -360,10 +366,14 @@ handleBuyTicket: async () => {
     const loadingToast = toast.loading("Transferring ticket...");
     try {
       const data = await ticketsAPI.transfer({
-        ticket_id: transferTicket.id, to_email: transferEmail,
+        ticket_id: transferTicket.ticket_id || transferTicket.id,
+        to_email:  transferEmail,
       });
       if (data.message) {
-        set({ myTickets: myTickets.filter(t => t.id !== transferTicket.id), transferDone: true });
+        set({
+          myTickets:    myTickets.filter(t => t.id !== transferTicket.id),
+          transferDone: true,
+        });
         toast.dismiss(loadingToast);
         toast.success("Ticket transferred successfully!");
       } else {
@@ -399,8 +409,8 @@ handleBuyTicket: async () => {
         name:          addEventForm.name.trim(),
         description:   addEventForm.description?.trim() || "No description provided.",
         category:      addEventForm.category || "other",
-        venue:         addEventForm.venue?.trim() || "TBA",
-        city:          addEventForm.city?.trim()  || "Accra",
+        venue:         addEventForm.venue?.trim()  || "TBA",
+        city:          addEventForm.city?.trim()   || "Accra",
         date:          addEventForm.date,
         time:          addEventForm.time || "20:00:00",
         price:         parseFloat(addEventForm.price) || 0,
@@ -430,7 +440,7 @@ handleBuyTicket: async () => {
       } else {
         toast.dismiss(loadingToast);
         const errMsg = typeof data === "object"
-          ? Object.entries(data).map(([k, v]) => `${k}: ${Array.isArray(v) ? v.join(", ") : v}`).join(" | ")
+          ? Object.entries(data).map(([k,v]) => `${k}: ${Array.isArray(v) ? v.join(", ") : v}`).join(" | ")
           : "Failed to create event.";
         toast.error(errMsg);
       }
@@ -511,6 +521,7 @@ handleBuyTicket: async () => {
         return;
       }
     } catch {}
+    // Local fallback
     let found = null;
     Object.values(doorStaffInvites).forEach(invites => {
       invites.forEach(inv => { if (inv.code === trimmed) found = inv; });
@@ -555,6 +566,7 @@ handleBuyTicket: async () => {
     }
     set(updates);
   },
+
 }));
 
 export default useStore;

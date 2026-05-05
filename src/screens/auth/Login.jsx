@@ -92,7 +92,6 @@ function ForgotPassword({ onBack }) {
   );
 }
 
-// ── Responsive helper — works at render time ──────────────────
 const isWide = () => typeof window !== "undefined" && window.innerWidth >= 1024;
 
 export default function Login() {
@@ -112,7 +111,6 @@ export default function Login() {
   const [honeypot, setHoneypot]     = useState("");
   const checkRate = useRateLimit(5, 60000);
 
-  // Track window width reactively
   useEffect(() => {
     const onResize = () => setWide(window.innerWidth >= 1024);
     window.addEventListener("resize", onResize);
@@ -144,23 +142,16 @@ export default function Login() {
   return (
     <div style={{ minHeight: "100vh", background: "var(--bg)", display: "flex", fontFamily: "var(--font-sans)" }}>
 
-      {/* ── Left panel — only on wide screens ── */}
+      {/* ── Left panel — desktop only ── */}
       {wide && (
-        <div style={{
-          flex: 1,
-          background: "linear-gradient(160deg, #1a1a1a 0%, #0e0e0e 100%)",
-          display: "flex", flexDirection: "column", justifyContent: "space-between",
-          padding: "48px", position: "relative", overflow: "hidden",
-        }}>
+        <div style={{ flex: 1, background: "linear-gradient(160deg, #1a1a1a 0%, #0e0e0e 100%)", display: "flex", flexDirection: "column", justifyContent: "space-between", padding: "48px", position: "relative", overflow: "hidden" }}>
           <div style={{ position: "absolute", top: 0, right: 0, width: "400px", height: "400px", borderRadius: "50%", background: "radial-gradient(circle, rgba(245,166,35,0.12) 0%, transparent 70%)", transform: "translate(30%, -30%)", pointerEvents: "none" }} />
 
-          {/* Logo */}
           <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
             <div style={{ width: "40px", height: "40px", borderRadius: "12px", background: "linear-gradient(135deg, #f5a623, #e8920f)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "20px" }}>🎟️</div>
             <span style={{ fontWeight: 800, fontSize: "18px", color: "#fff" }}>Master Events</span>
           </div>
 
-          {/* Copy */}
           <div style={{ position: "relative", zIndex: 1 }}>
             <div style={{ fontSize: "11px", fontWeight: 700, letterSpacing: "2px", color: "#f5a623", marginBottom: "16px" }}>WELCOME BACK</div>
             <h2 style={{ fontSize: "clamp(36px, 3vw, 52px)", fontWeight: 900, color: "#fff", letterSpacing: "-1.5px", lineHeight: 1.1, marginBottom: "20px" }}>
@@ -189,7 +180,6 @@ export default function Login() {
             </div>
           </div>
 
-          {/* Stats */}
           <div style={{ display: "flex", gap: "28px" }}>
             {[["10K+","Tickets"],["50+","Events"],["0%","Fakes"]].map(([val, label]) => (
               <div key={label}>
@@ -208,7 +198,6 @@ export default function Login() {
         alignItems: "center", justifyContent: "center",
         padding: wide ? "48px 32px" : "40px 20px",
         overflowY: "auto",
-        // On mobile takes full width; on desktop constrained
         maxWidth: wide ? "560px" : "100%",
         width: "100%",
         margin: "0 auto",
@@ -314,33 +303,28 @@ export default function Login() {
             )}
           </AnimatePresence>
 
-          {/* Loading state — prominent so user knows to wait */}
+          {/* ── Loading — clean animated dots ── */}
           <AnimatePresence>
             {loading && (
-              <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
-                style={{ background: "rgba(245,166,35,0.06)", border: "1px solid rgba(245,166,35,0.2)", borderRadius: "14px", padding: "16px", marginBottom: "14px" }}>
-                <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "10px" }}>
-                  <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 1, ease: "linear" }}
-                    style={{ fontSize: "20px", flexShrink: 0 }}>⏳</motion.div>
-                  <div style={{ color: "#f5a623", fontSize: "14px", fontWeight: 700 }}>Connecting to server...</div>
-                </div>
-                <div style={{ color: "var(--text-muted)", fontSize: "12px", lineHeight: 1.5, marginBottom: "10px" }}>
-                  Our server wakes up on first request — this takes <strong style={{ color: "var(--text-primary)" }}>up to 30 seconds.</strong> Please wait, do not click again.
-                </div>
-                {/* Animated progress bar */}
-                <div style={{ height: "3px", background: "var(--border)", borderRadius: "2px", overflow: "hidden" }}>
-                  <motion.div
-                    initial={{ width: "0%" }}
-                    animate={{ width: "92%" }}
-                    transition={{ duration: 28, ease: "easeOut" }}
-                    style={{ height: "100%", background: "linear-gradient(90deg, #f5a623, #e8920f)", borderRadius: "2px" }}
-                  />
+              <motion.div initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
+                style={{ marginBottom: "14px" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "12px", padding: "14px 16px", borderRadius: "14px", background: "rgba(245,166,35,0.06)", border: "1px solid rgba(245,166,35,0.15)" }}>
+                  <div style={{ display: "flex", gap: "5px", flexShrink: 0 }}>
+                    {[0, 1, 2].map(i => (
+                      <motion.div key={i}
+                        animate={{ opacity: [0.25, 1, 0.25], scale: [0.75, 1.15, 0.75] }}
+                        transition={{ repeat: Infinity, duration: 1.2, delay: i * 0.18, ease: "easeInOut" }}
+                        style={{ width: "7px", height: "7px", borderRadius: "50%", background: "#f5a623" }}
+                      />
+                    ))}
+                  </div>
+                  <span style={{ color: "#f5a623", fontSize: "14px", fontWeight: 700, letterSpacing: "-0.2px" }}>Logging in...</span>
                 </div>
               </motion.div>
             )}
           </AnimatePresence>
 
-          {/* Submit button */}
+          {/* Submit */}
           <motion.button
             whileHover={!loading && !rateLock ? { scale: 1.02, boxShadow: "0 12px 36px rgba(245,166,35,0.4)" } : {}}
             whileTap={!loading && !rateLock ? { scale: 0.97 } : {}}

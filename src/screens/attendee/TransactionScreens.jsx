@@ -33,7 +33,6 @@ function PageWrap({ children, maxW = "600px" }) {
   );
 }
 
-// ── Blockchain trust strip ────────────────────────────────────
 function ChainStrip({ txHash, tokenId }) {
   const url = txHash ? `https://polygonscan.com/tx/${txHash}` : null;
   return (
@@ -64,7 +63,6 @@ function ChainStrip({ txHash, tokenId }) {
   );
 }
 
-// ── Ownership badge ───────────────────────────────────────────
 function OwnershipBadge({ owner }) {
   return (
     <div style={{ background: "rgba(22,163,74,0.06)", border: "1px solid rgba(22,163,74,0.18)", borderRadius: "12px", padding: "10px 14px", display: "flex", alignItems: "center", gap: "10px" }}>
@@ -82,7 +80,6 @@ function OwnershipBadge({ owner }) {
   );
 }
 
-// ── Security features ─────────────────────────────────────────
 function SecurityFeatures() {
   return (
     <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px" }}>
@@ -116,9 +113,7 @@ export function PaymentSuccess() {
       <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}
         transition={{ type: "spring", stiffness: 300, damping: 25 }}
         style={{ background: "var(--bg-card)", borderRadius: "24px", padding: desktop ? "48px 44px" : "28px 20px", boxShadow: desktop ? "var(--shadow-lg)" : "var(--shadow-md)", border: "1px solid var(--border)", overflow: "hidden", position: "relative" }}>
-
         <div style={{ position: "absolute", top: 0, right: 0, width: "200px", height: "200px", borderRadius: "50%", background: "radial-gradient(circle, rgba(22,163,74,0.08) 0%, transparent 70%)", transform: "translate(30%,-30%)", pointerEvents: "none" }} />
-
         <div style={{ textAlign: "center", position: "relative" }}>
           <motion.div initial={{ scale: 0, rotate: -20 }} animate={{ scale: 1, rotate: 0 }}
             transition={{ type: "spring", stiffness: 400, damping: 18, delay: 0.15 }}
@@ -130,7 +125,6 @@ export function PaymentSuccess() {
             Your ticket is confirmed. NFT is being minted on Polygon.
           </p>
         </div>
-
         {event && (
           <div style={{ background: "var(--bg-subtle)", borderRadius: "14px", padding: "14px", marginBottom: "14px", border: "1px solid var(--border)" }}>
             <div style={{ fontSize: "9px", color: "#f5a623", fontWeight: 700, marginBottom: "6px", letterSpacing: "1.5px" }}>EVENT</div>
@@ -138,11 +132,9 @@ export function PaymentSuccess() {
             <div style={{ fontSize: "12px", color: "var(--text-muted)" }}>📅 {event.date} · 📍 {event.venue}</div>
           </div>
         )}
-
         <div style={{ marginBottom: "14px" }}>
           <ChainStrip txHash={viewingTicket?.nft_tx_hash} tokenId={viewingTicket?.nft_token_id} />
         </div>
-
         <div style={{ background: "rgba(124,58,237,0.04)", border: "1px solid rgba(124,58,237,0.12)", borderRadius: "14px", padding: "14px", marginBottom: "20px" }}>
           <div style={{ fontSize: "11px", fontWeight: 700, color: "#7c3aed", marginBottom: "10px", letterSpacing: "0.3px" }}>WHAT THIS MEANS FOR YOU</div>
           {[
@@ -157,7 +149,6 @@ export function PaymentSuccess() {
             </div>
           ))}
         </div>
-
         <motion.button whileHover={{ scale: 1.02, boxShadow: "0 12px 32px rgba(245,166,35,0.4)" }}
           whileTap={{ scale: 0.97 }} onClick={() => setScreen("ticketView")}
           style={{ ...primaryBtn, marginBottom: "10px" }}>
@@ -173,7 +164,7 @@ export function PaymentSuccess() {
   );
 }
 
-// ── Checkout — FIXED SCROLL + PAYSTACK ───────────────────────
+// ── Checkout ─────────────────────────────────────────────────
 export function Checkout() {
   const checkoutEvent   = useStore(s => s.checkoutEvent);
   const ticketQty       = useStore(s => s.ticketQty);
@@ -183,7 +174,8 @@ export function Checkout() {
   const handleBuyTicket = useStore(s => s.handleBuyTicket);
   const setScreen       = useStore(s => s.setScreen);
   const currentUser     = useStore(s => s.currentUser);
-  const [paying, setPaying] = useState(false);
+  const [paying, setPaying]   = useState(false);
+  const [payError, setPayError] = useState("");
   const desktop = isDesktop();
 
   if (!checkoutEvent) return null;
@@ -193,16 +185,21 @@ export function Checkout() {
 
   const onPay = async () => {
     if (paying) return;
+    setPayError("");
     setPaying(true);
 
-    // Free ticket — skip Paystack
+    // Free ticket
     if (checkoutEvent.price === 0) {
-      await handleBuyTicket("FREE-" + Date.now());
+      try {
+        await handleBuyTicket("FREE-" + Date.now());
+      } catch {
+        setPayError("Something went wrong. Please try again.");
+      }
       setPaying(false);
       return;
     }
 
-    // Load Paystack inline script
+    // Load Paystack
     if (!window.PaystackPop) {
       try {
         await new Promise((resolve, reject) => {
@@ -213,18 +210,27 @@ export function Checkout() {
           document.head.appendChild(s);
         });
       } catch {
+        setPayError("Failed to load payment gateway. Check your connection.");
         setPaying(false);
-        alert("Failed to load payment gateway. Check your connection.");
         return;
       }
     }
 
-    const ref = "ME-" + Date.now() + "-" + Math.random().toString(36).substr(2,6).toUpperCase();
+    // Check key
+    const paystackKey = import.meta.env.VITE_PAYSTACK_PUBLIC_KEY;
+    if (!paystackKey) {
+      setPayError("Payment gateway not configured. Contact support.");
+      console.error("VITE_PAYSTACK_PUBLIC_KEY is not set");
+      setPaying(false);
+      return;
+    }
+
+    const ref = "ME-" + Date.now() + "-" + Math.random().toString(36).substr(2, 6).toUpperCase();
 
     const handler = window.PaystackPop.setup({
-      key:      import.meta.env.VITE_PAYSTACK_PUBLIC_KEY || "pk_live_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+      key:      paystackKey,
       email:    currentUser?.email || "user@masterevents.com",
-      amount:   total * 100, // pesewas
+      amount:   total * 100,
       currency: "GHS",
       ref,
       metadata: {
@@ -233,20 +239,39 @@ export function Checkout() {
           { display_name: "Quantity", variable_name: "quantity", value: String(ticketQty) },
         ],
       },
-      onClose:  () => { setPaying(false); },
-      callback: async (response) => {
-        await handleBuyTicket(response.reference);
+      onClose: () => {
         setPaying(false);
+        setPayError("");
+      },
+      callback: async (response) => {
+        try {
+          // 35s timeout — backend may be cold starting
+          const timeout = new Promise((_, reject) =>
+            setTimeout(() => reject(new Error("timeout")), 35000)
+          );
+          await Promise.race([
+            handleBuyTicket(response.reference),
+            timeout,
+          ]);
+        } catch (e) {
+          if (e.message === "timeout") {
+            setPayError("Server is warming up. Your payment was received — check My Tickets in ~1 minute.");
+          } else {
+            setPayError("Payment received but ticket creation failed. Contact support with ref: " + response.reference);
+          }
+        } finally {
+          setPaying(false);
+        }
       },
     });
+
     handler.openIframe();
   };
 
   return (
-    // ── Outer: flex column, clips overflow ───────────────────
     <div style={{ background: "var(--bg)", height: "100%", display: "flex", flexDirection: "column", overflow: "hidden" }}>
 
-      {/* ── Sticky header ── */}
+      {/* Sticky header */}
       <div style={{ display: "flex", alignItems: "center", padding: "16px 20px", gap: "14px", borderBottom: "1px solid var(--border)", background: "var(--bg-card)", flexShrink: 0, zIndex: 10 }}>
         <motion.div whileTap={{ scale: 0.9 }} onClick={() => setScreen("app")}
           style={{ width: "36px", height: "36px", borderRadius: "10px", background: "var(--bg-subtle)", border: "1px solid var(--border)", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", fontSize: "17px", color: "var(--text-primary)", flexShrink: 0 }}>
@@ -264,7 +289,7 @@ export function Checkout() {
         </div>
       </div>
 
-      {/* ── Scrollable body ── */}
+      {/* Scrollable body */}
       <div style={{ flex: 1, overflowY: "auto", WebkitOverflowScrolling: "touch", overscrollBehavior: "contain" }}>
         <div style={{ maxWidth: desktop ? "640px" : "100%", margin: "0 auto", padding: desktop ? "24px 40px 60px" : "16px 16px 80px" }}>
 
@@ -331,12 +356,30 @@ export function Checkout() {
             </div>
           </div>
 
+          {/* Pay error */}
           <AnimatePresence>
-            {paying && (
+            {payError && (
+              <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
+                style={{ background: "var(--error-bg)", border: "1px solid rgba(220,38,38,0.2)", borderRadius: "14px", padding: "14px 16px", marginBottom: "14px", color: "var(--error)", fontSize: "13px", lineHeight: 1.5 }}>
+                ⚠️ {payError}
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {/* Paying state */}
+          <AnimatePresence>
+            {paying && !payError && (
               <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
                 style={{ background: "rgba(124,58,237,0.06)", border: "1px solid rgba(124,58,237,0.18)", borderRadius: "16px", padding: "16px", marginBottom: "14px", textAlign: "center" }}>
-                <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 1.2, ease: "linear" }}
-                  style={{ fontSize: "28px", marginBottom: "8px", display: "inline-block" }}>⛓️</motion.div>
+                <div style={{ display: "flex", justifyContent: "center", gap: "6px", marginBottom: "10px" }}>
+                  {[0, 1, 2].map(i => (
+                    <motion.div key={i}
+                      animate={{ opacity: [0.3, 1, 0.3], scale: [0.8, 1.2, 0.8] }}
+                      transition={{ repeat: Infinity, duration: 1.2, delay: i * 0.2, ease: "easeInOut" }}
+                      style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#7c3aed" }}
+                    />
+                  ))}
+                </div>
                 <div style={{ color: "#7c3aed", fontWeight: 700, fontSize: "14px", marginBottom: "3px" }}>Processing payment...</div>
                 <div style={{ color: "var(--text-muted)", fontSize: "11px" }}>Do not close this screen</div>
               </motion.div>
@@ -445,15 +488,10 @@ export function TicketView() {
           </div>
         </div>
 
-        {/* Card body */}
         <div style={{ background: "var(--bg-card)", borderRadius: desktop ? "0 0 20px 20px" : 0, overflow: "hidden", boxShadow: desktop ? "var(--shadow-lg)" : "none", border: desktop ? "1px solid var(--border)" : "none" }}>
-
-          {/* Ownership */}
           <div style={{ padding: "14px 16px", borderBottom: "1px solid var(--border)", background: "rgba(22,163,74,0.03)" }}>
             <OwnershipBadge owner={ownerName} />
           </div>
-
-          {/* Info row */}
           <div style={{ padding: "14px 16px", display: "flex", justifyContent: "space-around", borderBottom: "1px dashed var(--border)" }}>
             {[["DATE", ev.date || "TBA"], ["TIME", formatTime(ev.time)], ["QTY", viewingTicket.qty || viewingTicket.quantity || 1]].map(([k, v]) => (
               <div key={k} style={{ textAlign: "center" }}>
@@ -498,7 +536,6 @@ export function TicketView() {
               </div>
             )}
 
-            {/* Countdown */}
             {viewingTicket.status === "active" && (
               <div style={{ width: "190px" }}>
                 <div style={{ height: "3px", background: "var(--bg-subtle)", borderRadius: "2px", overflow: "hidden", marginBottom: "7px" }}>
@@ -517,7 +554,6 @@ export function TicketView() {
               </div>
             )}
 
-            {/* Ticket ID */}
             <div style={{ background: "var(--bg-subtle)", padding: "5px 12px", borderRadius: "99px", border: "1px solid var(--border)" }}>
               <span style={{ fontFamily: "monospace", fontSize: "10px", color: "var(--text-muted)", letterSpacing: "0.5px" }}>
                 {(viewingTicket.ticket_id || viewingTicket.id || "").toString().substring(0, 24)}
@@ -525,12 +561,10 @@ export function TicketView() {
             </div>
           </div>
 
-          {/* Chain strip */}
           <div style={{ padding: "0 16px 14px" }}>
             <ChainStrip txHash={viewingTicket.nft_tx_hash} tokenId={viewingTicket.nft_token_id} />
           </div>
 
-          {/* Security expandable */}
           <div style={{ padding: "0 16px 14px" }}>
             <motion.div whileTap={{ scale: 0.98 }} onClick={() => setShowSecurity(!showSecurity)}
               style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 14px", borderRadius: "12px", background: "var(--bg-subtle)", border: "1px solid var(--border)", cursor: "pointer" }}>
@@ -552,7 +586,6 @@ export function TicketView() {
             </AnimatePresence>
           </div>
 
-          {/* Actions */}
           {viewingTicket.status === "active" && (
             <div style={{ padding: "0 16px 10px", display: "flex", gap: "10px" }}>
               <motion.button whileTap={{ scale: 0.95 }}
@@ -598,7 +631,6 @@ export function Resale() {
 
   return (
     <div style={{ background: "var(--bg)", height: "100%", display: "flex", flexDirection: "column", overflow: "hidden" }}>
-      {/* Header */}
       <div style={{ display: "flex", alignItems: "center", padding: "16px 20px", gap: "14px", borderBottom: "1px solid var(--border)", background: "var(--bg-card)", flexShrink: 0, zIndex: 10 }}>
         <motion.div whileTap={{ scale: 0.9 }} onClick={() => setScreen("ticketView")}
           style={{ width: "36px", height: "36px", borderRadius: "10px", background: "var(--bg-subtle)", border: "1px solid var(--border)", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", fontSize: "17px", color: "var(--text-primary)", flexShrink: 0 }}>←</motion.div>
@@ -607,7 +639,6 @@ export function Resale() {
           <div style={{ fontSize: "11px", color: "var(--text-muted)", marginTop: "1px" }}>NFT ownership transfers on-chain automatically</div>
         </div>
       </div>
-      {/* Scrollable body */}
       <div style={{ flex: 1, overflowY: "auto", WebkitOverflowScrolling: "touch", overscrollBehavior: "contain" }}>
         <div style={{ maxWidth: desktop ? "560px" : "100%", margin: "0 auto", padding: desktop ? "24px 40px 60px" : "16px 16px 80px" }}>
           <div style={{ background: "var(--bg-subtle)", borderRadius: "14px", padding: "14px", marginBottom: "14px", border: "1px solid var(--border)" }}>
@@ -740,7 +771,6 @@ export function Transfer() {
 
   return (
     <div style={{ background: "var(--bg)", height: "100%", display: "flex", flexDirection: "column", overflow: "hidden" }}>
-      {/* Header */}
       <div style={{ display: "flex", alignItems: "center", padding: "16px 20px", gap: "14px", borderBottom: "1px solid var(--border)", background: "var(--bg-card)", flexShrink: 0, zIndex: 10 }}>
         <motion.div whileTap={{ scale: 0.9 }} onClick={() => setScreen("ticketView")}
           style={{ width: "36px", height: "36px", borderRadius: "10px", background: "var(--bg-subtle)", border: "1px solid var(--border)", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", fontSize: "17px", color: "var(--text-primary)", flexShrink: 0 }}>←</motion.div>
@@ -749,7 +779,6 @@ export function Transfer() {
           <div style={{ fontSize: "11px", color: "var(--text-muted)", marginTop: "1px" }}>Permanent on-chain ownership transfer</div>
         </div>
       </div>
-      {/* Scrollable body */}
       <div style={{ flex: 1, overflowY: "auto", WebkitOverflowScrolling: "touch", overscrollBehavior: "contain" }}>
         <div style={{ maxWidth: desktop ? "560px" : "100%", margin: "0 auto", padding: desktop ? "24px 40px 60px" : "16px 16px 80px" }}>
           <div style={{ background: "rgba(124,58,237,0.05)", border: "1px solid rgba(124,58,237,0.18)", borderRadius: "14px", padding: "14px", marginBottom: "14px" }}>

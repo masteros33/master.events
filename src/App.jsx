@@ -24,7 +24,6 @@ import {
   PlusCircle, Zap, ScanLine
 } from "lucide-react";
 
-// ── Route map for mobile full-screen screens ─────────────────
 const FULL_SCREENS = [
   "checkout","ticketView","resale","resaleSuccess",
   "transfer","paymentSuccess","addEvent","orgEventDetail",
@@ -54,32 +53,13 @@ function AppTabs() {
 
   return (
     <div className="app-shell">
-      {/* Scrollable content — tab-content handles safe area padding */}
-      <div className="tab-content">
-        {renderTab()}
-      </div>
-
-      {/* FAB for organizer */}
+      <div className="tab-content">{renderTab()}</div>
       {role === "organizer" && (
-        <motion.div
-          whileTap={{ scale: 0.9 }}
-          onClick={() => setScreen("addEvent")}
-          style={{
-            position: "fixed",
-            bottom: "calc(var(--nav-height) + env(safe-area-inset-bottom, 0px) + 16px)",
-            right: "20px",
-            width: "52px", height: "52px",
-            borderRadius: "50%",
-            background: "linear-gradient(135deg, #f5a623, #e8920f)",
-            display: "flex", alignItems: "center", justifyContent: "center",
-            cursor: "pointer",
-            boxShadow: "0 4px 20px rgba(245,166,35,0.5)",
-            zIndex: 200,
-          }}>
+        <motion.div whileTap={{ scale: 0.9 }} onClick={() => setScreen("addEvent")}
+          style={{ position: "fixed", bottom: "calc(var(--nav-height) + env(safe-area-inset-bottom, 0px) + 16px)", right: "20px", width: "52px", height: "52px", borderRadius: "50%", background: "linear-gradient(135deg, #f5a623, #e8920f)", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", boxShadow: "0 4px 20px rgba(245,166,35,0.5)", zIndex: 200 }}>
           <PlusCircle size={24} color="#fff" />
         </motion.div>
       )}
-
       <BottomNav />
     </div>
   );
@@ -89,31 +69,12 @@ function AppTabs() {
 function NavItem({ icon: Icon, label, active, collapsed, onClick, title }) {
   return (
     <motion.div whileTap={{ scale: 0.94 }} onClick={onClick} title={title}
-      style={{
-        display: "flex", alignItems: "center",
-        gap: "10px",
-        padding: collapsed ? "10px 0" : "9px 10px",
-        justifyContent: collapsed ? "center" : "flex-start",
-        borderRadius: "12px", marginBottom: "2px", cursor: "pointer",
-        background: active ? "rgba(245,166,35,0.1)" : "transparent",
-        transition: "all 0.18s ease",
-      }}
+      style={{ display: "flex", alignItems: "center", gap: "10px", padding: collapsed ? "10px 0" : "9px 10px", justifyContent: collapsed ? "center" : "flex-start", borderRadius: "12px", marginBottom: "2px", cursor: "pointer", background: active ? "rgba(245,166,35,0.1)" : "transparent", transition: "all 0.18s ease" }}
       onMouseEnter={e => { if (!active) e.currentTarget.style.background = "var(--bg-hover)"; }}
       onMouseLeave={e => { e.currentTarget.style.background = active ? "rgba(245,166,35,0.1)" : "transparent"; }}>
-      <Icon
-        size={17}
-        strokeWidth={active ? 2.5 : 1.8}
-        color={active ? "#f5a623" : "var(--text-secondary)"}
-        style={{ flexShrink: 0 }}
-      />
-      {!collapsed && (
-        <span style={{ fontWeight: 600, fontSize: "13px", whiteSpace: "nowrap", color: active ? "#f5a623" : "var(--text-secondary)" }}>
-          {label}
-        </span>
-      )}
-      {!collapsed && active && (
-        <div style={{ marginLeft: "auto", width: "6px", height: "6px", borderRadius: "50%", background: "#f5a623" }} />
-      )}
+      <Icon size={17} strokeWidth={active ? 2.5 : 1.8} color={active ? "#f5a623" : "var(--text-secondary)"} style={{ flexShrink: 0 }} />
+      {!collapsed && <span style={{ fontWeight: 600, fontSize: "13px", whiteSpace: "nowrap", color: active ? "#f5a623" : "var(--text-secondary)" }}>{label}</span>}
+      {!collapsed && active && <div style={{ marginLeft: "auto", width: "6px", height: "6px", borderRadius: "50%", background: "#f5a623" }} />}
     </motion.div>
   );
 }
@@ -128,8 +89,8 @@ function DesktopAppLayout() {
   const currentUser  = useStore(s => s.currentUser);
   const handleLogout = useStore(s => s.handleLogout);
   const { theme, setTheme } = useTheme();
-  const [collapsed,    setCollapsed]    = React.useState(false);
-  const [profileOpen,  setProfileOpen]  = React.useState(true);
+  const [collapsed,   setCollapsed]   = React.useState(false);
+  const [profileOpen, setProfileOpen] = React.useState(true);
 
   const attendeeNav = [
     { id: "home",    Icon: Home,          label: "Discover Events" },
@@ -142,7 +103,7 @@ function DesktopAppLayout() {
     { id: "wallet",    Icon: Wallet,          label: "Wallet"     },
     { id: "alerts",    Icon: Bell,            label: "Alerts"     },
   ];
-  const navItems  = role === "organizer" ? orgNav : attendeeNav;
+  const navItems     = role === "organizer" ? orgNav : attendeeNav;
   const isFullScreen = FULL_SCREENS.includes(screen);
 
   const renderContent = () => {
@@ -188,21 +149,9 @@ function DesktopAppLayout() {
 
   return (
     <div style={{ display: "flex", height: "100vh", background: "var(--bg)", fontFamily: "var(--font-sans)", overflow: "hidden" }}>
-
-      {/* ── Sidebar ── */}
-      <motion.aside
-        animate={{ width: sidebarW }}
-        transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
-        style={{
-          flexShrink: 0,
-          background: "var(--bg-card)",
-          borderRight: "1px solid var(--border)",
-          display: "flex", flexDirection: "column",
-          height: "100vh",
-          overflow: "hidden",
-          boxShadow: "2px 0 20px rgba(0,0,0,0.04)",
-          position: "relative", zIndex: 10,
-        }}>
+      {/* Sidebar */}
+      <motion.aside animate={{ width: sidebarW }} transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
+        style={{ flexShrink: 0, background: "var(--bg-card)", borderRight: "1px solid var(--border)", display: "flex", flexDirection: "column", height: "100vh", overflow: "hidden", boxShadow: "2px 0 20px rgba(0,0,0,0.04)", position: "relative", zIndex: 10 }}>
 
         {/* Brand */}
         <div style={{ padding: "14px 12px", borderBottom: "1px solid var(--border)", display: "flex", alignItems: "center", justifyContent: collapsed ? "center" : "space-between", gap: "8px", minHeight: "60px", flexShrink: 0 }}>
@@ -212,8 +161,7 @@ function DesktopAppLayout() {
             </div>
             <AnimatePresence>
               {!collapsed && (
-                <motion.div initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -8 }}
-                  transition={{ duration: 0.18 }} style={{ overflow: "hidden", minWidth: 0 }}>
+                <motion.div initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -8 }} transition={{ duration: 0.18 }} style={{ overflow: "hidden", minWidth: 0 }}>
                   <div style={{ fontWeight: 800, fontSize: "13px", color: "var(--text-primary)", letterSpacing: "-0.3px", whiteSpace: "nowrap" }}>Master Events</div>
                   <div style={{ display: "flex", alignItems: "center", gap: "4px", marginTop: "2px" }}>
                     <motion.div animate={{ scale: [1, 1.4, 1] }} transition={{ repeat: Infinity, duration: 2 }}
@@ -226,18 +174,14 @@ function DesktopAppLayout() {
           </div>
           <motion.button whileTap={{ scale: 0.88 }} onClick={() => setCollapsed(!collapsed)}
             style={{ width: "26px", height: "26px", borderRadius: "8px", background: "var(--bg-subtle)", border: "1px solid var(--border)", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", flexShrink: 0 }}>
-            {collapsed
-              ? <ChevronRight size={13} color="var(--text-muted)" />
-              : <ChevronLeft  size={13} color="var(--text-muted)" />
-            }
+            {collapsed ? <ChevronRight size={13} color="var(--text-muted)" /> : <ChevronLeft size={13} color="var(--text-muted)" />}
           </motion.button>
         </div>
 
         {/* Profile */}
         <div style={{ borderBottom: "1px solid var(--border)", flexShrink: 0 }}>
           {collapsed ? (
-            <motion.div whileHover={{ background: "var(--bg-hover)" }} whileTap={{ scale: 0.95 }}
-              onClick={() => setCollapsed(false)}
+            <motion.div whileHover={{ background: "var(--bg-hover)" }} whileTap={{ scale: 0.95 }} onClick={() => setCollapsed(false)}
               title={`${currentUser?.first_name} ${currentUser?.last_name}`}
               style={{ padding: "12px 0", display: "flex", justifyContent: "center", cursor: "pointer" }}>
               <div style={{ width: "34px", height: "34px", borderRadius: "50%", background: "linear-gradient(135deg, #f5a623, #e8920f)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "14px", fontWeight: 700, color: "#fff" }}>
@@ -265,9 +209,7 @@ function DesktopAppLayout() {
               </div>
               <AnimatePresence>
                 {profileOpen && (
-                  <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }}
-                    exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.2 }}
-                    style={{ overflow: "hidden" }}>
+                  <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.2 }} style={{ overflow: "hidden" }}>
                     <div style={{ marginTop: "10px", display: "inline-flex", alignItems: "center", gap: "5px", padding: "3px 10px", borderRadius: "99px", background: "rgba(245,166,35,0.1)", border: "1px solid rgba(245,166,35,0.2)" }}>
                       {role === "organizer" ? <Zap size={9} color="#f5a623" /> : <Ticket size={9} color="#f5a623" />}
                       <span style={{ fontSize: "9px", fontWeight: 700, color: "#f5a623", letterSpacing: "0.5px" }}>
@@ -283,33 +225,24 @@ function DesktopAppLayout() {
 
         {/* Nav */}
         <nav style={{ flex: 1, padding: "10px 8px", overflowY: "auto" }}>
-          {!collapsed && (
-            <div style={{ fontSize: "9px", fontWeight: 700, color: "var(--text-muted)", letterSpacing: "1.5px", padding: "0 8px", marginBottom: "8px" }}>MENU</div>
-          )}
+          {!collapsed && <div style={{ fontSize: "9px", fontWeight: 700, color: "var(--text-muted)", letterSpacing: "1.5px", padding: "0 8px", marginBottom: "8px" }}>MENU</div>}
           {navItems.map(item => (
             <NavItem key={item.id} icon={item.Icon} label={item.label}
               active={!isFullScreen && activeTab === item.id}
-              collapsed={collapsed}
-              title={collapsed ? item.label : ""}
+              collapsed={collapsed} title={collapsed ? item.label : ""}
               onClick={() => { setActiveTab(item.id); setScreen("app"); }} />
           ))}
-
           {role === "organizer" && (
             <div style={{ marginTop: "12px" }}>
-              {!collapsed && (
-                <div style={{ fontSize: "9px", fontWeight: 700, color: "var(--text-muted)", letterSpacing: "1.5px", padding: "0 8px", marginBottom: "8px" }}>ACTIONS</div>
-              )}
-              <motion.div whileTap={{ scale: 0.94 }} onClick={() => setScreen("addEvent")}
-                title={collapsed ? "Create Event" : ""}
+              {!collapsed && <div style={{ fontSize: "9px", fontWeight: 700, color: "var(--text-muted)", letterSpacing: "1.5px", padding: "0 8px", marginBottom: "8px" }}>ACTIONS</div>}
+              <motion.div whileTap={{ scale: 0.94 }} onClick={() => setScreen("addEvent")} title={collapsed ? "Create Event" : ""}
                 style={{ display: "flex", alignItems: "center", gap: "10px", padding: collapsed ? "10px 0" : "9px 10px", justifyContent: collapsed ? "center" : "flex-start", borderRadius: "12px", cursor: "pointer", border: collapsed ? "none" : "1.5px dashed rgba(245,166,35,0.3)", color: "#f5a623", transition: "all 0.18s ease" }}
                 onMouseEnter={e => { e.currentTarget.style.background = "rgba(245,166,35,0.06)"; if (!collapsed) e.currentTarget.style.borderColor = "#f5a623"; }}
                 onMouseLeave={e => { e.currentTarget.style.background = "transparent"; if (!collapsed) e.currentTarget.style.borderColor = "rgba(245,166,35,0.3)"; }}>
                 <PlusCircle size={17} style={{ flexShrink: 0 }} color="#f5a623" />
                 {!collapsed && <span style={{ fontWeight: 600, fontSize: "13px" }}>Create Event</span>}
               </motion.div>
-
-              <motion.div whileTap={{ scale: 0.94 }} onClick={() => setScreen("scanTicket")}
-                title={collapsed ? "Scan Tickets" : ""}
+              <motion.div whileTap={{ scale: 0.94 }} onClick={() => setScreen("scanTicket")} title={collapsed ? "Scan Tickets" : ""}
                 style={{ display: "flex", alignItems: "center", gap: "10px", padding: collapsed ? "10px 0" : "9px 10px", justifyContent: collapsed ? "center" : "flex-start", borderRadius: "12px", cursor: "pointer", marginTop: "4px", color: "var(--text-secondary)", transition: "all 0.18s ease" }}
                 onMouseEnter={e => { e.currentTarget.style.background = "var(--bg-hover)"; }}
                 onMouseLeave={e => { e.currentTarget.style.background = "transparent"; }}>
@@ -320,7 +253,7 @@ function DesktopAppLayout() {
           )}
         </nav>
 
-        {/* Bottom — theme + logout */}
+        {/* Bottom */}
         <div style={{ padding: "8px", borderTop: "1px solid var(--border)", flexShrink: 0 }}>
           <motion.div whileTap={{ scale: 0.9 }} onClick={() => setTheme(nextTheme)}
             title={collapsed ? themeOpts[theme].label : "Switch to " + nextTheme}
@@ -330,9 +263,7 @@ function DesktopAppLayout() {
             <ThemeIcon size={17} color="var(--text-secondary)" style={{ flexShrink: 0 }} />
             {!collapsed && <span style={{ fontSize: "13px", fontWeight: 600, color: "var(--text-secondary)" }}>{themeOpts[theme].label} mode</span>}
           </motion.div>
-
-          <motion.div whileTap={{ scale: 0.9 }} onClick={handleLogout}
-            title={collapsed ? "Log Out" : ""}
+          <motion.div whileTap={{ scale: 0.9 }} onClick={handleLogout} title={collapsed ? "Log Out" : ""}
             style={{ display: "flex", alignItems: "center", gap: "10px", padding: collapsed ? "10px 0" : "9px 10px", justifyContent: collapsed ? "center" : "flex-start", borderRadius: "12px", cursor: "pointer", transition: "background 0.18s" }}
             onMouseEnter={e => { e.currentTarget.style.background = "var(--error-bg)"; }}
             onMouseLeave={e => { e.currentTarget.style.background = "transparent"; }}>
@@ -342,31 +273,26 @@ function DesktopAppLayout() {
         </div>
       </motion.aside>
 
-      {/* ── Main content ── */}
+      {/* Main content */}
       <main style={{ flex: 1, display: "flex", flexDirection: "column", minWidth: 0, overflow: "hidden" }}>
         {/* Topbar */}
         <div style={{ background: "var(--bg-card)", borderBottom: "1px solid var(--border)", padding: "14px 32px", display: "flex", justifyContent: "space-between", alignItems: "center", position: "sticky", top: 0, zIndex: 40, boxShadow: "var(--shadow-sm)", flexShrink: 0 }}>
           <div>
             <h1 style={{ fontWeight: 800, fontSize: "19px", color: "var(--text-primary)", letterSpacing: "-0.4px" }}>
-              {isFullScreen
-                ? screenTitles[screen] || "Master Events"
-                : navItems.find(n => n.id === activeTab)?.label || "Master Events"
-              }
+              {isFullScreen ? screenTitles[screen] || "Master Events" : navItems.find(n => n.id === activeTab)?.label || "Master Events"}
             </h1>
             <p style={{ fontSize: "11px", color: "var(--text-muted)", marginTop: "1px" }}>
               {new Date().toLocaleDateString("en-GH", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}
             </p>
           </div>
-          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: "6px", padding: "6px 12px", borderRadius: "99px", border: "1px solid rgba(22,163,74,0.2)", background: "rgba(22,163,74,0.06)" }}>
-              <motion.div animate={{ scale: [1, 1.4, 1] }} transition={{ repeat: Infinity, duration: 2 }}
-                style={{ width: "6px", height: "6px", borderRadius: "50%", background: "#16a34a" }} />
-              <span style={{ fontSize: "11px", fontWeight: 700, color: "#16a34a" }}>Polygon Live</span>
-            </div>
+          <div style={{ display: "flex", alignItems: "center", gap: "6px", padding: "6px 12px", borderRadius: "99px", border: "1px solid rgba(22,163,74,0.2)", background: "rgba(22,163,74,0.06)" }}>
+            <motion.div animate={{ scale: [1, 1.4, 1] }} transition={{ repeat: Infinity, duration: 2 }}
+              style={{ width: "6px", height: "6px", borderRadius: "50%", background: "#16a34a" }} />
+            <span style={{ fontSize: "11px", fontWeight: 700, color: "#16a34a" }}>Polygon Live</span>
           </div>
         </div>
 
-        {/* Page content */}
+        {/* Page */}
         <div style={{ flex: 1, overflowY: "auto", overflowX: "hidden", WebkitOverflowScrolling: "touch" }}>
           <div key={screen + activeTab} className="screen-enter" style={{ minHeight: "100%" }}>
             {renderContent()}
@@ -380,30 +306,18 @@ function DesktopAppLayout() {
 // ── Mobile content router ─────────────────────────────────────
 function MobileAppContent() {
   const screen = useStore(s => s.screen);
-
   const routes = {
-    login:          <Login />,
-    signup:         <Signup />,
-    role:           <RoleSelect />,
-    app:            <AppTabs />,
-    checkout:       <Checkout />,
-    ticketView:     <TicketView />,
-    resale:         <Resale />,
-    resaleSuccess:  <ResaleSuccess />,
-    transfer:       <Transfer />,
-    paymentSuccess: <PaymentSuccess />,
-    addEvent:       <AddEvent />,
-    orgEventDetail: <OrganizerEventDetail />,
-    scanTicket:     <OrganizerScan />,
-    doorStaffLogin: <DoorStaffLogin />,
-    doorStaffScan:  <DoorStaffScan />,
+    login: <Login />, signup: <Signup />, role: <RoleSelect />,
+    app: <AppTabs />,
+    checkout: <Checkout />, ticketView: <TicketView />,
+    resale: <Resale />, resaleSuccess: <ResaleSuccess />,
+    transfer: <Transfer />, paymentSuccess: <PaymentSuccess />,
+    addEvent: <AddEvent />, orgEventDetail: <OrganizerEventDetail />,
+    scanTicket: <OrganizerScan />, doorStaffLogin: <DoorStaffLogin />,
+    doorStaffScan: <DoorStaffScan />,
   };
-
   return (
-    <div
-      key={screen}
-      className="screen-enter app-shell"
-      style={{ background: "var(--bg)" }}>
+    <div key={screen} className="screen-enter app-shell" style={{ background: "var(--bg)" }}>
       {routes[screen] || <Login />}
     </div>
   );
@@ -412,6 +326,7 @@ function MobileAppContent() {
 // ── Root ──────────────────────────────────────────────────────
 export default function App() {
   const isLoggedIn = useStore(s => s.isLoggedIn);
+  const screen     = useStore(s => s.screen);
   const [desktop, setDesktop] = React.useState(window.innerWidth > 768);
   useTheme();
 
@@ -421,10 +336,19 @@ export default function App() {
     return () => window.removeEventListener("resize", handler);
   }, []);
 
+  // ── Desktop auth screens — full screen, no PhoneFrame ──────
+  if (desktop && !isLoggedIn) {
+    if (screen === "signup") return <Signup />;
+    if (screen === "role")   return <RoleSelect />;
+    return <Login />;
+  }
+
+  // ── Desktop app ────────────────────────────────────────────
   if (desktop && isLoggedIn) {
     return <DesktopAppLayout />;
   }
 
+  // ── Mobile — all screens in PhoneFrame ────────────────────
   return (
     <PhoneFrame>
       <MobileAppContent />

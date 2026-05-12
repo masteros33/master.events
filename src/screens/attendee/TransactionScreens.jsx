@@ -219,11 +219,10 @@ export function Checkout() {
     // IMPORTANT: callback must be a plain function, NOT async
     // Paystack validates typeof callback === 'function' synchronously
     const handler = window.PaystackPop.setup({
-      key:      paystackKey,
-      email:    currentUser?.email || "user@masterevents.com",
-      amount:   total * 100, // pesewas
-      currency: "GHS",
-      ref:      ref,
+      key:    paystackKey,
+      email:  currentUser?.email || "user@masterevents.com",
+      amount: total * 100,
+      ref:    ref,
       metadata: {
         custom_fields: [
           { display_name: "Event",    variable_name: "event",    value: checkoutEvent.name },

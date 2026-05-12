@@ -3,75 +3,88 @@ const STATIC = [
   "/",
   "/index.html",
   "/manifest.json",
-  "/ticket.svg",
 ];
 
-// Install — cache static assets
+// ── Own origins only — skip everything external ───────────────
+const OWN_ORIGINS = [
+  self.location.origin,
+];
+
+const SKIP_DOMAINS = [
+  "paystack.com",
+  "paystack.co",
+  "js.paystack.co",
+  "api.paystack.co",
+  "polygonscan.com",
+  "alchemy.com",
+  "cloudinary.com",
+  "unsplash.com",
+  "fonts.googleapis.com",
+  "fonts.gstatic.com",
+  "posthog.com",
+];
+
+function shouldSkip(url) {
+  try {
+    const u = new URL(url);
+    // Skip non-http
+    if (!u.protocol.startsWith("http")) return true;
+    // Skip all external domains
+    if (!OWN_ORIGINS.includes(u.origin)) return true;
+    return false;
+  } catch {
+    return true;
+  }
+}
+
+// Install
 self.addEventListener("install", e => {
   e.waitUntil(
-    caches.open(CACHE).then(c => c.addAll(STATIC)).then(() => self.skipWaiting())
+    caches.open(CACHE)
+      .then(c => c.addAll(STATIC))
+      .then(() => self.skipWaiting())
   );
 });
 
-// Activate — clean old caches
+// Activate
 self.addEventListener("activate", e => {
   e.waitUntil(
-    caches.keys().then(keys =>
-      Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k)))
-    ).then(() => self.clients.claim())
+    caches.keys()
+      .then(keys => Promise.all(
+        keys.filter(k => k !== CACHE).map(k => caches.delete(k))
+      ))
+      .then(() => self.clients.claim())
   );
 });
 
-// Fetch strategy:
-// - API calls → Network first, fall back to cache
-// - Images → Cache first, fall back to network
-// - Everything else → Network first
+// Fetch — only handle same-origin requests
 self.addEventListener("fetch", e => {
+  // Skip non-GET
+  if (e.request.method !== "GET") return;
+
+  // Skip ALL external domains — let browser handle them natively
+  if (shouldSkip(e.request.url)) return;
+
+  // Same-origin only from here
   const url = new URL(e.request.url);
 
-  // Skip non-GET and chrome-extension
-  if (e.request.method !== "GET") return;
-  if (url.protocol === "chrome-extension:") return;
-
-  // API — network first
-  if (url.hostname.includes("onrender.com") || url.hostname.includes("supabase")) {
-    e.respondWith(
-      fetch(e.request)
-        .then(res => {
-          const clone = res.clone();
-          caches.open(CACHE).then(c => c.put(e.request, clone));
-          return res;
-        })
-        .catch(() => caches.match(e.request))
-    );
+  // API calls — network first, no cache
+  if (url.pathname.startsWith("/api/")) {
+    e.respondWith(fetch(e.request));
     return;
   }
 
-  // Images — cache first
-  if (e.request.destination === "image") {
-    e.respondWith(
-      caches.match(e.request).then(cached => {
-        if (cached) return cached;
-        return fetch(e.request).then(res => {
-          const clone = res.clone();
-          caches.open(CACHE).then(c => c.put(e.request, clone));
-          return res;
-        });
-      })
-    );
-    return;
-  }
-
-  // Default — network first
+  // Static assets — cache first
   e.respondWith(
-    fetch(e.request)
-      .then(res => {
-        if (res.ok) {
+    caches.match(e.request).then(cached => {
+      if (cached) return cached;
+      return fetch(e.request).then(res => {
+        if (res.ok && res.status < 400) {
           const clone = res.clone();
           caches.open(CACHE).then(c => c.put(e.request, clone));
         }
         return res;
-      })
-      .catch(() => caches.match(e.request) || caches.match("/index.html"))
+      }).catch(() => caches.match("/index.html"));
+    })
   );
 });

@@ -215,7 +215,7 @@ export function Checkout() {
         headers: {
           "Content-Type":  "application/json",
           "Authorization": token ? `Bearer ${token}` : "",
-        },
+    
         },
         body: JSON.stringify({
           amount:     total,

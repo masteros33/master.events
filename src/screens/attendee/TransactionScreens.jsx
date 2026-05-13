@@ -44,7 +44,7 @@ function ChainStrip({ txHash, tokenId }) {
           <span style={{ fontSize: "13px" }}>⛓️</span>
         </div>
         <div>
-          <div style={{ fontSize: "11px", fontWeight: 600, color: "var(--text-secondary)", letterSpacing: "0.3px" }}>Polygon Blockchain</div>
+          <div style={{ fontSize: "11px", fontWeight: 600, color: "var(--text-secondary)" }}>Polygon Blockchain</div>
           <div style={{ fontSize: "11px", color: "var(--text-muted)", marginTop: "1px" }}>
             {tokenId ? `NFT #${tokenId}` : "Minting..."}
           </div>
@@ -161,22 +161,41 @@ export function Checkout() {
   const handleBuyTicket = useStore(s => s.handleBuyTicket);
   const setScreen       = useStore(s => s.setScreen);
   const currentUser     = useStore(s => s.currentUser);
-  const [paying, setPaying]     = useState(false);
+
+  const [paying,   setPaying]   = useState(false);
   const [payError, setPayError] = useState("");
   const desktop = isDesktop();
 
   if (!checkoutEvent) return null;
-  const subtotal = checkoutEvent.price * ticketQty;
-  const fee      = Math.round(subtotal * 0.05);
-  const total    = subtotal + fee;
+
+  // ── Safe price calculation ────────────────────────────────
+  const unitPrice = Math.round(parseFloat(checkoutEvent.price) || 0);
+  const qty       = Math.max(1, parseInt(ticketQty) || 1);
+  const subtotal  = unitPrice * qty;
+  const fee       = Math.round(subtotal * 0.05);
+  const total     = subtotal + fee;
+
+  // ── Amount in pesewas — must be integer > 0 ───────────────
+  const amountPesewas = total * 100;
+
+  const loadPaystack = () => {
+    return new Promise((resolve, reject) => {
+      if (window.PaystackPop) { resolve(); return; }
+      const script    = document.createElement("script");
+      script.src      = "https://js.paystack.co/v1/inline.js";
+      script.onload   = resolve;
+      script.onerror  = reject;
+      document.head.appendChild(script);
+    });
+  };
 
   const onPay = async () => {
     if (paying) return;
     setPayError("");
     setPaying(true);
 
-    // ── Free ticket ───────────────────────────────────────────
-    if (checkoutEvent.price === 0) {
+    // ── Free ticket path ──────────────────────────────────────
+    if (unitPrice === 0) {
       try {
         await handleBuyTicket("FREE-" + Date.now());
       } catch {
@@ -186,77 +205,105 @@ export function Checkout() {
       return;
     }
 
-    // ── Load Paystack script ──────────────────────────────────
-    if (!window.PaystackPop) {
-      try {
-        await new Promise((resolve, reject) => {
-          const s   = document.createElement("script");
-          s.src     = "https://js.paystack.co/v1/inline.js";
-          s.onload  = resolve;
-          s.onerror = reject;
-          document.head.appendChild(s);
-        });
-      } catch {
-        setPayError("Failed to load payment gateway. Check your connection.");
-        setPaying(false);
-        return;
-      }
-    }
-
-    // ── Check key ─────────────────────────────────────────────
-    const paystackKey = import.meta.env.VITE_PAYSTACK_PUBLIC_KEY;
-    if (!paystackKey) {
-      setPayError("Payment gateway not configured. Contact support.");
-      console.error("VITE_PAYSTACK_PUBLIC_KEY is not set");
+    // ── Validate amount before touching Paystack ─────────────
+    if (!amountPesewas || amountPesewas < 100 || !Number.isInteger(amountPesewas)) {
+      setPayError("Invalid ticket price: " + unitPrice + " GHS. Please go back and try again.");
       setPaying(false);
       return;
     }
 
+    // ── Load Paystack script ──────────────────────────────────
+    try {
+      await loadPaystack();
+    } catch {
+      setPayError("Failed to load payment gateway. Check your internet connection.");
+      setPaying(false);
+      return;
+    }
+
+    // ── Validate key ──────────────────────────────────────────
+    const paystackKey = import.meta.env.VITE_PAYSTACK_PUBLIC_KEY;
+    if (!paystackKey || !paystackKey.startsWith("pk_")) {
+      setPayError("Payment gateway misconfigured. Contact support.");
+      setPaying(false);
+      return;
+    }
+
+    // ── Validate email ────────────────────────────────────────
+    const email = currentUser?.email;
+    if (!email || !email.includes("@")) {
+      setPayError("Your account email is invalid. Please log out and log back in.");
+      setPaying(false);
+      return;
+    }
+
+    // ── Generate unique reference ─────────────────────────────
     const ref = "ME-" + Date.now() + "-" +
-      Math.random().toString(36).substr(2, 6).toUpperCase();
+      Math.random().toString(36).substring(2, 8).toUpperCase();
 
-    // ── Setup Paystack ────────────────────────────────────────
-    // IMPORTANT: callback must be a plain function, NOT async
-    // Paystack validates typeof callback === 'function' synchronously
-    const handler = window.PaystackPop.setup({
-      key:    paystackKey,
-      email:  currentUser?.email || "user@masterevents.com",
-      amount: total * 100,
+    // ── Debug log ─────────────────────────────────────────────
+    console.log("[Paystack] Initializing:", {
+      key:    paystackKey.substring(0, 20) + "...",
+      email:  email,
+      amount: amountPesewas,
       ref:    ref,
-      metadata: {
-        custom_fields: [
-          { display_name: "Event",    variable_name: "event",    value: checkoutEvent.name },
-          { display_name: "Quantity", variable_name: "quantity", value: String(ticketQty) },
-        ],
-      },
-
-      onClose: function() {
-        setPaying(false);
-        setPayError("");
-      },
-
-      // ── Plain function wrapping async work ────────────────
-      callback: function(response) {
-        var reference = response.reference;
-        var timeoutId = setTimeout(function() {
-          setPaying(false);
-          setPayError("Server is warming up. Payment received — check My Tickets in ~1 minute. Ref: " + reference);
-        }, 35000);
-
-        handleBuyTicket(reference)
-          .then(function() {
-            clearTimeout(timeoutId);
-            setPaying(false);
-          })
-          .catch(function() {
-            clearTimeout(timeoutId);
-            setPaying(false);
-            setPayError("Payment received but ticket creation failed. Ref: " + reference);
-          });
-      },
     });
 
-    handler.openIframe();
+    // ── Open Paystack popup ───────────────────────────────────
+    // callback MUST be a plain function — Paystack rejects async
+    try {
+      const handler = window.PaystackPop.setup({
+        key:    paystackKey,
+        email:  email,
+        amount: amountPesewas,
+        ref:    ref,
+        label:  checkoutEvent.name,
+        metadata: {
+          custom_fields: [
+            { display_name: "Event",    variable_name: "event",    value: String(checkoutEvent.name) },
+            { display_name: "Quantity", variable_name: "quantity", value: String(qty) },
+            { display_name: "User",     variable_name: "user_id",  value: String(currentUser?.id || "") },
+          ],
+        },
+        onClose: function () {
+          console.log("[Paystack] Popup closed by user");
+          setPaying(false);
+          setPayError("");
+        },
+        callback: function (response) {
+          console.log("[Paystack] Payment complete:", response);
+          var reference = response.reference;
+
+          // 35s timeout — backend may be cold starting on Render
+          var timeoutId = setTimeout(function () {
+            setPaying(false);
+            setPayError(
+              "Server is warming up. Your payment was received — check My Tickets in ~1 minute. Ref: " + reference
+            );
+          }, 35000);
+
+          handleBuyTicket(reference)
+            .then(function () {
+              clearTimeout(timeoutId);
+              setPaying(false);
+            })
+            .catch(function (err) {
+              clearTimeout(timeoutId);
+              setPaying(false);
+              console.error("[Paystack] Backend error:", err);
+              setPayError(
+                "Payment received but ticket creation failed. Contact support with ref: " + reference
+              );
+            });
+        },
+      });
+
+      handler.openIframe();
+    } catch (err) {
+      console.error("[Paystack] Setup error:", err);
+      setPayError("Payment gateway error: " + err.message);
+      setPaying(false);
+    }
   };
 
   return (
@@ -292,7 +339,9 @@ export function Checkout() {
               <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to bottom, transparent, rgba(0,0,0,0.65))" }} />
               <div style={{ position: "absolute", bottom: "12px", left: "14px", right: "14px" }}>
                 <div style={{ color: "#fff", fontWeight: 600, fontSize: "16px" }}>{checkoutEvent.name}</div>
-                <div style={{ color: "rgba(255,255,255,0.75)", fontSize: "11px", marginTop: "2px" }}>📅 {checkoutEvent.date} · 📍 {checkoutEvent.venue}</div>
+                <div style={{ color: "rgba(255,255,255,0.75)", fontSize: "11px", marginTop: "2px" }}>
+                  📅 {checkoutEvent.date} · 📍 {checkoutEvent.venue}
+                </div>
               </div>
             </div>
           </div>
@@ -301,11 +350,15 @@ export function Checkout() {
           <div style={{ marginBottom: "16px" }}>
             <div style={{ fontSize: "12px", fontWeight: 600, color: "var(--text-muted)", marginBottom: "10px", textTransform: "uppercase", letterSpacing: "0.5px" }}>Quantity</div>
             <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
-              <motion.button whileTap={{ scale: 0.9 }} onClick={() => setTicketQty(Math.max(1, ticketQty - 1))}
-                style={{ width: "40px", height: "40px", borderRadius: "10px", background: "var(--bg-subtle)", color: "var(--text-primary)", border: "1px solid var(--border)", fontSize: "20px", fontWeight: 500, cursor: "pointer" }}>−</motion.button>
-              <span style={{ fontSize: "24px", fontWeight: 700, color: "var(--text-primary)", minWidth: "32px", textAlign: "center" }}>{ticketQty}</span>
-              <motion.button whileTap={{ scale: 0.9 }} onClick={() => setTicketQty(Math.min(10, ticketQty + 1))}
-                style={{ width: "40px", height: "40px", borderRadius: "10px", background: "var(--bg-subtle)", color: "var(--text-primary)", border: "1px solid var(--border)", fontSize: "20px", fontWeight: 500, cursor: "pointer" }}>+</motion.button>
+              <motion.button whileTap={{ scale: 0.9 }}
+                onClick={() => setTicketQty(Math.max(1, qty - 1))}
+                style={{ width: "40px", height: "40px", borderRadius: "10px", background: "var(--bg-subtle)", color: "var(--text-primary)", border: "1px solid var(--border)", fontSize: "20px", fontWeight: 500, cursor: "pointer" }}>−
+              </motion.button>
+              <span style={{ fontSize: "24px", fontWeight: 700, color: "var(--text-primary)", minWidth: "32px", textAlign: "center" }}>{qty}</span>
+              <motion.button whileTap={{ scale: 0.9 }}
+                onClick={() => setTicketQty(Math.min(10, qty + 1))}
+                style={{ width: "40px", height: "40px", borderRadius: "10px", background: "var(--bg-subtle)", color: "var(--text-primary)", border: "1px solid var(--border)", fontSize: "20px", fontWeight: 500, cursor: "pointer" }}>+
+              </motion.button>
             </div>
           </div>
 
@@ -313,8 +366,9 @@ export function Checkout() {
           <div style={{ marginBottom: "16px" }}>
             <div style={{ fontSize: "12px", fontWeight: 600, color: "var(--text-muted)", marginBottom: "10px", textTransform: "uppercase", letterSpacing: "0.5px" }}>Payment Method</div>
             <div style={{ display: "flex", gap: "10px" }}>
-              {[["momo","📱 MoMo"],["visa","💳 Card"]].map(([id, label]) => (
-                <motion.button key={id} whileTap={{ scale: 0.95 }} onClick={() => setPayMethod(id)}
+              {[["momo", "📱 MoMo"], ["card", "💳 Card"]].map(([id, label]) => (
+                <motion.button key={id} whileTap={{ scale: 0.95 }}
+                  onClick={() => setPayMethod(id)}
                   style={{ flex: 1, padding: "12px", borderRadius: "10px", cursor: "pointer", fontWeight: 500, fontSize: "14px", fontFamily: "var(--font-sans)", border: payMethod === id ? "1.5px solid var(--brand)" : "1px solid var(--border)", background: payMethod === id ? "var(--brand-light)" : "var(--bg-subtle)", color: payMethod === id ? "var(--brand-dark)" : "var(--text-secondary)", transition: "all 0.15s" }}>
                   {label}
                 </motion.button>
@@ -326,8 +380,8 @@ export function Checkout() {
           <div style={{ background: "var(--bg-subtle)", borderRadius: "12px", padding: "16px", marginBottom: "20px", border: "1px solid var(--border)" }}>
             <div style={{ fontSize: "12px", fontWeight: 600, color: "var(--text-muted)", marginBottom: "12px", textTransform: "uppercase", letterSpacing: "0.5px" }}>Order Summary</div>
             {[
-              ["Tickets", `${ticketQty} × Ghc ${checkoutEvent.price}`],
-              ["Platform Fee (5%)", `Ghc ${fee}`],
+              ["Tickets", `${qty} × GHS ${unitPrice}`],
+              ["Platform Fee (5%)", `GHS ${fee}`],
             ].map(([k, v]) => (
               <div key={k} style={{ display: "flex", justifyContent: "space-between", paddingBottom: "8px", marginBottom: "8px", borderBottom: "1px solid var(--border)" }}>
                 <span style={{ color: "var(--text-muted)", fontSize: "13px" }}>{k}</span>
@@ -336,7 +390,7 @@ export function Checkout() {
             ))}
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
               <span style={{ color: "var(--text-primary)", fontWeight: 600, fontSize: "15px" }}>Total</span>
-              <span style={{ color: "var(--brand)", fontWeight: 700, fontSize: "22px" }}>Ghc {total}</span>
+              <span style={{ color: "var(--brand)", fontWeight: 700, fontSize: "22px" }}>GHS {total}</span>
             </div>
           </div>
 
@@ -350,13 +404,13 @@ export function Checkout() {
             )}
           </AnimatePresence>
 
-          {/* Processing state */}
+          {/* Processing */}
           <AnimatePresence>
             {paying && !payError && (
               <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
                 style={{ background: "var(--bg-subtle)", border: "1px solid var(--border)", borderRadius: "12px", padding: "16px", marginBottom: "14px", textAlign: "center" }}>
                 <div style={{ display: "flex", justifyContent: "center", gap: "5px", marginBottom: "8px" }}>
-                  {[0,1,2].map(i => (
+                  {[0, 1, 2].map(i => (
                     <motion.div key={i}
                       animate={{ opacity: [0.3, 1, 0.3], scale: [0.8, 1.1, 0.8] }}
                       transition={{ repeat: Infinity, duration: 1.2, delay: i * 0.2 }}
@@ -372,16 +426,16 @@ export function Checkout() {
 
           {/* Pay button */}
           <motion.button
-            whileHover={!paying ? { opacity: 0.9 } : {}}
+            whileHover={!paying ? { opacity: 0.88 } : {}}
             whileTap={!paying ? { scale: 0.98 } : {}}
             onClick={onPay}
             disabled={paying}
             style={{ ...primaryBtn, marginBottom: 0, opacity: paying ? 0.6 : 1 }}>
             {paying
               ? "Processing..."
-              : checkoutEvent.price === 0
+              : unitPrice === 0
                 ? "Get Free Ticket"
-                : `Pay Ghc ${total}`}
+                : `Pay GHS ${total}`}
           </motion.button>
 
         </div>
@@ -418,7 +472,8 @@ export function TicketView() {
       const sLeft = 10 - (Math.floor(Date.now() / 1000) % 10);
       setTimeLeft(sLeft);
       if (sLeft === 10) {
-        setRefreshing(true); setQrLoaded(false);
+        setRefreshing(true);
+        setQrLoaded(false);
         ticketsAPI.myTickets().then(data => {
           if (Array.isArray(data)) {
             const updated = data.find(t => t.ticket_id === viewingTicket.ticket_id);
@@ -434,6 +489,7 @@ export function TicketView() {
   }, [viewingTicket?.ticket_id]);
 
   if (!viewingTicket) return null;
+
   const ev = viewingTicket.event;
   const formatTime = t => (!t ? "TBA" : t.substring(0, 5));
   const ownerName  = viewingTicket.owner ||
@@ -442,8 +498,11 @@ export function TicketView() {
 
   const qrSrc = dynamicQR
     ? "data:image/png;base64," + dynamicQR
-    : viewingTicket.qr_image_url || (viewingTicket.qr_image
-        ? (viewingTicket.qr_image.startsWith("http") ? viewingTicket.qr_image : API + viewingTicket.qr_image)
+    : viewingTicket.qr_image_url ||
+      (viewingTicket.qr_image
+        ? (viewingTicket.qr_image.startsWith("http")
+            ? viewingTicket.qr_image
+            : API + viewingTicket.qr_image)
         : null);
 
   const isExpiringSoon = timeLeft <= 3;
@@ -472,17 +531,19 @@ export function TicketView() {
           </div>
         </div>
 
-        {/* Card */}
+        {/* Body card */}
         <div style={{ background: "var(--bg-card)", borderRadius: desktop ? "0 0 16px 16px" : 0, border: desktop ? "1px solid var(--border)" : "none", borderTop: "none" }}>
 
-          {/* Owner */}
           <div style={{ padding: "14px 16px", borderBottom: "1px solid var(--border)" }}>
             <OwnershipBadge owner={ownerName} />
           </div>
 
-          {/* Info */}
           <div style={{ padding: "14px 16px", display: "flex", justifyContent: "space-around", borderBottom: "1px solid var(--border)" }}>
-            {[["DATE", ev.date || "TBA"], ["TIME", formatTime(ev.time)], ["QTY", viewingTicket.qty || viewingTicket.quantity || 1]].map(([k, v]) => (
+            {[
+              ["DATE", ev.date || "TBA"],
+              ["TIME", formatTime(ev.time)],
+              ["QTY",  viewingTicket.qty || viewingTicket.quantity || 1],
+            ].map(([k, v]) => (
               <div key={k} style={{ textAlign: "center" }}>
                 <div style={{ fontSize: "9px", color: "var(--text-muted)", fontWeight: 600, marginBottom: "4px", letterSpacing: "1px", textTransform: "uppercase" }}>{k}</div>
                 <div style={{ fontWeight: 600, fontSize: "14px", color: "var(--text-primary)" }}>{v}</div>
@@ -508,7 +569,8 @@ export function TicketView() {
                   )}
                 </AnimatePresence>
                 <img src={qrSrc} alt="QR Code"
-                  onLoad={() => setQrLoaded(true)} onError={() => setQrError(true)}
+                  onLoad={() => setQrLoaded(true)}
+                  onError={() => setQrError(true)}
                   style={{ width: "180px", height: "180px", borderRadius: "12px", border: `2px solid ${progressColor}`, padding: "6px", background: "#fff", display: qrError ? "none" : "block", transition: "border-color 0.3s" }} />
                 {qrError && (
                   <div style={{ width: "180px", height: "180px", borderRadius: "12px", background: "var(--bg-subtle)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", border: "1px solid var(--border)", gap: "8px" }}>
@@ -525,14 +587,14 @@ export function TicketView() {
               </div>
             )}
 
-            {/* Countdown */}
             {viewingTicket.status === "active" && (
               <div style={{ width: "180px" }}>
                 <div style={{ height: "2px", background: "var(--border)", borderRadius: "2px", overflow: "hidden", marginBottom: "6px" }}>
-                  <motion.div key={timeLeft} initial={{ width: "100%" }}
+                  <motion.div key={timeLeft}
+                    initial={{ width: "100%" }}
                     animate={{ width: (timeLeft / 10 * 100) + "%" }}
                     transition={{ duration: 1, ease: "linear" }}
-                    style={{ height: "100%", background: isExpiringSoon ? "#dc2626" : "#16a34a", borderRadius: "2px" }} />
+                    style={{ height: "100%", background: progressColor, borderRadius: "2px" }} />
                 </div>
                 <div style={{ display: "flex", alignItems: "center", gap: "6px", justifyContent: "center" }}>
                   <motion.div animate={{ scale: [1, 1.3, 1] }} transition={{ repeat: Infinity, duration: 1 }}
@@ -544,7 +606,6 @@ export function TicketView() {
               </div>
             )}
 
-            {/* Ticket ID */}
             <div style={{ background: "var(--bg-subtle)", padding: "4px 12px", borderRadius: "99px", border: "1px solid var(--border)" }}>
               <span style={{ fontFamily: "monospace", fontSize: "10px", color: "var(--text-muted)" }}>
                 {(viewingTicket.ticket_id || viewingTicket.id || "").toString().substring(0, 24)}
@@ -552,12 +613,10 @@ export function TicketView() {
             </div>
           </div>
 
-          {/* Chain */}
           <div style={{ padding: "0 16px 14px" }}>
             <ChainStrip txHash={viewingTicket.nft_tx_hash} tokenId={viewingTicket.nft_token_id} />
           </div>
 
-          {/* Security */}
           <div style={{ padding: "0 16px 14px" }}>
             <motion.div whileTap={{ scale: 0.98 }} onClick={() => setShowSecurity(!showSecurity)}
               style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "10px 14px", borderRadius: "10px", background: "var(--bg-subtle)", border: "1px solid var(--border)", cursor: "pointer" }}>
@@ -579,7 +638,6 @@ export function TicketView() {
             </AnimatePresence>
           </div>
 
-          {/* Actions */}
           {viewingTicket.status === "active" && (
             <div style={{ padding: "0 16px 10px", display: "flex", gap: "10px" }}>
               <motion.button whileTap={{ scale: 0.95 }}
@@ -594,6 +652,7 @@ export function TicketView() {
               </motion.button>
             </div>
           )}
+
           <div style={{ padding: "0 16px 20px" }}>
             <motion.button whileTap={{ scale: 0.97 }}
               onClick={() => { setScreen("app"); setActiveTab("home"); }}
@@ -639,7 +698,7 @@ export function Resale() {
           <div style={{ background: "var(--bg-subtle)", borderRadius: "12px", padding: "14px", marginBottom: "16px", border: "1px solid var(--border)" }}>
             <div style={{ fontWeight: 600, fontSize: "14px", color: "var(--text-primary)" }}>{ev.name}</div>
             <div style={{ color: "var(--text-muted)", fontSize: "12px", marginTop: "4px" }}>
-              Original price: Ghc {ev.price} · Max: Ghc {ev.price - 1}
+              Original price: GHS {ev.price} · Max resale: GHS {ev.price - 1}
             </div>
           </div>
 
@@ -649,10 +708,14 @@ export function Resale() {
           </div>
 
           <div style={{ marginBottom: "14px" }}>
-            <div style={{ fontSize: "13px", fontWeight: 500, color: "var(--text-secondary)", marginBottom: "8px" }}>Resale Price (Ghc)</div>
-            <input value={resalePrice} onChange={e => setResalePrice(e.target.value)} type="number"
-              placeholder={"Max Ghc " + (ev.price - 1)}
-              style={{ ...inp, fontSize: "20px", fontWeight: 600, borderColor: resaleError ? "var(--error)" : "var(--border)", marginBottom: resaleError ? "6px" : 0 }} />
+            <div style={{ fontSize: "13px", fontWeight: 500, color: "var(--text-secondary)", marginBottom: "8px" }}>Resale Price (GHS)</div>
+            <input
+              value={resalePrice}
+              onChange={e => setResalePrice(e.target.value)}
+              type="number"
+              placeholder={"Max GHS " + (ev.price - 1)}
+              style={{ ...inp, fontSize: "20px", fontWeight: 600, borderColor: resaleError ? "var(--error)" : "var(--border)", marginBottom: resaleError ? "6px" : 0 }}
+            />
             <AnimatePresence>
               {resaleError && (
                 <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
@@ -665,9 +728,9 @@ export function Resale() {
             <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
               style={{ background: "var(--bg-subtle)", borderRadius: "12px", padding: "14px", marginBottom: "16px", border: "1px solid var(--border)" }}>
               {[
-                ["Listing Price", "Ghc " + price,   "var(--text-primary)"],
-                ["Platform Fee (2%)", "− Ghc " + fee, "var(--error)"],
-                ["Your Payout",   "Ghc " + payout,  "#16a34a"],
+                ["Listing Price",      "GHS " + price,   "var(--text-primary)"],
+                ["Platform Fee (2%)",  "− GHS " + fee,   "var(--error)"],
+                ["Your Payout",        "GHS " + payout,  "#16a34a"],
               ].map(([k, v, c], i) => (
                 <div key={k} style={{ display: "flex", justifyContent: "space-between", padding: "7px 0", borderBottom: i < 2 ? "1px solid var(--border)" : "none" }}>
                   <span style={{ color: "var(--text-muted)", fontSize: "13px" }}>{k}</span>
@@ -701,7 +764,7 @@ export function ResaleSuccess() {
           style={{ width: "60px", height: "60px", borderRadius: "16px", background: "var(--brand)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "28px", margin: "0 auto 16px", boxShadow: "var(--shadow-brand)" }}>🏷️</motion.div>
         <h2 style={{ fontSize: "20px", fontWeight: 700, color: "var(--text-primary)", marginBottom: "8px" }}>Listed for Resale</h2>
         <p style={{ color: "var(--text-muted)", fontSize: "13px", lineHeight: 1.6, marginBottom: "24px" }}>
-          Your ticket is now on the marketplace. NFT ownership transfers automatically when sold.
+          Your ticket is on the marketplace. NFT ownership transfers automatically when sold.
         </p>
         <button onClick={() => { setScreen("app"); setActiveTab("tickets"); }}
           style={{ ...primaryBtn, marginBottom: 0 }}>
@@ -728,7 +791,11 @@ export function Transfer() {
 
   if (!transferTicket) return null;
   const ev = transferTicket.event;
-  const onTransfer = async () => { setTransferring(true); await handleTransfer(); setTransferring(false); };
+  const onTransfer = async () => {
+    setTransferring(true);
+    await handleTransfer();
+    setTransferring(false);
+  };
 
   if (transferDone) return (
     <PageWrap maxW="440px">
@@ -757,7 +824,7 @@ export function Transfer() {
           style={{ width: "34px", height: "34px", borderRadius: "10px", background: "var(--bg-subtle)", border: "1px solid var(--border)", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", fontSize: "16px", color: "var(--text-primary)", flexShrink: 0 }}>←</motion.div>
         <div>
           <div style={{ fontSize: "15px", fontWeight: 600, color: "var(--text-primary)" }}>Transfer Ticket</div>
-          <div style={{ fontSize: "11px", color: "var(--text-muted)", marginTop: "1px" }}>Permanent on-chain ownership transfer</div>
+          <div style={{ fontSize: "11px", color: "var(--text-muted)", marginTop: "1px" }}>Permanent on-chain ownership transfer · Free</div>
         </div>
       </div>
       <div style={{ flex: 1, overflowY: "auto", WebkitOverflowScrolling: "touch" }}>
@@ -765,7 +832,12 @@ export function Transfer() {
 
           <div style={{ background: "var(--bg-subtle)", borderRadius: "10px", padding: "12px 14px", marginBottom: "16px", border: "1px solid var(--border)" }}>
             <div style={{ fontSize: "12px", color: "var(--text-muted)", marginBottom: "6px" }}>Note</div>
-            {["NFT ownership moves to recipient","Your QR becomes invalid instantly","Free — no platform fee","Cannot be undone after confirmation"].map((info, i) => (
+            {[
+              "NFT ownership moves to recipient on Polygon",
+              "Your QR becomes invalid instantly",
+              "Free — no platform fee",
+              "Cannot be undone after confirmation",
+            ].map((info, i) => (
               <div key={i} style={{ display: "flex", gap: "8px", marginBottom: i < 3 ? "4px" : 0, fontSize: "12px", color: "var(--text-secondary)" }}>
                 <span style={{ color: "var(--text-muted)", flexShrink: 0 }}>·</span>
                 <span>{info}</span>
@@ -783,7 +855,9 @@ export function Transfer() {
             <div style={{ fontSize: "12px", color: "var(--error)", fontWeight: 500 }}>⚠️ Double-check the email. This cannot be undone.</div>
           </div>
 
-          <motion.button whileTap={{ scale: 0.97 }} onClick={onTransfer} disabled={transferring}
+          <motion.button whileTap={{ scale: 0.97 }}
+            onClick={onTransfer}
+            disabled={transferring}
             style={{ ...primaryBtn, background: "#7c3aed", marginBottom: 0, opacity: transferring ? 0.6 : 1 }}>
             {transferring ? "Transferring..." : "Confirm Transfer"}
           </motion.button>

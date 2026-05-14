@@ -25,8 +25,91 @@ const CATEGORIES = [
 ];
 
 let cachedEvents = [];
-let lastFetch = 0;
-const isDesktop = () => window.innerWidth > 768;
+let lastFetch    = 0;
+const isDesktop  = () => window.innerWidth > 768;
+
+// ── Hover-aware event card ────────────────────────────────────
+function EventCard({ ev, onClick }) {
+  const [hovered, setHovered] = useState(false);
+  const desktop = isDesktop();
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 16 }}
+      animate={{ opacity: 1, y: 0 }}
+      whileTap={{ scale: 0.98 }}
+      onClick={onClick}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      style={{
+        background: "var(--bg-card)",
+        borderRadius: "16px",
+        overflow: "hidden",
+        border: hovered ? "1px solid var(--brand)" : "1px solid var(--border)",
+        cursor: "pointer",
+        transition: "border-color 0.2s, box-shadow 0.2s, transform 0.2s",
+        transform: hovered && desktop ? "translateY(-4px)" : "translateY(0)",
+        boxShadow: hovered ? "var(--shadow-md)" : "var(--shadow-sm)",
+      }}>
+
+      {/* Image */}
+      <div style={{ height: desktop ? "195px" : "170px", position: "relative", overflow: "hidden" }}>
+        <motion.img
+          src={ev.image} alt={ev.name}
+          animate={{ scale: hovered ? 1.04 : 1 }}
+          transition={{ duration: 0.4, ease: "easeOut" }}
+          style={{ width: "100%", height: "100%", objectFit: "cover" }}
+          onError={e => { e.target.src = categoryImages.other; }}
+        />
+        <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to bottom, transparent 30%, rgba(0,0,0,0.72))" }} />
+
+        {/* Category */}
+        <div style={{ position: "absolute", top: "10px", right: "10px", background: "var(--brand)", color: "#fff", fontSize: "10px", fontWeight: 600, padding: "3px 9px", borderRadius: "99px" }}>
+          {ev.category}
+        </div>
+
+        {/* Free badge */}
+        {ev.price === 0 && (
+          <div style={{ position: "absolute", top: "10px", left: "10px", background: "#16a34a", color: "#fff", fontSize: "10px", fontWeight: 600, padding: "3px 9px", borderRadius: "99px" }}>
+            FREE
+          </div>
+        )}
+
+        {/* NFT trust badge */}
+        <div style={{ position: "absolute", bottom: "10px", left: "10px", display: "flex", alignItems: "center", gap: "4px", background: "rgba(124,58,237,0.85)", backdropFilter: "blur(8px)", padding: "3px 8px", borderRadius: "99px" }}>
+          <span style={{ fontSize: "9px" }}>⛓️</span>
+          <span style={{ fontSize: "9px", fontWeight: 600, color: "#fff", letterSpacing: "0.3px" }}>NFT Ticket</span>
+        </div>
+
+        {/* Event name on image */}
+        <div style={{ position: "absolute", bottom: "10px", right: "12px", left: "90px" }}>
+          <div style={{ color: "#fff", fontWeight: 600, fontSize: "13px", lineHeight: 1.2, textAlign: "right" }}>{ev.name}</div>
+        </div>
+      </div>
+
+      {/* Card footer */}
+      <div style={{ padding: "12px 14px" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "6px" }}>
+          <div>
+            <div style={{ fontWeight: 600, fontSize: "14px", color: "var(--text-primary)", marginBottom: "2px", lineHeight: 1.3 }}>{ev.name}</div>
+            <div style={{ fontSize: "11px", color: "var(--text-muted)" }}>📍 {ev.venue} · {ev.date}</div>
+          </div>
+        </div>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <div style={{ color: "var(--brand)", fontWeight: 700, fontSize: "17px" }}>
+            {ev.price === 0 ? "FREE" : `GHS ${ev.price}`}
+          </div>
+          <motion.div
+            animate={{ x: hovered ? 3 : 0, opacity: hovered ? 1 : 0.5 }}
+            transition={{ duration: 0.2 }}
+            style={{ fontSize: "11px", color: "var(--text-muted)", fontWeight: 500, display: "flex", alignItems: "center", gap: "3px" }}>
+            View details <span>→</span>
+          </motion.div>
+        </div>
+      </div>
+    </motion.div>
+  );
+}
 
 export default function AttendeeHome() {
   const setScreen        = useStore(s => s.setScreen);
@@ -55,10 +138,13 @@ export default function AttendeeHome() {
     eventsAPI.list().then(data => {
       if (Array.isArray(data)) {
         const mapped = data.map(e => ({
-          id: e.id, name: e.name, description: e.description,
+          id: e.id, name: e.name,
+          description: e.description || "",
           category: e.category, venue: e.venue, city: e.city,
-          date: e.date, time: e.time, price: parseFloat(e.price),
-          totalTickets: e.total_tickets, ticketsSold: e.tickets_sold,
+          date: e.date, time: e.time,
+          price: parseFloat(e.price) || 0,
+          totalTickets: e.total_tickets || 0,
+          ticketsSold: e.tickets_sold || 0,
           salesOpen: e.sales_open,
           image: e.image || categoryImages[e.category] || categoryImages.other,
         }));
@@ -86,27 +172,33 @@ export default function AttendeeHome() {
       style={{ background: "var(--bg)", height: "100%", display: "flex", flexDirection: "column", overflow: "hidden" }}>
       <div style={{ flex: 1, overflowY: "auto", WebkitOverflowScrolling: "touch", paddingBottom: "40px" }}>
 
-        {/* Hero image */}
+        {/* Hero */}
         <div style={{ height: desktop ? "340px" : "260px", position: "relative", flexShrink: 0 }}>
           <img src={overlayEvent.image} alt={overlayEvent.name}
             style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-          <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to bottom, rgba(0,0,0,0.2), rgba(0,0,0,0.75))" }} />
+          <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to bottom, rgba(0,0,0,0.25), rgba(0,0,0,0.82))" }} />
 
-          {/* Back button */}
           <motion.button whileTap={{ scale: 0.9 }} onClick={() => setOverlayEvent(null)}
             style={{ position: "absolute", top: "16px", left: "16px", width: "36px", height: "36px", borderRadius: "10px", background: "rgba(255,255,255,0.15)", backdropFilter: "blur(10px)", border: "1px solid rgba(255,255,255,0.2)", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", fontSize: "16px", color: "#fff", zIndex: 10 }}>
             ←
           </motion.button>
 
-          {/* Category badge */}
-          <div style={{ position: "absolute", top: "16px", right: "16px", background: "var(--brand)", color: "#fff", fontSize: "10px", fontWeight: 600, padding: "4px 10px", borderRadius: "99px" }}>
-            {overlayEvent.category}
+          {/* NFT badge */}
+          <div style={{ position: "absolute", top: "16px", right: "16px", display: "flex", alignItems: "center", gap: "4px", background: "rgba(124,58,237,0.88)", backdropFilter: "blur(8px)", padding: "5px 10px", borderRadius: "99px" }}>
+            <span style={{ fontSize: "11px" }}>⛓️</span>
+            <span style={{ fontSize: "10px", fontWeight: 600, color: "#fff" }}>NFT Ticket on Polygon</span>
           </div>
 
-          {/* Event title */}
           <div style={{ position: "absolute", bottom: "20px", left: "20px", right: "20px" }}>
-            <div style={{ color: "#fff", fontWeight: 700, fontSize: desktop ? "26px" : "20px", marginBottom: "5px", lineHeight: 1.2 }}>{overlayEvent.name}</div>
-            <div style={{ color: "rgba(255,255,255,0.75)", fontSize: "12px" }}>📍 {overlayEvent.venue}{overlayEvent.city ? " · " + overlayEvent.city : ""}</div>
+            <div style={{ display: "inline-block", background: "var(--brand)", color: "#fff", fontSize: "10px", fontWeight: 600, padding: "3px 10px", borderRadius: "99px", marginBottom: "8px" }}>
+              {overlayEvent.category}
+            </div>
+            <div style={{ color: "#fff", fontWeight: 700, fontSize: desktop ? "26px" : "20px", marginBottom: "5px", lineHeight: 1.2 }}>
+              {overlayEvent.name}
+            </div>
+            <div style={{ color: "rgba(255,255,255,0.7)", fontSize: "12px" }}>
+              📍 {overlayEvent.venue}{overlayEvent.city ? " · " + overlayEvent.city : ""}
+            </div>
           </div>
         </div>
 
@@ -116,27 +208,41 @@ export default function AttendeeHome() {
           {/* Info strips */}
           <div style={{ display: "flex", gap: "10px", marginBottom: "20px" }}>
             {[
-              ["📅", overlayEvent.date || "TBA"],
-              ["🕐", overlayEvent.time ? overlayEvent.time.substring(0, 5) : "TBA"],
-              ["🎟️", (overlayEvent.totalTickets - overlayEvent.ticketsSold) + " left"],
-            ].map(([icon, val]) => (
-              <div key={icon} style={{ flex: 1, background: "var(--bg-subtle)", borderRadius: "12px", padding: "12px 8px", textAlign: "center", border: "1px solid var(--border)" }}>
+              ["📅", "Date",    overlayEvent.date || "TBA"],
+              ["🕐", "Time",    overlayEvent.time ? overlayEvent.time.substring(0, 5) : "TBA"],
+              ["🎟️", "Left",   (overlayEvent.totalTickets - overlayEvent.ticketsSold) + " tickets"],
+            ].map(([icon, label, val]) => (
+              <div key={label} style={{ flex: 1, background: "var(--bg-subtle)", borderRadius: "12px", padding: "12px 8px", textAlign: "center", border: "1px solid var(--border)" }}>
                 <div style={{ fontSize: "18px", marginBottom: "4px" }}>{icon}</div>
-                <div style={{ fontSize: "11px", fontWeight: 600, color: "var(--text-primary)" }}>{val}</div>
+                <div style={{ fontSize: "10px", color: "var(--text-muted)", marginBottom: "2px", textTransform: "uppercase", letterSpacing: "0.5px" }}>{label}</div>
+                <div style={{ fontSize: "12px", fontWeight: 600, color: "var(--text-primary)" }}>{val}</div>
               </div>
             ))}
           </div>
 
           {/* Description */}
           <div style={{ marginBottom: "20px" }}>
-            <div style={{ fontSize: "13px", fontWeight: 600, color: "var(--text-primary)", marginBottom: "8px", textTransform: "uppercase", letterSpacing: "0.5px" }}>About This Event</div>
+            <div style={{ fontSize: "12px", fontWeight: 600, color: "var(--text-muted)", marginBottom: "8px", textTransform: "uppercase", letterSpacing: "0.5px" }}>About This Event</div>
             <div style={{ fontSize: "14px", color: "var(--text-secondary)", lineHeight: 1.8 }}>
-              {overlayEvent.description || "No description available for this event."}
+              {overlayEvent.description && overlayEvent.description.trim()
+                ? overlayEvent.description
+                : "No description provided for this event."}
+            </div>
+          </div>
+
+          {/* Blockchain trust strip */}
+          <div style={{ background: "rgba(124,58,237,0.05)", border: "1px solid rgba(124,58,237,0.15)", borderRadius: "12px", padding: "12px 14px", marginBottom: "20px", display: "flex", alignItems: "center", gap: "10px" }}>
+            <span style={{ fontSize: "20px" }}>⛓️</span>
+            <div>
+              <div style={{ fontSize: "12px", fontWeight: 600, color: "#7c3aed" }}>Secured by Polygon Blockchain</div>
+              <div style={{ fontSize: "11px", color: "var(--text-muted)", marginTop: "1px" }}>
+                Your ticket is minted as an NFT · Screenshot-proof · Cannot be duplicated
+              </div>
             </div>
           </div>
 
           {/* Price + CTA */}
-          <div style={{ background: "var(--bg-subtle)", borderRadius: "16px", padding: "20px", border: "1px solid var(--border)", display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
+          <div style={{ background: "var(--bg-subtle)", borderRadius: "14px", padding: "18px", border: "1px solid var(--border)", marginBottom: "14px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
             <div>
               <div style={{ fontSize: "11px", color: "var(--text-muted)", fontWeight: 500, marginBottom: "4px" }}>Ticket Price</div>
               <div style={{ fontSize: "28px", fontWeight: 700, color: "var(--brand)", letterSpacing: "-0.5px" }}>
@@ -147,12 +253,11 @@ export default function AttendeeHome() {
               <div style={{ fontSize: "20px", fontWeight: 700, color: "var(--text-primary)" }}>
                 {overlayEvent.totalTickets - overlayEvent.ticketsSold}
               </div>
-              <div style={{ fontSize: "11px", color: "var(--text-muted)" }}>tickets left</div>
+              <div style={{ fontSize: "11px", color: "var(--text-muted)" }}>tickets remaining</div>
             </div>
           </div>
 
-          <motion.button
-            whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}
+          <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}
             onClick={() => goToCheckout(overlayEvent)}
             style={{ width: "100%", padding: "16px", background: "var(--brand)", color: "#fff", border: "none", borderRadius: "12px", fontSize: "15px", fontWeight: 600, cursor: "pointer", boxShadow: "var(--shadow-brand)", fontFamily: "var(--font-sans)" }}>
             {overlayEvent.price === 0 ? "Get Free Ticket" : `Buy Ticket — GHS ${overlayEvent.price}`}
@@ -171,43 +276,55 @@ export default function AttendeeHome() {
           <>
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
               onClick={() => setMenuOpen(false)}
-              style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", zIndex: 100 }} />
+              style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.45)", zIndex: 100 }} />
             <motion.div initial={{ x: "-100%" }} animate={{ x: 0 }} exit={{ x: "-100%" }}
               transition={{ type: "spring", stiffness: 300, damping: 30 }}
-              style={{ position: "fixed", top: 0, left: 0, width: "75%", maxWidth: "280px", height: "100%", background: "var(--bg-card)", zIndex: 101, padding: "0 0 40px", display: "flex", flexDirection: "column", boxShadow: "var(--shadow-lg)", borderRight: "1px solid var(--border)" }}>
+              style={{ position: "fixed", top: 0, left: 0, width: "75%", maxWidth: "280px", height: "100%", background: "var(--bg-card)", zIndex: 101, display: "flex", flexDirection: "column", boxShadow: "var(--shadow-lg)", borderRight: "1px solid var(--border)" }}>
 
-              <div style={{ padding: "56px 24px 24px", background: "linear-gradient(160deg, #1a1a1a 0%, #0e0e0e 100%)", position: "relative" }}>
-                <div style={{ position: "absolute", top: 0, right: 0, width: "120px", height: "120px", borderRadius: "50%", background: "radial-gradient(circle, rgba(245,166,35,0.15) 0%, transparent 70%)", transform: "translate(20%, -20%)" }} />
-                <div style={{ width: "48px", height: "48px", borderRadius: "50%", background: "var(--brand)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "20px", fontWeight: 700, color: "#fff", marginBottom: "10px" }}>
-                  {currentUser?.first_name?.[0]?.toUpperCase() || "U"}
-                </div>
-                <div style={{ fontSize: "16px", fontWeight: 700, color: "#fff", marginBottom: "2px" }}>{currentUser?.first_name} {currentUser?.last_name}</div>
-                <div style={{ fontSize: "11px", color: "rgba(255,255,255,0.45)", marginBottom: "10px" }}>{currentUser?.email}</div>
-                <div style={{ display: "inline-flex", alignItems: "center", gap: "4px", padding: "3px 10px", borderRadius: "99px", background: "rgba(245,166,35,0.15)", border: "1px solid rgba(245,166,35,0.25)" }}>
-                  <span style={{ fontSize: "9px", fontWeight: 700, color: "var(--brand)", letterSpacing: "0.5px" }}>ATTENDEE</span>
+              {/* User section — prominent */}
+              <div style={{ padding: "52px 20px 20px", background: "linear-gradient(160deg, #1a1a1a, #0e0e0e)", position: "relative", flexShrink: 0 }}>
+                <div style={{ position: "absolute", top: 0, right: 0, width: "100px", height: "100px", borderRadius: "50%", background: "radial-gradient(circle, rgba(245,166,35,0.15), transparent 70%)", transform: "translate(20%,-20%)" }} />
+                {/* App name — ambient */}
+                <div style={{ fontSize: "9px", fontWeight: 600, color: "rgba(255,255,255,0.3)", letterSpacing: "2px", textTransform: "uppercase", marginBottom: "14px" }}>Master Events</div>
+                {/* User — dominant */}
+                <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                  <div style={{ width: "44px", height: "44px", borderRadius: "50%", background: "var(--brand)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "18px", fontWeight: 700, color: "#fff", flexShrink: 0 }}>
+                    {currentUser?.first_name?.[0]?.toUpperCase() || "U"}
+                  </div>
+                  <div>
+                    <div style={{ fontSize: "16px", fontWeight: 700, color: "#fff", lineHeight: 1.2 }}>
+                      {currentUser?.first_name} {currentUser?.last_name}
+                    </div>
+                    <div style={{ fontSize: "11px", color: "rgba(255,255,255,0.45)", marginTop: "2px" }}>{currentUser?.email}</div>
+                    <div style={{ marginTop: "6px", display: "inline-flex", alignItems: "center", gap: "4px", padding: "2px 8px", borderRadius: "99px", background: "rgba(22,163,74,0.2)", border: "1px solid rgba(22,163,74,0.3)" }}>
+                      <span style={{ width: "5px", height: "5px", borderRadius: "50%", background: "#16a34a", display: "inline-block" }} />
+                      <span style={{ fontSize: "9px", fontWeight: 700, color: "#16a34a", letterSpacing: "0.5px" }}>ATTENDEE</span>
+                    </div>
+                  </div>
                 </div>
               </div>
 
+              {/* Nav */}
               <div style={{ flex: 1, padding: "16px 12px", overflowY: "auto" }}>
-                <div style={{ fontSize: "9px", fontWeight: 700, color: "var(--text-muted)", letterSpacing: "1.5px", padding: "0 12px", marginBottom: "8px" }}>NAVIGATION</div>
+                <div style={{ fontSize: "9px", fontWeight: 600, color: "var(--text-muted)", letterSpacing: "1.5px", padding: "0 10px", marginBottom: "8px" }}>NAVIGATION</div>
                 {[
-                  ["🏠", "Discover Events", () => { setMenuOpen(false); setActiveTab("home"); setScreen("app"); }],
+                  ["🏠", "Discover Events", () => { setMenuOpen(false); setActiveTab("home");    setScreen("app"); }],
                   ["🎟️", "My Tickets",      () => { setMenuOpen(false); setActiveTab("tickets"); setScreen("app"); }],
-                  ["🔔", "Alerts",          () => { setMenuOpen(false); setActiveTab("alerts"); setScreen("app"); }],
+                  ["🔔", "Alerts",          () => { setMenuOpen(false); setActiveTab("alerts");  setScreen("app"); }],
                 ].map(([icon, label, action]) => (
-                  <motion.div key={label} whileHover={{ x: 4 }} whileTap={{ scale: 0.97 }} onClick={action}
-                    style={{ display: "flex", alignItems: "center", gap: "12px", padding: "12px", borderRadius: "12px", cursor: "pointer", marginBottom: "2px" }}
+                  <motion.div key={label} whileTap={{ scale: 0.97 }} onClick={action}
+                    style={{ display: "flex", alignItems: "center", gap: "12px", padding: "11px 10px", borderRadius: "10px", cursor: "pointer", marginBottom: "2px" }}
                     onMouseEnter={e => { e.currentTarget.style.background = "var(--bg-hover)"; }}
                     onMouseLeave={e => { e.currentTarget.style.background = "transparent"; }}>
-                    <div style={{ width: "34px", height: "34px", borderRadius: "10px", background: "var(--bg-subtle)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "16px", border: "1px solid var(--border)" }}>{icon}</div>
+                    <div style={{ width: "32px", height: "32px", borderRadius: "9px", background: "var(--bg-subtle)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "15px", border: "1px solid var(--border)" }}>{icon}</div>
                     <span style={{ fontSize: "14px", fontWeight: 500, color: "var(--text-primary)" }}>{label}</span>
                   </motion.div>
                 ))}
               </div>
 
-              <div style={{ padding: "16px 12px", borderTop: "1px solid var(--border)" }}>
+              <div style={{ padding: "14px 12px", borderTop: "1px solid var(--border)" }}>
                 <motion.button whileTap={{ scale: 0.97 }} onClick={handleLogout}
-                  style={{ width: "100%", padding: "13px", background: "var(--error-bg)", border: "1px solid rgba(220,38,38,0.2)", color: "var(--error)", borderRadius: "12px", fontWeight: 600, cursor: "pointer", fontSize: "14px", fontFamily: "var(--font-sans)", display: "flex", alignItems: "center", justifyContent: "center", gap: "8px" }}>
+                  style={{ width: "100%", padding: "12px", background: "var(--error-bg)", border: "1px solid rgba(220,38,38,0.15)", color: "var(--error)", borderRadius: "10px", fontWeight: 600, cursor: "pointer", fontSize: "13px", fontFamily: "var(--font-sans)" }}>
                   Log Out
                 </motion.button>
               </div>
@@ -220,8 +337,12 @@ export default function AttendeeHome() {
       <div style={{ padding: desktop ? "32px 40px 0" : "16px 16px 0" }}>
         {desktop ? (
           <div style={{ marginBottom: "24px" }}>
-            <div style={{ fontSize: "22px", fontWeight: 700, color: "var(--text-primary)", letterSpacing: "-0.5px" }}>Discover Events</div>
-            <div style={{ fontSize: "13px", color: "var(--text-muted)", marginTop: "4px" }}>Ghana & Africa · {filtered.length} events available</div>
+            <h1 style={{ fontSize: "24px", fontWeight: 700, color: "var(--text-primary)", letterSpacing: "-0.5px", marginBottom: "4px" }}>
+              Discover Events
+            </h1>
+            <p style={{ fontSize: "13px", color: "var(--text-muted)" }}>
+              Ghana & Africa · {filtered.length} events · NFT-secured tickets on Polygon
+            </p>
           </div>
         ) : (
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
@@ -233,8 +354,8 @@ export default function AttendeeHome() {
                 <div style={{ fontSize: "15px", fontWeight: 700, color: "var(--text-primary)", lineHeight: 1.1 }}>
                   Hi, {currentUser?.first_name || "there"} 👋
                 </div>
-                <div style={{ fontSize: "11px", color: "var(--text-muted)", marginTop: "2px" }}>
-                  {filtered.length} events in Ghana
+                <div style={{ fontSize: "11px", color: "var(--text-muted)", marginTop: "1px" }}>
+                  {filtered.length} events · NFT tickets
                 </div>
               </div>
             </div>
@@ -245,12 +366,20 @@ export default function AttendeeHome() {
           </div>
         )}
 
+        {/* NFT trust banner — mobile only */}
+        {!desktop && (
+          <div style={{ display: "flex", alignItems: "center", gap: "8px", padding: "8px 12px", borderRadius: "10px", background: "rgba(124,58,237,0.05)", border: "1px solid rgba(124,58,237,0.12)", marginBottom: "14px" }}>
+            <span style={{ fontSize: "14px" }}>⛓️</span>
+            <span style={{ fontSize: "11px", color: "#7c3aed", fontWeight: 500 }}>Every ticket is an NFT on Polygon — no fakes, no fraud</span>
+          </div>
+        )}
+
         {/* Search */}
-        <div style={{ position: "relative", marginBottom: "16px", maxWidth: desktop ? "520px" : "100%" }}>
+        <div style={{ position: "relative", marginBottom: "14px", maxWidth: desktop ? "520px" : "100%" }}>
           <div style={{ position: "absolute", left: "14px", top: "50%", transform: "translateY(-50%)", color: "var(--text-muted)", fontSize: "15px", pointerEvents: "none" }}>🔍</div>
           <input value={searchQ} onChange={e => setSearchQ(e.target.value)}
-            placeholder="Search events, venues..."
-            style={{ width: "100%", padding: "12px 40px", border: "1px solid var(--border)", borderRadius: "12px", fontSize: "14px", outline: "none", background: "var(--bg-subtle)", color: "var(--text-primary)", boxSizing: "border-box", fontFamily: "var(--font-sans)" }} />
+            placeholder="Search events, venues, categories..."
+            style={{ width: "100%", padding: "13px 40px 13px 42px", border: "1.5px solid var(--border)", borderRadius: "12px", fontSize: "14px", outline: "none", background: "var(--bg-card)", color: "var(--text-primary)", boxSizing: "border-box", fontFamily: "var(--font-sans)" }} />
           {searchQ && (
             <div onClick={() => setSearchQ("")}
               style={{ position: "absolute", right: "14px", top: "50%", transform: "translateY(-50%)", cursor: "pointer", color: "var(--text-muted)", fontSize: "16px" }}>✕</div>
@@ -262,7 +391,7 @@ export default function AttendeeHome() {
           {CATEGORIES.map(cat => (
             <motion.div key={cat.key} whileTap={{ scale: 0.93 }}
               onClick={() => setActiveCategory(cat.key)}
-              style={{ flexShrink: 0, padding: "6px 14px", borderRadius: "99px", cursor: "pointer", background: activeCategory === cat.key ? "var(--brand)" : "var(--bg-subtle)", color: activeCategory === cat.key ? "#fff" : "var(--text-secondary)", fontSize: "12px", fontWeight: 500, display: "flex", alignItems: "center", gap: "5px", border: "1px solid " + (activeCategory === cat.key ? "transparent" : "var(--border)"), transition: "all 0.15s" }}>
+              style={{ flexShrink: 0, padding: "6px 14px", borderRadius: "99px", cursor: "pointer", background: activeCategory === cat.key ? "var(--brand)" : "var(--bg-card)", color: activeCategory === cat.key ? "#fff" : "var(--text-secondary)", fontSize: "12px", fontWeight: activeCategory === cat.key ? 600 : 400, display: "flex", alignItems: "center", gap: "5px", border: "1px solid " + (activeCategory === cat.key ? "transparent" : "var(--border)"), boxShadow: activeCategory === cat.key ? "var(--shadow-brand)" : "none", transition: "all 0.15s" }}>
               <span>{cat.icon}</span><span>{cat.label}</span>
             </motion.div>
           ))}
@@ -299,44 +428,14 @@ export default function AttendeeHome() {
 
         {/* Cards */}
         {!loading && filtered.length > 0 && (
-          <div className="stagger" style={{ display: "grid", gridTemplateColumns: desktop ? "repeat(3, 1fr)" : "1fr", gap: desktop ? "20px" : "12px" }}>
-            {filtered.map(ev => (
-              <motion.div key={ev.id}
-                whileHover={{ y: desktop ? -4 : 0, boxShadow: desktop ? "var(--shadow-md)" : "none" }}
-                whileTap={{ scale: 0.98 }}
-                onClick={() => setOverlayEvent(ev)}
-                style={{ background: "var(--bg-card)", borderRadius: "16px", overflow: "hidden", border: "1px solid var(--border)", cursor: "pointer", transition: "box-shadow 0.2s" }}>
-
-                {/* Image */}
-                <div style={{ height: desktop ? "195px" : "170px", position: "relative" }}>
-                  <img src={ev.image} alt={ev.name}
-                    style={{ width: "100%", height: "100%", objectFit: "cover" }}
-                    onError={e => { e.target.src = categoryImages.other; }} />
-                  <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to bottom, transparent 30%, rgba(0,0,0,0.68))" }} />
-                  <div style={{ position: "absolute", top: "10px", right: "10px", background: "var(--brand)", color: "#fff", fontSize: "10px", fontWeight: 600, padding: "3px 9px", borderRadius: "99px" }}>{ev.category}</div>
-                  {ev.price === 0 && (
-                    <div style={{ position: "absolute", top: "10px", left: "10px", background: "#16a34a", color: "#fff", fontSize: "10px", fontWeight: 600, padding: "3px 9px", borderRadius: "99px" }}>FREE</div>
-                  )}
-                  <div style={{ position: "absolute", bottom: "10px", left: "12px", right: "12px" }}>
-                    <div style={{ color: "#fff", fontWeight: 600, fontSize: "14px", marginBottom: "2px", lineHeight: 1.2 }}>{ev.name}</div>
-                    <div style={{ color: "rgba(255,255,255,0.7)", fontSize: "11px" }}>📍 {ev.venue} · {ev.date}</div>
-                  </div>
-                </div>
-
-                {/* Footer */}
-                <div style={{ padding: "12px 14px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                  <div>
-                    <div style={{ color: "var(--brand)", fontWeight: 700, fontSize: "15px" }}>
-                      {ev.price === 0 ? "FREE" : `GHS ${ev.price}`}
-                    </div>
-                    <div style={{ color: "var(--text-muted)", fontSize: "10px", marginTop: "2px" }}>
-                      {ev.totalTickets - ev.ticketsSold} tickets left
-                    </div>
-                  </div>
-                  <div style={{ fontSize: "11px", color: "var(--text-muted)", fontWeight: 500 }}>
-                    View details →
-                  </div>
-                </div>
+          <div style={{ display: "grid", gridTemplateColumns: desktop ? "repeat(3, 1fr)" : "1fr", gap: desktop ? "20px" : "12px" }}>
+            {filtered.map((ev, i) => (
+              <motion.div
+                key={ev.id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: i * 0.05, duration: 0.3 }}>
+                <EventCard ev={ev} onClick={() => setOverlayEvent(ev)} />
               </motion.div>
             ))}
           </div>

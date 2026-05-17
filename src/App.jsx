@@ -5,6 +5,7 @@ import PhoneFrame from "./components/PhoneFrame";
 import BottomNav from "./components/BottomNav";
 import Login from "./screens/auth/Login";
 import { Signup, RoleSelect } from "./screens/auth/Signup";
+import LandingPage from "./screens/landing/LandingPage";
 import AttendeeHome from "./screens/attendee/AttendeeHome";
 import { AttendeeTickets, AttendeeAlerts } from "./screens/attendee/AttendeeScreens";
 import {
@@ -149,7 +150,8 @@ function DesktopAppLayout() {
 
   return (
     <div style={{ display: "flex", height: "100vh", background: "var(--bg)", fontFamily: "var(--font-sans)", overflow: "hidden" }}>
-      {/* Sidebar */}
+
+      {/* ── Sidebar ── */}
       <motion.aside animate={{ width: sidebarW }} transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
         style={{ flexShrink: 0, background: "var(--bg-card)", borderRight: "1px solid var(--border)", display: "flex", flexDirection: "column", height: "100vh", overflow: "hidden", boxShadow: "2px 0 20px rgba(0,0,0,0.04)", position: "relative", zIndex: 10 }}>
 
@@ -273,7 +275,7 @@ function DesktopAppLayout() {
         </div>
       </motion.aside>
 
-      {/* Main content */}
+      {/* ── Main content ── */}
       <main style={{ flex: 1, display: "flex", flexDirection: "column", minWidth: 0, overflow: "hidden" }}>
         {/* Topbar */}
         <div style={{ background: "var(--bg-card)", borderBottom: "1px solid var(--border)", padding: "14px 32px", display: "flex", justifyContent: "space-between", alignItems: "center", position: "sticky", top: 0, zIndex: 40, boxShadow: "var(--shadow-sm)", flexShrink: 0 }}>
@@ -307,6 +309,7 @@ function DesktopAppLayout() {
 function MobileAppContent() {
   const screen = useStore(s => s.screen);
   const routes = {
+    landing: <LandingPage />,
     login: <Login />, signup: <Signup />, role: <RoleSelect />,
     app: <AppTabs />,
     checkout: <Checkout />, ticketView: <TicketView />,
@@ -318,7 +321,7 @@ function MobileAppContent() {
   };
   return (
     <div key={screen} className="screen-enter app-shell" style={{ background: "var(--bg)" }}>
-      {routes[screen] || <Login />}
+      {routes[screen] || <LandingPage />}
     </div>
   );
 }
@@ -336,11 +339,12 @@ export default function App() {
     return () => window.removeEventListener("resize", handler);
   }, []);
 
-  // ── Desktop auth screens — full screen, no PhoneFrame ──────
+  // ── Desktop auth / landing — full screen, no PhoneFrame ───
   if (desktop && !isLoggedIn) {
-    if (screen === "signup") return <Signup />;
-    if (screen === "role")   return <RoleSelect />;
-    return <Login />;
+    if (screen === "signup")  return <Signup />;
+    if (screen === "role")    return <RoleSelect />;
+    if (screen === "login")   return <Login />;
+    return <LandingPage />;
   }
 
   // ── Desktop app ────────────────────────────────────────────

@@ -351,7 +351,147 @@ export function PaymentSuccess() {
   );
 }
 
-// ── Checkout ─────────────────────────────────────────────────
+// ── Checkout ───────────
+// ── MoMo network detection ────────────────────────────────────
+const MOMO_NETWORKS = {
+  MTN: {
+    prefixes: ["024","054","055","059","025","053","023","020"],
+    color: "#FFC107",
+    bg: "rgba(255,193,7,0.1)",
+    border: "rgba(255,193,7,0.3)",
+    logo: (
+      <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
+        <rect width="32" height="32" rx="8" fill="#FFC107"/>
+        <text x="50%" y="55%" dominantBaseline="middle" textAnchor="middle"
+          style={{ fontSize: "10px", fontWeight: 900, fill: "#000", fontFamily: "sans-serif" }}>
+          MTN
+        </text>
+      </svg>
+    ),
+    label: "MTN MoMo",
+  },
+  TELECEL: {
+    prefixes: ["050","020"],
+    color: "#E53935",
+    bg: "rgba(229,57,53,0.1)",
+    border: "rgba(229,57,53,0.3)",
+    logo: (
+      <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
+        <rect width="32" height="32" rx="8" fill="#E53935"/>
+        <text x="50%" y="55%" dominantBaseline="middle" textAnchor="middle"
+          style={{ fontSize: "7px", fontWeight: 900, fill: "#fff", fontFamily: "sans-serif" }}>
+          TELECEL
+        </text>
+      </svg>
+    ),
+    label: "Telecel Cash",
+  },
+  AIRTELTIGO: {
+    prefixes: ["026","056","027","057"],
+    color: "#1565C0",
+    bg: "rgba(21,101,192,0.1)",
+    border: "rgba(21,101,192,0.3)",
+    logo: (
+      <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
+        <rect width="32" height="32" rx="8" fill="#1565C0"/>
+        <text x="50%" y="55%" dominantBaseline="middle" textAnchor="middle"
+          style={{ fontSize: "6px", fontWeight: 900, fill: "#fff", fontFamily: "sans-serif" }}>
+          AirtelTigo
+        </text>
+      </svg>
+    ),
+    label: "AirtelTigo Money",
+  },
+};
+
+function detectNetwork(phone) {
+  const cleaned = phone.replace(/\s/g, "").replace(/^(\+233|0{0})/, "0");
+  if (cleaned.length < 3) return null;
+  const prefix = cleaned.substring(0, 3);
+  // MTN takes priority for shared prefixes
+  if (MOMO_NETWORKS.MTN.prefixes.includes(prefix))      return "MTN";
+  if (MOMO_NETWORKS.TELECEL.prefixes.includes(prefix))  return "TELECEL";
+  if (MOMO_NETWORKS.AIRTELTIGO.prefixes.includes(prefix)) return "AIRTELTIGO";
+  return null;
+}
+
+function formatGhanaPhone(val) {
+  // Format as 0XXX XXX XXX
+  const digits = val.replace(/\D/g, "").substring(0, 10);
+  if (digits.length <= 4) return digits;
+  if (digits.length <= 7) return digits.slice(0, 4) + " " + digits.slice(4);
+  return digits.slice(0, 4) + " " + digits.slice(4, 7) + " " + digits.slice(7);
+}
+
+// ── MoMo input with live network detection ────────────────────
+function MoMoInput({ value, onChange }) {
+  const network = detectNetwork(value);
+  const net     = network ? MOMO_NETWORKS[network] : null;
+
+  return (
+    <div>
+      <label style={{ fontSize: "13px", fontWeight: 600, color: "var(--text-secondary)", marginBottom: "8px", display: "block" }}>
+        Mobile Money Number
+      </label>
+      <div style={{ position: "relative" }}>
+        <input
+          type="tel"
+          value={value}
+          onChange={e => onChange(formatGhanaPhone(e.target.value))}
+          placeholder="e.g. 0244 000 000"
+          maxLength={12}
+          style={{
+            width: "100%",
+            padding: net ? "14px 56px 14px 18px" : "14px 18px",
+            background: net ? net.bg : "var(--bg)",
+            border: "1.5px solid " + (net ? net.border : "var(--border)"),
+            borderRadius: "14px",
+            fontSize: "16px",
+            fontWeight: 600,
+            color: "var(--text-primary)",
+            outline: "none",
+            boxSizing: "border-box",
+            fontFamily: "var(--font-sans)",
+            letterSpacing: "0.5px",
+            transition: "border-color 0.2s, background 0.2s",
+          }}
+        />
+        {/* Network badge inside input */}
+        <AnimatePresence>
+          {net && (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.7 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.7 }}
+              transition={{ type: "spring", stiffness: 400, damping: 22 }}
+              style={{ position: "absolute", right: "12px", top: "50%", transform: "translateY(-50%)" }}>
+              {net.logo}
+            </motion.div>
+          )}
+          {!net && (
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 0.35 }} exit={{ opacity: 0 }}
+              style={{ position: "absolute", right: "14px", top: "50%", transform: "translateY(-50%)", fontSize: "20px", pointerEvents: "none" }}>
+              📱
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+
+      {/* Detected network label */}
+      <AnimatePresence>
+        {net && (
+          <motion.div initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
+            style={{ display: "flex", alignItems: "center", gap: "6px", marginTop: "8px" }}>
+            <div style={{ width: "6px", height: "6px", borderRadius: "50%", background: net.color }} />
+            <span style={{ fontSize: "12px", fontWeight: 600, color: net.color }}>{net.label} detected</span>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
+
 export function Checkout() {
   const checkoutEvent   = useStore(s => s.checkoutEvent);
   const ticketQty       = useStore(s => s.ticketQty);
@@ -361,11 +501,14 @@ export function Checkout() {
   const handleBuyTicket = useStore(s => s.handleBuyTicket);
   const setScreen       = useStore(s => s.setScreen);
   const currentUser     = useStore(s => s.currentUser);
-  const [paying, setPaying]     = useState(false);
-  const [payError, setPayError] = useState("");
+
+  const [paying,    setPaying]    = useState(false);
+  const [payError,  setPayError]  = useState("");
+  const [momoPhone, setMomoPhone] = useState("");
   const desktop = isDesktop();
 
   if (!checkoutEvent) return null;
+
   const unitPrice = Math.round(parseFloat(checkoutEvent.price) || 0);
   const qty       = Math.max(1, parseInt(ticketQty) || 1);
   const subtotal  = unitPrice * qty;
@@ -374,44 +517,103 @@ export function Checkout() {
 
   const onPay = async () => {
     if (paying) return;
-    setPayError(""); setPaying(true);
+    setPayError("");
+    setPaying(true);
+
     if (unitPrice === 0) {
-      try { await handleBuyTicket("FREE-" + Date.now()); } catch { setPayError("Something went wrong."); setPaying(false); }
+      try { await handleBuyTicket("FREE-" + Date.now()); }
+      catch { setPayError("Something went wrong. Please try again."); setPaying(false); }
       return;
     }
-    if (total < 1) { setPayError("Invalid ticket price."); setPaying(false); return; }
+
+    if (total < 1) {
+      setPayError("Invalid ticket price. Please go back and try again.");
+      setPaying(false); return;
+    }
+
     try {
       await new Promise((resolve, reject) => {
         if (window.PaystackPop) { resolve(); return; }
-        const s = document.createElement("script"); s.src = "https://js.paystack.co/v1/inline.js"; s.onload = resolve; s.onerror = reject; document.head.appendChild(s);
+        const s = document.createElement("script");
+        s.src = "https://js.paystack.co/v1/inline.js";
+        s.onload = resolve; s.onerror = reject;
+        document.head.appendChild(s);
       });
-    } catch { setPayError("Failed to load payment gateway."); setPaying(false); return; }
+    } catch {
+      setPayError("Failed to load payment gateway. Check your connection.");
+      setPaying(false); return;
+    }
+
     let accessCode, payRef;
     try {
       const token = localStorage.getItem("access_token") || "";
-      const initRes = await fetch(`${API}/api/payments/initialize/`, { method: "POST", headers: { "Content-Type": "application/json", "Authorization": token ? `Bearer ${token}` : "" }, body: JSON.stringify({ amount: total, event_id: checkoutEvent.id, event_name: checkoutEvent.name, quantity: qty }) });
+      const initRes = await fetch(`${API}/api/payments/initialize/`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "Authorization": token ? `Bearer ${token}` : "" },
+        body: JSON.stringify({
+          amount:     total,
+          event_id:   checkoutEvent.id,
+          event_name: checkoutEvent.name,
+          quantity:   qty,
+        }),
+      });
       const initData = await initRes.json();
-      if (!initRes.ok || !initData.access_code) { setPayError(initData.error || "Failed to initialize payment."); setPaying(false); return; }
-      accessCode = initData.access_code; payRef = initData.reference;
-    } catch { setPayError("Connection error initializing payment."); setPaying(false); return; }
+      if (!initRes.ok || !initData.access_code) {
+        setPayError(initData.error || "Failed to initialize payment. Please try again.");
+        setPaying(false); return;
+      }
+      accessCode = initData.access_code;
+      payRef     = initData.reference;
+    } catch {
+      setPayError("Connection error initializing payment. Please try again.");
+      setPaying(false); return;
+    }
+
     const doHandle = (ref) => {
-      var tid = setTimeout(function() { setPaying(false); setPayError("Server warming up. Payment received — check My Tickets in ~1 min. Ref: " + ref); }, 35000);
-      handleBuyTicket(ref).then(function() { clearTimeout(tid); setPaying(false); }).catch(function() { clearTimeout(tid); setPaying(false); setPayError("Ticket creation failed. Ref: " + ref); });
+      var tid = setTimeout(function () {
+        setPaying(false);
+        setPayError("Server warming up. Payment received — check My Tickets in ~1 min. Ref: " + ref);
+      }, 35000);
+      handleBuyTicket(ref)
+        .then(function () { clearTimeout(tid); setPaying(false); })
+        .catch(function () { clearTimeout(tid); setPaying(false); setPayError("Ticket creation failed. Ref: " + ref); });
     };
+
     try {
-      window.PaystackPop.resumeTransaction(accessCode, { onClose: function() { setPaying(false); setPayError(""); }, callback: function(r) { doHandle(r.reference || payRef); } });
+      window.PaystackPop.resumeTransaction(accessCode, {
+        onClose: function () { setPaying(false); setPayError(""); },
+        callback: function (r) { doHandle(r.reference || payRef); },
+      });
     } catch {
       try {
-        const handler = window.PaystackPop.setup({ key: import.meta.env.VITE_PAYSTACK_PUBLIC_KEY, email: currentUser?.email, amount: total * 100, ref: payRef, access_code: accessCode, onClose: function() { setPaying(false); setPayError(""); }, callback: function(r) { doHandle(r.reference || payRef); } });
+        const handler = window.PaystackPop.setup({
+          key:         import.meta.env.VITE_PAYSTACK_PUBLIC_KEY,
+          email:       currentUser?.email,
+          amount:      total * 100,          // GHS → pesewas ×100
+          currency:    "GHS",
+          channels:    ["mobile_money", "card"],
+          ref:         payRef,
+          access_code: accessCode,
+          onClose:     function () { setPaying(false); setPayError(""); },
+          callback:    function (r) { doHandle(r.reference || payRef); },
+        });
         handler.openIframe();
-      } catch(e2) { setPayError("Payment gateway error: " + e2.message); setPaying(false); }
+      } catch (e2) {
+        setPayError("Payment gateway error: " + e2.message);
+        setPaying(false);
+      }
     }
   };
 
   return (
     <div style={{ background: "var(--bg)", height: "100%", display: "flex", flexDirection: "column", overflow: "hidden" }}>
+
+      {/* Header */}
       <div style={{ display: "flex", alignItems: "center", padding: "16px 20px", gap: "14px", borderBottom: "1px solid var(--border)", background: "var(--bg-card)", flexShrink: 0, zIndex: 10 }}>
-        <motion.div whileTap={{ scale: 0.9 }} onClick={() => setScreen("app")} style={{ width: "34px", height: "34px", borderRadius: "10px", background: "var(--bg-subtle)", border: "1px solid var(--border)", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", fontSize: "16px", color: "var(--text-primary)", flexShrink: 0 }}>←</motion.div>
+        <motion.div whileTap={{ scale: 0.9 }} onClick={() => setScreen("app")}
+          style={{ width: "34px", height: "34px", borderRadius: "10px", background: "var(--bg-subtle)", border: "1px solid var(--border)", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", fontSize: "16px", color: "var(--text-primary)", flexShrink: 0 }}>
+          ←
+        </motion.div>
         <div style={{ flex: 1 }}>
           <div style={{ fontSize: "15px", fontWeight: 600, color: "var(--text-primary)" }}>Secure Checkout</div>
           <div style={{ fontSize: "11px", color: "var(--text-muted)", marginTop: "1px" }}>NFT ticket on Polygon after payment</div>
@@ -421,64 +623,131 @@ export function Checkout() {
           <span style={{ fontSize: "10px", fontWeight: 600, color: "#16a34a" }}>Secured</span>
         </div>
       </div>
+
+      {/* Body */}
       <div style={{ flex: 1, overflowY: "auto", WebkitOverflowScrolling: "touch", overscrollBehavior: "contain" }}>
-        <div style={{ maxWidth: desktop ? "600px" : "100%", margin: "0 auto", padding: desktop ? "24px 40px 60px" : "16px 16px 80px" }}>
-          <div style={{ borderRadius: "14px", overflow: "hidden", marginBottom: "20px" }}>
-            <div style={{ height: "120px", position: "relative" }}>
-              {checkoutEvent.image ? <img src={checkoutEvent.image} alt={checkoutEvent.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : <div style={{ width: "100%", height: "100%", background: "var(--brand)" }} />}
-              <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to bottom, transparent, rgba(0,0,0,0.65))" }} />
-              <div style={{ position: "absolute", bottom: "12px", left: "14px", right: "14px" }}>
-                <div style={{ color: "#fff", fontWeight: 600, fontSize: "16px" }}>{checkoutEvent.name}</div>
-                <div style={{ color: "rgba(255,255,255,0.75)", fontSize: "11px", marginTop: "2px" }}>📅 {checkoutEvent.date} · 📍 {checkoutEvent.venue}</div>
+        <div style={{ maxWidth: desktop ? "640px" : "100%", margin: "0 auto", padding: desktop ? "28px 40px 80px" : "20px 20px 100px" }}>
+
+          {/* Event banner */}
+          <div style={{ borderRadius: "16px", overflow: "hidden", marginBottom: "24px" }}>
+            <div style={{ height: "130px", position: "relative" }}>
+              {checkoutEvent.image
+                ? <img src={checkoutEvent.image} alt={checkoutEvent.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                : <div style={{ width: "100%", height: "100%", background: "var(--brand)" }} />
+              }
+              <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to bottom, transparent, rgba(0,0,0,0.7))" }} />
+              <div style={{ position: "absolute", bottom: "14px", left: "16px", right: "16px" }}>
+                <div style={{ color: "#fff", fontWeight: 700, fontSize: "17px", marginBottom: "3px" }}>{checkoutEvent.name}</div>
+                <div style={{ color: "rgba(255,255,255,0.7)", fontSize: "12px" }}>📅 {checkoutEvent.date} · 📍 {checkoutEvent.venue}</div>
               </div>
             </div>
           </div>
-          <div style={{ marginBottom: "16px" }}>
-            <div style={{ fontSize: "12px", fontWeight: 600, color: "var(--text-muted)", marginBottom: "10px", textTransform: "uppercase", letterSpacing: "0.5px" }}>Quantity</div>
+
+          {/* Quantity */}
+          <div style={{ marginBottom: "20px" }}>
+            <div style={{ fontSize: "12px", fontWeight: 700, color: "var(--text-muted)", marginBottom: "12px", textTransform: "uppercase", letterSpacing: "0.5px" }}>Quantity</div>
             <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
-              <motion.button whileTap={{ scale: 0.9 }} onClick={() => setTicketQty(Math.max(1, qty - 1))} style={{ width: "40px", height: "40px", borderRadius: "10px", background: "var(--bg-subtle)", color: "var(--text-primary)", border: "1px solid var(--border)", fontSize: "20px", fontWeight: 500, cursor: "pointer" }}>−</motion.button>
-              <span style={{ fontSize: "24px", fontWeight: 700, color: "var(--text-primary)", minWidth: "32px", textAlign: "center" }}>{qty}</span>
-              <motion.button whileTap={{ scale: 0.9 }} onClick={() => setTicketQty(Math.min(10, qty + 1))} style={{ width: "40px", height: "40px", borderRadius: "10px", background: "var(--bg-subtle)", color: "var(--text-primary)", border: "1px solid var(--border)", fontSize: "20px", fontWeight: 500, cursor: "pointer" }}>+</motion.button>
+              <motion.button whileTap={{ scale: 0.9 }} onClick={() => setTicketQty(Math.max(1, qty - 1))}
+                style={{ width: "42px", height: "42px", borderRadius: "12px", background: "var(--bg-subtle)", color: "var(--text-primary)", border: "1.5px solid var(--border)", fontSize: "22px", fontWeight: 500, cursor: "pointer", fontFamily: "var(--font-sans)" }}>
+                −
+              </motion.button>
+              <span style={{ fontSize: "26px", fontWeight: 800, color: "var(--text-primary)", minWidth: "36px", textAlign: "center" }}>{qty}</span>
+              <motion.button whileTap={{ scale: 0.9 }} onClick={() => setTicketQty(Math.min(10, qty + 1))}
+                style={{ width: "42px", height: "42px", borderRadius: "12px", background: "var(--bg-subtle)", color: "var(--text-primary)", border: "1.5px solid var(--border)", fontSize: "22px", fontWeight: 500, cursor: "pointer", fontFamily: "var(--font-sans)" }}>
+                +
+              </motion.button>
             </div>
           </div>
-          <div style={{ marginBottom: "16px" }}>
-            <div style={{ fontSize: "12px", fontWeight: 600, color: "var(--text-muted)", marginBottom: "10px", textTransform: "uppercase", letterSpacing: "0.5px" }}>Payment Method</div>
+
+          {/* Payment method */}
+          <div style={{ marginBottom: "20px" }}>
+            <div style={{ fontSize: "12px", fontWeight: 700, color: "var(--text-muted)", marginBottom: "12px", textTransform: "uppercase", letterSpacing: "0.5px" }}>Payment Method</div>
             <div style={{ display: "flex", gap: "10px" }}>
-              {[["momo","📱 MoMo"],["card","💳 Card"]].map(([id, label]) => (
-                <motion.button key={id} whileTap={{ scale: 0.95 }} onClick={() => setPayMethod(id)} style={{ flex: 1, padding: "12px", borderRadius: "10px", cursor: "pointer", fontWeight: 500, fontSize: "14px", fontFamily: "var(--font-sans)", border: payMethod === id ? "1.5px solid var(--brand)" : "1px solid var(--border)", background: payMethod === id ? "var(--brand-light)" : "var(--bg-subtle)", color: payMethod === id ? "var(--brand-dark)" : "var(--text-secondary)", transition: "all 0.15s" }}>{label}</motion.button>
+              {[["momo","📱 Mobile Money"],["card","💳 Debit / Credit"]].map(([id, label]) => (
+                <motion.button key={id} whileTap={{ scale: 0.95 }} onClick={() => setPayMethod(id)}
+                  style={{ flex: 1, padding: "14px 10px", borderRadius: "14px", cursor: "pointer", fontWeight: 600, fontSize: "13px", fontFamily: "var(--font-sans)", border: payMethod === id ? "2px solid var(--brand)" : "1.5px solid var(--border)", background: payMethod === id ? "var(--brand-light)" : "var(--bg-subtle)", color: payMethod === id ? "var(--brand-dark)" : "var(--text-secondary)", transition: "all 0.15s" }}>
+                  {label}
+                </motion.button>
               ))}
             </div>
           </div>
-          <div style={{ background: "var(--bg-subtle)", borderRadius: "12px", padding: "16px", marginBottom: "20px", border: "1px solid var(--border)" }}>
-            <div style={{ fontSize: "12px", fontWeight: 600, color: "var(--text-muted)", marginBottom: "12px", textTransform: "uppercase", letterSpacing: "0.5px" }}>Order Summary</div>
-            {[["Tickets", `${qty} × GHS ${unitPrice}`], ["Platform Fee (5%)", `GHS ${fee}`]].map(([k, v]) => (
-              <div key={k} style={{ display: "flex", justifyContent: "space-between", paddingBottom: "8px", marginBottom: "8px", borderBottom: "1px solid var(--border)" }}>
-                <span style={{ color: "var(--text-muted)", fontSize: "13px" }}>{k}</span>
-                <span style={{ color: "var(--text-secondary)", fontSize: "13px", fontWeight: 500 }}>{v}</span>
-              </div>
-            ))}
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <span style={{ color: "var(--text-primary)", fontWeight: 600, fontSize: "15px" }}>Total</span>
-              <span style={{ color: "var(--brand)", fontWeight: 700, fontSize: "22px" }}>GHS {total}</span>
-            </div>
-          </div>
+
+          {/* MoMo phone input with live detection */}
           <AnimatePresence>
-            {payError && <motion.div initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} style={{ background: "var(--error-bg)", border: "1px solid rgba(220,38,38,0.2)", borderRadius: "10px", padding: "12px 14px", marginBottom: "14px", color: "var(--error)", fontSize: "13px", lineHeight: 1.5 }}>⚠️ {payError}</motion.div>}
-          </AnimatePresence>
-          <AnimatePresence>
-            {paying && !payError && (
-              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} style={{ background: "var(--bg-subtle)", border: "1px solid var(--border)", borderRadius: "12px", padding: "16px", marginBottom: "14px", textAlign: "center" }}>
-                <div style={{ display: "flex", justifyContent: "center", gap: "5px", marginBottom: "8px" }}>
-                  {[0,1,2].map(i => <motion.div key={i} animate={{ opacity: [0.3, 1, 0.3], scale: [0.8, 1.1, 0.8] }} transition={{ repeat: Infinity, duration: 1.2, delay: i * 0.2 }} style={{ width: "7px", height: "7px", borderRadius: "50%", background: "var(--brand)" }} />)}
-                </div>
-                <div style={{ color: "var(--text-primary)", fontWeight: 600, fontSize: "14px", marginBottom: "2px" }}>Processing payment</div>
-                <div style={{ color: "var(--text-muted)", fontSize: "12px" }}>Do not close this screen</div>
+            {payMethod === "momo" && (
+              <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }}
+                style={{ overflow: "hidden", marginBottom: "20px" }}>
+                <MoMoInput value={momoPhone} onChange={setMomoPhone} />
               </motion.div>
             )}
           </AnimatePresence>
-          <motion.button whileHover={!paying ? { opacity: 0.88 } : {}} whileTap={!paying ? { scale: 0.98 } : {}} onClick={onPay} disabled={paying} style={{ ...primaryBtn, marginBottom: 0, opacity: paying ? 0.6 : 1 }}>
-            {paying ? "Processing..." : unitPrice === 0 ? "Get Free Ticket" : `Pay GHS ${total}`}
+
+          {/* Order summary */}
+          <div style={{ background: "var(--bg-subtle)", borderRadius: "16px", padding: "20px", marginBottom: "20px", border: "1.5px solid var(--border)" }}>
+            <div style={{ fontSize: "12px", fontWeight: 700, color: "var(--text-muted)", marginBottom: "14px", textTransform: "uppercase", letterSpacing: "0.5px" }}>Order Summary</div>
+            {[
+              ["Tickets",          `${qty} × GHS ${unitPrice}`],
+              ["Platform Fee (5%)", `GHS ${fee}`],
+            ].map(([k, v]) => (
+              <div key={k} style={{ display: "flex", justifyContent: "space-between", paddingBottom: "10px", marginBottom: "10px", borderBottom: "1px solid var(--border)" }}>
+                <span style={{ color: "var(--text-muted)", fontSize: "14px" }}>{k}</span>
+                <span style={{ color: "var(--text-secondary)", fontSize: "14px", fontWeight: 500 }}>{v}</span>
+              </div>
+            ))}
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <span style={{ color: "var(--text-primary)", fontWeight: 700, fontSize: "16px" }}>Total</span>
+              <span style={{ color: "var(--brand)", fontWeight: 800, fontSize: "26px", letterSpacing: "-0.5px" }}>GHS {total}</span>
+            </div>
+          </div>
+
+          {/* Error */}
+          <AnimatePresence>
+            {payError && (
+              <motion.div initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
+                style={{ background: "var(--error-bg)", border: "1px solid rgba(220,38,38,0.2)", borderRadius: "12px", padding: "12px 14px", marginBottom: "14px", color: "var(--error)", fontSize: "13px", lineHeight: 1.5 }}>
+                ⚠️ {payError}
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {/* Submit — spinner inside button */}
+          <motion.button
+            whileHover={!paying ? { scale: 1.02 } : {}}
+            whileTap={!paying ? { scale: 0.97 } : {}}
+            onClick={onPay}
+            disabled={paying}
+            style={{
+              width: "100%", padding: "17px", background: "var(--brand)", color: "#fff",
+              border: "none", borderRadius: "14px", fontSize: "16px", fontWeight: 700,
+              cursor: paying ? "not-allowed" : "pointer",
+              boxShadow: paying ? "none" : "var(--shadow-brand)",
+              opacity: paying ? 0.85 : 1,
+              fontFamily: "var(--font-sans)",
+              display: "flex", alignItems: "center", justifyContent: "center", gap: "10px",
+              transition: "all 0.2s",
+            }}>
+            {paying ? (
+              <>
+                <motion.div
+                  animate={{ rotate: 360 }}
+                  transition={{ repeat: Infinity, duration: 0.7, ease: "linear" }}
+                  style={{ width: "18px", height: "18px", borderRadius: "50%", border: "2.5px solid rgba(255,255,255,0.3)", borderTopColor: "#fff", flexShrink: 0 }}
+                />
+                Processing...
+              </>
+            ) : unitPrice === 0 ? (
+              "Get Free Ticket"
+            ) : (
+              `Pay GHS ${total} →`
+            )}
           </motion.button>
+
+          {/* Paystack trust note */}
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "6px", marginTop: "14px" }}>
+            <span style={{ fontSize: "11px", color: "var(--text-muted)" }}>🔒 Secured by</span>
+            <span style={{ fontSize: "11px", fontWeight: 700, color: "var(--text-muted)" }}>Paystack</span>
+            <span style={{ fontSize: "11px", color: "var(--text-muted)" }}>· GHS payments only</span>
+          </div>
         </div>
       </div>
     </div>

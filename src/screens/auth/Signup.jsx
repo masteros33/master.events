@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import useStore from "../../store/useStore";
-import ThemeToggle from "../../components/ThemeToggle";
 
 const pwChecks = [
   { label: "8+ characters",    test: pw => pw.length >= 8 },
@@ -63,33 +62,46 @@ export function Signup() {
   return (
     <div style={{ minHeight: "100vh", background: "var(--bg)", display: "flex", fontFamily: "var(--font-sans)" }}>
 
-      {/* ── Left panel — desktop only ── */}
+      {/* ── Left panel — perfectly centered branding ── */}
       {wide && (
         <div style={{
           flex: 1,
           background: "linear-gradient(160deg, #1a1a1a 0%, #0e0e0e 100%)",
-          display: "flex", flexDirection: "column", justifyContent: "space-between",
-          padding: "48px", position: "relative", overflow: "hidden",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          padding: "48px",
+          position: "relative",
+          overflow: "hidden",
         }}>
+          {/* Glow orbs */}
           <div style={{ position: "absolute", top: 0, right: 0, width: "400px", height: "400px", borderRadius: "50%", background: "radial-gradient(circle, rgba(245,166,35,0.12) 0%, transparent 70%)", transform: "translate(30%, -30%)", pointerEvents: "none" }} />
+          <div style={{ position: "absolute", bottom: 0, left: 0, width: "300px", height: "300px", borderRadius: "50%", background: "radial-gradient(circle, rgba(124,58,237,0.08) 0%, transparent 70%)", transform: "translate(-30%, 30%)", pointerEvents: "none" }} />
 
-          <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-            <div style={{ width: "40px", height: "40px", borderRadius: "12px", background: "linear-gradient(135deg, #f5a623, #e8920f)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "20px" }}>🎟️</div>
-            <span style={{ fontWeight: 800, fontSize: "18px", color: "#fff" }}>Master Events</span>
-          </div>
+          {/* Centered content */}
+          <div style={{ position: "relative", zIndex: 1, textAlign: "center", maxWidth: "420px" }}>
 
-          <div style={{ position: "relative", zIndex: 1 }}>
-            <div style={{ fontSize: "11px", fontWeight: 700, letterSpacing: "2px", color: "#f5a623", marginBottom: "16px" }}>GET STARTED TODAY</div>
+            {/* Logo */}
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "12px", marginBottom: "40px" }}>
+              <div style={{ width: "44px", height: "44px", borderRadius: "14px", background: "linear-gradient(135deg, #f5a623, #e8920f)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "22px", boxShadow: "0 8px 24px rgba(245,166,35,0.4)" }}>🎟️</div>
+              <span style={{ fontWeight: 800, fontSize: "20px", color: "#fff", letterSpacing: "-0.3px" }}>Master Events</span>
+            </div>
+
+            <div style={{ fontSize: "11px", fontWeight: 700, letterSpacing: "2px", color: "#f5a623", marginBottom: "16px", textTransform: "uppercase" }}>Get Started Today</div>
+
             <h2 style={{ fontSize: "clamp(36px, 3vw, 52px)", fontWeight: 900, color: "#fff", letterSpacing: "-1.5px", lineHeight: 1.1, marginBottom: "20px" }}>
               Ghana's best<br />
-              <span style={{ background: "linear-gradient(135deg, #f5a623, #ff6b35)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text" }}>
+              <span style={{ background: "linear-gradient(135deg, #f5a623, #ff6b35)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
                 tickets.
               </span>
             </h2>
-            <p style={{ color: "rgba(255,255,255,0.5)", fontSize: "16px", lineHeight: 1.7, maxWidth: "340px", marginBottom: "36px" }}>
+
+            <p style={{ color: "rgba(255,255,255,0.5)", fontSize: "16px", lineHeight: 1.7, marginBottom: "40px" }}>
               Join thousands of event-goers and organizers. Every ticket is an NFT — unfakeable, yours forever.
             </p>
-            <div style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
+
+            {/* Feature list */}
+            <div style={{ display: "flex", flexDirection: "column", gap: "14px", textAlign: "left", marginBottom: "40px" }}>
               {[
                 ["🎟️", "Buy & Own as NFT",  "Blockchain-verified on Polygon"],
                 ["🔄", "Resell & Transfer",  "Trade peer-to-peer, only 2% fee"],
@@ -104,15 +116,16 @@ export function Signup() {
                 </div>
               ))}
             </div>
-          </div>
 
-          <div style={{ display: "flex", gap: "28px" }}>
-            {[["10K+","Tickets"],["50+","Events"],["0%","Fakes"]].map(([val,label]) => (
-              <div key={label}>
-                <div style={{ fontSize: "24px", fontWeight: 900, color: "#f5a623" }}>{val}</div>
-                <div style={{ fontSize: "12px", color: "rgba(255,255,255,0.35)", marginTop: "2px" }}>{label}</div>
-              </div>
-            ))}
+            {/* Stats */}
+            <div style={{ display: "flex", justifyContent: "center", gap: "36px" }}>
+              {[["10K+","Tickets"],["50+","Events"],["0%","Fakes"]].map(([val, label]) => (
+                <div key={label} style={{ textAlign: "center" }}>
+                  <div style={{ fontSize: "24px", fontWeight: 900, color: "#f5a623" }}>{val}</div>
+                  <div style={{ fontSize: "12px", color: "rgba(255,255,255,0.35)", marginTop: "2px" }}>{label}</div>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       )}
@@ -120,11 +133,14 @@ export function Signup() {
       {/* ── Right panel — form ── */}
       <div style={{
         flex: 1,
-        display: "flex", flexDirection: "column",
-        alignItems: "center", justifyContent: "center",
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        justifyContent: "center",
         padding: wide ? "48px 32px" : "40px 20px",
         maxWidth: wide ? "560px" : "100%",
-        width: "100%", margin: "0 auto",
+        width: "100%",
+        margin: "0 auto",
         overflowY: "auto",
       }}>
         <div style={{ width: "100%", maxWidth: "400px" }}>
@@ -137,12 +153,10 @@ export function Signup() {
             </div>
           )}
 
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "24px" }}>
-            <div>
-              <h1 style={{ fontSize: "26px", fontWeight: 900, color: "var(--text-primary)", letterSpacing: "-0.8px", marginBottom: "4px" }}>Create account</h1>
-              <p style={{ fontSize: "14px", color: "var(--text-secondary)" }}>Join Ghana's #1 NFT ticketing platform</p>
-            </div>
-            <ThemeToggle compact={true} />
+          {/* Header — NO ThemeToggle */}
+          <div style={{ marginBottom: "24px" }}>
+            <h1 style={{ fontSize: "26px", fontWeight: 900, color: "var(--text-primary)", letterSpacing: "-0.8px", marginBottom: "4px" }}>Create account</h1>
+            <p style={{ fontSize: "14px", color: "var(--text-secondary)" }}>Join Ghana's #1 NFT ticketing platform</p>
           </div>
 
           {/* Trust bar */}
@@ -154,10 +168,16 @@ export function Signup() {
           {/* Google OAuth */}
           <motion.button whileHover={{ scale: 1.02, boxShadow: "var(--shadow-md)" }} whileTap={{ scale: 0.97 }}
             style={{ width: "100%", padding: "14px", borderRadius: "14px", background: "var(--bg-card)", border: "1.5px solid var(--border)", color: "var(--text-primary)", fontWeight: 600, fontSize: "15px", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: "10px", marginBottom: "18px", boxShadow: "var(--shadow-sm)", fontFamily: "var(--font-sans)" }}>
-            <svg width="18" height="18" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+            <svg width="18" height="18" viewBox="0 0 24 24">
+              <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+              <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+              <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+              <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+            </svg>
             Sign up with Google
           </motion.button>
 
+          {/* Divider */}
           <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "18px" }}>
             <div style={{ flex: 1, height: "1px", background: "var(--border)" }} />
             <span style={{ fontSize: "12px", color: "var(--text-muted)", fontWeight: 500 }}>or sign up with email</span>
@@ -179,7 +199,13 @@ export function Signup() {
               ].map(item => (
                 <motion.div key={item.role} whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}
                   onClick={() => setSelectedRole(item.role)}
-                  style={{ flex: 1, padding: "14px 12px", borderRadius: "16px", cursor: "pointer", textAlign: "center", border: "1.5px solid " + (selectedRole === item.role ? "#f5a623" : "var(--border)"), background: selectedRole === item.role ? "rgba(245,166,35,0.06)" : "var(--bg-card)", boxShadow: selectedRole === item.role ? "0 4px 16px rgba(245,166,35,0.15)" : "var(--shadow-sm)", transition: "all 0.2s" }}>
+                  style={{
+                    flex: 1, padding: "14px 12px", borderRadius: "16px", cursor: "pointer", textAlign: "center",
+                    border: "1.5px solid " + (selectedRole === item.role ? "#f5a623" : "var(--border)"),
+                    background: selectedRole === item.role ? "rgba(245,166,35,0.06)" : "var(--bg-card)",
+                    boxShadow: selectedRole === item.role ? "0 4px 16px rgba(245,166,35,0.15)" : "var(--shadow-sm)",
+                    transition: "all 0.2s",
+                  }}>
                   <div style={{ fontSize: "24px", marginBottom: "5px" }}>{item.icon}</div>
                   <div style={{ fontWeight: 700, fontSize: "13px", color: selectedRole === item.role ? "#f5a623" : "var(--text-primary)" }}>{item.label}</div>
                   <div style={{ fontSize: "10px", color: "var(--text-muted)", marginTop: "2px" }}>{item.sub}</div>
@@ -188,16 +214,19 @@ export function Signup() {
             </div>
           </div>
 
-          {/* Name + Email fields */}
+          {/* Name + Email */}
           {[
             { label: "Full Name",     placeholder: "e.g. Kwame Mensah", value: fullName,    onChange: setFullName,    type: "text",  autoComplete: "name"  },
             { label: "Email Address", placeholder: "you@email.com",      value: signupEmail, onChange: setSignupEmail, type: "email", autoComplete: "email" },
           ].map(f => (
             <div key={f.label} style={{ marginBottom: "14px" }}>
               <label style={{ fontSize: "13px", fontWeight: 600, color: "var(--text-secondary)", marginBottom: "8px", display: "block" }}>{f.label}</label>
-              <input placeholder={f.placeholder} value={f.value} onChange={e => f.onChange(e.target.value)}
+              <input
+                placeholder={f.placeholder} value={f.value}
+                onChange={e => f.onChange(e.target.value)}
                 type={f.type} autoComplete={f.autoComplete}
-                style={{ width: "100%", padding: "14px 18px", background: "var(--bg)", border: "1.5px solid var(--border)", borderRadius: "14px", fontSize: "15px", color: "var(--text-primary)", outline: "none", boxSizing: "border-box", fontFamily: "var(--font-sans)" }} />
+                style={{ width: "100%", padding: "14px 18px", background: "var(--bg)", border: "1.5px solid var(--border)", borderRadius: "14px", fontSize: "15px", color: "var(--text-primary)", outline: "none", boxSizing: "border-box", fontFamily: "var(--font-sans)" }}
+              />
             </div>
           ))}
 
@@ -218,6 +247,8 @@ export function Signup() {
                 {showPw ? "🙈" : "👁️"}
               </button>
             </div>
+
+            {/* Password strength chips */}
             {signupPassword && (
               <motion.div initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }}
                 style={{ display: "flex", flexWrap: "wrap", gap: "6px", marginTop: "10px" }}>
@@ -233,6 +264,7 @@ export function Signup() {
             )}
           </div>
 
+          {/* Signup error */}
           <AnimatePresence>
             {signupError && (
               <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
@@ -242,13 +274,37 @@ export function Signup() {
             )}
           </AnimatePresence>
 
+          {/* Submit — loading lives inside button only */}
           <motion.button
-            whileHover={{ scale: 1.02, boxShadow: "0 12px 36px rgba(245,166,35,0.4)" }}
-            whileTap={{ scale: 0.97 }}
+            whileHover={!loading && allPwMet ? { scale: 1.02, boxShadow: "0 12px 36px rgba(245,166,35,0.4)" } : {}}
+            whileTap={!loading && allPwMet ? { scale: 0.97 } : {}}
             onClick={handleCreate}
             disabled={loading || !allPwMet}
-            style={{ width: "100%", padding: "16px", borderRadius: "14px", background: allPwMet ? "linear-gradient(135deg, #f5a623, #e8920f)" : "var(--bg-subtle)", color: allPwMet ? "#fff" : "var(--text-muted)", fontWeight: 700, fontSize: "16px", border: "none", cursor: loading || !allPwMet ? "not-allowed" : "pointer", opacity: loading ? 0.7 : 1, boxShadow: allPwMet ? "var(--shadow-brand)" : "none", marginBottom: "18px", fontFamily: "var(--font-sans)", transition: "all 0.2s" }}>
-            {loading ? "⏳ Creating account..." : "Create Account →"}
+            style={{
+              width: "100%", padding: "16px", borderRadius: "14px",
+              background: allPwMet ? "linear-gradient(135deg, #f5a623, #e8920f)" : "var(--bg-subtle)",
+              color: allPwMet ? "#fff" : "var(--text-muted)",
+              fontWeight: 700, fontSize: "16px", border: "none",
+              cursor: loading || !allPwMet ? "not-allowed" : "pointer",
+              opacity: loading ? 0.85 : 1,
+              boxShadow: allPwMet ? "var(--shadow-brand)" : "none",
+              marginBottom: "18px", fontFamily: "var(--font-sans)",
+              transition: "all 0.2s",
+              display: "flex", alignItems: "center", justifyContent: "center", gap: "10px",
+            }}>
+            {loading ? (
+              <>
+                {/* Inline spinner */}
+                <motion.div
+                  animate={{ rotate: 360 }}
+                  transition={{ repeat: Infinity, duration: 0.7, ease: "linear" }}
+                  style={{ width: "18px", height: "18px", borderRadius: "50%", border: "2.5px solid rgba(255,255,255,0.3)", borderTopColor: "#fff", flexShrink: 0 }}
+                />
+                Creating account...
+              </>
+            ) : (
+              "Create Account →"
+            )}
           </motion.button>
 
           <p style={{ fontSize: "11px", color: "var(--text-muted)", textAlign: "center", marginBottom: "14px", lineHeight: 1.5 }}>
@@ -276,7 +332,9 @@ export function RoleSelect() {
         style={{ maxWidth: "440px", width: "100%", textAlign: "center" }}>
         <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }}
           transition={{ type: "spring", stiffness: 300, damping: 20 }}
-          style={{ width: "72px", height: "72px", borderRadius: "22px", background: "linear-gradient(135deg, #f5a623, #e8920f)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "32px", margin: "0 auto 24px", boxShadow: "var(--shadow-brand)" }}>🎉</motion.div>
+          style={{ width: "72px", height: "72px", borderRadius: "22px", background: "linear-gradient(135deg, #f5a623, #e8920f)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "32px", margin: "0 auto 24px", boxShadow: "var(--shadow-brand)" }}>
+          🎉
+        </motion.div>
         <h2 style={{ fontSize: "28px", fontWeight: 900, color: "var(--text-primary)", marginBottom: "8px", letterSpacing: "-0.5px" }}>You're in!</h2>
         <p style={{ color: "var(--text-secondary)", fontSize: "15px", marginBottom: "32px" }}>How will you use Master Events?</p>
         <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
@@ -284,8 +342,10 @@ export function RoleSelect() {
             { role: "attendee",  icon: "🎟️", title: "I'm an Attendee",  sub: "Browse events, buy NFT tickets, resell and transfer" },
             { role: "organizer", icon: "🎪", title: "I'm an Organizer", sub: "Create events, sell tickets, manage door access" },
           ].map(item => (
-            <motion.div key={item.role} whileHover={{ scale: 1.02, boxShadow: "var(--shadow-md)" }}
-              whileTap={{ scale: 0.97 }} onClick={() => handleSelectRole(item.role)}
+            <motion.div key={item.role}
+              whileHover={{ scale: 1.02, boxShadow: "var(--shadow-md)" }}
+              whileTap={{ scale: 0.97 }}
+              onClick={() => handleSelectRole(item.role)}
               style={{ background: "var(--bg-card)", borderRadius: "20px", padding: "20px", cursor: "pointer", display: "flex", gap: "16px", alignItems: "center", boxShadow: "var(--shadow-sm)", border: "1.5px solid var(--border)", transition: "box-shadow 0.2s" }}>
               <div style={{ width: "52px", height: "52px", background: "rgba(245,166,35,0.1)", borderRadius: "16px", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "24px", flexShrink: 0 }}>{item.icon}</div>
               <div style={{ textAlign: "left" }}>

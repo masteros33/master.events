@@ -1,5 +1,6 @@
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useState, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useQuery } from "@tanstack/react-query";
 import useStore from "../../store/useStore";
 import { eventsAPI } from "../../api";
 
@@ -27,9 +28,7 @@ const CATEGORIES = [
 const ITEMS_PER_PAGE_DESKTOP = 9;
 const ITEMS_PER_PAGE_MOBILE  = 6;
 
-let cachedEvents = [];
-let lastFetch    = 0;
-const isDesktop  = () => window.innerWidth > 768;
+const isDesktop = () => window.innerWidth > 768;
 
 // ── Event Card ────────────────────────────────────────────────
 function EventCard({ ev, onClick }) {
@@ -87,7 +86,7 @@ function EventCard({ ev, onClick }) {
         </div>
       </div>
 
-      {/* Card body — event name appears ONCE here only */}
+      {/* Card body */}
       <div style={{ padding: "14px 16px 16px" }}>
         <div style={{ fontWeight: 700, fontSize: desktop ? "15px" : "14px", color: "var(--text-primary)", marginBottom: "5px", lineHeight: 1.35, letterSpacing: "-0.2px" }}>
           {ev.name}
@@ -102,7 +101,6 @@ function EventCard({ ev, onClick }) {
           <div style={{ color: "var(--brand)", fontWeight: 800, fontSize: "18px", letterSpacing: "-0.5px" }}>
             {ev.price === 0 ? "FREE" : `GHS ${ev.price}`}
           </div>
-          {/* View details — high contrast, not muted */}
           <motion.div
             animate={{ x: hovered ? 4 : 0 }}
             transition={{ duration: 0.2 }}
@@ -173,19 +171,16 @@ function EventDetailOverlay({ ev, onBack, onCheckout }) {
             onError={e => { e.target.src = categoryImages.other; }} />
           <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to bottom, rgba(0,0,0,0.15) 0%, rgba(0,0,0,0.78) 100%)" }} />
 
-          {/* Back */}
           <motion.button whileTap={{ scale: 0.9 }} onClick={onBack}
             style={{ position: "absolute", top: "18px", left: "18px", width: "38px", height: "38px", borderRadius: "12px", background: "rgba(255,255,255,0.15)", backdropFilter: "blur(12px)", border: "1px solid rgba(255,255,255,0.2)", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", fontSize: "17px", color: "#fff", zIndex: 10 }}>
             ←
           </motion.button>
 
-          {/* NFT badge */}
           <div style={{ position: "absolute", top: "18px", right: "18px", display: "flex", alignItems: "center", gap: "5px", background: "rgba(124,58,237,0.88)", backdropFilter: "blur(8px)", padding: "5px 11px", borderRadius: "99px", border: "1px solid rgba(124,58,237,0.4)" }}>
             <span style={{ fontSize: "11px" }}>⛓️</span>
             <span style={{ fontSize: "10px", fontWeight: 700, color: "#fff" }}>NFT Ticket · Polygon</span>
           </div>
 
-          {/* Hero text */}
           <div style={{ position: "absolute", bottom: "24px", left: "20px", right: "20px" }}>
             <div style={{ display: "inline-block", background: "var(--brand)", color: "#fff", fontSize: "10px", fontWeight: 700, padding: "3px 10px", borderRadius: "99px", marginBottom: "10px", letterSpacing: "0.3px" }}>
               {ev.category}
@@ -210,9 +205,8 @@ function EventDetailOverlay({ ev, onBack, onCheckout }) {
           alignItems: "start",
         }}>
 
-          {/* LEFT — description */}
+          {/* LEFT */}
           <div>
-            {/* Info chips */}
             <div style={{ display: "flex", gap: "10px", marginBottom: "24px", flexWrap: "wrap" }}>
               {[
                 ["📅", "Date",  ev.date || "TBA"],
@@ -227,7 +221,6 @@ function EventDetailOverlay({ ev, onBack, onCheckout }) {
               ))}
             </div>
 
-            {/* Description */}
             <div style={{ marginBottom: "24px" }}>
               <div style={{ fontSize: "11px", fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "1px", marginBottom: "12px" }}>About This Event</div>
               <div style={{ fontSize: "15px", color: "var(--text-secondary)", lineHeight: 1.85, fontWeight: 400 }}>
@@ -237,7 +230,6 @@ function EventDetailOverlay({ ev, onBack, onCheckout }) {
               </div>
             </div>
 
-            {/* Blockchain trust */}
             <div style={{ background: "rgba(124,58,237,0.05)", border: "1px solid rgba(124,58,237,0.15)", borderRadius: "14px", padding: "14px 16px", display: "flex", alignItems: "center", gap: "12px" }}>
               <span style={{ fontSize: "22px" }}>⛓️</span>
               <div>
@@ -248,7 +240,6 @@ function EventDetailOverlay({ ev, onBack, onCheckout }) {
               </div>
             </div>
 
-            {/* Mobile CTA */}
             {!desktop && (
               <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}
                 onClick={onCheckout}
@@ -258,12 +249,10 @@ function EventDetailOverlay({ ev, onBack, onCheckout }) {
             )}
           </div>
 
-          {/* RIGHT — sticky meta box (desktop only) */}
+          {/* RIGHT — sticky meta box */}
           {desktop && (
             <div style={{ position: "sticky", top: "20px" }}>
               <div style={{ background: "var(--bg-card)", border: "1.5px solid var(--border)", borderRadius: "20px", padding: "24px", boxShadow: "0 8px 40px rgba(0,0,0,0.1)" }}>
-
-                {/* Price */}
                 <div style={{ marginBottom: "20px", paddingBottom: "20px", borderBottom: "1px solid var(--border)" }}>
                   <div style={{ fontSize: "11px", color: "var(--text-muted)", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: "6px" }}>Ticket Price</div>
                   <div style={{ fontSize: "36px", fontWeight: 800, color: "var(--brand)", letterSpacing: "-1px", lineHeight: 1 }}>
@@ -271,7 +260,6 @@ function EventDetailOverlay({ ev, onBack, onCheckout }) {
                   </div>
                 </div>
 
-                {/* Meta rows */}
                 {[
                   ["📅", "Date",          ev.date || "TBA"],
                   ["🕐", "Time",          ev.time ? ev.time.substring(0, 5) : "TBA"],
@@ -287,7 +275,6 @@ function EventDetailOverlay({ ev, onBack, onCheckout }) {
                   </div>
                 ))}
 
-                {/* Availability bar */}
                 <div style={{ margin: "18px 0 20px" }}>
                   <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "6px" }}>
                     <span style={{ fontSize: "11px", color: "var(--text-muted)", fontWeight: 500 }}>Availability</span>
@@ -336,44 +323,54 @@ export default function AttendeeHome() {
   const handleLogout     = useStore(s => s.handleLogout);
   const currentUser      = useStore(s => s.currentUser);
 
-  const [events,         setEvents]         = useState(cachedEvents);
-  const [loading,        setLoading]        = useState(cachedEvents.length === 0);
   const [activeCategory, setActiveCategory] = useState("all");
   const [menuOpen,       setMenuOpen]       = useState(false);
   const [page,           setPage]           = useState(1);
   const desktop = isDesktop();
 
-  useEffect(() => {
-    const now = Date.now();
-    if (cachedEvents.length > 0 && now - lastFetch < 120000) {
-      setEvents(cachedEvents); setLoading(false); return;
-    }
-    setLoading(true);
-    eventsAPI.list().then(data => {
-      if (Array.isArray(data)) {
-        const mapped = data.map(e => ({
-          id: e.id, name: e.name,
-          description: e.description || "",
-          category: e.category, venue: e.venue, city: e.city,
-          date: e.date, time: e.time,
-          price: parseFloat(e.price) || 0,
-          totalTickets: e.total_tickets || 0,
-          ticketsSold: e.tickets_sold || 0,
-          salesOpen: e.sales_open,
-          image: e.image || categoryImages[e.category] || categoryImages.other,
-        }));
-        cachedEvents = mapped; lastFetch = Date.now(); setEvents(mapped);
-      }
-      setLoading(false);
-    }).catch(() => setLoading(false));
-  }, []);
+  // ── TanStack Query — server state for events ──────────────
+  const { data: eventsData, isLoading: loading } = useQuery({
+    queryKey: ["events"],
+    queryFn: () =>
+      eventsAPI.list().then(data =>
+        Array.isArray(data)
+          ? data.map(e => ({
+              id:           e.id,
+              name:         e.name,
+              description:  e.description || "",
+              category:     e.category,
+              venue:        e.venue,
+              city:         e.city,
+              date:         e.date,
+              time:         e.time,
+              price:        parseFloat(e.price) || 0,
+              totalTickets: e.total_tickets || 0,
+              ticketsSold:  e.tickets_sold  || 0,
+              salesOpen:    e.sales_open,
+              image:        e.image || categoryImages[e.category] || categoryImages.other,
+            }))
+          : []
+      ),
+    staleTime: 2 * 60 * 1000,
+  });
 
-  useEffect(() => { setPage(1); }, [searchQ, activeCategory]);
+  const events = eventsData || [];
+
+  // Reset page when filters change
+  const [prevSearch, setPrevSearch] = useState(searchQ);
+  const [prevCat,    setPrevCat]    = useState(activeCategory);
+  if (searchQ !== prevSearch || activeCategory !== prevCat) {
+    setPage(1);
+    setPrevSearch(searchQ);
+    setPrevCat(activeCategory);
+  }
 
   const filtered = events.filter(e => {
     const q = searchQ.toLowerCase();
-    const matchSearch = e.name.toLowerCase().includes(q) ||
-      e.venue.toLowerCase().includes(q) || e.category.toLowerCase().includes(q);
+    const matchSearch =
+      e.name.toLowerCase().includes(q) ||
+      e.venue.toLowerCase().includes(q) ||
+      e.category.toLowerCase().includes(q);
     const matchCat = activeCategory === "all" || e.category === activeCategory;
     return matchSearch && matchCat;
   });
@@ -383,7 +380,10 @@ export default function AttendeeHome() {
   const paginated  = filtered.slice((page - 1) * perPage, page * perPage);
 
   const goToCheckout = useCallback((ev) => {
-    setCheckoutEvent(ev); setTicketQty(1); setOverlayEvent(null); setScreen("checkout");
+    setCheckoutEvent(ev);
+    setTicketQty(1);
+    setOverlayEvent(null);
+    setScreen("checkout");
   }, [setCheckoutEvent, setTicketQty, setOverlayEvent, setScreen]);
 
   const handlePageChange = (p) => {
@@ -413,7 +413,6 @@ export default function AttendeeHome() {
               transition={{ type: "spring", stiffness: 320, damping: 32 }}
               style={{ position: "fixed", top: 0, left: 0, width: "78%", maxWidth: "300px", height: "100%", background: "var(--bg-card)", zIndex: 101, display: "flex", flexDirection: "column", boxShadow: "4px 0 32px rgba(0,0,0,0.25)", borderRight: "1px solid var(--border)" }}>
 
-              {/* Brand only — no user avatar */}
               <div style={{ padding: "56px 24px 20px", borderBottom: "1px solid var(--border)" }}>
                 <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
                   <div style={{ width: "32px", height: "32px", borderRadius: "10px", background: "linear-gradient(135deg, #f5a623, #e8920f)", display: "flex", alignItems: "center", justifyContent: "center" }}>
@@ -423,7 +422,6 @@ export default function AttendeeHome() {
                 </div>
               </div>
 
-              {/* Nav links — large tap targets, orange = active text only, no pill */}
               <div style={{ flex: 1, padding: "16px", overflowY: "auto" }}>
                 {[
                   ["🏠", "Discover Events", "home"],
@@ -481,7 +479,6 @@ export default function AttendeeHome() {
                 </div>
               </div>
             </div>
-            {/* Hamburger — 3 lines */}
             <motion.div whileTap={{ scale: 0.88 }} onClick={() => setMenuOpen(true)}
               style={{ width: "38px", height: "38px", borderRadius: "10px", background: "var(--bg-subtle)", border: "1px solid var(--border)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: "5px", cursor: "pointer", flexShrink: 0 }}>
               {[0,1,2].map(i => (
@@ -494,9 +491,12 @@ export default function AttendeeHome() {
         {/* Search */}
         <div style={{ position: "relative", marginBottom: "0", maxWidth: desktop ? "560px" : "100%" }}>
           <div style={{ position: "absolute", left: "14px", top: "50%", transform: "translateY(-50%)", color: "var(--text-muted)", fontSize: "15px", pointerEvents: "none" }}>🔍</div>
-          <input value={searchQ} onChange={e => setSearchQ(e.target.value)}
+          <input
+            value={searchQ}
+            onChange={e => setSearchQ(e.target.value)}
             placeholder="Search events, venues, categories..."
-            style={{ width: "100%", padding: "13px 40px 13px 44px", border: "1.5px solid var(--border)", borderRadius: "14px", fontSize: "14px", outline: "none", background: "var(--bg-card)", color: "var(--text-primary)", boxSizing: "border-box", fontFamily: "var(--font-sans)" }} />
+            style={{ width: "100%", padding: "13px 40px 13px 44px", border: "1.5px solid var(--border)", borderRadius: "14px", fontSize: "14px", outline: "none", background: "var(--bg-card)", color: "var(--text-primary)", boxSizing: "border-box", fontFamily: "var(--font-sans)" }}
+          />
           {searchQ && (
             <div onClick={() => setSearchQ("")}
               style={{ position: "absolute", right: "14px", top: "50%", transform: "translateY(-50%)", cursor: "pointer", color: "var(--text-muted)", fontSize: "16px" }}>✕</div>
@@ -504,7 +504,7 @@ export default function AttendeeHome() {
         </div>
       </div>
 
-      {/* ── Category chips — sticky strip ── */}
+      {/* ── Category chips — sticky ── */}
       <div style={{
         position: "sticky", top: 0, zIndex: 30,
         background: "var(--bg)",
@@ -519,11 +519,8 @@ export default function AttendeeHome() {
               <motion.div key={cat.key} whileTap={{ scale: 0.91 }}
                 onClick={() => setActiveCategory(cat.key)}
                 style={{
-                  flexShrink: 0,
-                  padding: "7px 16px",
-                  borderRadius: "99px",
-                  cursor: "pointer",
-                  fontSize: "12px",
+                  flexShrink: 0, padding: "7px 16px", borderRadius: "99px",
+                  cursor: "pointer", fontSize: "12px",
                   fontWeight: active ? 700 : 500,
                   display: "flex", alignItems: "center", gap: "5px",
                   transition: "all 0.15s",

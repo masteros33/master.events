@@ -9,7 +9,7 @@
     <link rel="apple-touch-icon" href="/icon-192.png" />
     <link rel="manifest" href="/manifest.json" />
 
-    <!-- Viewport — viewport-fit=cover is CRITICAL for iPhone safe areas -->
+    <!-- Viewport -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no" />
 
     <!-- PWA Meta -->
@@ -54,34 +54,51 @@
 
     <style>
       /* Critical CSS — prevent layout shift before React loads */
-      *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-      html, body, #root {
+      *, *::before, *::after {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      html {
         height: 100%;
         width: 100%;
-        overflow: hidden;
-        /* Prevent rubber-band scrolling on iOS */
+        /* NO overflow hidden here — landing page must scroll on desktop */
+        overscroll-behavior: none;
+        scroll-behavior: smooth;
+        -webkit-text-size-adjust: 100%;
+        text-size-adjust: 100%;
+      }
+
+      body {
+        height: 100%;
+        width: 100%;
+        /* NO overflow hidden — PhoneFrame handles it for the app shell only */
         overscroll-behavior: none;
         -webkit-overflow-scrolling: touch;
-      }
-      body {
         font-family: 'Plus Jakarta Sans', 'Inter', -apple-system, sans-serif;
         -webkit-font-smoothing: antialiased;
         -moz-osx-font-smoothing: grayscale;
-        /* Fill entire screen including notch area */
-        padding-top: env(safe-area-inset-top);
-        padding-left: env(safe-area-inset-left);
-        padding-right: env(safe-area-inset-right);
-        /* DO NOT add padding-bottom here — BottomNav handles it */
+        padding-top:   env(safe-area-inset-top,   0px);
+        padding-left:  env(safe-area-inset-left,  0px);
+        padding-right: env(safe-area-inset-right, 0px);
       }
-      /* Loading splash */
+
+      #root {
+        height: 100%;
+        width: 100%;
+        /* NO overflow hidden — each screen manages its own scroll */
+        display: flex;
+        flex-direction: column;
+        isolation: isolate;
+      }
+
+      /* Loading splash — shown while React boots */
       #root:empty::before {
         content: '';
         position: fixed;
         inset: 0;
         background: #f9f8f6;
-        display: flex;
-        align-items: center;
-        justify-content: center;
       }
     </style>
   </head>

@@ -509,8 +509,14 @@ export default function PhoneFrame({ children }) {
   if (desktopPage === "about") return <AboutPage onNavigate={handleNavigate} />;
 
   return (
-    <div style={{ minHeight: "100vh", background: "var(--bg)", fontFamily: "var(--font-sans)" }}>
-      {children}
-    </div>
-  );
+  <div style={{
+    height: "100vh",
+    width: "100%",
+    overflow: "hidden",       // ← only the app shell gets overflow hidden
+    background: "var(--bg)",
+    fontFamily: "var(--font-sans)",
+  }}>
+    {children}
+  </div>
+);
 }

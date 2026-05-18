@@ -477,31 +477,37 @@ function AboutPage({ onNavigate }) {
 
 // ── Main Export ───────────────────────────────────────────────
 export default function PhoneFrame({ children }) {
-  const [desktopPage, setDesktopPage] = useState("home");
-  const setScreen = useStore(s => s.setScreen);
+  const setScreen  = useStore(s => s.setScreen);
+  const screen     = useStore(s => s.screen);
   const isLoggedIn = useStore(s => s.isLoggedIn);
   useTheme();
+
+  // Sync desktopPage with screen store so back buttons work
+  const getPage = () => {
+    if (isLoggedIn) return "app";
+    if (screen === "home")   return "home";
+    if (screen === "about")  return "about";
+    if (screen === "login" || screen === "signup" || screen === "role") return "app";
+    return "home";
+  };
+
+  const desktopPage = getPage();
 
   const handleNavigate = (page) => {
     if (page === "login" || page === "signup") {
       setScreen(page);
-      setDesktopPage("app");
     } else if (page === "app") {
-      setDesktopPage("app");
+      setScreen("app");
+    } else if (page === "home") {
+      setScreen("home");
     } else {
-      setDesktopPage(page);
+      setScreen(page);
     }
   };
-
-  // If logged in always show app
-  useEffect(() => {
-    if (isLoggedIn) setDesktopPage("app");
-  }, [isLoggedIn]);
 
   if (desktopPage === "home")  return <LandingPage onNavigate={handleNavigate} />;
   if (desktopPage === "about") return <AboutPage onNavigate={handleNavigate} />;
 
-  // App view — full responsive, no phone frame
   return (
     <div style={{ minHeight: "100vh", background: "var(--bg)", fontFamily: "var(--font-sans)" }}>
       {children}

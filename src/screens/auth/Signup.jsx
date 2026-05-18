@@ -34,7 +34,7 @@ export function Signup() {
   const setScreen         = useStore(s => s.setScreen);
   const signupError       = useStore(s => s.signupError);
 
-  const [wide, setWide]               = useState(isWide());
+  const [wide, setWide]                 = useState(isWide());
   const [selectedRole, setSelectedRole] = useState("attendee");
   const [loading, setLoading]           = useState(false);
   const [showPw, setShowPw]             = useState(false);
@@ -62,45 +62,27 @@ export function Signup() {
   return (
     <div style={{ minHeight: "100vh", background: "var(--bg)", display: "flex", fontFamily: "var(--font-sans)" }}>
 
-      {/* ── Left panel — perfectly centered branding ── */}
+      {/* ── Left panel — centered branding ── */}
       {wide && (
-        <div style={{
-          flex: 1,
-          background: "linear-gradient(160deg, #1a1a1a 0%, #0e0e0e 100%)",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          padding: "48px",
-          position: "relative",
-          overflow: "hidden",
-        }}>
-          {/* Glow orbs */}
+        <div style={{ flex: 1, background: "linear-gradient(160deg, #1a1a1a 0%, #0e0e0e 100%)", display: "flex", alignItems: "center", justifyContent: "center", padding: "48px", position: "relative", overflow: "hidden" }}>
           <div style={{ position: "absolute", top: 0, right: 0, width: "400px", height: "400px", borderRadius: "50%", background: "radial-gradient(circle, rgba(245,166,35,0.12) 0%, transparent 70%)", transform: "translate(30%, -30%)", pointerEvents: "none" }} />
           <div style={{ position: "absolute", bottom: 0, left: 0, width: "300px", height: "300px", borderRadius: "50%", background: "radial-gradient(circle, rgba(124,58,237,0.08) 0%, transparent 70%)", transform: "translate(-30%, 30%)", pointerEvents: "none" }} />
 
-          {/* Centered content */}
           <div style={{ position: "relative", zIndex: 1, textAlign: "center", maxWidth: "420px" }}>
-
-            {/* Logo */}
             <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "12px", marginBottom: "40px" }}>
               <div style={{ width: "44px", height: "44px", borderRadius: "14px", background: "linear-gradient(135deg, #f5a623, #e8920f)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "22px", boxShadow: "0 8px 24px rgba(245,166,35,0.4)" }}>🎟️</div>
               <span style={{ fontWeight: 800, fontSize: "20px", color: "#fff", letterSpacing: "-0.3px" }}>Master Events</span>
             </div>
-
             <div style={{ fontSize: "11px", fontWeight: 700, letterSpacing: "2px", color: "#f5a623", marginBottom: "16px", textTransform: "uppercase" }}>Get Started Today</div>
-
             <h2 style={{ fontSize: "clamp(36px, 3vw, 52px)", fontWeight: 900, color: "#fff", letterSpacing: "-1.5px", lineHeight: 1.1, marginBottom: "20px" }}>
               Ghana's best<br />
               <span style={{ background: "linear-gradient(135deg, #f5a623, #ff6b35)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
                 tickets.
               </span>
             </h2>
-
             <p style={{ color: "rgba(255,255,255,0.5)", fontSize: "16px", lineHeight: 1.7, marginBottom: "40px" }}>
               Join thousands of event-goers and organizers. Every ticket is an NFT — unfakeable, yours forever.
             </p>
-
-            {/* Feature list */}
             <div style={{ display: "flex", flexDirection: "column", gap: "14px", textAlign: "left", marginBottom: "40px" }}>
               {[
                 ["🎟️", "Buy & Own as NFT",  "Blockchain-verified on Polygon"],
@@ -116,8 +98,6 @@ export function Signup() {
                 </div>
               ))}
             </div>
-
-            {/* Stats */}
             <div style={{ display: "flex", justifyContent: "center", gap: "36px" }}>
               {[["10K+","Tickets"],["50+","Events"],["0%","Fakes"]].map(([val, label]) => (
                 <div key={label} style={{ textAlign: "center" }}>
@@ -131,19 +111,16 @@ export function Signup() {
       )}
 
       {/* ── Right panel — form ── */}
-      <div style={{
-        flex: 1,
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        justifyContent: "center",
-        padding: wide ? "48px 32px" : "40px 20px",
-        maxWidth: wide ? "560px" : "100%",
-        width: "100%",
-        margin: "0 auto",
-        overflowY: "auto",
-      }}>
+      <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: wide ? "48px 32px" : "40px 20px", maxWidth: wide ? "560px" : "100%", width: "100%", margin: "0 auto", overflowY: "auto" }}>
         <div style={{ width: "100%", maxWidth: "400px" }}>
+
+          {/* ── Back to landing ── */}
+          <motion.button
+            whileTap={{ scale: 0.95 }}
+            onClick={() => setScreen("home")}
+            style={{ background: "none", border: "none", cursor: "pointer", display: "flex", alignItems: "center", gap: "6px", color: "var(--text-muted)", fontSize: "13px", fontWeight: 600, padding: "0 0 20px 0", fontFamily: "var(--font-sans)" }}>
+            ← Back
+          </motion.button>
 
           {/* Mobile logo */}
           {!wide && (
@@ -153,7 +130,7 @@ export function Signup() {
             </div>
           )}
 
-          {/* Header — NO ThemeToggle */}
+          {/* Header */}
           <div style={{ marginBottom: "24px" }}>
             <h1 style={{ fontSize: "26px", fontWeight: 900, color: "var(--text-primary)", letterSpacing: "-0.8px", marginBottom: "4px" }}>Create account</h1>
             <p style={{ fontSize: "14px", color: "var(--text-secondary)" }}>Join Ghana's #1 NFT ticketing platform</p>
@@ -199,13 +176,7 @@ export function Signup() {
               ].map(item => (
                 <motion.div key={item.role} whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}
                   onClick={() => setSelectedRole(item.role)}
-                  style={{
-                    flex: 1, padding: "14px 12px", borderRadius: "16px", cursor: "pointer", textAlign: "center",
-                    border: "1.5px solid " + (selectedRole === item.role ? "#f5a623" : "var(--border)"),
-                    background: selectedRole === item.role ? "rgba(245,166,35,0.06)" : "var(--bg-card)",
-                    boxShadow: selectedRole === item.role ? "0 4px 16px rgba(245,166,35,0.15)" : "var(--shadow-sm)",
-                    transition: "all 0.2s",
-                  }}>
+                  style={{ flex: 1, padding: "14px 12px", borderRadius: "16px", cursor: "pointer", textAlign: "center", border: "1.5px solid " + (selectedRole === item.role ? "#f5a623" : "var(--border)"), background: selectedRole === item.role ? "rgba(245,166,35,0.06)" : "var(--bg-card)", boxShadow: selectedRole === item.role ? "0 4px 16px rgba(245,166,35,0.15)" : "var(--shadow-sm)", transition: "all 0.2s" }}>
                   <div style={{ fontSize: "24px", marginBottom: "5px" }}>{item.icon}</div>
                   <div style={{ fontWeight: 700, fontSize: "13px", color: selectedRole === item.role ? "#f5a623" : "var(--text-primary)" }}>{item.label}</div>
                   <div style={{ fontSize: "10px", color: "var(--text-muted)", marginTop: "2px" }}>{item.sub}</div>
@@ -247,8 +218,6 @@ export function Signup() {
                 {showPw ? "🙈" : "👁️"}
               </button>
             </div>
-
-            {/* Password strength chips */}
             {signupPassword && (
               <motion.div initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }}
                 style={{ display: "flex", flexWrap: "wrap", gap: "6px", marginTop: "10px" }}>
@@ -264,7 +233,7 @@ export function Signup() {
             )}
           </div>
 
-          {/* Signup error */}
+          {/* Error */}
           <AnimatePresence>
             {signupError && (
               <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
@@ -274,7 +243,7 @@ export function Signup() {
             )}
           </AnimatePresence>
 
-          {/* Submit — loading lives inside button only */}
+          {/* Submit */}
           <motion.button
             whileHover={!loading && allPwMet ? { scale: 1.02, boxShadow: "0 12px 36px rgba(245,166,35,0.4)" } : {}}
             whileTap={!loading && allPwMet ? { scale: 0.97 } : {}}
@@ -294,7 +263,6 @@ export function Signup() {
             }}>
             {loading ? (
               <>
-                {/* Inline spinner */}
                 <motion.div
                   animate={{ rotate: 360 }}
                   transition={{ repeat: Infinity, duration: 0.7, ease: "linear" }}
@@ -326,10 +294,20 @@ export function Signup() {
 
 export function RoleSelect() {
   const handleSelectRole = useStore(s => s.handleSelectRole);
+  const setScreen        = useStore(s => s.setScreen);
   return (
     <div style={{ minHeight: "100vh", background: "var(--bg)", display: "flex", alignItems: "center", justifyContent: "center", padding: "40px 24px", fontFamily: "var(--font-sans)" }}>
       <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}
         style={{ maxWidth: "440px", width: "100%", textAlign: "center" }}>
+
+        {/* Back button on RoleSelect too */}
+        <motion.button
+          whileTap={{ scale: 0.95 }}
+          onClick={() => setScreen("home")}
+          style={{ background: "none", border: "none", cursor: "pointer", display: "flex", alignItems: "center", gap: "6px", color: "var(--text-muted)", fontSize: "13px", fontWeight: 600, padding: "0 0 20px 0", fontFamily: "var(--font-sans)", margin: "0 auto" }}>
+          ← Back
+        </motion.button>
+
         <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }}
           transition={{ type: "spring", stiffness: 300, damping: 20 }}
           style={{ width: "72px", height: "72px", borderRadius: "22px", background: "linear-gradient(135deg, #f5a623, #e8920f)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "32px", margin: "0 auto 24px", boxShadow: "var(--shadow-brand)" }}>

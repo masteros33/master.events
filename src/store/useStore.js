@@ -89,7 +89,7 @@ const bootState = saved && token ? {
   currentUser: null,
   role:        null,
   isLoggedIn:  false,
-  screen:      "login",
+  screen:      "home",   // ← landing page on first load / no session
   activeTab:   "home",
 };
 
@@ -211,7 +211,8 @@ const useStore = create((set, get) => ({
     clearSession();
     toast.success("Logged out successfully");
     set({
-      screen: "login", currentUser: null, role: null,
+      screen: "home",   // ← back to landing page after logout
+      currentUser: null, role: null,
       isLoggedIn: false, menuOpen: false,
       email: "", password: "", loginError: "", activeTab: "home",
       overlayEvent: null, checkoutEvent: null,
@@ -246,14 +247,11 @@ const useStore = create((set, get) => ({
   setPayMethod:     (v) => set({ payMethod: v }),
   setViewingTicket: (v) => set({ viewingTicket: v }),
 
-  // ── handleBuyTicket — accepts real Paystack reference ──────
   handleBuyTicket: async (paymentReference) => {
     const { ticketsAPI } = await import("../api");
     const { checkoutEvent, ticketQty, payMethod, myTickets } = get();
     const loadingToast = toast.loading("Verifying payment...");
     try {
-      // Use the real Paystack reference passed in from the popup.
-      // Only fall back to a generated one for free tickets.
       const reference = paymentReference ||
         ("PAY-" + Math.random().toString(36).substr(2, 9).toUpperCase());
 
@@ -263,8 +261,7 @@ const useStore = create((set, get) => ({
         payment_reference: reference,
       });
 
-      // ── Success detection ────────────────────────────────
-      const ticketId = data.ticket_id || data.id || data.pk;
+      const ticketId  = data.ticket_id || data.id || data.pk;
       const isSuccess = ticketId || data._status === 201 || data._status === 200;
 
       if (isSuccess) {
@@ -521,7 +518,6 @@ const useStore = create((set, get) => ({
         return;
       }
     } catch {}
-    // Local fallback
     let found = null;
     Object.values(doorStaffInvites).forEach(invites => {
       invites.forEach(inv => { if (inv.code === trimmed) found = inv; });

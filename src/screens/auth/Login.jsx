@@ -141,44 +141,27 @@ export default function Login() {
   return (
     <div style={{ minHeight: "100vh", background: "var(--bg)", display: "flex", fontFamily: "var(--font-sans)" }}>
 
-      {/* ── Left panel — perfectly centered branding ── */}
+      {/* ── Left panel — centered branding ── */}
       {wide && (
-        <div style={{
-          flex: 1,
-          background: "linear-gradient(160deg, #1a1a1a 0%, #0e0e0e 100%)",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          padding: "48px",
-          position: "relative",
-          overflow: "hidden",
-        }}>
-          {/* Glow orb */}
+        <div style={{ flex: 1, background: "linear-gradient(160deg, #1a1a1a 0%, #0e0e0e 100%)", display: "flex", alignItems: "center", justifyContent: "center", padding: "48px", position: "relative", overflow: "hidden" }}>
           <div style={{ position: "absolute", top: 0, right: 0, width: "400px", height: "400px", borderRadius: "50%", background: "radial-gradient(circle, rgba(245,166,35,0.12) 0%, transparent 70%)", transform: "translate(30%, -30%)", pointerEvents: "none" }} />
           <div style={{ position: "absolute", bottom: 0, left: 0, width: "300px", height: "300px", borderRadius: "50%", background: "radial-gradient(circle, rgba(124,58,237,0.08) 0%, transparent 70%)", transform: "translate(-30%, 30%)", pointerEvents: "none" }} />
 
-          {/* Centered content */}
           <div style={{ position: "relative", zIndex: 1, textAlign: "center", maxWidth: "420px" }}>
-            {/* Logo */}
             <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "12px", marginBottom: "40px" }}>
               <div style={{ width: "44px", height: "44px", borderRadius: "14px", background: "linear-gradient(135deg, #f5a623, #e8920f)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "22px", boxShadow: "0 8px 24px rgba(245,166,35,0.4)" }}>🎟️</div>
               <span style={{ fontWeight: 800, fontSize: "20px", color: "#fff", letterSpacing: "-0.3px" }}>Master Events</span>
             </div>
-
             <div style={{ fontSize: "11px", fontWeight: 700, letterSpacing: "2px", color: "#f5a623", marginBottom: "16px", textTransform: "uppercase" }}>Welcome Back</div>
-
             <h2 style={{ fontSize: "clamp(36px, 3vw, 52px)", fontWeight: 900, color: "#fff", letterSpacing: "-1.5px", lineHeight: 1.1, marginBottom: "20px" }}>
               Your tickets<br />
               <span style={{ background: "linear-gradient(135deg, #f5a623, #ff6b35)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
                 are waiting.
               </span>
             </h2>
-
             <p style={{ color: "rgba(255,255,255,0.5)", fontSize: "16px", lineHeight: 1.7, marginBottom: "40px" }}>
               Every ticket is an NFT on Polygon — secured by blockchain, owned by you forever.
             </p>
-
-            {/* Feature list */}
             <div style={{ display: "flex", flexDirection: "column", gap: "14px", textAlign: "left", marginBottom: "40px" }}>
               {[
                 ["⛓️", "NFT on Polygon",  "Blockchain-verified ownership"],
@@ -194,8 +177,6 @@ export default function Login() {
                 </div>
               ))}
             </div>
-
-            {/* Stats */}
             <div style={{ display: "flex", justifyContent: "center", gap: "36px" }}>
               {[["10K+","Tickets"],["50+","Events"],["0%","Fakes"]].map(([val, label]) => (
                 <div key={label} style={{ textAlign: "center" }}>
@@ -209,19 +190,16 @@ export default function Login() {
       )}
 
       {/* ── Right panel — form ── */}
-      <div style={{
-        flex: 1,
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        justifyContent: "center",
-        padding: wide ? "48px 32px" : "40px 20px",
-        overflowY: "auto",
-        maxWidth: wide ? "560px" : "100%",
-        width: "100%",
-        margin: "0 auto",
-      }}>
+      <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: wide ? "48px 32px" : "40px 20px", overflowY: "auto", maxWidth: wide ? "560px" : "100%", width: "100%", margin: "0 auto" }}>
         <div style={{ width: "100%", maxWidth: "400px" }}>
+
+          {/* ── Back to landing ── */}
+          <motion.button
+            whileTap={{ scale: 0.95 }}
+            onClick={() => setScreen("home")}
+            style={{ background: "none", border: "none", cursor: "pointer", display: "flex", alignItems: "center", gap: "6px", color: "var(--text-muted)", fontSize: "13px", fontWeight: 600, padding: "0 0 20px 0", fontFamily: "var(--font-sans)" }}>
+            ← Back
+          </motion.button>
 
           {/* Mobile logo */}
           {!wide && (
@@ -231,7 +209,7 @@ export default function Login() {
             </div>
           )}
 
-          {/* Header — NO ThemeToggle */}
+          {/* Header */}
           <div style={{ marginBottom: "28px" }}>
             <h1 style={{ fontSize: "26px", fontWeight: 900, color: "var(--text-primary)", letterSpacing: "-0.8px", marginBottom: "4px" }}>Log in</h1>
             <p style={{ fontSize: "14px", color: "var(--text-secondary)" }}>Welcome back to Master Events</p>
@@ -304,7 +282,7 @@ export default function Login() {
             </div>
           </div>
 
-          {/* Rate lock warning */}
+          {/* Rate lock */}
           <AnimatePresence>
             {rateLock && (
               <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
@@ -324,7 +302,7 @@ export default function Login() {
             )}
           </AnimatePresence>
 
-          {/* Submit button — loading state lives HERE only, no floating notification */}
+          {/* Submit */}
           <motion.button
             whileHover={!loading && !rateLock ? { scale: 1.02, boxShadow: "0 12px 36px rgba(245,166,35,0.4)" } : {}}
             whileTap={!loading && !rateLock ? { scale: 0.97 } : {}}
@@ -344,7 +322,6 @@ export default function Login() {
             }}>
             {loading ? (
               <>
-                {/* Inline spinner */}
                 <motion.div
                   animate={{ rotate: 360 }}
                   transition={{ repeat: Infinity, duration: 0.7, ease: "linear" }}

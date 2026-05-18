@@ -5,7 +5,6 @@ import PhoneFrame from "./components/PhoneFrame";
 import BottomNav from "./components/BottomNav";
 import Login from "./screens/auth/Login";
 import { Signup, RoleSelect } from "./screens/auth/Signup";
-import LandingPage from "./screens/landing/LandingPage";
 import AttendeeHome from "./screens/attendee/AttendeeHome";
 import { AttendeeTickets, AttendeeAlerts } from "./screens/attendee/AttendeeScreens";
 import {
@@ -22,7 +21,7 @@ import { useTheme } from "./hooks/useTheme";
 import {
   Home, Ticket, Bell, LayoutDashboard, CalendarDays, Wallet,
   LogOut, Sun, Moon, Monitor, ChevronLeft, ChevronRight,
-  PlusCircle, Zap, ScanLine
+  PlusCircle, Zap, ScanLine, Search
 } from "lucide-react";
 
 const FULL_SCREENS = [
@@ -80,6 +79,99 @@ function NavItem({ icon: Icon, label, active, collapsed, onClick, title }) {
   );
 }
 
+// ── Desktop topbar ────────────────────────────────────────────
+function DesktopTopbar({ navItems, activeTab, isFullScreen, screen, screenTitles, currentUser, role, setScreen, setActiveTab, theme, setTheme }) {
+  const searchQ    = useStore(s => s.searchQ);
+  const setSearchQ = useStore(s => s.setSearchQ);
+
+  const themeOpts  = { light: { Icon: Sun, label: "Light" }, dark: { Icon: Moon, label: "Dark" }, system: { Icon: Monitor, label: "System" } };
+  const themeOrder = ["light", "dark", "system"];
+  const nextTheme  = themeOrder[(themeOrder.indexOf(theme) + 1) % 3];
+  const ThemeIcon  = themeOpts[theme].Icon;
+
+  const pageTitle = isFullScreen
+    ? screenTitles[screen] || "Master Events"
+    : navItems.find(n => n.id === activeTab)?.label || "Master Events";
+
+  return (
+    <div style={{
+      background: "var(--bg-card)",
+      borderBottom: "1px solid var(--border)",
+      padding: "0 28px",
+      height: "64px",
+      display: "flex", alignItems: "center", justifyContent: "space-between",
+      gap: "20px",
+      position: "sticky", top: 0, zIndex: 40,
+      boxShadow: "var(--shadow-sm)", flexShrink: 0,
+    }}>
+
+      {/* LEFT — page title */}
+      <div style={{ flexShrink: 0, minWidth: "160px" }}>
+        <h1 style={{ fontWeight: 800, fontSize: "17px", color: "var(--text-primary)", letterSpacing: "-0.4px", lineHeight: 1.2 }}>
+          {pageTitle}
+        </h1>
+        <p style={{ fontSize: "10px", color: "var(--text-muted)", marginTop: "1px" }}>
+          {new Date().toLocaleDateString("en-GH", { weekday: "short", month: "short", day: "numeric" })}
+        </p>
+      </div>
+
+      {/* CENTER — search */}
+      <div style={{ flex: 1, maxWidth: "440px", position: "relative" }}>
+        <div style={{ position: "absolute", left: "13px", top: "50%", transform: "translateY(-50%)", pointerEvents: "none" }}>
+          <Search size={15} color="var(--text-muted)" />
+        </div>
+        <input
+          value={searchQ}
+          onChange={e => {
+            setSearchQ(e.target.value);
+            if (activeTab !== "home" && role === "attendee") {
+              setActiveTab("home"); setScreen("app");
+            }
+          }}
+          placeholder="Search events, venues, categories..."
+          style={{ width: "100%", padding: "9px 14px 9px 38px", background: "var(--bg-subtle)", border: "1.5px solid var(--border)", borderRadius: "12px", fontSize: "13px", color: "var(--text-primary)", outline: "none", boxSizing: "border-box", fontFamily: "var(--font-sans)", transition: "border-color 0.2s" }}
+          onFocus={e => { e.target.style.borderColor = "var(--brand)"; e.target.style.background = "var(--bg-card)"; }}
+          onBlur={e => { e.target.style.borderColor = "var(--border)"; e.target.style.background = "var(--bg-subtle)"; }}
+        />
+        {searchQ && (
+          <div onClick={() => setSearchQ("")}
+            style={{ position: "absolute", right: "12px", top: "50%", transform: "translateY(-50%)", cursor: "pointer", color: "var(--text-muted)", fontSize: "14px" }}>✕</div>
+        )}
+      </div>
+
+      {/* RIGHT — polygon + theme + user */}
+      <div style={{ display: "flex", alignItems: "center", gap: "12px", flexShrink: 0 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "5px", padding: "5px 10px", borderRadius: "99px", border: "1px solid rgba(22,163,74,0.2)", background: "rgba(22,163,74,0.06)" }}>
+          <motion.div animate={{ scale: [1, 1.4, 1] }} transition={{ repeat: Infinity, duration: 2 }}
+            style={{ width: "6px", height: "6px", borderRadius: "50%", background: "#16a34a" }} />
+          <span style={{ fontSize: "10px", fontWeight: 700, color: "#16a34a" }}>Polygon Live</span>
+        </div>
+
+        <motion.div whileTap={{ scale: 0.9 }} onClick={() => setTheme(nextTheme)}
+          style={{ width: "32px", height: "32px", borderRadius: "9px", background: "var(--bg-subtle)", border: "1px solid var(--border)", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}>
+          <ThemeIcon size={15} color="var(--text-secondary)" />
+        </motion.div>
+
+        <div style={{ display: "flex", alignItems: "center", gap: "10px", padding: "6px 10px", borderRadius: "12px", background: "var(--bg-subtle)", border: "1px solid var(--border)", cursor: "pointer" }}
+          onMouseEnter={e => e.currentTarget.style.background = "var(--bg-hover)"}
+          onMouseLeave={e => e.currentTarget.style.background = "var(--bg-subtle)"}>
+          <div style={{ width: "30px", height: "30px", borderRadius: "50%", background: "linear-gradient(135deg, #f5a623, #e8920f)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "13px", fontWeight: 700, color: "#fff", flexShrink: 0 }}>
+            {currentUser?.first_name?.[0]?.toUpperCase() || "U"}
+          </div>
+          <div>
+            <div style={{ fontWeight: 700, fontSize: "13px", color: "var(--text-primary)", whiteSpace: "nowrap", lineHeight: 1.2 }}>
+              {currentUser?.first_name} {currentUser?.last_name}
+            </div>
+            <div style={{ fontSize: "10px", fontWeight: 600, color: "#f5a623", letterSpacing: "0.3px", textTransform: "uppercase", lineHeight: 1.2, marginTop: "1px" }}>
+              {role === "organizer" ? "⚡ Organizer" : "🎟️ Attendee"}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ── Desktop layout ────────────────────────────────────────────
 function DesktopAppLayout() {
   const screen       = useStore(s => s.screen);
@@ -110,11 +202,16 @@ function DesktopAppLayout() {
   const renderContent = () => {
     if (isFullScreen) {
       const map = {
-        checkout: <Checkout />, ticketView: <TicketView />,
-        resale: <Resale />, resaleSuccess: <ResaleSuccess />,
-        transfer: <Transfer />, paymentSuccess: <PaymentSuccess />,
-        addEvent: <AddEvent />, orgEventDetail: <OrganizerEventDetail />,
-        scanTicket: <OrganizerScan />, doorStaffLogin: <DoorStaffLogin />,
+        checkout:      <Checkout />,
+        ticketView:    <TicketView />,
+        resale:        <Resale />,
+        resaleSuccess: <ResaleSuccess />,
+        transfer:      <Transfer />,
+        paymentSuccess:<PaymentSuccess />,
+        addEvent:      <AddEvent />,
+        orgEventDetail:<OrganizerEventDetail />,
+        scanTicket:    <OrganizerScan />,
+        doorStaffLogin:<DoorStaffLogin />,
         doorStaffScan: <DoorStaffScan />,
       };
       return map[screen];
@@ -134,29 +231,30 @@ function DesktopAppLayout() {
   };
 
   const screenTitles = {
-    checkout: "Checkout", ticketView: "Your Ticket",
-    resale: "Resell Ticket", resaleSuccess: "Listed!",
-    transfer: "Transfer Ticket", paymentSuccess: "Payment Successful",
-    addEvent: "Create Event", orgEventDetail: "Event Details",
-    scanTicket: "Scan Tickets", doorStaffLogin: "Door Staff",
+    checkout:      "Checkout",
+    ticketView:    "Your Ticket",
+    resale:        "Resell Ticket",
+    resaleSuccess: "Listed!",
+    transfer:      "Transfer Ticket",
+    paymentSuccess:"Payment Successful",
+    addEvent:      "Create Event",
+    orgEventDetail:"Event Details",
+    scanTicket:    "Scan Tickets",
+    doorStaffLogin:"Door Staff",
     doorStaffScan: "Door Scanner",
   };
 
-  const themeOpts  = { light: { Icon: Sun, label: "Light" }, dark: { Icon: Moon, label: "Dark" }, system: { Icon: Monitor, label: "System" } };
-  const themeOrder = ["light", "dark", "system"];
-  const nextTheme  = themeOrder[(themeOrder.indexOf(theme) + 1) % 3];
-  const ThemeIcon  = themeOpts[theme].Icon;
-  const sidebarW   = collapsed ? "68px" : "256px";
+  const sidebarW = collapsed ? "68px" : "256px";
 
   return (
     <div style={{ display: "flex", height: "100vh", background: "var(--bg)", fontFamily: "var(--font-sans)", overflow: "hidden" }}>
 
-      {/* ── Sidebar ── */}
+      {/* Sidebar */}
       <motion.aside animate={{ width: sidebarW }} transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
         style={{ flexShrink: 0, background: "var(--bg-card)", borderRight: "1px solid var(--border)", display: "flex", flexDirection: "column", height: "100vh", overflow: "hidden", boxShadow: "2px 0 20px rgba(0,0,0,0.04)", position: "relative", zIndex: 10 }}>
 
         {/* Brand */}
-        <div style={{ padding: "14px 12px", borderBottom: "1px solid var(--border)", display: "flex", alignItems: "center", justifyContent: collapsed ? "center" : "space-between", gap: "8px", minHeight: "60px", flexShrink: 0 }}>
+        <div style={{ padding: "14px 12px", borderBottom: "1px solid var(--border)", display: "flex", alignItems: "center", justifyContent: collapsed ? "center" : "space-between", gap: "8px", minHeight: "64px", flexShrink: 0 }}>
           <div style={{ display: "flex", alignItems: "center", gap: "10px", overflow: "hidden", flex: 1 }}>
             <div style={{ width: "32px", height: "32px", borderRadius: "10px", background: "linear-gradient(135deg, #f5a623, #e8920f)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, boxShadow: "0 4px 12px rgba(245,166,35,0.3)" }}>
               <Ticket size={16} color="#fff" strokeWidth={2.5} />
@@ -257,44 +355,31 @@ function DesktopAppLayout() {
 
         {/* Bottom */}
         <div style={{ padding: "8px", borderTop: "1px solid var(--border)", flexShrink: 0 }}>
-          <motion.div whileTap={{ scale: 0.9 }} onClick={() => setTheme(nextTheme)}
-            title={collapsed ? themeOpts[theme].label : "Switch to " + nextTheme}
-            style={{ display: "flex", alignItems: "center", gap: "10px", padding: collapsed ? "10px 0" : "9px 10px", justifyContent: collapsed ? "center" : "flex-start", borderRadius: "12px", cursor: "pointer", marginBottom: "2px", transition: "background 0.18s" }}
-            onMouseEnter={e => { e.currentTarget.style.background = "var(--bg-hover)"; }}
-            onMouseLeave={e => { e.currentTarget.style.background = "transparent"; }}>
-            <ThemeIcon size={17} color="var(--text-secondary)" style={{ flexShrink: 0 }} />
-            {!collapsed && <span style={{ fontSize: "13px", fontWeight: 600, color: "var(--text-secondary)" }}>{themeOpts[theme].label} mode</span>}
-          </motion.div>
           <motion.div whileTap={{ scale: 0.9 }} onClick={handleLogout} title={collapsed ? "Log Out" : ""}
             style={{ display: "flex", alignItems: "center", gap: "10px", padding: collapsed ? "10px 0" : "9px 10px", justifyContent: collapsed ? "center" : "flex-start", borderRadius: "12px", cursor: "pointer", transition: "background 0.18s" }}
             onMouseEnter={e => { e.currentTarget.style.background = "var(--error-bg)"; }}
             onMouseLeave={e => { e.currentTarget.style.background = "transparent"; }}>
-            <LogOut size={17} color="var(--error)" style={{ flexShrink: 0 }} />
-            {!collapsed && <span style={{ fontWeight: 600, fontSize: "13px", color: "var(--error)" }}>Log Out</span>}
+          <LogOut size={17} color="var(--error)" style={{ flexShrink: 0 }} />
+          {!collapsed && <span style={{ fontWeight: 600, fontSize: "13px", color: "var(--error)" }}>Log Out</span>}
           </motion.div>
         </div>
       </motion.aside>
 
-      {/* ── Main content ── */}
+      {/* Main content */}
       <main style={{ flex: 1, display: "flex", flexDirection: "column", minWidth: 0, overflow: "hidden" }}>
-        {/* Topbar */}
-        <div style={{ background: "var(--bg-card)", borderBottom: "1px solid var(--border)", padding: "14px 32px", display: "flex", justifyContent: "space-between", alignItems: "center", position: "sticky", top: 0, zIndex: 40, boxShadow: "var(--shadow-sm)", flexShrink: 0 }}>
-          <div>
-            <h1 style={{ fontWeight: 800, fontSize: "19px", color: "var(--text-primary)", letterSpacing: "-0.4px" }}>
-              {isFullScreen ? screenTitles[screen] || "Master Events" : navItems.find(n => n.id === activeTab)?.label || "Master Events"}
-            </h1>
-            <p style={{ fontSize: "11px", color: "var(--text-muted)", marginTop: "1px" }}>
-              {new Date().toLocaleDateString("en-GH", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}
-            </p>
-          </div>
-          <div style={{ display: "flex", alignItems: "center", gap: "6px", padding: "6px 12px", borderRadius: "99px", border: "1px solid rgba(22,163,74,0.2)", background: "rgba(22,163,74,0.06)" }}>
-            <motion.div animate={{ scale: [1, 1.4, 1] }} transition={{ repeat: Infinity, duration: 2 }}
-              style={{ width: "6px", height: "6px", borderRadius: "50%", background: "#16a34a" }} />
-            <span style={{ fontSize: "11px", fontWeight: 700, color: "#16a34a" }}>Polygon Live</span>
-          </div>
-        </div>
-
-        {/* Page */}
+        <DesktopTopbar
+          navItems={navItems}
+          activeTab={activeTab}
+          isFullScreen={isFullScreen}
+          screen={screen}
+          screenTitles={screenTitles}
+          currentUser={currentUser}
+          role={role}
+          setScreen={setScreen}
+          setActiveTab={setActiveTab}
+          theme={theme}
+          setTheme={setTheme}
+        />
         <div style={{ flex: 1, overflowY: "auto", overflowX: "hidden", WebkitOverflowScrolling: "touch" }}>
           <div key={screen + activeTab} className="screen-enter" style={{ minHeight: "100%" }}>
             {renderContent()}
@@ -309,19 +394,25 @@ function DesktopAppLayout() {
 function MobileAppContent() {
   const screen = useStore(s => s.screen);
   const routes = {
-    landing: <LandingPage />,
-    login: <Login />, signup: <Signup />, role: <RoleSelect />,
-    app: <AppTabs />,
-    checkout: <Checkout />, ticketView: <TicketView />,
-    resale: <Resale />, resaleSuccess: <ResaleSuccess />,
-    transfer: <Transfer />, paymentSuccess: <PaymentSuccess />,
-    addEvent: <AddEvent />, orgEventDetail: <OrganizerEventDetail />,
-    scanTicket: <OrganizerScan />, doorStaffLogin: <DoorStaffLogin />,
+    login:         <Login />,
+    signup:        <Signup />,
+    role:          <RoleSelect />,
+    app:           <AppTabs />,
+    checkout:      <Checkout />,
+    ticketView:    <TicketView />,
+    resale:        <Resale />,
+    resaleSuccess: <ResaleSuccess />,
+    transfer:      <Transfer />,
+    paymentSuccess:<PaymentSuccess />,
+    addEvent:      <AddEvent />,
+    orgEventDetail:<OrganizerEventDetail />,
+    scanTicket:    <OrganizerScan />,
+    doorStaffLogin:<DoorStaffLogin />,
     doorStaffScan: <DoorStaffScan />,
   };
   return (
     <div key={screen} className="screen-enter app-shell" style={{ background: "var(--bg)" }}>
-      {routes[screen] || <LandingPage />}
+      {routes[screen] || <AppTabs />}
     </div>
   );
 }
@@ -339,20 +430,20 @@ export default function App() {
     return () => window.removeEventListener("resize", handler);
   }, []);
 
-  // ── Desktop auth / landing — full screen, no PhoneFrame ───
+  // ── Desktop auth — full screen ────────────────────────────
   if (desktop && !isLoggedIn) {
-    if (screen === "signup")  return <Signup />;
-    if (screen === "role")    return <RoleSelect />;
-    if (screen === "login")   return <Login />;
-    return <LandingPage />;
+    if (screen === "signup") return <Signup />;
+    if (screen === "role")   return <RoleSelect />;
+    if (screen === "login")  return <Login />;
+    // Guest on desktop → PhoneFrame handles LandingPage
   }
 
-  // ── Desktop app ────────────────────────────────────────────
-  if (desktop && isLoggedIn) {
-    return <DesktopAppLayout />;
-  }
+  // ── Desktop app ───────────────────────────────────────────
+  if (desktop && isLoggedIn) return <DesktopAppLayout />;
 
-  // ── Mobile — all screens in PhoneFrame ────────────────────
+  // ── All other cases (mobile + desktop guest) → PhoneFrame ─
+  // PhoneFrame already has LandingPage built in and handles
+  // navigation to login/signup itself
   return (
     <PhoneFrame>
       <MobileAppContent />

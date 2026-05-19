@@ -6,6 +6,7 @@ import { Toaster } from 'react-hot-toast'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { useTheme } from './hooks/useTheme'
 import ErrorBoundary from './components/ErrorBoundary'
+import TicketSuccessToast from './components/TicketSuccessToast'
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -30,6 +31,7 @@ function Root() {
   return (
     <>
       <App />
+      <TicketSuccessToast />
       <Toaster
         position="top-center"
         toastOptions={{

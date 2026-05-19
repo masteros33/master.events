@@ -26,15 +26,19 @@ function ForgotPassword({ onBack }) {
   const [error, setError]     = useState("");
 
  const handleSend = async () => {
-  if (!email) { setError("Please enter your email"); return; }
-  if (!email.includes("@") || !email.includes(".")) {
-    setError("Please enter a valid email address"); return;
+  if (!email.trim()) { setError("Please enter your email"); return; }
+  // Simple but reliable email check
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(email.trim())) {
+    setError("Please enter a valid email address e.g. name@email.com");
+    return;
   }
   setLoading(true); setError("");
   try {
     const res = await fetch(`${API}/api/auth/forgot-password/`, {
-      method: "POST", headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email }),
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email: email.trim() }),
     });
     const data = await res.json();
     if (res.ok) setSent(true);

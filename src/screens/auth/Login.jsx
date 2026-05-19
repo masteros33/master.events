@@ -25,20 +25,23 @@ function ForgotPassword({ onBack }) {
   const [sent, setSent]       = useState(false);
   const [error, setError]     = useState("");
 
-  const handleSend = async () => {
-    if (!email) { setError("Please enter your email"); return; }
-    setLoading(true); setError("");
-    try {
-      const res  = await fetch(`${API}/api/auth/forgot-password/`, {
-        method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email }),
-      });
-      const data = await res.json();
-      if (res.ok) setSent(true);
-      else setError(data.error || "Something went wrong");
-    } catch { setError("Connection error. Try again."); }
-    setLoading(false);
-  };
+ const handleSend = async () => {
+  if (!email) { setError("Please enter your email"); return; }
+  if (!email.includes("@") || !email.includes(".")) {
+    setError("Please enter a valid email address"); return;
+  }
+  setLoading(true); setError("");
+  try {
+    const res = await fetch(`${API}/api/auth/forgot-password/`, {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email }),
+    });
+    const data = await res.json();
+    if (res.ok) setSent(true);
+    else setError(data.error || "Something went wrong");
+  } catch { setError("Connection error. Try again."); }
+  setLoading(false);
+};
 
   if (sent) return (
     <div style={{ minHeight: "100vh", background: "var(--bg)", display: "flex", alignItems: "center", justifyContent: "center", padding: "40px 24px" }}>

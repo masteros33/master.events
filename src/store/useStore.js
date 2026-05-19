@@ -247,70 +247,97 @@ const useStore = create((set, get) => ({
   setPayMethod:     (v) => set({ payMethod: v }),
   setViewingTicket: (v) => set({ viewingTicket: v }),
 
+
   handleBuyTicket: async (paymentReference) => {
-    const { ticketsAPI } = await import("../api");
-    const { checkoutEvent, ticketQty, payMethod, myTickets } = get();
-    const loadingToast = toast.loading("Verifying payment...");
-    try {
-      const reference = paymentReference ||
-        ("PAY-" + Math.random().toString(36).substr(2, 9).toUpperCase());
+  const { ticketsAPI } = await import("../api");
+  const { checkoutEvent, ticketQty, payMethod, myTickets } = get();
+  const loadingToast = toast.loading("Verifying payment...");
+  try {
+    const reference = paymentReference ||
+      ("PAY-" + Math.random().toString(36).substr(2, 9).toUpperCase());
 
-      const data = await ticketsAPI.purchase({
-        event_id:          checkoutEvent.id,
-        quantity:          ticketQty,
-        payment_reference: reference,
+    const data = await ticketsAPI.purchase({
+      event_id:          checkoutEvent.id,
+      quantity:          ticketQty,
+      payment_reference: reference,
+    });
+
+    // ── Success: 201 Created OR ticket_id present ────────────
+    const ticketId  = data.ticket_id || data.id || data.pk;
+    const isSuccess = data._status === 201 || data._status === 200 || !!ticketId;
+
+    if (isSuccess && ticketId) {
+      // Use backend event data if available, fall back to checkoutEvent
+      const eventData = data.event || checkoutEvent;
+
+      const ticket = {
+        id:           ticketId,
+        ticket_id:    ticketId,
+        event:        {
+          id:          eventData.id          || checkoutEvent.id,
+          name:        eventData.name        || checkoutEvent.name,
+          description: eventData.description || checkoutEvent.description || "",
+          category:    eventData.category    || checkoutEvent.category,
+          venue:       eventData.venue       || checkoutEvent.venue,
+          city:        eventData.city        || checkoutEvent.city,
+          date:        eventData.date        || checkoutEvent.date,
+          time:        eventData.time        || checkoutEvent.time,
+          price:       eventData.price       || checkoutEvent.price,
+          image:       eventData.image       || checkoutEvent.image,
+        },
+        qty:          ticketQty,
+        quantity:     data.quantity          || ticketQty,
+        payMethod,
+        purchasedAt:  new Date().toLocaleDateString(),
+        // owner — handle both string and object formats
+        owner:        typeof data.owner === "object"
+          ? ((data.owner?.first_name || "") + " " + (data.owner?.last_name || "")).trim()
+          : (data.owner || ""),
+        ownerEmail:   data.owner?.email      || null,
+        status:       data.status            || "active",
+        qr_data:      data.qr_data           || null,
+        dynamic_qr:   data.dynamic_qr        || null,
+        qr_base64:    data.dynamic_qr        || data.qr_base64 || null,
+        qr_image_url: data.qr_image_url      || null,
+        qr_image:     data.qr_image
+          ? (data.qr_image.startsWith("http")
+              ? data.qr_image
+              : "https://master-events-backend.onrender.com" + data.qr_image)
+          : null,
+        nft_tx_hash:  data.nft_tx_hash       || null,
+        nft_token_id: data.nft_token_id      || null,
+        nft_minting:  data.nft_minting       || true,
+      };
+
+      set({
+        myTickets:     [...myTickets, ticket],
+        checkoutEvent: null,
+        overlayEvent:  null,
+        activeTab:     "tickets",
+        screen:        "paymentSuccess",
+        viewingTicket: ticket,
       });
-
-      const ticketId  = data.ticket_id || data.id || data.pk;
-      const isSuccess = ticketId || data._status === 201 || data._status === 200;
-
-      if (isSuccess) {
-        const ticket = {
-          id:           ticketId || reference,
-          ticket_id:    ticketId || reference,
-          event:        checkoutEvent,
-          qty:          ticketQty,
-          quantity:     ticketQty,
-          payMethod,
-          purchasedAt:  new Date().toLocaleDateString(),
-          owner:        (data.owner?.first_name || "") + " " + (data.owner?.last_name || ""),
-          ownerEmail:   data.owner?.email,
-          status:       data.status || "active",
-          qr_data:      data.qr_data      || null,
-          dynamic_qr:   data.dynamic_qr   || null,
-          qr_base64:    data.dynamic_qr   || null,
-          qr_image_url: data.qr_image_url || null,
-          qr_image:     data.qr_image
-            ? (data.qr_image.startsWith("http") ? data.qr_image : BACKEND + data.qr_image)
-            : null,
-          nft_tx_hash:  data.nft_tx_hash  || null,
-          nft_token_id: data.nft_token_id || null,
-          nft_minting:  data.nft_minting  || false,
-        };
-        set({
-          myTickets:     [...myTickets, ticket],
-          checkoutEvent: null,
-          overlayEvent:  null,
-          activeTab:     "tickets",
-          screen:        "paymentSuccess",
-          viewingTicket: ticket,
-        });
-        toast.dismiss(loadingToast);
-        toast.success("🎉 Payment successful! NFT minting on Polygon...");
-      } else {
-        toast.dismiss(loadingToast);
-        const errMsg = data.error || data.detail || data.message ||
-          (typeof data === "object"
-            ? Object.values(data).flat().join(" ")
-            : "Purchase failed.");
-        toast.error(errMsg);
-      }
-    } catch (e) {
-      console.error("Purchase error:", e);
       toast.dismiss(loadingToast);
-      toast.error("Connection error. Please try again.");
+      toast.success("🎉 Payment successful! NFT minting on Polygon...");
+
+    } else {
+      // ── Error response ──────────────────────────────────────
+      toast.dismiss(loadingToast);
+      const errMsg = data.error || data.detail || data.message ||
+        (typeof data === "object"
+          ? Object.values(data)
+              .filter(v => typeof v === "string")
+              .join(" ")
+          : "Purchase failed.");
+      toast.error(errMsg || "Purchase failed. Please try again.");
     }
-  },
+
+  } catch (e) {
+    console.error("Purchase error:", e);
+    toast.dismiss(loadingToast);
+    toast.error("Connection error. Please try again.");
+  }
+},
 
   // ── Resale ─────────────────────────────────────────────────
   resaleTicket: null, resalePrice: "", resaleError: "",

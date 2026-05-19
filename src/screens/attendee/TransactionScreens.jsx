@@ -571,9 +571,10 @@ export function Checkout() {
 
     const doHandle = (ref) => {
       var tid = setTimeout(function () {
-        setPaying(false);
-        setPayError("Server warming up. Payment received — check My Tickets in ~1 min. Ref: " + ref);
-      }, 35000);
+  setPaying(false);
+  setPayError("Server warming up. Payment received — check My Tickets in ~1 min. Ref: " + ref);
+}, 90000);
+     
       handleBuyTicket(ref)
         .then(function () { clearTimeout(tid); setPaying(false); })
         .catch(function () { clearTimeout(tid); setPaying(false); setPayError("Ticket creation failed. Ref: " + ref); });

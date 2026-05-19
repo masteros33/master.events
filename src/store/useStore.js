@@ -226,6 +226,10 @@ const useStore = create((set, get) => ({
   menuOpen:    false,
   setMenuOpen: (v) => set({ menuOpen: v }),
 
+  // ── Password reset params ──────────────────────────────────
+resetPasswordParams:    null,
+setResetPasswordParams: (v) => set({ resetPasswordParams: v }),
+
   // ── Ticket notification ────────────────────────────────────
   newTicketCount:        0,
   showSuccessToast:      false,

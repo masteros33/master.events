@@ -5,6 +5,7 @@ import PhoneFrame from "./components/PhoneFrame";
 import BottomNav from "./components/BottomNav";
 import Login from "./screens/auth/Login";
 import { Signup, RoleSelect } from "./screens/auth/Signup";
+import ResetPassword from "./screens/auth/ResetPassword";
 import AttendeeHome from "./screens/attendee/AttendeeHome";
 import { AttendeeTickets, AttendeeAlerts } from "./screens/attendee/AttendeeScreens";
 import {
@@ -94,64 +95,35 @@ function DesktopTopbar({ navItems, activeTab, isFullScreen, screen, screenTitles
     : navItems.find(n => n.id === activeTab)?.label || "Master Events";
 
   return (
-    <div style={{
-      background: "var(--bg-card)",
-      borderBottom: "1px solid var(--border)",
-      padding: "0 28px",
-      height: "64px",
-      display: "flex", alignItems: "center", justifyContent: "space-between",
-      gap: "20px",
-      position: "sticky", top: 0, zIndex: 40,
-      boxShadow: "var(--shadow-sm)", flexShrink: 0,
-    }}>
-
-      {/* LEFT — page title */}
+    <div style={{ background: "var(--bg-card)", borderBottom: "1px solid var(--border)", padding: "0 28px", height: "64px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: "20px", position: "sticky", top: 0, zIndex: 40, boxShadow: "var(--shadow-sm)", flexShrink: 0 }}>
       <div style={{ flexShrink: 0, minWidth: "160px" }}>
-        <h1 style={{ fontWeight: 800, fontSize: "17px", color: "var(--text-primary)", letterSpacing: "-0.4px", lineHeight: 1.2 }}>
-          {pageTitle}
-        </h1>
+        <h1 style={{ fontWeight: 800, fontSize: "17px", color: "var(--text-primary)", letterSpacing: "-0.4px", lineHeight: 1.2 }}>{pageTitle}</h1>
         <p style={{ fontSize: "10px", color: "var(--text-muted)", marginTop: "1px" }}>
           {new Date().toLocaleDateString("en-GH", { weekday: "short", month: "short", day: "numeric" })}
         </p>
       </div>
-
-      {/* CENTER — search */}
       <div style={{ flex: 1, maxWidth: "440px", position: "relative" }}>
         <div style={{ position: "absolute", left: "13px", top: "50%", transform: "translateY(-50%)", pointerEvents: "none" }}>
           <Search size={15} color="var(--text-muted)" />
         </div>
-        <input
-          value={searchQ}
-          onChange={e => {
-            setSearchQ(e.target.value);
-            if (activeTab !== "home" && role === "attendee") {
-              setActiveTab("home"); setScreen("app");
-            }
-          }}
+        <input value={searchQ}
+          onChange={e => { setSearchQ(e.target.value); if (activeTab !== "home" && role === "attendee") { setActiveTab("home"); setScreen("app"); } }}
           placeholder="Search events, venues, categories..."
           style={{ width: "100%", padding: "9px 14px 9px 38px", background: "var(--bg-subtle)", border: "1.5px solid var(--border)", borderRadius: "12px", fontSize: "13px", color: "var(--text-primary)", outline: "none", boxSizing: "border-box", fontFamily: "var(--font-sans)", transition: "border-color 0.2s" }}
           onFocus={e => { e.target.style.borderColor = "var(--brand)"; e.target.style.background = "var(--bg-card)"; }}
           onBlur={e => { e.target.style.borderColor = "var(--border)"; e.target.style.background = "var(--bg-subtle)"; }}
         />
-        {searchQ && (
-          <div onClick={() => setSearchQ("")}
-            style={{ position: "absolute", right: "12px", top: "50%", transform: "translateY(-50%)", cursor: "pointer", color: "var(--text-muted)", fontSize: "14px" }}>✕</div>
-        )}
+        {searchQ && <div onClick={() => setSearchQ("")} style={{ position: "absolute", right: "12px", top: "50%", transform: "translateY(-50%)", cursor: "pointer", color: "var(--text-muted)", fontSize: "14px" }}>✕</div>}
       </div>
-
-      {/* RIGHT — polygon + theme + user */}
       <div style={{ display: "flex", alignItems: "center", gap: "12px", flexShrink: 0 }}>
         <div style={{ display: "flex", alignItems: "center", gap: "5px", padding: "5px 10px", borderRadius: "99px", border: "1px solid rgba(22,163,74,0.2)", background: "rgba(22,163,74,0.06)" }}>
-          <motion.div animate={{ scale: [1, 1.4, 1] }} transition={{ repeat: Infinity, duration: 2 }}
-            style={{ width: "6px", height: "6px", borderRadius: "50%", background: "#16a34a" }} />
+          <motion.div animate={{ scale: [1, 1.4, 1] }} transition={{ repeat: Infinity, duration: 2 }} style={{ width: "6px", height: "6px", borderRadius: "50%", background: "#16a34a" }} />
           <span style={{ fontSize: "10px", fontWeight: 700, color: "#16a34a" }}>Polygon Live</span>
         </div>
-
         <motion.div whileTap={{ scale: 0.9 }} onClick={() => setTheme(nextTheme)}
           style={{ width: "32px", height: "32px", borderRadius: "9px", background: "var(--bg-subtle)", border: "1px solid var(--border)", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}>
           <ThemeIcon size={15} color="var(--text-secondary)" />
         </motion.div>
-
         <div style={{ display: "flex", alignItems: "center", gap: "10px", padding: "6px 10px", borderRadius: "12px", background: "var(--bg-subtle)", border: "1px solid var(--border)", cursor: "pointer" }}
           onMouseEnter={e => e.currentTarget.style.background = "var(--bg-hover)"}
           onMouseLeave={e => e.currentTarget.style.background = "var(--bg-subtle)"}>
@@ -159,9 +131,7 @@ function DesktopTopbar({ navItems, activeTab, isFullScreen, screen, screenTitles
             {currentUser?.first_name?.[0]?.toUpperCase() || "U"}
           </div>
           <div>
-            <div style={{ fontWeight: 700, fontSize: "13px", color: "var(--text-primary)", whiteSpace: "nowrap", lineHeight: 1.2 }}>
-              {currentUser?.first_name} {currentUser?.last_name}
-            </div>
+            <div style={{ fontWeight: 700, fontSize: "13px", color: "var(--text-primary)", whiteSpace: "nowrap", lineHeight: 1.2 }}>{currentUser?.first_name} {currentUser?.last_name}</div>
             <div style={{ fontSize: "10px", fontWeight: 600, color: "#f5a623", letterSpacing: "0.3px", textTransform: "uppercase", lineHeight: 1.2, marginTop: "1px" }}>
               {role === "organizer" ? "⚡ Organizer" : "🎟️ Attendee"}
             </div>
@@ -231,29 +201,19 @@ function DesktopAppLayout() {
   };
 
   const screenTitles = {
-    checkout:      "Checkout",
-    ticketView:    "Your Ticket",
-    resale:        "Resell Ticket",
-    resaleSuccess: "Listed!",
-    transfer:      "Transfer Ticket",
-    paymentSuccess:"Payment Successful",
-    addEvent:      "Create Event",
-    orgEventDetail:"Event Details",
-    scanTicket:    "Scan Tickets",
-    doorStaffLogin:"Door Staff",
-    doorStaffScan: "Door Scanner",
+    checkout: "Checkout", ticketView: "Your Ticket", resale: "Resell Ticket",
+    resaleSuccess: "Listed!", transfer: "Transfer Ticket", paymentSuccess: "Payment Successful",
+    addEvent: "Create Event", orgEventDetail: "Event Details", scanTicket: "Scan Tickets",
+    doorStaffLogin: "Door Staff", doorStaffScan: "Door Scanner",
   };
 
   const sidebarW = collapsed ? "68px" : "256px";
 
   return (
     <div style={{ display: "flex", height: "100vh", background: "var(--bg)", fontFamily: "var(--font-sans)", overflow: "hidden" }}>
-
-      {/* Sidebar */}
       <motion.aside animate={{ width: sidebarW }} transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
         style={{ flexShrink: 0, background: "var(--bg-card)", borderRight: "1px solid var(--border)", display: "flex", flexDirection: "column", height: "100vh", overflow: "hidden", boxShadow: "2px 0 20px rgba(0,0,0,0.04)", position: "relative", zIndex: 10 }}>
 
-        {/* Brand */}
         <div style={{ padding: "14px 12px", borderBottom: "1px solid var(--border)", display: "flex", alignItems: "center", justifyContent: collapsed ? "center" : "space-between", gap: "8px", minHeight: "64px", flexShrink: 0 }}>
           <div style={{ display: "flex", alignItems: "center", gap: "10px", overflow: "hidden", flex: 1 }}>
             <div style={{ width: "32px", height: "32px", borderRadius: "10px", background: "linear-gradient(135deg, #f5a623, #e8920f)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, boxShadow: "0 4px 12px rgba(245,166,35,0.3)" }}>
@@ -264,8 +224,7 @@ function DesktopAppLayout() {
                 <motion.div initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -8 }} transition={{ duration: 0.18 }} style={{ overflow: "hidden", minWidth: 0 }}>
                   <div style={{ fontWeight: 800, fontSize: "13px", color: "var(--text-primary)", letterSpacing: "-0.3px", whiteSpace: "nowrap" }}>Master Events</div>
                   <div style={{ display: "flex", alignItems: "center", gap: "4px", marginTop: "2px" }}>
-                    <motion.div animate={{ scale: [1, 1.4, 1] }} transition={{ repeat: Infinity, duration: 2 }}
-                      style={{ width: "5px", height: "5px", borderRadius: "50%", background: "#16a34a" }} />
+                    <motion.div animate={{ scale: [1, 1.4, 1] }} transition={{ repeat: Infinity, duration: 2 }} style={{ width: "5px", height: "5px", borderRadius: "50%", background: "#16a34a" }} />
                     <span style={{ fontSize: "9px", color: "#16a34a", fontWeight: 700, letterSpacing: "0.5px", whiteSpace: "nowrap" }}>POLYGON LIVE</span>
                   </div>
                 </motion.div>
@@ -278,7 +237,6 @@ function DesktopAppLayout() {
           </motion.button>
         </div>
 
-        {/* Profile */}
         <div style={{ borderBottom: "1px solid var(--border)", flexShrink: 0 }}>
           {collapsed ? (
             <motion.div whileHover={{ background: "var(--bg-hover)" }} whileTap={{ scale: 0.95 }} onClick={() => setCollapsed(false)}
@@ -289,19 +247,14 @@ function DesktopAppLayout() {
               </div>
             </motion.div>
           ) : (
-            <motion.div onClick={() => setProfileOpen(!profileOpen)}
-              style={{ padding: "12px 14px", cursor: "pointer", userSelect: "none" }}>
+            <motion.div onClick={() => setProfileOpen(!profileOpen)} style={{ padding: "12px 14px", cursor: "pointer", userSelect: "none" }}>
               <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
                 <div style={{ width: "34px", height: "34px", borderRadius: "50%", background: "linear-gradient(135deg, #f5a623, #e8920f)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "14px", fontWeight: 700, color: "#fff", flexShrink: 0 }}>
                   {currentUser?.first_name?.[0]?.toUpperCase() || "U"}
                 </div>
                 <div style={{ minWidth: 0, flex: 1 }}>
-                  <div style={{ fontWeight: 700, fontSize: "13px", color: "var(--text-primary)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                    {currentUser?.first_name} {currentUser?.last_name}
-                  </div>
-                  <div style={{ fontSize: "11px", color: "var(--text-muted)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                    {currentUser?.email}
-                  </div>
+                  <div style={{ fontWeight: 700, fontSize: "13px", color: "var(--text-primary)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{currentUser?.first_name} {currentUser?.last_name}</div>
+                  <div style={{ fontSize: "11px", color: "var(--text-muted)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{currentUser?.email}</div>
                 </div>
                 <motion.div animate={{ rotate: profileOpen ? 180 : 0 }} transition={{ duration: 0.2 }}>
                   <ChevronLeft size={12} color="var(--text-muted)" style={{ transform: "rotate(-90deg)" }} />
@@ -323,7 +276,6 @@ function DesktopAppLayout() {
           )}
         </div>
 
-        {/* Nav */}
         <nav style={{ flex: 1, padding: "10px 8px", overflowY: "auto" }}>
           {!collapsed && <div style={{ fontSize: "9px", fontWeight: 700, color: "var(--text-muted)", letterSpacing: "1.5px", padding: "0 8px", marginBottom: "8px" }}>MENU</div>}
           {navItems.map(item => (
@@ -353,32 +305,23 @@ function DesktopAppLayout() {
           )}
         </nav>
 
-        {/* Bottom */}
         <div style={{ padding: "8px", borderTop: "1px solid var(--border)", flexShrink: 0 }}>
           <motion.div whileTap={{ scale: 0.9 }} onClick={handleLogout} title={collapsed ? "Log Out" : ""}
             style={{ display: "flex", alignItems: "center", gap: "10px", padding: collapsed ? "10px 0" : "9px 10px", justifyContent: collapsed ? "center" : "flex-start", borderRadius: "12px", cursor: "pointer", transition: "background 0.18s" }}
             onMouseEnter={e => { e.currentTarget.style.background = "var(--error-bg)"; }}
             onMouseLeave={e => { e.currentTarget.style.background = "transparent"; }}>
-          <LogOut size={17} color="var(--error)" style={{ flexShrink: 0 }} />
-          {!collapsed && <span style={{ fontWeight: 600, fontSize: "13px", color: "var(--error)" }}>Log Out</span>}
+            <LogOut size={17} color="var(--error)" style={{ flexShrink: 0 }} />
+            {!collapsed && <span style={{ fontWeight: 600, fontSize: "13px", color: "var(--error)" }}>Log Out</span>}
           </motion.div>
         </div>
       </motion.aside>
 
-      {/* Main content */}
       <main style={{ flex: 1, display: "flex", flexDirection: "column", minWidth: 0, overflow: "hidden" }}>
         <DesktopTopbar
-          navItems={navItems}
-          activeTab={activeTab}
-          isFullScreen={isFullScreen}
-          screen={screen}
-          screenTitles={screenTitles}
-          currentUser={currentUser}
-          role={role}
-          setScreen={setScreen}
-          setActiveTab={setActiveTab}
-          theme={theme}
-          setTheme={setTheme}
+          navItems={navItems} activeTab={activeTab} isFullScreen={isFullScreen}
+          screen={screen} screenTitles={screenTitles} currentUser={currentUser}
+          role={role} setScreen={setScreen} setActiveTab={setActiveTab}
+          theme={theme} setTheme={setTheme}
         />
         <div style={{ flex: 1, overflowY: "auto", overflowX: "hidden", WebkitOverflowScrolling: "touch" }}>
           <div key={screen + activeTab} className="screen-enter" style={{ minHeight: "100%" }}>
@@ -397,6 +340,7 @@ function MobileAppContent() {
     login:         <Login />,
     signup:        <Signup />,
     role:          <RoleSelect />,
+    resetPassword: <ResetPassword />,
     app:           <AppTabs />,
     checkout:      <Checkout />,
     ticketView:    <TicketView />,
@@ -424,26 +368,37 @@ export default function App() {
   const [desktop, setDesktop] = React.useState(window.innerWidth > 768);
   useTheme();
 
+  // ── Detect password reset link from email ─────────────────
+  React.useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const uid    = params.get("uid");
+    const token  = params.get("token");
+    if (uid && token) {
+      useStore.getState().setResetPasswordParams({ uid, token });
+      useStore.getState().setScreen("resetPassword");
+    }
+  }, []);
+
   React.useEffect(() => {
     const handler = () => setDesktop(window.innerWidth > 768);
     window.addEventListener("resize", handler);
     return () => window.removeEventListener("resize", handler);
   }, []);
 
-  // ── Desktop auth — full screen ────────────────────────────
+  // ── Reset password — always full screen regardless of auth ─
+  if (screen === "resetPassword") return <ResetPassword />;
+
+  // ── Desktop auth ──────────────────────────────────────────
   if (desktop && !isLoggedIn) {
     if (screen === "signup") return <Signup />;
     if (screen === "role")   return <RoleSelect />;
     if (screen === "login")  return <Login />;
-    // Guest on desktop → PhoneFrame handles LandingPage
   }
 
   // ── Desktop app ───────────────────────────────────────────
   if (desktop && isLoggedIn) return <DesktopAppLayout />;
 
-  // ── All other cases (mobile + desktop guest) → PhoneFrame ─
-  // PhoneFrame already has LandingPage built in and handles
-  // navigation to login/signup itself
+  // ── Mobile ────────────────────────────────────────────────
   return (
     <PhoneFrame>
       <MobileAppContent />

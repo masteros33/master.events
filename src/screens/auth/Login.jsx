@@ -358,18 +358,7 @@ export default function Login() {
             </motion.span>
           </p>
 
-          {import.meta.env.DEV && (
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.5 }}
-              style={{ marginTop: "28px", background: "var(--bg-subtle)", border: "1px solid var(--border)", borderRadius: "16px", padding: "14px" }}>
-              <div style={{ fontSize: "10px", color: "#f5a623", fontWeight: 700, marginBottom: "8px", letterSpacing: "1.5px" }}>⚡ QUICK LOGIN (DEV ONLY)</div>
-              <motion.div whileHover={{ background: "var(--bg-hover)" }}
-                onClick={() => { setEmail("jude@test.com"); setPassword("test1234"); }}
-                style={{ display: "flex", justifyContent: "space-between", padding: "8px 10px", cursor: "pointer", borderRadius: "10px", transition: "background 0.2s" }}>
-                <span style={{ fontSize: "12px", color: "var(--text-secondary)" }}>jude@test.com / test1234</span>
-                <span style={{ fontSize: "11px", color: "#f5a623", fontWeight: 700 }}>Organizer</span>
-              </motion.div>
-            </motion.div>
-          )}
+    
         </div>
       </div>
     </div>

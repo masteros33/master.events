@@ -7,6 +7,7 @@ import Login from "./screens/auth/Login";
 import { Signup, RoleSelect } from "./screens/auth/Signup";
 import ResetPassword from "./screens/auth/ResetPassword";
 import AttendeeHome from "./screens/attendee/AttendeeHome";
+import ResaleMarketplace from "./screens/attendee/ResaleMarketplace";
 import { AttendeeTickets, AttendeeAlerts } from "./screens/attendee/AttendeeScreens";
 import {
   Checkout, TicketView, Resale, ResaleSuccess,
@@ -28,10 +29,9 @@ import {
 const FULL_SCREENS = [
   "checkout","ticketView","resale","resaleSuccess",
   "transfer","paymentSuccess","addEvent","orgEventDetail",
-  "scanTicket","doorStaffLogin","doorStaffScan",
+  "scanTicket","doorStaffLogin","doorStaffScan","resaleMarket",
 ];
 
-// ── Mobile app tabs ───────────────────────────────────────────
 function AppTabs() {
   const role      = useStore(s => s.role);
   const activeTab = useStore(s => s.activeTab);
@@ -66,7 +66,6 @@ function AppTabs() {
   );
 }
 
-// ── Desktop sidebar nav item ──────────────────────────────────
 function NavItem({ icon: Icon, label, active, collapsed, onClick, title }) {
   return (
     <motion.div whileTap={{ scale: 0.94 }} onClick={onClick} title={title}
@@ -80,7 +79,6 @@ function NavItem({ icon: Icon, label, active, collapsed, onClick, title }) {
   );
 }
 
-// ── Desktop topbar ────────────────────────────────────────────
 function DesktopTopbar({ navItems, activeTab, isFullScreen, screen, screenTitles, currentUser, role, setScreen, setActiveTab, theme, setTheme }) {
   const searchQ    = useStore(s => s.searchQ);
   const setSearchQ = useStore(s => s.setSearchQ);
@@ -142,7 +140,6 @@ function DesktopTopbar({ navItems, activeTab, isFullScreen, screen, screenTitles
   );
 }
 
-// ── Desktop layout ────────────────────────────────────────────
 function DesktopAppLayout() {
   const screen       = useStore(s => s.screen);
   const role         = useStore(s => s.role);
@@ -183,6 +180,7 @@ function DesktopAppLayout() {
         scanTicket:    <OrganizerScan />,
         doorStaffLogin:<DoorStaffLogin />,
         doorStaffScan: <DoorStaffScan />,
+        resaleMarket:  <ResaleMarketplace />,
       };
       return map[screen];
     }
@@ -204,7 +202,7 @@ function DesktopAppLayout() {
     checkout: "Checkout", ticketView: "Your Ticket", resale: "Resell Ticket",
     resaleSuccess: "Listed!", transfer: "Transfer Ticket", paymentSuccess: "Payment Successful",
     addEvent: "Create Event", orgEventDetail: "Event Details", scanTicket: "Scan Tickets",
-    doorStaffLogin: "Door Staff", doorStaffScan: "Door Scanner",
+    doorStaffLogin: "Door Staff", doorStaffScan: "Door Scanner", resaleMarket: "Resale Market",
   };
 
   const sidebarW = collapsed ? "68px" : "256px";
@@ -284,6 +282,12 @@ function DesktopAppLayout() {
               collapsed={collapsed} title={collapsed ? item.label : ""}
               onClick={() => { setActiveTab(item.id); setScreen("app"); }} />
           ))}
+          {role === "attendee" && (
+            <NavItem icon={Ticket} label="Resale Market"
+              active={screen === "resaleMarket"}
+              collapsed={collapsed} title={collapsed ? "Resale Market" : ""}
+              onClick={() => setScreen("resaleMarket")} />
+          )}
           {role === "organizer" && (
             <div style={{ marginTop: "12px" }}>
               {!collapsed && <div style={{ fontSize: "9px", fontWeight: 700, color: "var(--text-muted)", letterSpacing: "1.5px", padding: "0 8px", marginBottom: "8px" }}>ACTIONS</div>}
@@ -333,7 +337,6 @@ function DesktopAppLayout() {
   );
 }
 
-// ── Mobile content router ─────────────────────────────────────
 function MobileAppContent() {
   const screen = useStore(s => s.screen);
   const routes = {
@@ -353,6 +356,7 @@ function MobileAppContent() {
     scanTicket:    <OrganizerScan />,
     doorStaffLogin:<DoorStaffLogin />,
     doorStaffScan: <DoorStaffScan />,
+    resaleMarket:  <ResaleMarketplace />,
   };
   return (
     <div key={screen} className="screen-enter app-shell" style={{ background: "var(--bg)" }}>
@@ -361,14 +365,12 @@ function MobileAppContent() {
   );
 }
 
-// ── Root ──────────────────────────────────────────────────────
 export default function App() {
   const isLoggedIn = useStore(s => s.isLoggedIn);
   const screen     = useStore(s => s.screen);
   const [desktop, setDesktop] = React.useState(window.innerWidth > 768);
   useTheme();
 
-  // ── Detect password reset link from email ─────────────────
   React.useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const uid    = params.get("uid");
@@ -385,20 +387,16 @@ export default function App() {
     return () => window.removeEventListener("resize", handler);
   }, []);
 
-  // ── Reset password — always full screen regardless of auth ─
   if (screen === "resetPassword") return <ResetPassword />;
 
-  // ── Desktop auth ──────────────────────────────────────────
   if (desktop && !isLoggedIn) {
     if (screen === "signup") return <Signup />;
     if (screen === "role")   return <RoleSelect />;
     if (screen === "login")  return <Login />;
   }
 
-  // ── Desktop app ───────────────────────────────────────────
   if (desktop && isLoggedIn) return <DesktopAppLayout />;
 
-  // ── Mobile ────────────────────────────────────────────────
   return (
     <PhoneFrame>
       <MobileAppContent />

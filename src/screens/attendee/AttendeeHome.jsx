@@ -30,6 +30,22 @@ const ITEMS_PER_PAGE_MOBILE  = 6;
 
 const isDesktop = () => window.innerWidth > 768;
 
+{/* ── Resale Market banner ── */}
+<div style={{ padding: desktop ? "12px 40px 0" : "12px 16px 0" }}>
+  <motion.div whileTap={{ scale: 0.98 }} onClick={() => setScreen("resaleMarket")}
+    style={{ background: "linear-gradient(135deg, rgba(124,58,237,0.08), rgba(37,99,235,0.06))", border: "1px solid rgba(124,58,237,0.2)", borderRadius: "14px", padding: "12px 16px", display: "flex", alignItems: "center", justifyContent: "space-between", cursor: "pointer" }}>
+    <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+      <div style={{ width: "36px", height: "36px", borderRadius: "10px", background: "linear-gradient(135deg, #7c3aed, #2563eb)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "16px", flexShrink: 0 }}>🏷️</div>
+      <div>
+        <div style={{ fontSize: "13px", fontWeight: 700, color: "var(--text-primary)" }}>Resale Market</div>
+        <div style={{ fontSize: "11px", color: "var(--text-muted)" }}>Fan-to-fan NFT ticket resales · 2% fee</div>
+      </div>
+    </div>
+    <span style={{ color: "#7c3aed", fontSize: "16px", fontWeight: 700 }}>→</span>
+  </motion.div>
+</div>
+
+
 // ── Event Card ────────────────────────────────────────────────
 function EventCard({ ev, onClick }) {
   const [hovered, setHovered] = useState(false);

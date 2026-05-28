@@ -262,6 +262,75 @@ const useStore = create((set, get) => ({
     const { checkoutEvent, ticketQty, payMethod, myTickets } = get();
     const loadingToast = toast.loading("Verifying payment...");
 
+    // ── Helper: build ticket object from backend ticket data ──
+    const buildTicket = (found) => ({
+      id:           found.ticket_id || found.id,
+      ticket_id:    found.ticket_id || found.id,
+      event: {
+        ...(found.event || {}),
+        id:       found.event?.id       || checkoutEvent?.id,
+        name:     found.event?.name     || checkoutEvent?.name,
+        date:     found.event?.date     || checkoutEvent?.date,
+        time:     found.event?.time     || checkoutEvent?.time,
+        venue:    found.event?.venue    || checkoutEvent?.venue,
+        city:     found.event?.city     || checkoutEvent?.city,
+        category: found.event?.category || checkoutEvent?.category,
+        price:    found.event?.price    || checkoutEvent?.price,
+        image:    found.event?.image    || checkoutEvent?.image,  // ← always falls back to checkoutEvent image
+      },
+      qty:          found.quantity || ticketQty,
+      quantity:     found.quantity || ticketQty,
+      payMethod,
+      purchasedAt:  new Date().toLocaleDateString(),
+      owner:        typeof found.owner === "object"
+        ? ((found.owner?.first_name || "") + " " + (found.owner?.last_name || "")).trim()
+        : (found.owner || ""),
+      ownerEmail:   found.owner?.email || null,
+      status:       found.status       || "active",
+      qr_data:      found.qr_data      || null,
+      dynamic_qr:   found.dynamic_qr   || null,
+      qr_base64:    found.dynamic_qr   || null,
+      qr_image_url: found.qr_image_url || null,
+      qr_image:     found.qr_image
+        ? (found.qr_image.startsWith("http") ? found.qr_image : BACKEND + found.qr_image)
+        : null,
+      nft_tx_hash:  found.nft_tx_hash  || null,
+      nft_token_id: found.nft_token_id || null,
+      nft_minting:  true,
+    });
+
+    // ── Helper: show success screen with ticket ───────────────
+    const showSuccess = (ticket) => {
+      toast.dismiss();
+      set({
+        myTickets:          [...get().myTickets, ticket],
+        checkoutEvent:      null,
+        overlayEvent:       null,
+        activeTab:          "tickets",
+        screen:             "paymentSuccess",
+        viewingTicket:      ticket,
+        newTicketCount:     (get().newTicketCount || 0) + 1,
+        successToastTicket: ticket,
+        showSuccessToast:   true,
+      });
+      toast.success("🎉 Payment confirmed! Ticket is yours.");
+    };
+
+    // ── Helper: fetch latest ticket after 409 or timeout ─────
+    const fetchAndShow = async () => {
+      await new Promise(r => setTimeout(r, 2000));
+      const tickets = await ticketsAPI.myTickets();
+      if (Array.isArray(tickets) && tickets.length > 0) {
+        const found = tickets.find(t =>
+          t.event?.id   === checkoutEvent?.id ||
+          t.event?.name === checkoutEvent?.name
+        ) || tickets[0];
+        showSuccess(buildTicket(found));
+        return true;
+      }
+      return false;
+    };
+
     try {
       const reference = paymentReference ||
         ("PAY-" + Math.random().toString(36).substr(2, 9).toUpperCase());
@@ -271,7 +340,7 @@ const useStore = create((set, get) => ({
         const controller = new AbortController();
         const timeoutId  = setTimeout(() => controller.abort(), 120000);
         const res = await fetch(
-          "https://master-events-backend.onrender.com/api/tickets/purchase/",
+          `${BACKEND}/api/tickets/purchase/`,
           {
             method:  "POST",
             headers: {
@@ -290,82 +359,46 @@ const useStore = create((set, get) => ({
         data = { ...await res.json(), _status: res.status };
 
       } catch (fetchErr) {
-        // ── Fetch timed out or failed — check if ticket exists ─
+        // ── Network timeout / failure — ticket may exist already ──
         toast.dismiss(loadingToast);
         toast.loading("Payment received — confirming ticket...");
-        await new Promise(r => setTimeout(r, 5000));
-
         try {
-          const tickets = await ticketsAPI.myTickets();
-          if (Array.isArray(tickets) && tickets.length > 0) {
-            const found = tickets.find(t =>
-              t.event?.id === checkoutEvent.id ||
-              t.event?.name === checkoutEvent.name
-            ) || tickets[0];
-
-            // ── Fix: always use checkoutEvent image as fallback ─
-            const ticket = {
-              id:           found.ticket_id || found.id,
-              ticket_id:    found.ticket_id || found.id,
-              event: {
-                ...(found.event || {}),
-                id:       found.event?.id       || checkoutEvent?.id,
-                name:     found.event?.name     || checkoutEvent?.name,
-                date:     found.event?.date     || checkoutEvent?.date,
-                time:     found.event?.time     || checkoutEvent?.time,
-                venue:    found.event?.venue    || checkoutEvent?.venue,
-                city:     found.event?.city     || checkoutEvent?.city,
-                category: found.event?.category || checkoutEvent?.category,
-                price:    found.event?.price    || checkoutEvent?.price,
-                image:    found.event?.image    || checkoutEvent?.image,
-              },
-              qty:          found.quantity || ticketQty,
-              quantity:     found.quantity || ticketQty,
-              payMethod,
-              purchasedAt:  new Date().toLocaleDateString(),
-              owner:        typeof found.owner === "object"
-                ? ((found.owner?.first_name || "") + " " + (found.owner?.last_name || "")).trim()
-                : (found.owner || ""),
-              ownerEmail:   found.owner?.email || null,
-              status:       found.status       || "active",
-              qr_data:      found.qr_data      || null,
-              dynamic_qr:   found.dynamic_qr   || null,
-              qr_base64:    found.dynamic_qr   || null,
-              qr_image_url: found.qr_image_url || null,
-              qr_image:     found.qr_image
-                ? (found.qr_image.startsWith("http")
-                    ? found.qr_image
-                    : BACKEND + found.qr_image)
-                : null,
-              nft_tx_hash:  found.nft_tx_hash  || null,
-              nft_token_id: found.nft_token_id || null,
-              nft_minting:  true,
-            };
-
+          const shown = await fetchAndShow();
+          if (!shown) {
             toast.dismiss();
-            set({
-              myTickets:          [...myTickets, ticket],
-              checkoutEvent:      null,
-              overlayEvent:       null,
-              activeTab:          "tickets",
-              screen:             "paymentSuccess",
-              viewingTicket:      ticket,
-              newTicketCount:     (get().newTicketCount || 0) + 1,
-              successToastTicket: ticket,
-              showSuccessToast:   true,
-            });
-            toast.success("🎉 Payment confirmed! Ticket is yours.");
-            return;
+            toast.error("Payment received — your ticket will appear in My Tickets shortly.");
+            set({ screen: "app", activeTab: "tickets" });
           }
-        } catch {}
-
-        toast.dismiss();
-        toast.error("Payment received — your ticket will appear in My Tickets shortly.");
-        set({ screen: "app", activeTab: "tickets" });
+        } catch {
+          toast.dismiss();
+          toast.error("Payment received — your ticket will appear in My Tickets shortly.");
+          set({ screen: "app", activeTab: "tickets" });
+        }
         return;
       }
 
-      // ── Normal success path ─────────────────────────────────
+      // ── 409 = duplicate reference = ticket already created ───
+      // This happens when Paystack fires the callback twice.
+      // Treat it as success — fetch the existing ticket and show it.
+      if (data._status === 409) {
+        toast.dismiss(loadingToast);
+        toast.loading("Confirming your ticket...");
+        try {
+          const shown = await fetchAndShow();
+          if (!shown) {
+            toast.dismiss();
+            toast.success("🎉 Payment confirmed! Check My Tickets.");
+            set({ screen: "app", activeTab: "tickets", checkoutEvent: null });
+          }
+        } catch {
+          toast.dismiss();
+          toast.success("🎉 Payment confirmed! Check My Tickets.");
+          set({ screen: "app", activeTab: "tickets", checkoutEvent: null });
+        }
+        return;
+      }
+
+      // ── Normal success (201 / 200) ────────────────────────────
       const ticketId  = data.ticket_id || data.id || data.pk;
       const isSuccess = data._status === 201 || data._status === 200 || !!ticketId;
 
@@ -384,7 +417,7 @@ const useStore = create((set, get) => ({
             date:        eventData.date        || checkoutEvent.date,
             time:        eventData.time        || checkoutEvent.time,
             price:       eventData.price       || checkoutEvent.price,
-            image:       eventData.image       || checkoutEvent.image,
+            image:       eventData.image       || checkoutEvent.image,  // ← always uses real event image
           },
           qty:          ticketQty,
           quantity:     data.quantity          || ticketQty,
@@ -400,9 +433,7 @@ const useStore = create((set, get) => ({
           qr_base64:    data.dynamic_qr        || data.qr_base64 || null,
           qr_image_url: data.qr_image_url      || null,
           qr_image:     data.qr_image
-            ? (data.qr_image.startsWith("http")
-                ? data.qr_image
-                : BACKEND + data.qr_image)
+            ? (data.qr_image.startsWith("http") ? data.qr_image : BACKEND + data.qr_image)
             : null,
           nft_tx_hash:  data.nft_tx_hash       || null,
           nft_token_id: data.nft_token_id      || null,
@@ -457,7 +488,7 @@ const useStore = create((set, get) => ({
     const loadingToast = toast.loading("Listing ticket...");
     try {
       const token = localStorage.getItem("access_token") || "";
-      const res = await fetch("https://master-events-backend.onrender.com/api/tickets/resale/list/", {
+      const res = await fetch(`${BACKEND}/api/tickets/resale/list/`, {
         method: "POST",
         headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
         body: JSON.stringify({
@@ -498,7 +529,7 @@ const useStore = create((set, get) => ({
 
     try {
       const token = localStorage.getItem("access_token") || "";
-      await fetch("https://master-events-backend.onrender.com/api/tickets/resale/cancel/", {
+      await fetch(`${BACKEND}/api/tickets/resale/cancel/`, {
         method: "POST",
         headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
         body: JSON.stringify({ ticket_id: ticket?.ticket_id || ticketId }),

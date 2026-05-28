@@ -20,6 +20,7 @@ import {
 import OrganizerWallet from "./screens/organizer/OrganizerWallet";
 import { DoorStaffLogin, DoorStaffScan, OrganizerScan } from "./screens/doorstaff/DoorStaffScreens";
 import { useTheme } from "./hooks/useTheme";
+import { Avatar } from "./utils/avatar";
 import {
   Home, Ticket, Bell, LayoutDashboard, CalendarDays, Wallet,
   LogOut, Sun, Moon, Monitor, ChevronLeft, ChevronRight,
@@ -122,12 +123,11 @@ function DesktopTopbar({ navItems, activeTab, isFullScreen, screen, screenTitles
           style={{ width: "32px", height: "32px", borderRadius: "9px", background: "var(--bg-subtle)", border: "1px solid var(--border)", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}>
           <ThemeIcon size={15} color="var(--text-secondary)" />
         </motion.div>
+        {/* ── Topbar user avatar ── */}
         <div style={{ display: "flex", alignItems: "center", gap: "10px", padding: "6px 10px", borderRadius: "12px", background: "var(--bg-subtle)", border: "1px solid var(--border)", cursor: "pointer" }}
           onMouseEnter={e => e.currentTarget.style.background = "var(--bg-hover)"}
           onMouseLeave={e => e.currentTarget.style.background = "var(--bg-subtle)"}>
-          <div style={{ width: "30px", height: "30px", borderRadius: "50%", background: "linear-gradient(135deg, #f5a623, #e8920f)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "13px", fontWeight: 700, color: "#fff", flexShrink: 0 }}>
-            {currentUser?.first_name?.[0]?.toUpperCase() || "U"}
-          </div>
+          <Avatar seed={currentUser?.email} name={currentUser?.first_name} size={30} style={{ flexShrink: 0 }} />
           <div>
             <div style={{ fontWeight: 700, fontSize: "13px", color: "var(--text-primary)", whiteSpace: "nowrap", lineHeight: 1.2 }}>{currentUser?.first_name} {currentUser?.last_name}</div>
             <div style={{ fontSize: "10px", fontWeight: 600, color: "#f5a623", letterSpacing: "0.3px", textTransform: "uppercase", lineHeight: 1.2, marginTop: "1px" }}>
@@ -169,18 +169,18 @@ function DesktopAppLayout() {
   const renderContent = () => {
     if (isFullScreen) {
       const map = {
-        checkout:      <Checkout />,
-        ticketView:    <TicketView />,
-        resale:        <Resale />,
-        resaleSuccess: <ResaleSuccess />,
-        transfer:      <Transfer />,
-        paymentSuccess:<PaymentSuccess />,
-        addEvent:      <AddEvent />,
-        orgEventDetail:<OrganizerEventDetail />,
-        scanTicket:    <OrganizerScan />,
-        doorStaffLogin:<DoorStaffLogin />,
-        doorStaffScan: <DoorStaffScan />,
-        resaleMarket:  <ResaleMarketplace />,
+        checkout:       <Checkout />,
+        ticketView:     <TicketView />,
+        resale:         <Resale />,
+        resaleSuccess:  <ResaleSuccess />,
+        transfer:       <Transfer />,
+        paymentSuccess: <PaymentSuccess />,
+        addEvent:       <AddEvent />,
+        orgEventDetail: <OrganizerEventDetail />,
+        scanTicket:     <OrganizerScan />,
+        doorStaffLogin: <DoorStaffLogin />,
+        doorStaffScan:  <DoorStaffScan />,
+        resaleMarket:   <ResaleMarketplace />,
       };
       return map[screen];
     }
@@ -212,6 +212,7 @@ function DesktopAppLayout() {
       <motion.aside animate={{ width: sidebarW }} transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
         style={{ flexShrink: 0, background: "var(--bg-card)", borderRight: "1px solid var(--border)", display: "flex", flexDirection: "column", height: "100vh", overflow: "hidden", boxShadow: "2px 0 20px rgba(0,0,0,0.04)", position: "relative", zIndex: 10 }}>
 
+        {/* ── Sidebar header ── */}
         <div style={{ padding: "14px 12px", borderBottom: "1px solid var(--border)", display: "flex", alignItems: "center", justifyContent: collapsed ? "center" : "space-between", gap: "8px", minHeight: "64px", flexShrink: 0 }}>
           <div style={{ display: "flex", alignItems: "center", gap: "10px", overflow: "hidden", flex: 1 }}>
             <div style={{ width: "32px", height: "32px", borderRadius: "10px", background: "linear-gradient(135deg, #f5a623, #e8920f)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, boxShadow: "0 4px 12px rgba(245,166,35,0.3)" }}>
@@ -235,21 +236,18 @@ function DesktopAppLayout() {
           </motion.button>
         </div>
 
+        {/* ── Profile section ── */}
         <div style={{ borderBottom: "1px solid var(--border)", flexShrink: 0 }}>
           {collapsed ? (
             <motion.div whileHover={{ background: "var(--bg-hover)" }} whileTap={{ scale: 0.95 }} onClick={() => setCollapsed(false)}
               title={`${currentUser?.first_name} ${currentUser?.last_name}`}
               style={{ padding: "12px 0", display: "flex", justifyContent: "center", cursor: "pointer" }}>
-              <div style={{ width: "34px", height: "34px", borderRadius: "50%", background: "linear-gradient(135deg, #f5a623, #e8920f)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "14px", fontWeight: 700, color: "#fff" }}>
-                {currentUser?.first_name?.[0]?.toUpperCase() || "U"}
-              </div>
+              <Avatar seed={currentUser?.email} name={currentUser?.first_name} size={34} />
             </motion.div>
           ) : (
             <motion.div onClick={() => setProfileOpen(!profileOpen)} style={{ padding: "12px 14px", cursor: "pointer", userSelect: "none" }}>
               <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                <div style={{ width: "34px", height: "34px", borderRadius: "50%", background: "linear-gradient(135deg, #f5a623, #e8920f)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "14px", fontWeight: 700, color: "#fff", flexShrink: 0 }}>
-                  {currentUser?.first_name?.[0]?.toUpperCase() || "U"}
-                </div>
+                <Avatar seed={currentUser?.email} name={currentUser?.first_name} size={34} style={{ flexShrink: 0 }} />
                 <div style={{ minWidth: 0, flex: 1 }}>
                   <div style={{ fontWeight: 700, fontSize: "13px", color: "var(--text-primary)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{currentUser?.first_name} {currentUser?.last_name}</div>
                   <div style={{ fontSize: "11px", color: "var(--text-muted)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{currentUser?.email}</div>
@@ -274,6 +272,7 @@ function DesktopAppLayout() {
           )}
         </div>
 
+        {/* ── Nav items ── */}
         <nav style={{ flex: 1, padding: "10px 8px", overflowY: "auto" }}>
           {!collapsed && <div style={{ fontSize: "9px", fontWeight: 700, color: "var(--text-muted)", letterSpacing: "1.5px", padding: "0 8px", marginBottom: "8px" }}>MENU</div>}
           {navItems.map(item => (
@@ -309,6 +308,7 @@ function DesktopAppLayout() {
           )}
         </nav>
 
+        {/* ── Logout ── */}
         <div style={{ padding: "8px", borderTop: "1px solid var(--border)", flexShrink: 0 }}>
           <motion.div whileTap={{ scale: 0.9 }} onClick={handleLogout} title={collapsed ? "Log Out" : ""}
             style={{ display: "flex", alignItems: "center", gap: "10px", padding: collapsed ? "10px 0" : "9px 10px", justifyContent: collapsed ? "center" : "flex-start", borderRadius: "12px", cursor: "pointer", transition: "background 0.18s" }}
@@ -340,23 +340,23 @@ function DesktopAppLayout() {
 function MobileAppContent() {
   const screen = useStore(s => s.screen);
   const routes = {
-    login:         <Login />,
-    signup:        <Signup />,
-    role:          <RoleSelect />,
-    resetPassword: <ResetPassword />,
-    app:           <AppTabs />,
-    checkout:      <Checkout />,
-    ticketView:    <TicketView />,
-    resale:        <Resale />,
-    resaleSuccess: <ResaleSuccess />,
-    transfer:      <Transfer />,
-    paymentSuccess:<PaymentSuccess />,
-    addEvent:      <AddEvent />,
-    orgEventDetail:<OrganizerEventDetail />,
-    scanTicket:    <OrganizerScan />,
-    doorStaffLogin:<DoorStaffLogin />,
-    doorStaffScan: <DoorStaffScan />,
-    resaleMarket:  <ResaleMarketplace />,
+    login:          <Login />,
+    signup:         <Signup />,
+    role:           <RoleSelect />,
+    resetPassword:  <ResetPassword />,
+    app:            <AppTabs />,
+    checkout:       <Checkout />,
+    ticketView:     <TicketView />,
+    resale:         <Resale />,
+    resaleSuccess:  <ResaleSuccess />,
+    transfer:       <Transfer />,
+    paymentSuccess: <PaymentSuccess />,
+    addEvent:       <AddEvent />,
+    orgEventDetail: <OrganizerEventDetail />,
+    scanTicket:     <OrganizerScan />,
+    doorStaffLogin: <DoorStaffLogin />,
+    doorStaffScan:  <DoorStaffScan />,
+    resaleMarket:   <ResaleMarketplace />,
   };
   return (
     <div key={screen} className="screen-enter app-shell" style={{ background: "var(--bg)" }}>

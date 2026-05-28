@@ -2,6 +2,8 @@ import React, { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence, useMotionValue, useTransform } from "framer-motion";
 import useStore from "../../store/useStore";
 import { ticketsAPI } from "../../api";
+import { Avatar } from "../../utils/avatar";
+
 
 const API = "https://master-events-backend.onrender.com";
 const isDesktop = () => window.innerWidth > 768;
@@ -241,10 +243,14 @@ function PremiumTicket({ ev, ownerName, qrSrc, qrLoaded, qrError, refreshing, se
       <div style={{ background: DARK, borderRadius: "0 0 20px 20px", border: "1px solid rgba(255,255,255,0.1)", borderTop: "none", padding: "18px 16px 20px", display: "flex", flexDirection: "column", alignItems: "center", gap: "14px" }}>
 
         {/* Verified owner */}
+        {/* Verified owner */}
         <div style={{ width: "100%", background: "rgba(22,163,74,0.08)", border: "1px solid rgba(22,163,74,0.2)", borderRadius: "10px", padding: "10px 14px", display: "flex", alignItems: "center", gap: "10px" }}>
-          <div style={{ width: "26px", height: "26px", borderRadius: "50%", background: "#16a34a", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "11px", fontWeight: 700, color: "#fff", flexShrink: 0 }}>
-            {ownerName?.[0]?.toUpperCase() || "U"}
-          </div>
+          <Avatar
+            seed={viewingTicket?.ownerEmail || ownerName}
+            name={ownerName}
+            size={26}
+            style={{ border: "2px solid #16a34a", flexShrink: 0 }}
+          />
           <div style={{ minWidth: 0, flex: 1 }}>
             <div style={{ fontSize: "9px", fontWeight: 700, color: "#4ade80", letterSpacing: "0.5px", textTransform: "uppercase" }}>Verified Owner</div>
             <div style={{ fontSize: "12px", color: "rgba(255,255,255,0.75)", fontWeight: 500, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", marginTop: "1px" }}>{ownerName}</div>
@@ -574,36 +580,42 @@ export function Checkout() {
       payRef     = initData.reference;
     } catch { setPayError("Connection error initializing payment."); setPaying(false); return; }
 
-    const doHandle = (ref) => {
-      var tid = setTimeout(() => {
-        setPaying(false);
-        setPayError("Server warming up. Payment received — check My Tickets in ~1 min. Ref: " + ref);
-      }, 90000);
-      handleBuyTicket(ref)
-        .then(() => { clearTimeout(tid); setPaying(false); })
-        .catch(() => { clearTimeout(tid); setPaying(false); setPayError("Ticket creation failed. Ref: " + ref); });
-    };
+   // ── In Checkout, replace the doHandle + PaystackPop block ──
+const doHandle = (() => {
+  let called = false;  // ← prevents double-fire
+  return (ref) => {
+    if (called) return;
+    called = true;
+    var tid = setTimeout(() => {
+      setPaying(false);
+      setPayError("Server warming up. Payment received — check My Tickets in ~1 min. Ref: " + ref);
+    }, 90000);
+    handleBuyTicket(ref)
+      .then(() => { clearTimeout(tid); setPaying(false); })
+      .catch(() => { clearTimeout(tid); setPaying(false); setPayError("Ticket creation failed. Ref: " + ref); });
+  };
+})();
 
-    try {
-      window.PaystackPop.resumeTransaction(accessCode, {
-        onClose:  () => { setPaying(false); setPayError(""); },
-        callback: (r) => { doHandle(r.reference || payRef); },
-      });
-    } catch {
-      try {
-        const handler = window.PaystackPop.setup({
-          key: import.meta.env.VITE_PAYSTACK_PUBLIC_KEY,
-          email: currentUser?.email,
-          amount: total * 100,
-          currency: "GHS",
-          channels: ["mobile_money", "card"],
-          ref: payRef, access_code: accessCode,
-          onClose:  () => { setPaying(false); setPayError(""); },
-          callback: (r) => { doHandle(r.reference || payRef); },
-        });
-        handler.openIframe();
-      } catch (e2) { setPayError("Payment gateway error: " + e2.message); setPaying(false); }
-    }
+try {
+  window.PaystackPop.resumeTransaction(accessCode, {
+    onClose:  () => { setPaying(false); setPayError(""); },
+    callback: (r) => { doHandle(r.reference || payRef); },
+  });
+} catch {
+  try {
+    const handler = window.PaystackPop.setup({
+      key: import.meta.env.VITE_PAYSTACK_PUBLIC_KEY,
+      email: currentUser?.email,
+      amount: total * 100,
+      currency: "GHS",
+      channels: ["mobile_money", "card"],
+      ref: payRef, access_code: accessCode,
+      onClose:  () => { setPaying(false); setPayError(""); },
+      callback: (r) => { doHandle(r.reference || payRef); },
+    });
+    handler.openIframe();
+  } catch (e2) { setPayError("Payment gateway error: " + e2.message); setPaying(false); }
+}
   };
 
   return (

@@ -2,18 +2,18 @@ import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Home, Ticket, Bell, LayoutDashboard, CalendarDays, Wallet, LogOut, ScanLine, PlusCircle } from "lucide-react";
 import useStore from "../store/useStore";
+import { Avatar } from "../utils/avatar";
 
 const NAV_HEIGHT = 56;
 
 export default function BottomNav() {
-  const activeTab    = useStore(s => s.activeTab);
-  const setActiveTab = useStore(s => s.setActiveTab);
-  const setScreen    = useStore(s => s.setScreen);
-  const handleLogout = useStore(s => s.handleLogout);
-  const role         = useStore(s => s.role);
-  const currentUser  = useStore(s => s.currentUser);
-  const myTickets    = useStore(s => s.myTickets);
-  const newTicketCount = useStore(s => s.newTicketCount || 0);
+  const activeTab         = useStore(s => s.activeTab);
+  const setActiveTab      = useStore(s => s.setActiveTab);
+  const setScreen         = useStore(s => s.setScreen);
+  const handleLogout      = useStore(s => s.handleLogout);
+  const role              = useStore(s => s.role);
+  const currentUser       = useStore(s => s.currentUser);
+  const newTicketCount    = useStore(s => s.newTicketCount || 0);
   const setNewTicketCount = useStore(s => s.setNewTicketCount);
   const [showMenu, setShowMenu] = useState(false);
 
@@ -30,13 +30,9 @@ export default function BottomNav() {
   ];
 
   const tabs = role === "organizer" ? organizerTabs : attendeeTabs;
-  const initial = currentUser?.first_name?.[0]?.toUpperCase() || "U";
 
   const handleTabClick = (id) => {
-    // Clear ticket badge when user taps tickets tab
-    if (id === "tickets" && newTicketCount > 0) {
-      setNewTicketCount(0);
-    }
+    if (id === "tickets" && newTicketCount > 0) setNewTicketCount(0);
     setActiveTab(id);
     setScreen("app");
   };
@@ -61,10 +57,14 @@ export default function BottomNav() {
                 <div style={{ width: "36px", height: "4px", borderRadius: "2px", background: "var(--border-strong)" }} />
               </div>
 
+              {/* Profile card */}
               <div style={{ margin: "12px 20px 14px", padding: "14px 16px", background: "var(--bg-subtle)", borderRadius: "18px", border: "1px solid var(--border)", display: "flex", alignItems: "center", gap: "14px" }}>
-                <div style={{ width: "46px", height: "46px", borderRadius: "50%", background: "linear-gradient(135deg, #f5a623, #e8920f)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "19px", fontWeight: 700, color: "#fff", flexShrink: 0, boxShadow: "0 4px 14px rgba(245,166,35,0.3)" }}>
-                  {initial}
-                </div>
+                <Avatar
+                  seed={currentUser?.email}
+                  name={currentUser?.first_name}
+                  size={46}
+                  style={{ boxShadow: "0 4px 14px rgba(245,166,35,0.3)", flexShrink: 0 }}
+                />
                 <div style={{ minWidth: 0, flex: 1 }}>
                   <div style={{ fontWeight: 700, fontSize: "15px", color: "var(--text-primary)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                     {currentUser?.first_name} {currentUser?.last_name}
@@ -113,6 +113,7 @@ export default function BottomNav() {
       {/* ── Bottom nav bar ── */}
       <nav style={{ position: "fixed", bottom: 0, left: 0, right: 0, zIndex: 300, background: "var(--bg-card)", backdropFilter: "blur(24px)", WebkitBackdropFilter: "blur(24px)", borderTop: "1px solid var(--border)", boxShadow: "0 -1px 0 var(--border), 0 -8px 24px rgba(0,0,0,0.05)", paddingBottom: "env(safe-area-inset-bottom, 0px)" }}>
         <div style={{ display: "flex", justifyContent: "space-around", alignItems: "center", height: `${NAV_HEIGHT}px` }}>
+
           {tabs.map(({ id, Icon, label, badge }) => {
             const active = activeTab === id;
             return (
@@ -126,12 +127,11 @@ export default function BottomNav() {
                     transition={{ type: "spring", stiffness: 380, damping: 30 }} />
                 )}
 
-                <motion.div animate={{ scale: active ? 1.1 : 1, y: active ? -1 : 0 }}
+                <motion.div
+                  animate={{ scale: active ? 1.1 : 1, y: active ? -1 : 0 }}
                   transition={{ type: "spring", stiffness: 420, damping: 22 }}
                   style={{ position: "relative", zIndex: 1 }}>
                   <Icon size={20} strokeWidth={active ? 2.5 : 1.8} color={active ? "#f5a623" : "var(--text-muted)"} />
-
-                  {/* ── Notification badge ── */}
                   <AnimatePresence>
                     {badge > 0 && (
                       <motion.div
@@ -139,16 +139,7 @@ export default function BottomNav() {
                         animate={{ scale: 1, opacity: 1 }}
                         exit={{ scale: 0, opacity: 0 }}
                         transition={{ type: "spring", stiffness: 500, damping: 25 }}
-                        style={{
-                          position: "absolute",
-                          top: "-5px", right: "-7px",
-                          minWidth: "16px", height: "16px",
-                          borderRadius: "99px",
-                          background: "#ef4444",
-                          border: "2px solid var(--bg-card)",
-                          display: "flex", alignItems: "center", justifyContent: "center",
-                          padding: "0 3px",
-                        }}>
+                        style={{ position: "absolute", top: "-5px", right: "-7px", minWidth: "16px", height: "16px", borderRadius: "99px", background: "#ef4444", border: "2px solid var(--bg-card)", display: "flex", alignItems: "center", justifyContent: "center", padding: "0 3px" }}>
                         <span style={{ fontSize: "9px", fontWeight: 800, color: "#fff", lineHeight: 1 }}>
                           {badge > 9 ? "9+" : badge}
                         </span>
@@ -164,14 +155,18 @@ export default function BottomNav() {
             );
           })}
 
-          {/* Me tab */}
+          {/* ── Me tab ── */}
           <motion.button whileTap={{ scale: 0.84 }} onClick={() => setShowMenu(true)}
             style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: "3px", flex: 1, height: "100%", cursor: "pointer", border: "none", background: "transparent", padding: 0, fontFamily: "var(--font-sans)", position: "relative" }}>
-            <div style={{ width: "26px", height: "26px", borderRadius: "50%", background: "linear-gradient(135deg, #f5a623, #e8920f)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "11px", fontWeight: 700, color: "#fff", boxShadow: "0 2px 8px rgba(245,166,35,0.35)", border: showMenu ? "2px solid #f5a623" : "2px solid transparent", transition: "border-color 0.2s" }}>
-              {initial}
-            </div>
+            <Avatar
+              seed={currentUser?.email}
+              name={currentUser?.first_name}
+              size={26}
+              style={{ border: showMenu ? "2px solid #f5a623" : "2px solid transparent", borderRadius: "50%", transition: "border-color 0.2s" }}
+            />
             <span style={{ fontSize: "10px", fontWeight: 500, color: showMenu ? "#f5a623" : "var(--text-muted)", transition: "color 0.2s" }}>Me</span>
           </motion.button>
+
         </div>
       </nav>
     </>

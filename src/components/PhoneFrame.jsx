@@ -3,6 +3,7 @@ import { motion, AnimatePresence, useScroll, useTransform } from "framer-motion"
 import useStore from "../store/useStore";
 import ThemeToggle from "./ThemeToggle";
 import { useTheme } from "../hooks/useTheme";
+import { Avatar } from "../utils/avatar";
 
 // ── Animation variants ────────────────────────────────────────
 const fadeUp = {
@@ -56,7 +57,6 @@ function FloatingCards() {
 // ── Navbar ────────────────────────────────────────────────────
 function NavBar({ onNavigate, active }) {
   const [scrolled, setScrolled] = useState(false);
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   useEffect(() => {
     const handler = () => setScrolled(window.scrollY > 20);
@@ -80,14 +80,12 @@ function NavBar({ onNavigate, active }) {
       }}>
       <div style={{ maxWidth: "1200px", margin: "0 auto", padding: "0 32px", height: "68px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
 
-        {/* Logo */}
         <motion.div whileHover={{ scale: 1.02 }} onClick={() => onNavigate("home")}
           style={{ display: "flex", alignItems: "center", gap: "10px", cursor: "pointer" }}>
           <div style={{ width: "38px", height: "38px", borderRadius: "12px", background: "linear-gradient(135deg, #f5a623, #e8920f)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "18px", boxShadow: "0 4px 14px rgba(245,166,35,0.35)" }}>🎟️</div>
           <span style={{ fontWeight: 800, fontSize: "17px", color: "var(--text-primary)", letterSpacing: "-0.3px" }}>Master Events</span>
         </motion.div>
 
-        {/* Desktop nav */}
         <div className="hidden md:flex" style={{ alignItems: "center", gap: "32px" }}>
           {[["Events", "#events"], ["About", "about"], ["Pricing", "#pricing"]].map(([label, href]) => (
             <motion.span key={label} whileHover={{ color: "#f5a623" }}
@@ -98,7 +96,6 @@ function NavBar({ onNavigate, active }) {
           ))}
         </div>
 
-        {/* Right actions */}
         <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
           <ThemeToggle compact={true} />
           <motion.span whileHover={{ color: "#f5a623" }}
@@ -170,7 +167,7 @@ function LandingPage({ onNavigate }) {
       {/* ── Hero ── */}
       <section ref={heroRef} style={{ position: "relative", overflow: "hidden", padding: "100px 32px 120px", textAlign: "center", background: "linear-gradient(160deg, var(--bg) 0%, var(--brand-light) 50%, var(--bg) 100%)" }}>
         <FloatingCards />
-        <motion.div style={{ y: heroY }} className="relative" style={{ position: "relative", zIndex: 10, maxWidth: "760px", margin: "0 auto" }}>
+        <div style={{ position: "relative", zIndex: 10, maxWidth: "760px", margin: "0 auto" }}>
           <motion.div variants={stagger} initial="hidden" animate="show">
             <motion.div variants={fadeUp}>
               <motion.div
@@ -210,9 +207,8 @@ function LandingPage({ onNavigate }) {
               </motion.button>
             </motion.div>
           </motion.div>
-        </motion.div>
+        </div>
 
-        {/* Stats row */}
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.6, duration: 0.6 }}
           style={{ display: "flex", gap: "48px", justifyContent: "center", marginTop: "72px", flexWrap: "wrap", position: "relative", zIndex: 10 }}>
           {[["10K+", "Tickets Sold", "#f5a623"], ["50+", "Live Events", "#16a34a"], ["100%", "NFT Verified", "#2563eb"], ["0%", "Fake Tickets", "#dc2626"]].map(([val, label, color]) => (
@@ -361,7 +357,7 @@ function LandingPage({ onNavigate }) {
         </div>
       </section>
 
-      {/* ── Testimonials ── */}
+      {/* ── Testimonials — Navii avatars ── */}
       <section style={{ background: "var(--bg-subtle)", padding: "80px 32px", borderTop: "1px solid var(--border)" }}>
         <div style={{ maxWidth: "1200px", margin: "0 auto" }}>
           <motion.div initial="hidden" whileInView="show" viewport={{ once: true, amount: 0.2 }} variants={stagger}>
@@ -371,9 +367,9 @@ function LandingPage({ onNavigate }) {
             </motion.div>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: "20px" }}>
               {[
-                { name: "Kwame Asante", role: "Event Organizer · Accra", quote: "Master Events gave us one place to manage tickets, door staff, and payments. We received 95% of revenue directly to MoMo — no delays.", avatar: "KA" },
-                { name: "Ama Owusu", role: "Concert Attendee · Kumasi", quote: "I love that my ticket is an NFT — I can transfer it to my friend and it just works. No more fake tickets at the gate.", avatar: "AO" },
-                { name: "Kofi Mensah", role: "Tech Conference Organizer", quote: "The blockchain verification at the door was seamless. Our door staff just scanned QR codes and it told them instantly if the ticket was valid.", avatar: "KM" },
+                { name: "Kwame Asante", role: "Event Organizer · Accra",    quote: "Master Events gave us one place to manage tickets, door staff, and payments. We received 95% of revenue directly to MoMo — no delays." },
+                { name: "Ama Owusu",    role: "Concert Attendee · Kumasi",  quote: "I love that my ticket is an NFT — I can transfer it to my friend and it just works. No more fake tickets at the gate." },
+                { name: "Kofi Mensah",  role: "Tech Conference Organizer",  quote: "The blockchain verification at the door was seamless. Our door staff just scanned QR codes and it told them instantly if the ticket was valid." },
               ].map((t, i) => (
                 <motion.div key={i} variants={fadeUp}
                   whileHover={{ y: -4, boxShadow: "var(--shadow-md)" }}
@@ -381,7 +377,8 @@ function LandingPage({ onNavigate }) {
                   <div style={{ fontSize: "32px", color: "#f5a623", fontWeight: 900, lineHeight: 1, marginBottom: "16px" }}>"</div>
                   <p style={{ fontSize: "14px", color: "var(--text-secondary)", lineHeight: 1.7, marginBottom: "20px" }}>{t.quote}</p>
                   <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-                    <div style={{ width: "40px", height: "40px", borderRadius: "50%", background: "linear-gradient(135deg, #f5a623, #e8920f)", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontWeight: 700, fontSize: "13px" }}>{t.avatar}</div>
+                    {/* ── Navii avatar ── */}
+                    <Avatar seed={t.name} name={t.name} size={40} />
                     <div>
                       <div style={{ fontWeight: 700, fontSize: "14px", color: "var(--text-primary)" }}>{t.name}</div>
                       <div style={{ fontSize: "12px", color: "var(--text-muted)" }}>{t.role}</div>
@@ -482,7 +479,6 @@ export default function PhoneFrame({ children }) {
   const isLoggedIn = useStore(s => s.isLoggedIn);
   useTheme();
 
-  // Sync desktopPage with screen store so back buttons work
   const getPage = () => {
     if (isLoggedIn) return "app";
     if (screen === "home")   return "home";
@@ -509,14 +505,11 @@ export default function PhoneFrame({ children }) {
   if (desktopPage === "about") return <AboutPage onNavigate={handleNavigate} />;
 
   return (
-  <div style={{
-    height: "100vh",
-    width: "100%",
-    overflow: "hidden",       // ← only the app shell gets overflow hidden
-    background: "var(--bg)",
-    fontFamily: "var(--font-sans)",
-  }}>
-    {children}
-  </div>
-);
+    <div style={{
+      height: "100vh", width: "100%", overflow: "hidden",
+      background: "var(--bg)", fontFamily: "var(--font-sans)",
+    }}>
+      {children}
+    </div>
+  );
 }

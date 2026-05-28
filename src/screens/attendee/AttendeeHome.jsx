@@ -30,22 +30,6 @@ const ITEMS_PER_PAGE_MOBILE  = 6;
 
 const isDesktop = () => window.innerWidth > 768;
 
-{/* ── Resale Market banner ── */}
-<div style={{ padding: desktop ? "12px 40px 0" : "12px 16px 0" }}>
-  <motion.div whileTap={{ scale: 0.98 }} onClick={() => setScreen("resaleMarket")}
-    style={{ background: "linear-gradient(135deg, rgba(124,58,237,0.08), rgba(37,99,235,0.06))", border: "1px solid rgba(124,58,237,0.2)", borderRadius: "14px", padding: "12px 16px", display: "flex", alignItems: "center", justifyContent: "space-between", cursor: "pointer" }}>
-    <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-      <div style={{ width: "36px", height: "36px", borderRadius: "10px", background: "linear-gradient(135deg, #7c3aed, #2563eb)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "16px", flexShrink: 0 }}>🏷️</div>
-      <div>
-        <div style={{ fontSize: "13px", fontWeight: 700, color: "var(--text-primary)" }}>Resale Market</div>
-        <div style={{ fontSize: "11px", color: "var(--text-muted)" }}>Fan-to-fan NFT ticket resales · 2% fee</div>
-      </div>
-    </div>
-    <span style={{ color: "#7c3aed", fontSize: "16px", fontWeight: 700 }}>→</span>
-  </motion.div>
-</div>
-
-
 // ── Event Card ────────────────────────────────────────────────
 function EventCard({ ev, onClick }) {
   const [hovered, setHovered] = useState(false);
@@ -72,7 +56,6 @@ function EventCard({ ev, onClick }) {
           : "0 2px 12px rgba(0,0,0,0.07)",
       }}>
 
-      {/* Image */}
       <div style={{ height: desktop ? "240px" : "200px", position: "relative", overflow: "hidden" }}>
         <motion.img
           src={ev.image} alt={ev.name}
@@ -82,27 +65,20 @@ function EventCard({ ev, onClick }) {
           onError={e => { e.target.src = categoryImages.other; }}
         />
         <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to bottom, rgba(0,0,0,0.08) 0%, rgba(0,0,0,0.65) 100%)" }} />
-
-        {/* Category pill */}
         <div style={{ position: "absolute", top: "12px", right: "12px", background: "var(--brand)", color: "#fff", fontSize: "10px", fontWeight: 700, padding: "4px 10px", borderRadius: "99px", letterSpacing: "0.3px" }}>
           {ev.category}
         </div>
-
-        {/* Free badge */}
         {ev.price === 0 && (
           <div style={{ position: "absolute", top: "12px", left: "12px", background: "#16a34a", color: "#fff", fontSize: "10px", fontWeight: 700, padding: "4px 10px", borderRadius: "99px" }}>
             FREE
           </div>
         )}
-
-        {/* NFT badge */}
         <div style={{ position: "absolute", bottom: "12px", left: "12px", display: "flex", alignItems: "center", gap: "4px", background: "rgba(124,58,237,0.88)", backdropFilter: "blur(8px)", padding: "4px 9px", borderRadius: "99px" }}>
           <span style={{ fontSize: "9px" }}>⛓️</span>
           <span style={{ fontSize: "9px", fontWeight: 700, color: "#fff", letterSpacing: "0.3px" }}>NFT Ticket</span>
         </div>
       </div>
 
-      {/* Card body */}
       <div style={{ padding: "14px 16px 16px" }}>
         <div style={{ fontWeight: 700, fontSize: desktop ? "15px" : "14px", color: "var(--text-primary)", marginBottom: "5px", lineHeight: 1.35, letterSpacing: "-0.2px" }}>
           {ev.name}
@@ -120,16 +96,7 @@ function EventCard({ ev, onClick }) {
           <motion.div
             animate={{ x: hovered ? 4 : 0 }}
             transition={{ duration: 0.2 }}
-            style={{
-              fontSize: "12px",
-              fontWeight: 600,
-              color: "var(--text-primary)",
-              display: "flex",
-              alignItems: "center",
-              gap: "4px",
-              opacity: hovered ? 1 : 0.7,
-              transition: "opacity 0.2s",
-            }}>
+            style={{ fontSize: "12px", fontWeight: 600, color: "var(--text-primary)", display: "flex", alignItems: "center", gap: "4px", opacity: hovered ? 1 : 0.7, transition: "opacity 0.2s" }}>
             View details <span style={{ fontSize: "13px" }}>→</span>
           </motion.div>
         </div>
@@ -142,27 +109,19 @@ function EventCard({ ev, onClick }) {
 function Pagination({ current, total, onChange }) {
   if (total <= 1) return null;
   const pages = Array.from({ length: total }, (_, i) => i + 1);
-
   return (
     <div style={{ display: "flex", justifyContent: "center", alignItems: "center", gap: "6px", padding: "32px 0 8px" }}>
-      <motion.button whileTap={{ scale: 0.9 }}
-        onClick={() => onChange(current - 1)}
-        disabled={current === 1}
+      <motion.button whileTap={{ scale: 0.9 }} onClick={() => onChange(current - 1)} disabled={current === 1}
         style={{ padding: "8px 14px", borderRadius: "10px", border: "1.5px solid var(--border)", background: "var(--bg-card)", color: current === 1 ? "var(--text-muted)" : "var(--text-primary)", cursor: current === 1 ? "not-allowed" : "pointer", fontSize: "13px", fontWeight: 600, opacity: current === 1 ? 0.4 : 1, fontFamily: "var(--font-sans)" }}>
         ← Prev
       </motion.button>
-
       {pages.map(p => (
-        <motion.button key={p} whileTap={{ scale: 0.88 }}
-          onClick={() => onChange(p)}
+        <motion.button key={p} whileTap={{ scale: 0.88 }} onClick={() => onChange(p)}
           style={{ width: "36px", height: "36px", borderRadius: "10px", border: p === current ? "none" : "1.5px solid var(--border)", background: p === current ? "var(--brand)" : "var(--bg-card)", color: p === current ? "#fff" : "var(--text-secondary)", cursor: "pointer", fontSize: "13px", fontWeight: p === current ? 700 : 500, boxShadow: p === current ? "var(--shadow-brand)" : "none", fontFamily: "var(--font-sans)" }}>
           {p}
         </motion.button>
       ))}
-
-      <motion.button whileTap={{ scale: 0.9 }}
-        onClick={() => onChange(current + 1)}
-        disabled={current === total}
+      <motion.button whileTap={{ scale: 0.9 }} onClick={() => onChange(current + 1)} disabled={current === total}
         style={{ padding: "8px 14px", borderRadius: "10px", border: "1.5px solid var(--border)", background: "var(--bg-card)", color: current === total ? "var(--text-muted)" : "var(--text-primary)", cursor: current === total ? "not-allowed" : "pointer", fontSize: "13px", fontWeight: 600, opacity: current === total ? 0.4 : 1, fontFamily: "var(--font-sans)" }}>
         Next →
       </motion.button>
@@ -180,7 +139,6 @@ function EventDetailOverlay({ ev, onBack, onCheckout }) {
       style={{ background: "var(--bg)", height: "100%", display: "flex", flexDirection: "column", overflow: "hidden" }}>
       <div style={{ flex: 1, overflowY: "auto", WebkitOverflowScrolling: "touch" }}>
 
-        {/* Hero — 70vh */}
         <div style={{ height: "70vh", minHeight: "380px", maxHeight: "600px", position: "relative", flexShrink: 0 }}>
           <img src={ev.image} alt={ev.name}
             style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
@@ -210,18 +168,8 @@ function EventDetailOverlay({ ev, onBack, onCheckout }) {
           </div>
         </div>
 
-        {/* Lower content — 2-col on desktop */}
-        <div style={{
-          maxWidth: desktop ? "1000px" : "100%",
-          margin: "0 auto",
-          padding: desktop ? "32px 40px 60px" : "20px 16px 80px",
-          display: desktop ? "grid" : "block",
-          gridTemplateColumns: desktop ? "1fr 340px" : undefined,
-          gap: desktop ? "40px" : undefined,
-          alignItems: "start",
-        }}>
+        <div style={{ maxWidth: desktop ? "1000px" : "100%", margin: "0 auto", padding: desktop ? "32px 40px 60px" : "20px 16px 80px", display: desktop ? "grid" : "block", gridTemplateColumns: desktop ? "1fr 340px" : undefined, gap: desktop ? "40px" : undefined, alignItems: "start" }}>
 
-          {/* LEFT */}
           <div>
             <div style={{ display: "flex", gap: "10px", marginBottom: "24px", flexWrap: "wrap" }}>
               {[
@@ -240,9 +188,7 @@ function EventDetailOverlay({ ev, onBack, onCheckout }) {
             <div style={{ marginBottom: "24px" }}>
               <div style={{ fontSize: "11px", fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "1px", marginBottom: "12px" }}>About This Event</div>
               <div style={{ fontSize: "15px", color: "var(--text-secondary)", lineHeight: 1.85, fontWeight: 400 }}>
-                {ev.description && ev.description.trim()
-                  ? ev.description
-                  : "No description provided for this event."}
+                {ev.description && ev.description.trim() ? ev.description : "No description provided for this event."}
               </div>
             </div>
 
@@ -250,22 +196,18 @@ function EventDetailOverlay({ ev, onBack, onCheckout }) {
               <span style={{ fontSize: "22px" }}>⛓️</span>
               <div>
                 <div style={{ fontSize: "13px", fontWeight: 700, color: "#7c3aed" }}>Secured by Polygon Blockchain</div>
-                <div style={{ fontSize: "12px", color: "var(--text-muted)", marginTop: "2px" }}>
-                  Your ticket is minted as an NFT · Screenshot-proof · Cannot be duplicated
-                </div>
+                <div style={{ fontSize: "12px", color: "var(--text-muted)", marginTop: "2px" }}>Your ticket is minted as an NFT · Screenshot-proof · Cannot be duplicated</div>
               </div>
             </div>
 
             {!desktop && (
-              <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}
-                onClick={onCheckout}
+              <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }} onClick={onCheckout}
                 style={{ width: "100%", padding: "17px", background: "var(--brand)", color: "#fff", border: "none", borderRadius: "14px", fontSize: "16px", fontWeight: 700, cursor: "pointer", boxShadow: "var(--shadow-brand)", fontFamily: "var(--font-sans)", marginTop: "24px" }}>
                 {ev.price === 0 ? "Get Free Ticket" : `Buy Ticket — GHS ${ev.price}`}
               </motion.button>
             )}
           </div>
 
-          {/* RIGHT — sticky meta box */}
           {desktop && (
             <div style={{ position: "sticky", top: "20px" }}>
               <div style={{ background: "var(--bg-card)", border: "1.5px solid var(--border)", borderRadius: "20px", padding: "24px", boxShadow: "0 8px 40px rgba(0,0,0,0.1)" }}>
@@ -275,7 +217,6 @@ function EventDetailOverlay({ ev, onBack, onCheckout }) {
                     {ev.price === 0 ? "FREE" : `GHS ${ev.price}`}
                   </div>
                 </div>
-
                 {[
                   ["📅", "Date",          ev.date || "TBA"],
                   ["🕐", "Time",          ev.time ? ev.time.substring(0, 5) : "TBA"],
@@ -290,7 +231,6 @@ function EventDetailOverlay({ ev, onBack, onCheckout }) {
                     <span style={{ fontSize: "13px", fontWeight: 700, color: "var(--text-primary)" }}>{val}</span>
                   </div>
                 ))}
-
                 <div style={{ margin: "18px 0 20px" }}>
                   <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "6px" }}>
                     <span style={{ fontSize: "11px", color: "var(--text-muted)", fontWeight: 500 }}>Availability</span>
@@ -299,20 +239,13 @@ function EventDetailOverlay({ ev, onBack, onCheckout }) {
                     </span>
                   </div>
                   <div style={{ height: "5px", background: "var(--border)", borderRadius: "99px", overflow: "hidden" }}>
-                    <div style={{
-                      height: "100%", borderRadius: "99px",
-                      background: remaining < 20 ? "#dc2626" : "var(--brand)",
-                      width: Math.max(5, Math.min(100, (remaining / (ev.totalTickets || 1)) * 100)) + "%",
-                    }} />
+                    <div style={{ height: "100%", borderRadius: "99px", background: remaining < 20 ? "#dc2626" : "var(--brand)", width: Math.max(5, Math.min(100, (remaining / (ev.totalTickets || 1)) * 100)) + "%" }} />
                   </div>
                 </div>
-
-                <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}
-                  onClick={onCheckout}
+                <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }} onClick={onCheckout}
                   style={{ width: "100%", padding: "16px", background: "var(--brand)", color: "#fff", border: "none", borderRadius: "14px", fontSize: "15px", fontWeight: 700, cursor: "pointer", boxShadow: "var(--shadow-brand)", fontFamily: "var(--font-sans)", marginBottom: "10px" }}>
                   {ev.price === 0 ? "Get Free Ticket" : `Buy Ticket — GHS ${ev.price}`}
                 </motion.button>
-
                 <div style={{ background: "rgba(124,58,237,0.05)", border: "1px solid rgba(124,58,237,0.15)", borderRadius: "10px", padding: "10px 12px", display: "flex", alignItems: "center", gap: "8px" }}>
                   <span style={{ fontSize: "13px" }}>⛓️</span>
                   <span style={{ fontSize: "11px", color: "#7c3aed", fontWeight: 500 }}>NFT minted on Polygon · Screenshot-proof</span>
@@ -329,6 +262,7 @@ function EventDetailOverlay({ ev, onBack, onCheckout }) {
 // ── Main AttendeeHome ─────────────────────────────────────────
 export default function AttendeeHome() {
   const setScreen        = useStore(s => s.setScreen);
+  const activeTab        = useStore(s => s.activeTab);   // ← fixed: added this
   const setActiveTab     = useStore(s => s.setActiveTab);
   const setCheckoutEvent = useStore(s => s.setCheckoutEvent);
   const setTicketQty     = useStore(s => s.setTicketQty);
@@ -344,7 +278,6 @@ export default function AttendeeHome() {
   const [page,           setPage]           = useState(1);
   const desktop = isDesktop();
 
-  // ── TanStack Query — server state for events ──────────────
   const { data: eventsData, isLoading: loading } = useQuery({
     queryKey: ["events"],
     queryFn: () =>
@@ -372,7 +305,6 @@ export default function AttendeeHome() {
 
   const events = eventsData || [];
 
-  // Reset page when filters change
   const [prevSearch, setPrevSearch] = useState(searchQ);
   const [prevCat,    setPrevCat]    = useState(activeCategory);
   if (searchQ !== prevSearch || activeCategory !== prevCat) {
@@ -444,7 +376,7 @@ export default function AttendeeHome() {
                   ["🎟️", "My Tickets",      "tickets"],
                   ["🔔", "Alerts",          "alerts"],
                 ].map(([icon, label, tabId]) => {
-                   const isActive = activeTab === tabId;
+                  const isActive = activeTab === tabId;  // ← fixed: uses activeTab from store
                   return (
                     <motion.div key={label} whileTap={{ scale: 0.97 }}
                       onClick={() => { setMenuOpen(false); setActiveTab(tabId); setScreen("app"); }}
@@ -473,9 +405,7 @@ export default function AttendeeHome() {
       <div style={{ padding: desktop ? "32px 40px 0" : "16px 16px 0" }}>
         {desktop ? (
           <div style={{ marginBottom: "20px" }}>
-            <h1 style={{ fontSize: "26px", fontWeight: 800, color: "var(--text-primary)", letterSpacing: "-0.6px", marginBottom: "4px" }}>
-              Discover Events
-            </h1>
+            <h1 style={{ fontSize: "26px", fontWeight: 800, color: "var(--text-primary)", letterSpacing: "-0.6px", marginBottom: "4px" }}>Discover Events</h1>
             <p style={{ fontSize: "13px", color: "var(--text-muted)" }}>
               Ghana & Africa · {filtered.length} events · NFT-secured tickets on Polygon
             </p>
@@ -504,12 +434,9 @@ export default function AttendeeHome() {
           </div>
         )}
 
-        {/* Search */}
         <div style={{ position: "relative", marginBottom: "0", maxWidth: desktop ? "560px" : "100%" }}>
           <div style={{ position: "absolute", left: "14px", top: "50%", transform: "translateY(-50%)", color: "var(--text-muted)", fontSize: "15px", pointerEvents: "none" }}>🔍</div>
-          <input
-            value={searchQ}
-            onChange={e => setSearchQ(e.target.value)}
+          <input value={searchQ} onChange={e => setSearchQ(e.target.value)}
             placeholder="Search events, venues, categories..."
             style={{ width: "100%", padding: "13px 40px 13px 44px", border: "1.5px solid var(--border)", borderRadius: "14px", fontSize: "14px", outline: "none", background: "var(--bg-card)", color: "var(--text-primary)", boxSizing: "border-box", fontFamily: "var(--font-sans)" }}
           />
@@ -521,30 +448,13 @@ export default function AttendeeHome() {
       </div>
 
       {/* ── Category chips — sticky ── */}
-      <div style={{
-        position: "sticky", top: 0, zIndex: 30,
-        background: "var(--bg)",
-        borderBottom: "1px solid var(--border)",
-        padding: desktop ? "12px 40px" : "10px 16px",
-        marginTop: "14px",
-      }}>
+      <div style={{ position: "sticky", top: 0, zIndex: 30, background: "var(--bg)", borderBottom: "1px solid var(--border)", padding: desktop ? "12px 40px" : "10px 16px", marginTop: "14px" }}>
         <div style={{ display: "flex", gap: "8px", overflowX: "auto", scrollbarWidth: "none" }}>
           {CATEGORIES.map(cat => {
             const active = activeCategory === cat.key;
             return (
-              <motion.div key={cat.key} whileTap={{ scale: 0.91 }}
-                onClick={() => setActiveCategory(cat.key)}
-                style={{
-                  flexShrink: 0, padding: "7px 16px", borderRadius: "99px",
-                  cursor: "pointer", fontSize: "12px",
-                  fontWeight: active ? 700 : 500,
-                  display: "flex", alignItems: "center", gap: "5px",
-                  transition: "all 0.15s",
-                  background: active ? "var(--brand)" : "var(--bg-card)",
-                  color: active ? "#fff" : "var(--text-secondary)",
-                  border: active ? "1.5px solid var(--brand)" : "1.5px solid var(--border)",
-                  boxShadow: active ? "0 2px 12px rgba(245,166,35,0.35)" : "none",
-                }}>
+              <motion.div key={cat.key} whileTap={{ scale: 0.91 }} onClick={() => setActiveCategory(cat.key)}
+                style={{ flexShrink: 0, padding: "7px 16px", borderRadius: "99px", cursor: "pointer", fontSize: "12px", fontWeight: active ? 700 : 500, display: "flex", alignItems: "center", gap: "5px", transition: "all 0.15s", background: active ? "var(--brand)" : "var(--bg-card)", color: active ? "#fff" : "var(--text-secondary)", border: active ? "1.5px solid var(--brand)" : "1.5px solid var(--border)", boxShadow: active ? "0 2px 12px rgba(245,166,35,0.35)" : "none" }}>
                 <span>{cat.icon}</span>
                 <span>{cat.label}</span>
               </motion.div>
@@ -553,10 +463,24 @@ export default function AttendeeHome() {
         </div>
       </div>
 
+      {/* ── Resale Market banner ── */}
+      <div style={{ padding: desktop ? "12px 40px 0" : "12px 16px 0" }}>
+        <motion.div whileTap={{ scale: 0.98 }} onClick={() => setScreen("resaleMarket")}
+          style={{ background: "linear-gradient(135deg, rgba(124,58,237,0.08), rgba(37,99,235,0.06))", border: "1px solid rgba(124,58,237,0.2)", borderRadius: "14px", padding: "12px 16px", display: "flex", alignItems: "center", justifyContent: "space-between", cursor: "pointer" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+            <div style={{ width: "36px", height: "36px", borderRadius: "10px", background: "linear-gradient(135deg, #7c3aed, #2563eb)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "16px", flexShrink: 0 }}>🏷️</div>
+            <div>
+              <div style={{ fontSize: "13px", fontWeight: 700, color: "var(--text-primary)" }}>Resale Market</div>
+              <div style={{ fontSize: "11px", color: "var(--text-muted)" }}>Fan-to-fan NFT ticket resales · 2% fee</div>
+            </div>
+          </div>
+          <span style={{ color: "#7c3aed", fontSize: "16px", fontWeight: 700 }}>→</span>
+        </motion.div>
+      </div>
+
       {/* ── Events Grid ── */}
       <div style={{ padding: desktop ? "20px 40px 0" : "16px 16px 0" }}>
 
-        {/* Skeleton */}
         {loading && (
           <div style={{ display: "grid", gridTemplateColumns: desktop ? "repeat(3, 1fr)" : "1fr", gap: desktop ? "24px" : "14px" }}>
             {[1,2,3,4,5,6].map(i => (
@@ -571,7 +495,6 @@ export default function AttendeeHome() {
           </div>
         )}
 
-        {/* Empty */}
         {!loading && filtered.length === 0 && (
           <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
             style={{ textAlign: "center", padding: "80px 20px" }}>
@@ -581,7 +504,6 @@ export default function AttendeeHome() {
           </motion.div>
         )}
 
-        {/* Cards */}
         {!loading && paginated.length > 0 && (
           <div style={{ display: "grid", gridTemplateColumns: desktop ? "repeat(3, 1fr)" : "1fr", gap: desktop ? "24px" : "14px" }}>
             {paginated.map((ev, i) => (
@@ -593,7 +515,6 @@ export default function AttendeeHome() {
           </div>
         )}
 
-        {/* Pagination */}
         {!loading && filtered.length > 0 && (
           <Pagination current={page} total={totalPages} onChange={handlePageChange} />
         )}

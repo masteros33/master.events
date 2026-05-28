@@ -227,8 +227,8 @@ const useStore = create((set, get) => ({
   setMenuOpen: (v) => set({ menuOpen: v }),
 
   // ── Password reset params ──────────────────────────────────
-resetPasswordParams:    null,
-setResetPasswordParams: (v) => set({ resetPasswordParams: v }),
+  resetPasswordParams:    null,
+  setResetPasswordParams: (v) => set({ resetPasswordParams: v }),
 
   // ── Ticket notification ────────────────────────────────────
   newTicketCount:        0,
@@ -275,7 +275,7 @@ setResetPasswordParams: (v) => set({ resetPasswordParams: v }),
           {
             method:  "POST",
             headers: {
-              "Content-Type": "application/json",
+              "Content-Type":  "application/json",
               "Authorization": `Bearer ${localStorage.getItem("access_token") || ""}`,
             },
             body: JSON.stringify({
@@ -290,7 +290,7 @@ setResetPasswordParams: (v) => set({ resetPasswordParams: v }),
         data = { ...await res.json(), _status: res.status };
 
       } catch (fetchErr) {
-        // ── Fetch timed out or failed — check if ticket exists
+        // ── Fetch timed out or failed — check if ticket exists ─
         toast.dismiss(loadingToast);
         toast.loading("Payment received — confirming ticket...");
         await new Promise(r => setTimeout(r, 5000));
@@ -303,10 +303,22 @@ setResetPasswordParams: (v) => set({ resetPasswordParams: v }),
               t.event?.name === checkoutEvent.name
             ) || tickets[0];
 
+            // ── Fix: always use checkoutEvent image as fallback ─
             const ticket = {
               id:           found.ticket_id || found.id,
               ticket_id:    found.ticket_id || found.id,
-              event:        found.event || checkoutEvent,
+              event: {
+                ...(found.event || {}),
+                id:       found.event?.id       || checkoutEvent?.id,
+                name:     found.event?.name     || checkoutEvent?.name,
+                date:     found.event?.date     || checkoutEvent?.date,
+                time:     found.event?.time     || checkoutEvent?.time,
+                venue:    found.event?.venue    || checkoutEvent?.venue,
+                city:     found.event?.city     || checkoutEvent?.city,
+                category: found.event?.category || checkoutEvent?.category,
+                price:    found.event?.price    || checkoutEvent?.price,
+                image:    found.event?.image    || checkoutEvent?.image,
+              },
               qty:          found.quantity || ticketQty,
               quantity:     found.quantity || ticketQty,
               payMethod,
@@ -315,7 +327,7 @@ setResetPasswordParams: (v) => set({ resetPasswordParams: v }),
                 ? ((found.owner?.first_name || "") + " " + (found.owner?.last_name || "")).trim()
                 : (found.owner || ""),
               ownerEmail:   found.owner?.email || null,
-              status:       found.status || "active",
+              status:       found.status       || "active",
               qr_data:      found.qr_data      || null,
               dynamic_qr:   found.dynamic_qr   || null,
               qr_base64:    found.dynamic_qr   || null,
@@ -433,30 +445,66 @@ setResetPasswordParams: (v) => set({ resetPasswordParams: v }),
   setResalePrice:  (v) => set({ resalePrice: v }),
   setResaleError:  (v) => set({ resaleError: v }),
 
-  handleListForResale: () => {
+  handleListForResale: async () => {
     const { resaleTicket, resalePrice, myTickets, resaleListings, currentUser } = get();
     const price = parseFloat(resalePrice);
     const orig  = resaleTicket.event.price;
+
     if (!price || isNaN(price)) { set({ resaleError: "Please enter a valid price." }); return; }
-    if (price >= orig)           { set({ resaleError: "Must be less than original price (Ghc " + orig + ")." }); return; }
-    if (price < orig * 0.3)      { set({ resaleError: "Minimum resale price: Ghc " + Math.floor(orig * 0.3) + "." }); return; }
-    set({
-      myTickets: myTickets.map(t =>
-        t.id === resaleTicket.id ? { ...t, status: "resale", resalePrice: price } : t
-      ),
-      resaleListings: [...resaleListings, {
-        ...resaleTicket, resalePrice: price,
-        listedAt: new Date().toLocaleDateString(),
-        seller: currentUser?.first_name,
-      }],
-      resaleTicket: null, resalePrice: "", resaleError: "",
-      screen: "resaleSuccess",
-    });
-    toast.success("Ticket listed for resale!");
+    if (price >= orig)           { set({ resaleError: "Must be less than original price (GHS " + orig + ")." }); return; }
+    if (price < orig * 0.3)      { set({ resaleError: "Minimum resale price: GHS " + Math.floor(orig * 0.3) + "." }); return; }
+
+    const loadingToast = toast.loading("Listing ticket...");
+    try {
+      const token = localStorage.getItem("access_token") || "";
+      const res = await fetch("https://master-events-backend.onrender.com/api/tickets/resale/list/", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
+        body: JSON.stringify({
+          ticket_id:    resaleTicket.ticket_id || resaleTicket.id,
+          resale_price: price,
+        }),
+      });
+      const data = await res.json();
+
+      if (res.ok) {
+        set({
+          myTickets: myTickets.map(t =>
+            t.id === resaleTicket.id ? { ...t, status: "resale", resalePrice: price } : t
+          ),
+          resaleListings: [...resaleListings, {
+            ...resaleTicket, resalePrice: price,
+            listedAt: new Date().toLocaleDateString(),
+            seller: currentUser?.first_name,
+          }],
+          resaleTicket: null, resalePrice: "", resaleError: "",
+          screen: "resaleSuccess",
+        });
+        toast.dismiss(loadingToast);
+        toast.success("Ticket listed for resale!");
+      } else {
+        toast.dismiss(loadingToast);
+        set({ resaleError: data.error || "Failed to list ticket." });
+      }
+    } catch {
+      toast.dismiss(loadingToast);
+      set({ resaleError: "Connection error. Try again." });
+    }
   },
 
-  handleCancelResale: (ticketId) => {
+  handleCancelResale: async (ticketId) => {
     const { myTickets, resaleListings } = get();
+    const ticket = myTickets.find(t => t.id === ticketId);
+
+    try {
+      const token = localStorage.getItem("access_token") || "";
+      await fetch("https://master-events-backend.onrender.com/api/tickets/resale/cancel/", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
+        body: JSON.stringify({ ticket_id: ticket?.ticket_id || ticketId }),
+      });
+    } catch {}
+
     set({
       myTickets:      myTickets.map(t => t.id === ticketId ? { ...t, status: "active", resalePrice: null } : t),
       resaleListings: resaleListings.filter(l => l.id !== ticketId),

@@ -444,7 +444,7 @@ export default function AttendeeHome() {
                   ["🎟️", "My Tickets",      "tickets"],
                   ["🔔", "Alerts",          "alerts"],
                 ].map(([icon, label, tabId]) => {
-                  const isActive = useStore.getState().activeTab === tabId;
+                   const isActive = activeTab === tabId;
                   return (
                     <motion.div key={label} whileTap={{ scale: 0.97 }}
                       onClick={() => { setMenuOpen(false); setActiveTab(tabId); setScreen("app"); }}

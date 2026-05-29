@@ -38,7 +38,7 @@ function PageWrap({ children, maxW = "600px" }) {
 }
 
 function ChainStrip({ txHash, tokenId }) {
-  const url = txHash ? `https://polygonscan.com/tx/${txHash}` : null;
+  const url = txHash ? `https://amoy.polygonscan.com/tx/${txHash}` : null;
   return (
     <div style={{ background: "var(--bg-subtle)", border: "1px solid var(--border)", borderRadius: "12px", padding: "12px 14px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: "10px" }}>
       <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
@@ -246,7 +246,7 @@ function PremiumTicket({ ev, ownerName, qrSrc, qrLoaded, qrError, refreshing, se
         {/* Verified owner */}
         <div style={{ width: "100%", background: "rgba(22,163,74,0.08)", border: "1px solid rgba(22,163,74,0.2)", borderRadius: "10px", padding: "10px 14px", display: "flex", alignItems: "center", gap: "10px" }}>
           <Avatar
-            seed={viewingTicket?.ownerEmail || ownerName}
+            seed={ownerName}
             name={ownerName}
             size={26}
             style={{ border: "2px solid #16a34a", flexShrink: 0 }}
@@ -342,7 +342,7 @@ function PremiumTicket({ ev, ownerName, qrSrc, qrLoaded, qrError, refreshing, se
             </div>
           </div>
           {txHash ? (
-            <a href={`https://polygonscan.com/tx/${txHash}`} target="_blank" rel="noreferrer"
+            <a href={`https://amoy.polygonscan.com/tx/${txHash}`}target="_blank" rel="noreferrer"
               style={{ fontSize: "10px", fontWeight: 600, color: "#a78bfa", textDecoration: "none", background: "rgba(124,58,237,0.15)", padding: "3px 8px", borderRadius: "99px", border: "1px solid rgba(124,58,237,0.25)" }}>
               Verify ↗
             </a>

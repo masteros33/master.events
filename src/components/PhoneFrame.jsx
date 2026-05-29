@@ -11,27 +11,31 @@ const fadeUp = {
 };
 const stagger = { show: { transition: { staggerChildren: 0.12 } } };
 
-// ── African/Ghanaian event hero images (Unsplash — free) ──────
 const HERO_IMAGES = [
-  "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=1600&q=90", // concert crowd
-  "https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?w=1600&q=90", // festival crowd
-  "https://images.unsplash.com/photo-1429962714451-bb934ecdc4ec?w=1600&q=90", // concert stage lights
+  "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=1600&q=90",
+  "https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?w=1600&q=90",
+  "https://images.unsplash.com/photo-1429962714451-bb934ecdc4ec?w=1600&q=90",
 ];
 
-// ── Floating popup cards — appear one at a time ───────────────
+// Login page — crowd entering venue
+const LOGIN_IMAGE = "https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=1200&q=90";
+
+// Signup page — QR scan at event gate
+const SIGNUP_IMAGE = "https://images.unsplash.com/photo-1501281668745-f7f57925c3b4?w=1200&q=90";
+
+// ── Floating popup cards ──────────────────────────────────────
 function FloatingCards() {
   const [visible, setVisible] = useState(0);
 
   const cards = [
-    { name: "Afrobeats Night Accra", price: "Ghc 80",  color: "#f5a623", icon: "🎵", pos: { top: "15%", left: "4%" } },
-    { name: "Tech Summit Ghana",     price: "Ghc 150", color: "#2563eb", icon: "💻", pos: { top: "8%",  right: "5%" } },
-    { name: "Food Fest Kumasi",      price: "FREE",    color: "#16a34a", icon: "🍔", pos: { top: "58%", right: "4%" } },
-    { name: "Art Exhibition Lagos",  price: "Ghc 40",  color: "#7c3aed", icon: "🎨", pos: { top: "62%", left: "3%" } },
-    { name: "GCTU Sports Day",       price: "FREE",    color: "#e17055", icon: "⚽", pos: { top: "80%", right: "7%" } },
-    { name: "Blockchain Talk",       price: "Ghc 50",  color: "#00cec9", icon: "⛓️", pos: { top: "82%", left: "6%" } },
+    { name: "Afrobeats Night Accra", price: "Ghc 80",  color: "#f5a623", icon: "🎵", pos: { top: "18%", left: "4%" } },
+    { name: "Tech Summit Ghana",     price: "Ghc 150", color: "#2563eb", icon: "💻", pos: { top: "10%", right: "5%" } },
+    { name: "Food Fest Kumasi",      price: "FREE",    color: "#16a34a", icon: "🍔", pos: { top: "62%", right: "4%" } },
+    { name: "Art Exhibition Lagos",  price: "Ghc 40",  color: "#7c3aed", icon: "🎨", pos: { top: "65%", left: "3%" } },
+    { name: "GCTU Sports Day",       price: "FREE",    color: "#e17055", icon: "⚽", pos: { top: "78%", right: "8%" } },
+    { name: "Blockchain Talk",       price: "Ghc 50",  color: "#00cec9", icon: "⛓️", pos: { top: "80%", left: "6%" } },
   ];
 
-  // Show cards one at a time, cycling
   useEffect(() => {
     const interval = setInterval(() => {
       setVisible(v => (v + 1) % cards.length);
@@ -81,7 +85,7 @@ function FloatingCards() {
   );
 }
 
-// ── Navbar ────────────────────────────────────────────────────
+// ── Navbar — always dark text, never white ────────────────────
 function NavBar({ onNavigate }) {
   const [scrolled, setScrolled] = useState(false);
 
@@ -98,15 +102,20 @@ function NavBar({ onNavigate }) {
       transition={{ duration: 0.5 }}
       style={{
         position: "sticky", top: 0, zIndex: 50,
-        background: scrolled ? "rgba(255,255,255,0.92)" : "transparent",
+        background: "var(--bg-card)",
         backdropFilter: "blur(20px)",
         WebkitBackdropFilter: "blur(20px)",
-        borderBottom: scrolled ? "1px solid rgba(0,0,0,0.08)" : "1px solid transparent",
-        boxShadow: scrolled ? "0 1px 12px rgba(0,0,0,0.06)" : "none",
-        transition: "all 0.3s ease",
+        borderBottom: "1px solid var(--border)",
+        boxShadow: scrolled ? "0 2px 16px rgba(0,0,0,0.07)" : "var(--shadow-sm)",
+        transition: "box-shadow 0.3s ease",
       }}>
-      <div style={{ maxWidth: "1200px", margin: "0 auto", padding: "0 32px", height: "68px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+      <div style={{
+        maxWidth: "1200px", margin: "0 auto",
+        padding: "0 32px", height: "68px",
+        display: "flex", alignItems: "center", justifyContent: "space-between",
+      }}>
 
+        {/* Logo */}
         <motion.div whileHover={{ scale: 1.02 }} onClick={() => onNavigate("home")}
           style={{ display: "flex", alignItems: "center", gap: "10px", cursor: "pointer" }}>
           <div style={{
@@ -115,28 +124,32 @@ function NavBar({ onNavigate }) {
             display: "flex", alignItems: "center", justifyContent: "center",
             fontSize: "18px", boxShadow: "0 4px 14px rgba(245,166,35,0.4)",
           }}>🎟️</div>
-          <span style={{ fontWeight: 800, fontSize: "17px", color: scrolled ? "#0f0e0c" : "#fff", letterSpacing: "-0.3px", transition: "color 0.3s" }}>
+          <span style={{ fontWeight: 800, fontSize: "17px", color: "var(--text-primary)", letterSpacing: "-0.3px" }}>
             Master Events
           </span>
         </motion.div>
 
+        {/* Nav links */}
         <div style={{ display: "flex", alignItems: "center", gap: "28px" }} className="hidden md:flex">
           {[["Events", "#events"], ["About", "about"]].map(([label, href]) => (
             <motion.span key={label}
               whileHover={{ color: "#f5a623" }}
-              onClick={() => href.startsWith("#") ? document.querySelector(href)?.scrollIntoView({ behavior: "smooth" }) : onNavigate(href)}
-              style={{ fontSize: "14px", fontWeight: 500, color: scrolled ? "var(--text-secondary)" : "rgba(255,255,255,0.85)", cursor: "pointer", transition: "color 0.2s" }}>
+              onClick={() => href.startsWith("#")
+                ? document.querySelector(href)?.scrollIntoView({ behavior: "smooth" })
+                : onNavigate(href)}
+              style={{ fontSize: "14px", fontWeight: 500, color: "var(--text-secondary)", cursor: "pointer", transition: "color 0.2s" }}>
               {label}
             </motion.span>
           ))}
         </div>
 
+        {/* Right actions */}
         <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
           <ThemeToggle compact={true} />
           <motion.span whileHover={{ color: "#f5a623" }}
             onClick={() => onNavigate("login")}
             className="hidden md:block"
-            style={{ fontSize: "14px", fontWeight: 600, color: scrolled ? "var(--text-secondary)" : "rgba(255,255,255,0.85)", cursor: "pointer", transition: "color 0.2s" }}>
+            style={{ fontSize: "14px", fontWeight: 600, color: "var(--text-secondary)", cursor: "pointer", transition: "color 0.2s" }}>
             Log in
           </motion.span>
           <motion.button
@@ -182,10 +195,7 @@ function LandingPage({ onNavigate }) {
   const [events,    setEvents]    = useState([]);
   const [heroIndex, setHeroIndex] = useState(0);
   const heroRef = useRef(null);
-  const { scrollYProgress } = useScroll({ target: heroRef });
-  const heroY = useTransform(scrollYProgress, [0, 1], ["0%", "25%"]);
 
-  // Rotate hero images every 5 seconds
   useEffect(() => {
     const interval = setInterval(() => {
       setHeroIndex(i => (i + 1) % HERO_IMAGES.length);
@@ -215,10 +225,15 @@ function LandingPage({ onNavigate }) {
       <NavBar onNavigate={onNavigate} />
       <StatsTicker />
 
-      {/* ── Hero — rotating background images ── */}
-      <section ref={heroRef} style={{ position: "relative", overflow: "hidden", height: "92vh", minHeight: "600px", display: "flex", alignItems: "center", justifyContent: "center" }}>
+      {/* ── Hero ── */}
+      <section ref={heroRef} style={{
+        position: "relative", overflow: "hidden",
+        minHeight: "100svh",
+        display: "flex", flexDirection: "column",
+        alignItems: "center", justifyContent: "center",
+      }}>
 
-        {/* Rotating background images */}
+        {/* Rotating images */}
         {HERO_IMAGES.map((img, i) => (
           <AnimatePresence key={i}>
             {heroIndex === i && (
@@ -240,18 +255,25 @@ function LandingPage({ onNavigate }) {
           </AnimatePresence>
         ))}
 
-        {/* Dark overlay — layered for depth */}
-        <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to bottom, rgba(0,0,0,0.5) 0%, rgba(0,0,0,0.35) 50%, rgba(0,0,0,0.7) 100%)", zIndex: 1 }} />
+        {/* Overlays */}
+        <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to bottom, rgba(0,0,0,0.52) 0%, rgba(0,0,0,0.32) 45%, rgba(0,0,0,0.72) 100%)", zIndex: 1 }} />
         <div style={{ position: "absolute", inset: 0, background: "radial-gradient(ellipse at center, transparent 30%, rgba(0,0,0,0.3) 100%)", zIndex: 1 }} />
 
-        {/* Floating popup cards */}
+        {/* Floating cards */}
         <div style={{ position: "absolute", inset: 0, zIndex: 2 }}>
           <FloatingCards />
         </div>
 
-        {/* Hero content */}
-        <div style={{ position: "relative", zIndex: 3, textAlign: "center", maxWidth: "800px", padding: "0 32px" }}>
-          <motion.div variants={stagger} initial="hidden" animate="show">
+        {/* Hero content — vertical stack, no absolute positioning */}
+        <div style={{
+          position: "relative", zIndex: 3,
+          textAlign: "center", maxWidth: "800px",
+          padding: "100px 32px 80px",
+          display: "flex", flexDirection: "column",
+          alignItems: "center", gap: "0",
+        }}>
+          <motion.div variants={stagger} initial="hidden" animate="show"
+            style={{ display: "flex", flexDirection: "column", alignItems: "center", width: "100%" }}>
 
             {/* Badge */}
             <motion.div variants={fadeUp} style={{ marginBottom: "28px" }}>
@@ -278,7 +300,7 @@ function LandingPage({ onNavigate }) {
             {/* Headline */}
             <motion.h1 variants={fadeUp}
               style={{
-                fontSize: "clamp(48px, 7vw, 88px)", fontWeight: 900, lineHeight: 1.0,
+                fontSize: "clamp(44px, 7vw, 88px)", fontWeight: 900, lineHeight: 1.0,
                 letterSpacing: "-3px", color: "#ffffff",
                 marginBottom: "24px", textShadow: "0 2px 20px rgba(0,0,0,0.3)",
               }}>
@@ -294,16 +316,17 @@ function LandingPage({ onNavigate }) {
             {/* Subtext */}
             <motion.p variants={fadeUp}
               style={{
-                fontSize: "18px", color: "rgba(255,255,255,0.78)",
+                fontSize: "clamp(15px, 2vw, 18px)",
+                color: "rgba(255,255,255,0.78)",
                 lineHeight: 1.7, marginBottom: "40px",
-                maxWidth: "520px", margin: "0 auto 40px",
+                maxWidth: "520px",
                 textShadow: "0 1px 8px rgba(0,0,0,0.3)",
               }}>
               From Afrobeats concerts in Accra to tech summits in Kumasi — discover, buy and own your tickets as NFTs on the blockchain.
             </motion.p>
 
             {/* CTAs */}
-            <motion.div variants={fadeUp} style={{ display: "flex", gap: "14px", justifyContent: "center", flexWrap: "wrap" }}>
+            <motion.div variants={fadeUp} style={{ display: "flex", gap: "14px", justifyContent: "center", flexWrap: "wrap", marginBottom: "56px" }}>
               <motion.button
                 whileHover={{ scale: 1.04, boxShadow: "0 16px 48px rgba(245,166,35,0.55)" }}
                 whileTap={{ scale: 0.97 }}
@@ -332,11 +355,36 @@ function LandingPage({ onNavigate }) {
                 Create Event
               </motion.button>
             </motion.div>
+
+            {/* Stats — below CTAs, in flow not absolute */}
+            <motion.div
+              variants={fadeUp}
+              style={{
+                display: "flex", gap: "clamp(20px, 4vw, 48px)",
+                flexWrap: "wrap", justifyContent: "center",
+                padding: "24px 32px",
+                background: "rgba(0,0,0,0.3)",
+                backdropFilter: "blur(12px)",
+                borderRadius: "20px",
+                border: "1px solid rgba(255,255,255,0.1)",
+              }}>
+              {[
+                ["10K+", "Tickets Sold",  "#f5a623"],
+                ["50+",  "Live Events",   "#4ade80"],
+                ["100%", "NFT Verified",  "#60a5fa"],
+                ["0%",   "Fake Tickets",  "#f87171"],
+              ].map(([val, label, color]) => (
+                <div key={label} style={{ textAlign: "center" }}>
+                  <div style={{ fontSize: "clamp(22px, 3vw, 34px)", fontWeight: 900, color, letterSpacing: "-1px" }}>{val}</div>
+                  <div style={{ fontSize: "11px", color: "rgba(255,255,255,0.6)", marginTop: "3px", fontWeight: 500 }}>{label}</div>
+                </div>
+              ))}
+            </motion.div>
           </motion.div>
         </div>
 
-        {/* Image dots indicator */}
-        <div style={{ position: "absolute", bottom: "32px", left: "50%", transform: "translateX(-50%)", display: "flex", gap: "8px", zIndex: 4 }}>
+        {/* Image dots */}
+        <div style={{ position: "absolute", bottom: "24px", left: "50%", transform: "translateX(-50%)", display: "flex", gap: "8px", zIndex: 4 }}>
           {HERO_IMAGES.map((_, i) => (
             <motion.div key={i}
               animate={{ width: heroIndex === i ? "24px" : "6px", opacity: heroIndex === i ? 1 : 0.4 }}
@@ -346,24 +394,6 @@ function LandingPage({ onNavigate }) {
             />
           ))}
         </div>
-
-        {/* Stats row at bottom */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.8, duration: 0.6 }}
-          style={{
-            position: "absolute", bottom: "80px", left: "50%",
-            transform: "translateX(-50%)",
-            display: "flex", gap: "40px", flexWrap: "wrap",
-            justifyContent: "center", zIndex: 4,
-          }}>
-          {[["10K+", "Tickets Sold", "#f5a623"], ["50+", "Live Events", "#4ade80"], ["100%", "NFT Verified", "#60a5fa"], ["0%", "Fake Tickets", "#f87171"]].map(([val, label, color]) => (
-            <div key={label} style={{ textAlign: "center" }}>
-              <div style={{ fontSize: "clamp(24px, 3vw, 36px)", fontWeight: 900, color, letterSpacing: "-1px", textShadow: "0 2px 12px rgba(0,0,0,0.4)" }}>{val}</div>
-              <div style={{ fontSize: "12px", color: "rgba(255,255,255,0.65)", marginTop: "3px", fontWeight: 500 }}>{label}</div>
-            </div>
-          ))}
-        </motion.div>
       </section>
 
       {/* ── Events Grid ── */}
@@ -385,11 +415,7 @@ function LandingPage({ onNavigate }) {
               <motion.div key={i} variants={fadeUp}
                 whileHover={{ y: -6, boxShadow: "0 24px 56px rgba(0,0,0,0.14)", borderColor: "var(--brand)" }}
                 onClick={() => onNavigate("signup")}
-                style={{
-                  background: "var(--bg-card)", borderRadius: "20px", overflow: "hidden",
-                  cursor: "pointer", border: "1px solid var(--border)",
-                  boxShadow: "var(--shadow-sm)", transition: "all 0.25s var(--ease-smooth)",
-                }}>
+                style={{ background: "var(--bg-card)", borderRadius: "20px", overflow: "hidden", cursor: "pointer", border: "1px solid var(--border)", boxShadow: "var(--shadow-sm)", transition: "all 0.25s var(--ease-smooth)" }}>
                 <div style={{ height: "190px", position: "relative", background: "var(--bg-subtle)" }}>
                   {ev ? (
                     <>
@@ -397,13 +423,11 @@ function LandingPage({ onNavigate }) {
                         style={{ width: "100%", height: "100%", objectFit: "cover" }}
                         onError={e => { e.target.src = catImg.other; }} />
                       <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to bottom, transparent 35%, rgba(0,0,0,0.6))" }} />
-                      <div style={{ position: "absolute", top: "12px", left: "12px", padding: "4px 10px", borderRadius: "99px", background: "#f5a623", color: "#fff", fontSize: "10px", fontWeight: 700, letterSpacing: "0.5px" }}>
+                      <div style={{ position: "absolute", top: "12px", left: "12px", padding: "4px 10px", borderRadius: "99px", background: "#f5a623", color: "#fff", fontSize: "10px", fontWeight: 700 }}>
                         {ev.category}
                       </div>
                       {parseFloat(ev.price) === 0 && (
-                        <div style={{ position: "absolute", top: "12px", right: "12px", padding: "4px 10px", borderRadius: "99px", background: "#16a34a", color: "#fff", fontSize: "10px", fontWeight: 700 }}>
-                          FREE
-                        </div>
+                        <div style={{ position: "absolute", top: "12px", right: "12px", padding: "4px 10px", borderRadius: "99px", background: "#16a34a", color: "#fff", fontSize: "10px", fontWeight: 700 }}>FREE</div>
                       )}
                       <div style={{ position: "absolute", bottom: "10px", left: "12px", display: "flex", alignItems: "center", gap: "4px", background: "rgba(124,58,237,0.85)", backdropFilter: "blur(8px)", padding: "3px 8px", borderRadius: "99px" }}>
                         <span style={{ fontSize: "8px" }}>⛓️</span>
@@ -486,7 +510,7 @@ function LandingPage({ onNavigate }) {
                   Ready to host<br />your next event?
                 </h2>
                 <p style={{ fontSize: "16px", color: "rgba(255,255,255,0.5)", lineHeight: 1.7, marginBottom: "32px" }}>
-                  Create events, sell blockchain-verified tickets, manage door staff, and receive 95% directly to your MoMo wallet. From Accra to Lagos.
+                  Create events, sell blockchain-verified tickets, manage door staff, and receive 95% directly to your MoMo wallet.
                 </p>
                 <div style={{ display: "flex", gap: "12px", flexWrap: "wrap" }}>
                   <motion.button whileHover={{ scale: 1.03, boxShadow: "0 16px 40px rgba(245,166,35,0.5)" }}
@@ -632,6 +656,105 @@ function AboutPage({ onNavigate }) {
   );
 }
 
+// ── Auth Split-Screen Panel (shared by Login + Signup) ────────
+export function AuthImagePanel({ image, title, headline, highlight, sub, features, stats }) {
+  return (
+    <div style={{
+      flex: 1, position: "relative", overflow: "hidden",
+      display: "flex", alignItems: "flex-end",
+      minHeight: "100vh",
+    }}>
+      {/* Background image */}
+      <img
+        src={image} alt=""
+        style={{
+          position: "absolute", inset: 0,
+          width: "100%", height: "100%",
+          objectFit: "cover", objectPosition: "center",
+        }}
+      />
+      {/* Dark gradient overlay */}
+      <div style={{
+        position: "absolute", inset: 0,
+        background: "linear-gradient(to bottom, rgba(0,0,0,0.2) 0%, rgba(0,0,0,0.5) 40%, rgba(0,0,0,0.88) 100%)",
+      }} />
+      {/* Amber glow bottom left */}
+      <div style={{
+        position: "absolute", bottom: 0, left: 0,
+        width: "400px", height: "400px", borderRadius: "50%",
+        background: "radial-gradient(circle, rgba(245,166,35,0.15) 0%, transparent 70%)",
+        transform: "translate(-20%, 20%)", pointerEvents: "none",
+      }} />
+
+      {/* Content */}
+      <div style={{ position: "relative", zIndex: 1, padding: "48px", width: "100%" }}>
+
+        {/* Logo */}
+        <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "40px" }}>
+          <div style={{
+            width: "40px", height: "40px", borderRadius: "12px",
+            background: "linear-gradient(135deg, #f5a623, #e8920f)",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            fontSize: "20px", boxShadow: "0 6px 20px rgba(245,166,35,0.4)",
+          }}>🎟️</div>
+          <span style={{ fontWeight: 800, fontSize: "18px", color: "#fff", letterSpacing: "-0.3px" }}>Master Events</span>
+        </div>
+
+        {/* Tag */}
+        <div style={{ fontSize: "10px", fontWeight: 700, letterSpacing: "2px", color: "#f5a623", marginBottom: "14px", fontFamily: "var(--font-mono)" }}>
+          {title}
+        </div>
+
+        {/* Headline */}
+        <h2 style={{ fontSize: "clamp(32px, 3vw, 48px)", fontWeight: 900, color: "#fff", letterSpacing: "-1.5px", lineHeight: 1.1, marginBottom: "16px" }}>
+          {headline}<br />
+          <span style={{ background: "linear-gradient(135deg, #f5a623, #ffb347)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
+            {highlight}
+          </span>
+        </h2>
+
+        <p style={{ color: "rgba(255,255,255,0.55)", fontSize: "15px", lineHeight: 1.7, marginBottom: "32px" }}>{sub}</p>
+
+        {/* Features */}
+        <div style={{ display: "flex", flexDirection: "column", gap: "12px", marginBottom: "36px" }}>
+          {features.map(([icon, title, sub]) => (
+            <div key={title} style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+              <div style={{
+                width: "36px", height: "36px", borderRadius: "10px",
+                background: "rgba(245,166,35,0.15)",
+                display: "flex", alignItems: "center", justifyContent: "center",
+                fontSize: "16px", flexShrink: 0,
+                border: "1px solid rgba(245,166,35,0.2)",
+              }}>{icon}</div>
+              <div>
+                <div style={{ fontWeight: 700, fontSize: "13px", color: "#fff" }}>{title}</div>
+                <div style={{ fontSize: "11px", color: "rgba(255,255,255,0.38)", marginTop: "1px" }}>{sub}</div>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Stats */}
+        <div style={{
+          display: "flex", gap: "28px",
+          padding: "16px 20px",
+          background: "rgba(255,255,255,0.06)",
+          backdropFilter: "blur(12px)",
+          borderRadius: "14px",
+          border: "1px solid rgba(255,255,255,0.1)",
+        }}>
+          {stats.map(([val, label]) => (
+            <div key={label} style={{ textAlign: "center" }}>
+              <div style={{ fontSize: "20px", fontWeight: 900, color: "#f5a623" }}>{val}</div>
+              <div style={{ fontSize: "10px", color: "rgba(255,255,255,0.35)", marginTop: "1px" }}>{label}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ── Main Export ───────────────────────────────────────────────
 export default function PhoneFrame({ children }) {
   const setScreen  = useStore(s => s.setScreen);
@@ -665,3 +788,6 @@ export default function PhoneFrame({ children }) {
     </div>
   );
 }
+
+// ── Export image constants for auth pages ─────────────────────
+export { LOGIN_IMAGE, SIGNUP_IMAGE };

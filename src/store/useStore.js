@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import toast from "react-hot-toast";
 import { DEMO_ORG_EVENTS } from "../constants/data";
+import { authAPI, eventsAPI, ticketsAPI } from "../api";
 
 const BACKEND = "https://master-events-backend.onrender.com";
 const ping = () => fetch(BACKEND + "/api/events/").catch(() => {});

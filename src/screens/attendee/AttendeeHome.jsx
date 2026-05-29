@@ -15,20 +15,61 @@ const categoryImages = {
 };
 
 const CATEGORIES = [
-  { key: "all",      label: "All",      icon: "🎯" },
-  { key: "music",    label: "Music",    icon: "🎵" },
-  { key: "tech",     label: "Tech",     icon: "💻" },
-  { key: "food",     label: "Food",     icon: "🍔" },
-  { key: "arts",     label: "Arts",     icon: "🎨" },
-  { key: "sports",   label: "Sports",   icon: "⚽" },
-  { key: "business", label: "Business", icon: "💼" },
-  { key: "other",    label: "Other",    icon: "✨" },
+  { key: "all",      label: "All",      icon: "◈" },
+  { key: "music",    label: "Music",    icon: "♪" },
+  { key: "tech",     label: "Tech",     icon: "⌥" },
+  { key: "food",     label: "Food",     icon: "◉" },
+  { key: "arts",     label: "Arts",     icon: "◇" },
+  { key: "sports",   label: "Sports",   icon: "◎" },
+  { key: "business", label: "Business", icon: "▣" },
+  { key: "other",    label: "Other",    icon: "◌" },
 ];
 
 const ITEMS_PER_PAGE_DESKTOP = 9;
 const ITEMS_PER_PAGE_MOBILE  = 6;
-
 const isDesktop = () => window.innerWidth > 768;
+
+// ── Telemetry status bar ──────────────────────────────────────
+function TelemetryBar({ total, filtered, loading, category }) {
+  const [ms] = useState(() => Math.floor(Math.random() * 18) + 8);
+  const desktop = isDesktop();
+
+  return (
+    <div style={{
+      display: "flex", alignItems: "center", gap: desktop ? "24px" : "14px",
+      padding: "8px 0", flexWrap: "wrap",
+      fontFamily: "var(--font-mono)",
+    }}>
+      {[
+        ["TOTAL_EVT",    loading ? "···" : total.toString().padStart(3, "0"),    "#f5a623"],
+        ["FILTERED",     loading ? "···" : filtered.toString().padStart(3, "0"), "#60a5fa"],
+        ["NET",          "ONLINE",    "#4ade80"],
+        ["CHAIN",        "AMOY",      "#a78bfa"],
+        ["IDX_TIME",     ms + "ms",   "var(--text-muted)"],
+        ...(category !== "all" ? [["CAT", category.toUpperCase(), "#f5a623"]] : []),
+      ].map(([key, val, color]) => (
+        <div key={key} style={{ display: "flex", alignItems: "center", gap: "5px" }}>
+          <span style={{ fontSize: "9px", color: "var(--text-muted)", letterSpacing: "0.8px" }}>{key}</span>
+          <span style={{ fontSize: "9px", color: "var(--border-strong)", marginTop: "1px" }}>:</span>
+          <motion.span
+            key={val}
+            initial={{ opacity: 0, y: -4 }}
+            animate={{ opacity: 1, y: 0 }}
+            style={{ fontSize: "9px", fontWeight: 700, color, letterSpacing: "0.5px" }}>
+            {val}
+          </motion.span>
+        </div>
+      ))}
+      <motion.div
+        animate={{ opacity: [0.4, 1, 0.4] }}
+        transition={{ duration: 2, repeat: Infinity }}
+        style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: "4px" }}>
+        <div style={{ width: "5px", height: "5px", borderRadius: "50%", background: "#4ade80" }} />
+        <span style={{ fontSize: "8px", fontWeight: 700, color: "#4ade80", letterSpacing: "1px" }}>LIVE</span>
+      </motion.div>
+    </div>
+  );
+}
 
 // ── Event Card ────────────────────────────────────────────────
 function EventCard({ ev, onClick }) {
@@ -45,59 +86,84 @@ function EventCard({ ev, onClick }) {
       onMouseLeave={() => setHovered(false)}
       style={{
         background: "var(--bg-card)",
-        borderRadius: "18px",
+        borderRadius: "16px",
         overflow: "hidden",
-        border: hovered ? "1.5px solid var(--brand)" : "1.5px solid var(--border)",
+        border: hovered ? "1px solid rgba(245,166,35,0.5)" : "1px solid var(--border)",
         cursor: "pointer",
-        transition: "border-color 0.2s, box-shadow 0.25s, transform 0.25s",
-        transform: hovered && desktop ? "translateY(-6px)" : "translateY(0)",
+        transition: "all 0.22s var(--ease-smooth)",
+        transform: hovered && desktop ? "translateY(-5px)" : "translateY(0)",
         boxShadow: hovered
-          ? "0 12px 40px rgba(0,0,0,0.18), 0 0 0 1px var(--brand)"
-          : "0 2px 12px rgba(0,0,0,0.07)",
+          ? "0 16px 40px rgba(0,0,0,0.14), 0 0 0 1px rgba(245,166,35,0.15)"
+          : "var(--shadow-sm)",
       }}>
 
-      <div style={{ height: desktop ? "240px" : "200px", position: "relative", overflow: "hidden" }}>
+      <div style={{ height: desktop ? "220px" : "190px", position: "relative", overflow: "hidden" }}>
         <motion.img
           src={ev.image} alt={ev.name}
-          animate={{ scale: hovered ? 1.06 : 1 }}
-          transition={{ duration: 0.45, ease: "easeOut" }}
+          animate={{ scale: hovered ? 1.05 : 1 }}
+          transition={{ duration: 0.4, ease: "easeOut" }}
           style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
           onError={e => { e.target.src = categoryImages.other; }}
         />
-        <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to bottom, rgba(0,0,0,0.08) 0%, rgba(0,0,0,0.65) 100%)" }} />
-        <div style={{ position: "absolute", top: "12px", right: "12px", background: "var(--brand)", color: "#fff", fontSize: "10px", fontWeight: 700, padding: "4px 10px", borderRadius: "99px", letterSpacing: "0.3px" }}>
-          {ev.category}
+        <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to bottom, rgba(0,0,0,0.06) 0%, rgba(0,0,0,0.62) 100%)" }} />
+
+        {/* Category badge */}
+        <div style={{
+          position: "absolute", top: "11px", right: "11px",
+          background: "var(--brand)", color: "#fff",
+          fontSize: "9px", fontWeight: 700, padding: "3px 9px",
+          borderRadius: "99px", letterSpacing: "0.5px",
+          fontFamily: "var(--font-mono)",
+        }}>
+          {ev.category.toUpperCase()}
         </div>
+
+        {/* Free badge */}
         {ev.price === 0 && (
-          <div style={{ position: "absolute", top: "12px", left: "12px", background: "#16a34a", color: "#fff", fontSize: "10px", fontWeight: 700, padding: "4px 10px", borderRadius: "99px" }}>
-            FREE
-          </div>
+          <div style={{
+            position: "absolute", top: "11px", left: "11px",
+            background: "#16a34a", color: "#fff",
+            fontSize: "9px", fontWeight: 700, padding: "3px 9px", borderRadius: "99px",
+            fontFamily: "var(--font-mono)",
+          }}>FREE</div>
         )}
-        <div style={{ position: "absolute", bottom: "12px", left: "12px", display: "flex", alignItems: "center", gap: "4px", background: "rgba(124,58,237,0.88)", backdropFilter: "blur(8px)", padding: "4px 9px", borderRadius: "99px" }}>
-          <span style={{ fontSize: "9px" }}>⛓️</span>
-          <span style={{ fontSize: "9px", fontWeight: 700, color: "#fff", letterSpacing: "0.3px" }}>NFT Ticket</span>
+
+        {/* NFT badge */}
+        <div style={{
+          position: "absolute", bottom: "11px", left: "11px",
+          display: "flex", alignItems: "center", gap: "4px",
+          background: "rgba(124,58,237,0.85)", backdropFilter: "blur(8px)",
+          padding: "3px 8px", borderRadius: "99px",
+        }}>
+          <span style={{ fontSize: "8px" }}>⛓️</span>
+          <span style={{ fontSize: "8px", fontWeight: 700, color: "#fff", fontFamily: "var(--font-mono)" }}>NFT</span>
         </div>
       </div>
 
-      <div style={{ padding: "14px 16px 16px" }}>
-        <div style={{ fontWeight: 700, fontSize: desktop ? "15px" : "14px", color: "var(--text-primary)", marginBottom: "5px", lineHeight: 1.35, letterSpacing: "-0.2px" }}>
+      <div style={{ padding: "13px 15px 15px" }}>
+        <div style={{ fontWeight: 700, fontSize: "14px", color: "var(--text-primary)", marginBottom: "5px", lineHeight: 1.35, letterSpacing: "-0.2px" }}>
           {ev.name}
         </div>
-        <div style={{ fontSize: "12px", color: "var(--text-muted)", marginBottom: "12px", display: "flex", alignItems: "center", gap: "4px" }}>
-          <span>📍</span>
+        <div style={{ fontSize: "11px", color: "var(--text-muted)", marginBottom: "12px", display: "flex", alignItems: "center", gap: "4px", fontFamily: "var(--font-mono)" }}>
+          <span style={{ opacity: 0.6 }}>📍</span>
           <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
             {ev.venue} · {ev.date}
           </span>
         </div>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          <div style={{ color: "var(--brand)", fontWeight: 800, fontSize: "18px", letterSpacing: "-0.5px" }}>
+          <div style={{ color: "var(--brand)", fontWeight: 800, fontSize: "17px", letterSpacing: "-0.5px" }}>
             {ev.price === 0 ? "FREE" : `GHS ${ev.price}`}
           </div>
           <motion.div
-            animate={{ x: hovered ? 4 : 0 }}
-            transition={{ duration: 0.2 }}
-            style={{ fontSize: "12px", fontWeight: 600, color: "var(--text-primary)", display: "flex", alignItems: "center", gap: "4px", opacity: hovered ? 1 : 0.7, transition: "opacity 0.2s" }}>
-            View details <span style={{ fontSize: "13px" }}>→</span>
+            animate={{ x: hovered ? 3 : 0 }}
+            transition={{ duration: 0.18 }}
+            style={{
+              fontSize: "11px", fontWeight: 600,
+              color: hovered ? "var(--brand)" : "var(--text-muted)",
+              display: "flex", alignItems: "center", gap: "3px",
+              transition: "color 0.18s",
+            }}>
+            View <span>→</span>
           </motion.div>
         </div>
       </div>
@@ -108,22 +174,21 @@ function EventCard({ ev, onClick }) {
 // ── Pagination ────────────────────────────────────────────────
 function Pagination({ current, total, onChange }) {
   if (total <= 1) return null;
-  const pages = Array.from({ length: total }, (_, i) => i + 1);
   return (
     <div style={{ display: "flex", justifyContent: "center", alignItems: "center", gap: "6px", padding: "32px 0 8px" }}>
       <motion.button whileTap={{ scale: 0.9 }} onClick={() => onChange(current - 1)} disabled={current === 1}
-        style={{ padding: "8px 14px", borderRadius: "10px", border: "1.5px solid var(--border)", background: "var(--bg-card)", color: current === 1 ? "var(--text-muted)" : "var(--text-primary)", cursor: current === 1 ? "not-allowed" : "pointer", fontSize: "13px", fontWeight: 600, opacity: current === 1 ? 0.4 : 1, fontFamily: "var(--font-sans)" }}>
-        ← Prev
+        style={{ padding: "7px 14px", borderRadius: "9px", border: "1px solid var(--border)", background: "var(--bg-card)", color: current === 1 ? "var(--text-muted)" : "var(--text-primary)", cursor: current === 1 ? "not-allowed" : "pointer", fontSize: "12px", fontWeight: 600, opacity: current === 1 ? 0.4 : 1, fontFamily: "var(--font-mono)" }}>
+        ← PREV
       </motion.button>
-      {pages.map(p => (
+      {Array.from({ length: total }, (_, i) => i + 1).map(p => (
         <motion.button key={p} whileTap={{ scale: 0.88 }} onClick={() => onChange(p)}
-          style={{ width: "36px", height: "36px", borderRadius: "10px", border: p === current ? "none" : "1.5px solid var(--border)", background: p === current ? "var(--brand)" : "var(--bg-card)", color: p === current ? "#fff" : "var(--text-secondary)", cursor: "pointer", fontSize: "13px", fontWeight: p === current ? 700 : 500, boxShadow: p === current ? "var(--shadow-brand)" : "none", fontFamily: "var(--font-sans)" }}>
+          style={{ width: "34px", height: "34px", borderRadius: "9px", border: p === current ? "none" : "1px solid var(--border)", background: p === current ? "var(--brand)" : "var(--bg-card)", color: p === current ? "#fff" : "var(--text-secondary)", cursor: "pointer", fontSize: "12px", fontWeight: p === current ? 700 : 500, boxShadow: p === current ? "var(--shadow-brand)" : "none", fontFamily: "var(--font-mono)" }}>
           {p}
         </motion.button>
       ))}
       <motion.button whileTap={{ scale: 0.9 }} onClick={() => onChange(current + 1)} disabled={current === total}
-        style={{ padding: "8px 14px", borderRadius: "10px", border: "1.5px solid var(--border)", background: "var(--bg-card)", color: current === total ? "var(--text-muted)" : "var(--text-primary)", cursor: current === total ? "not-allowed" : "pointer", fontSize: "13px", fontWeight: 600, opacity: current === total ? 0.4 : 1, fontFamily: "var(--font-sans)" }}>
-        Next →
+        style={{ padding: "7px 14px", borderRadius: "9px", border: "1px solid var(--border)", background: "var(--bg-card)", color: current === total ? "var(--text-muted)" : "var(--text-primary)", cursor: current === total ? "not-allowed" : "pointer", fontSize: "12px", fontWeight: 600, opacity: current === total ? 0.4 : 1, fontFamily: "var(--font-mono)" }}>
+        NEXT →
       </motion.button>
     </div>
   );
@@ -139,70 +204,69 @@ function EventDetailOverlay({ ev, onBack, onCheckout }) {
       style={{ background: "var(--bg)", height: "100%", display: "flex", flexDirection: "column", overflow: "hidden" }}>
       <div style={{ flex: 1, overflowY: "auto", WebkitOverflowScrolling: "touch" }}>
 
-        <div style={{ height: "70vh", minHeight: "380px", maxHeight: "600px", position: "relative", flexShrink: 0 }}>
+        <div style={{ height: "65vh", minHeight: "360px", maxHeight: "560px", position: "relative" }}>
           <img src={ev.image} alt={ev.name}
             style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
             onError={e => { e.target.src = categoryImages.other; }} />
-          <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to bottom, rgba(0,0,0,0.15) 0%, rgba(0,0,0,0.78) 100%)" }} />
+          <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to bottom, rgba(0,0,0,0.12) 0%, rgba(0,0,0,0.82) 100%)" }} />
 
           <motion.button whileTap={{ scale: 0.9 }} onClick={onBack}
-            style={{ position: "absolute", top: "18px", left: "18px", width: "38px", height: "38px", borderRadius: "12px", background: "rgba(255,255,255,0.15)", backdropFilter: "blur(12px)", border: "1px solid rgba(255,255,255,0.2)", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", fontSize: "17px", color: "#fff", zIndex: 10 }}>
+            style={{ position: "absolute", top: "18px", left: "18px", width: "38px", height: "38px", borderRadius: "11px", background: "rgba(255,255,255,0.12)", backdropFilter: "blur(12px)", border: "1px solid rgba(255,255,255,0.18)", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", fontSize: "17px", color: "#fff", zIndex: 10 }}>
             ←
           </motion.button>
 
-          <div style={{ position: "absolute", top: "18px", right: "18px", display: "flex", alignItems: "center", gap: "5px", background: "rgba(124,58,237,0.88)", backdropFilter: "blur(8px)", padding: "5px 11px", borderRadius: "99px", border: "1px solid rgba(124,58,237,0.4)" }}>
-            <span style={{ fontSize: "11px" }}>⛓️</span>
-            <span style={{ fontSize: "10px", fontWeight: 700, color: "#fff" }}>NFT Ticket · Polygon</span>
+          <div style={{ position: "absolute", top: "18px", right: "18px", display: "flex", alignItems: "center", gap: "5px", background: "rgba(124,58,237,0.85)", backdropFilter: "blur(8px)", padding: "5px 11px", borderRadius: "99px" }}>
+            <span style={{ fontSize: "10px" }}>⛓️</span>
+            <span style={{ fontSize: "9px", fontWeight: 700, color: "#fff", fontFamily: "var(--font-mono)" }}>NFT · POLYGON AMOY</span>
           </div>
 
           <div style={{ position: "absolute", bottom: "24px", left: "20px", right: "20px" }}>
-            <div style={{ display: "inline-block", background: "var(--brand)", color: "#fff", fontSize: "10px", fontWeight: 700, padding: "3px 10px", borderRadius: "99px", marginBottom: "10px", letterSpacing: "0.3px" }}>
-              {ev.category}
+            <div style={{ display: "inline-block", background: "var(--brand)", color: "#fff", fontSize: "9px", fontWeight: 700, padding: "3px 10px", borderRadius: "99px", marginBottom: "10px", letterSpacing: "0.5px", fontFamily: "var(--font-mono)" }}>
+              {ev.category.toUpperCase()}
             </div>
-            <div style={{ color: "#fff", fontWeight: 800, fontSize: desktop ? "32px" : "22px", marginBottom: "6px", lineHeight: 1.15, letterSpacing: "-0.5px" }}>
+            <div style={{ color: "#fff", fontWeight: 900, fontSize: desktop ? "32px" : "22px", marginBottom: "6px", lineHeight: 1.1, letterSpacing: "-0.5px" }}>
               {ev.name}
             </div>
-            <div style={{ color: "rgba(255,255,255,0.7)", fontSize: "13px" }}>
+            <div style={{ color: "rgba(255,255,255,0.65)", fontSize: "13px", fontFamily: "var(--font-mono)" }}>
               📍 {ev.venue}{ev.city ? " · " + ev.city : ""}
             </div>
           </div>
         </div>
 
-        <div style={{ maxWidth: desktop ? "1000px" : "100%", margin: "0 auto", padding: desktop ? "32px 40px 60px" : "20px 16px 80px", display: desktop ? "grid" : "block", gridTemplateColumns: desktop ? "1fr 340px" : undefined, gap: desktop ? "40px" : undefined, alignItems: "start" }}>
-
+        <div style={{ maxWidth: desktop ? "1000px" : "100%", margin: "0 auto", padding: desktop ? "32px 40px 60px" : "20px 16px 80px", display: desktop ? "grid" : "block", gridTemplateColumns: desktop ? "1fr 320px" : undefined, gap: desktop ? "40px" : undefined, alignItems: "start" }}>
           <div>
             <div style={{ display: "flex", gap: "10px", marginBottom: "24px", flexWrap: "wrap" }}>
               {[
-                ["📅", "Date",  ev.date || "TBA"],
-                ["🕐", "Time",  ev.time ? ev.time.substring(0, 5) : "TBA"],
-                ["🎟️", "Left", remaining + " tickets"],
+                ["📅", "DATE",  ev.date || "TBA"],
+                ["🕐", "TIME",  ev.time ? ev.time.substring(0, 5) : "TBA"],
+                ["🎟", "LEFT",  remaining + " left"],
               ].map(([icon, label, val]) => (
                 <div key={label} style={{ flex: "1 1 80px", background: "var(--bg-subtle)", borderRadius: "12px", padding: "12px 10px", textAlign: "center", border: "1px solid var(--border)", minWidth: "80px" }}>
-                  <div style={{ fontSize: "20px", marginBottom: "4px" }}>{icon}</div>
-                  <div style={{ fontSize: "9px", color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: "2px" }}>{label}</div>
-                  <div style={{ fontSize: "12px", fontWeight: 700, color: "var(--text-primary)" }}>{val}</div>
+                  <div style={{ fontSize: "18px", marginBottom: "4px" }}>{icon}</div>
+                  <div style={{ fontSize: "8px", color: "var(--text-muted)", letterSpacing: "1px", marginBottom: "3px", fontFamily: "var(--font-mono)" }}>{label}</div>
+                  <div style={{ fontSize: "12px", fontWeight: 700, color: "var(--text-primary)", fontFamily: "var(--font-mono)" }}>{val}</div>
                 </div>
               ))}
             </div>
 
             <div style={{ marginBottom: "24px" }}>
-              <div style={{ fontSize: "11px", fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "1px", marginBottom: "12px" }}>About This Event</div>
-              <div style={{ fontSize: "15px", color: "var(--text-secondary)", lineHeight: 1.85, fontWeight: 400 }}>
-                {ev.description && ev.description.trim() ? ev.description : "No description provided for this event."}
+              <div style={{ fontSize: "9px", fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "1.5px", marginBottom: "12px", fontFamily: "var(--font-mono)" }}>ABOUT_EVENT</div>
+              <div style={{ fontSize: "15px", color: "var(--text-secondary)", lineHeight: 1.85 }}>
+                {ev.description?.trim() || "No description provided."}
               </div>
             </div>
 
-            <div style={{ background: "rgba(124,58,237,0.05)", border: "1px solid rgba(124,58,237,0.15)", borderRadius: "14px", padding: "14px 16px", display: "flex", alignItems: "center", gap: "12px" }}>
-              <span style={{ fontSize: "22px" }}>⛓️</span>
+            <div style={{ background: "rgba(124,58,237,0.05)", border: "1px solid rgba(124,58,237,0.15)", borderRadius: "12px", padding: "14px 16px", display: "flex", alignItems: "center", gap: "12px" }}>
+              <span style={{ fontSize: "20px" }}>⛓️</span>
               <div>
-                <div style={{ fontSize: "13px", fontWeight: 700, color: "#7c3aed" }}>Secured by Polygon Blockchain</div>
-                <div style={{ fontSize: "12px", color: "var(--text-muted)", marginTop: "2px" }}>Your ticket is minted as an NFT · Screenshot-proof · Cannot be duplicated</div>
+                <div style={{ fontSize: "12px", fontWeight: 700, color: "#7c3aed" }}>Secured by Polygon Blockchain</div>
+                <div style={{ fontSize: "11px", color: "var(--text-muted)", marginTop: "2px" }}>NFT minted · Screenshot-proof · Cannot be duplicated</div>
               </div>
             </div>
 
             {!desktop && (
               <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }} onClick={onCheckout}
-                style={{ width: "100%", padding: "17px", background: "var(--brand)", color: "#fff", border: "none", borderRadius: "14px", fontSize: "16px", fontWeight: 700, cursor: "pointer", boxShadow: "var(--shadow-brand)", fontFamily: "var(--font-sans)", marginTop: "24px" }}>
+                style={{ width: "100%", padding: "17px", background: "linear-gradient(135deg, #f5a623, #e8920f)", color: "#fff", border: "none", borderRadius: "14px", fontSize: "16px", fontWeight: 700, cursor: "pointer", boxShadow: "var(--shadow-brand)", fontFamily: "var(--font-sans)", marginTop: "24px" }}>
                 {ev.price === 0 ? "Get Free Ticket" : `Buy Ticket — GHS ${ev.price}`}
               </motion.button>
             )}
@@ -210,45 +274,49 @@ function EventDetailOverlay({ ev, onBack, onCheckout }) {
 
           {desktop && (
             <div style={{ position: "sticky", top: "20px" }}>
-              <div style={{ background: "var(--bg-card)", border: "1.5px solid var(--border)", borderRadius: "20px", padding: "24px", boxShadow: "0 8px 40px rgba(0,0,0,0.1)" }}>
+              <div style={{ background: "var(--bg-card)", border: "1px solid var(--border)", borderRadius: "18px", padding: "24px", boxShadow: "var(--shadow-md)" }}>
                 <div style={{ marginBottom: "20px", paddingBottom: "20px", borderBottom: "1px solid var(--border)" }}>
-                  <div style={{ fontSize: "11px", color: "var(--text-muted)", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: "6px" }}>Ticket Price</div>
-                  <div style={{ fontSize: "36px", fontWeight: 800, color: "var(--brand)", letterSpacing: "-1px", lineHeight: 1 }}>
+                  <div style={{ fontSize: "9px", color: "var(--text-muted)", fontWeight: 700, letterSpacing: "1.5px", marginBottom: "6px", fontFamily: "var(--font-mono)" }}>TICKET_PRICE</div>
+                  <div style={{ fontSize: "34px", fontWeight: 900, color: "var(--brand)", letterSpacing: "-1px", lineHeight: 1 }}>
                     {ev.price === 0 ? "FREE" : `GHS ${ev.price}`}
                   </div>
                 </div>
                 {[
-                  ["📅", "Date",          ev.date || "TBA"],
-                  ["🕐", "Time",          ev.time ? ev.time.substring(0, 5) : "TBA"],
-                  ["🎟️", "Tickets Left", remaining.toString()],
-                  ["📍", "Venue",         ev.venue || "TBA"],
+                  ["📅", "DATE",    ev.date || "TBA"],
+                  ["🕐", "TIME",    ev.time ? ev.time.substring(0, 5) : "TBA"],
+                  ["🎟", "LEFT",    remaining.toString()],
+                  ["📍", "VENUE",   ev.venue || "TBA"],
                 ].map(([icon, label, val]) => (
-                  <div key={label} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 0", borderBottom: "1px solid var(--border)" }}>
+                  <div key={label} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "9px 0", borderBottom: "1px solid var(--border)" }}>
                     <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                      <span style={{ fontSize: "14px" }}>{icon}</span>
-                      <span style={{ fontSize: "12px", color: "var(--text-muted)", fontWeight: 500 }}>{label}</span>
+                      <span style={{ fontSize: "13px" }}>{icon}</span>
+                      <span style={{ fontSize: "10px", color: "var(--text-muted)", fontWeight: 600, fontFamily: "var(--font-mono)" }}>{label}</span>
                     </div>
-                    <span style={{ fontSize: "13px", fontWeight: 700, color: "var(--text-primary)" }}>{val}</span>
+                    <span style={{ fontSize: "12px", fontWeight: 700, color: "var(--text-primary)", fontFamily: "var(--font-mono)" }}>{val}</span>
                   </div>
                 ))}
-                <div style={{ margin: "18px 0 20px" }}>
+                <div style={{ margin: "16px 0 18px" }}>
                   <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "6px" }}>
-                    <span style={{ fontSize: "11px", color: "var(--text-muted)", fontWeight: 500 }}>Availability</span>
-                    <span style={{ fontSize: "11px", fontWeight: 700, color: remaining < 20 ? "#dc2626" : "#16a34a" }}>
-                      {remaining < 20 ? "Almost sold out!" : "Available"}
+                    <span style={{ fontSize: "9px", color: "var(--text-muted)", fontFamily: "var(--font-mono)" }}>AVAILABILITY</span>
+                    <span style={{ fontSize: "9px", fontWeight: 700, color: remaining < 20 ? "#dc2626" : "#16a34a", fontFamily: "var(--font-mono)" }}>
+                      {remaining < 20 ? "ALMOST_SOLD" : "AVAILABLE"}
                     </span>
                   </div>
-                  <div style={{ height: "5px", background: "var(--border)", borderRadius: "99px", overflow: "hidden" }}>
-                    <div style={{ height: "100%", borderRadius: "99px", background: remaining < 20 ? "#dc2626" : "var(--brand)", width: Math.max(5, Math.min(100, (remaining / (ev.totalTickets || 1)) * 100)) + "%" }} />
+                  <div style={{ height: "4px", background: "var(--bg-subtle)", borderRadius: "99px", overflow: "hidden" }}>
+                    <motion.div
+                      initial={{ width: 0 }}
+                      animate={{ width: Math.max(5, Math.min(100, (remaining / (ev.totalTickets || 1)) * 100)) + "%" }}
+                      transition={{ duration: 0.8 }}
+                      style={{ height: "100%", borderRadius: "99px", background: remaining < 20 ? "#dc2626" : "var(--brand)" }} />
                   </div>
                 </div>
-                <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }} onClick={onCheckout}
-                  style={{ width: "100%", padding: "16px", background: "var(--brand)", color: "#fff", border: "none", borderRadius: "14px", fontSize: "15px", fontWeight: 700, cursor: "pointer", boxShadow: "var(--shadow-brand)", fontFamily: "var(--font-sans)", marginBottom: "10px" }}>
+                <motion.button whileHover={{ scale: 1.02, boxShadow: "var(--shadow-brand-lg)" }} whileTap={{ scale: 0.97 }} onClick={onCheckout}
+                  style={{ width: "100%", padding: "15px", background: "linear-gradient(135deg, #f5a623, #e8920f)", color: "#fff", border: "none", borderRadius: "13px", fontSize: "14px", fontWeight: 700, cursor: "pointer", boxShadow: "var(--shadow-brand)", fontFamily: "var(--font-sans)", marginBottom: "10px" }}>
                   {ev.price === 0 ? "Get Free Ticket" : `Buy Ticket — GHS ${ev.price}`}
                 </motion.button>
-                <div style={{ background: "rgba(124,58,237,0.05)", border: "1px solid rgba(124,58,237,0.15)", borderRadius: "10px", padding: "10px 12px", display: "flex", alignItems: "center", gap: "8px" }}>
-                  <span style={{ fontSize: "13px" }}>⛓️</span>
-                  <span style={{ fontSize: "11px", color: "#7c3aed", fontWeight: 500 }}>NFT minted on Polygon · Screenshot-proof</span>
+                <div style={{ background: "rgba(124,58,237,0.05)", border: "1px solid rgba(124,58,237,0.15)", borderRadius: "9px", padding: "9px 12px", display: "flex", alignItems: "center", gap: "7px" }}>
+                  <span style={{ fontSize: "12px" }}>⛓️</span>
+                  <span style={{ fontSize: "10px", color: "#7c3aed", fontWeight: 600 }}>NFT minted on Polygon · Screenshot-proof</span>
                 </div>
               </div>
             </div>
@@ -262,7 +330,7 @@ function EventDetailOverlay({ ev, onBack, onCheckout }) {
 // ── Main AttendeeHome ─────────────────────────────────────────
 export default function AttendeeHome() {
   const setScreen        = useStore(s => s.setScreen);
-  const activeTab        = useStore(s => s.activeTab);   // ← fixed: added this
+  const activeTab        = useStore(s => s.activeTab);
   const setActiveTab     = useStore(s => s.setActiveTab);
   const setCheckoutEvent = useStore(s => s.setCheckoutEvent);
   const setTicketQty     = useStore(s => s.setTicketQty);
@@ -276,6 +344,7 @@ export default function AttendeeHome() {
   const [activeCategory, setActiveCategory] = useState("all");
   const [menuOpen,       setMenuOpen]       = useState(false);
   const [page,           setPage]           = useState(1);
+  const [searchFocused,  setSearchFocused]  = useState(false);
   const desktop = isDesktop();
 
   const { data: eventsData, isLoading: loading } = useQuery({
@@ -356,43 +425,47 @@ export default function AttendeeHome() {
           <>
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
               onClick={() => setMenuOpen(false)}
-              style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", zIndex: 100, backdropFilter: "blur(4px)" }} />
+              style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.55)", zIndex: 100, backdropFilter: "blur(6px)" }} />
             <motion.div initial={{ x: "-100%" }} animate={{ x: 0 }} exit={{ x: "-100%" }}
               transition={{ type: "spring", stiffness: 320, damping: 32 }}
-              style={{ position: "fixed", top: 0, left: 0, width: "78%", maxWidth: "300px", height: "100%", background: "var(--bg-card)", zIndex: 101, display: "flex", flexDirection: "column", boxShadow: "4px 0 32px rgba(0,0,0,0.25)", borderRight: "1px solid var(--border)" }}>
+              style={{ position: "fixed", top: 0, left: 0, width: "78%", maxWidth: "300px", height: "100%", background: "var(--bg-card)", zIndex: 101, display: "flex", flexDirection: "column", boxShadow: "4px 0 32px rgba(0,0,0,0.2)", borderRight: "1px solid var(--border)" }}>
 
-              <div style={{ padding: "56px 24px 20px", borderBottom: "1px solid var(--border)" }}>
-                <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                  <div style={{ width: "32px", height: "32px", borderRadius: "10px", background: "linear-gradient(135deg, #f5a623, #e8920f)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                    <span style={{ fontSize: "16px" }}>🎟️</span>
+              <div style={{ padding: "52px 20px 16px", borderBottom: "1px solid var(--border)" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "9px" }}>
+                  <div style={{ width: "30px", height: "30px", borderRadius: "9px", background: "linear-gradient(135deg, #f5a623, #e8920f)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                    <span style={{ fontSize: "14px" }}>🎟️</span>
                   </div>
-                  <span style={{ fontWeight: 800, fontSize: "16px", color: "var(--text-primary)", letterSpacing: "-0.3px" }}>Master Events</span>
+                  <span style={{ fontWeight: 800, fontSize: "15px", color: "var(--text-primary)", letterSpacing: "-0.3px" }}>Master Events</span>
                 </div>
               </div>
 
-              <div style={{ flex: 1, padding: "16px", overflowY: "auto" }}>
+              <div style={{ flex: 1, padding: "12px", overflowY: "auto" }}>
                 {[
-                  ["🏠", "Discover Events", "home"],
-                  ["🎟️", "My Tickets",      "tickets"],
-                  ["🔔", "Alerts",          "alerts"],
+                  ["◈", "Discover",      "home"],
+                  ["🎟", "My Tickets",   "tickets"],
+                  ["🔔", "Alerts",       "alerts"],
                 ].map(([icon, label, tabId]) => {
-                  const isActive = activeTab === tabId;  // ← fixed: uses activeTab from store
+                  const isActive = activeTab === tabId;
                   return (
                     <motion.div key={label} whileTap={{ scale: 0.97 }}
                       onClick={() => { setMenuOpen(false); setActiveTab(tabId); setScreen("app"); }}
-                      style={{ display: "flex", alignItems: "center", gap: "14px", padding: "15px 12px", cursor: "pointer", borderRadius: "12px" }}
-                      onMouseEnter={e => e.currentTarget.style.background = "var(--bg-subtle)"}
-                      onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
-                      <span style={{ fontSize: "18px" }}>{icon}</span>
-                      <span style={{ fontSize: "16px", fontWeight: 600, color: isActive ? "#f5a623" : "var(--text-primary)" }}>{label}</span>
+                      style={{
+                        display: "flex", alignItems: "center", gap: "12px",
+                        padding: "12px 10px", cursor: "pointer", borderRadius: "10px",
+                        background: isActive ? "rgba(245,166,35,0.08)" : "transparent",
+                        border: isActive ? "1px solid rgba(245,166,35,0.2)" : "1px solid transparent",
+                        marginBottom: "3px", transition: "all 0.15s",
+                      }}>
+                      <span style={{ fontSize: "14px", fontFamily: "var(--font-mono)", color: isActive ? "#f5a623" : "var(--text-muted)" }}>{icon}</span>
+                      <span style={{ fontSize: "14px", fontWeight: 600, color: isActive ? "#f5a623" : "var(--text-primary)" }}>{label}</span>
                     </motion.div>
                   );
                 })}
               </div>
 
-              <div style={{ padding: "14px 16px 28px", borderTop: "1px solid var(--border)" }}>
+              <div style={{ padding: "12px 12px 28px", borderTop: "1px solid var(--border)" }}>
                 <motion.button whileTap={{ scale: 0.97 }} onClick={handleLogout}
-                  style={{ width: "100%", padding: "14px", background: "var(--error-bg)", border: "1px solid rgba(220,38,38,0.15)", color: "var(--error)", borderRadius: "12px", fontWeight: 700, cursor: "pointer", fontSize: "14px", fontFamily: "var(--font-sans)" }}>
+                  style={{ width: "100%", padding: "13px", background: "var(--error-bg)", border: "1px solid rgba(220,38,38,0.15)", color: "var(--error)", borderRadius: "11px", fontWeight: 700, cursor: "pointer", fontSize: "13px", fontFamily: "var(--font-sans)" }}>
                   Log Out
                 </motion.button>
               </div>
@@ -401,94 +474,168 @@ export default function AttendeeHome() {
         )}
       </AnimatePresence>
 
-      {/* ── Page header ── */}
-      <div style={{ padding: desktop ? "32px 40px 0" : "16px 16px 0" }}>
-        {desktop ? (
-          <div style={{ marginBottom: "20px" }}>
-            <h1 style={{ fontSize: "26px", fontWeight: 800, color: "var(--text-primary)", letterSpacing: "-0.6px", marginBottom: "4px" }}>Discover Events</h1>
-            <p style={{ fontSize: "13px", color: "var(--text-muted)" }}>
-              Ghana & Africa · {filtered.length} events · NFT-secured tickets on Polygon
-            </p>
-          </div>
-        ) : (
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "14px" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-              <div style={{ width: "36px", height: "36px", borderRadius: "10px", background: "var(--brand)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                <span style={{ fontSize: "17px" }}>🎟️</span>
-              </div>
-              <div>
-                <div style={{ fontSize: "15px", fontWeight: 700, color: "var(--text-primary)", lineHeight: 1.1 }}>
-                  Hi, {currentUser?.first_name || "there"} 👋
-                </div>
-                <div style={{ fontSize: "11px", color: "var(--text-muted)", marginTop: "1px" }}>
-                  {filtered.length} events · NFT tickets
-                </div>
+      {/* ══════════════════════════════════════════════════════
+          UNIFIED COMMAND BAR
+          - Omni search at top
+          - Category chips directly below
+          - Telemetry bar below chips
+      ══════════════════════════════════════════════════════ */}
+      <div style={{
+        position: "sticky", top: 0, zIndex: 30,
+        background: "var(--bg-card)",
+        borderBottom: "1px solid var(--border)",
+        boxShadow: "0 1px 0 var(--border), 0 4px 16px rgba(0,0,0,0.04)",
+      }}>
+        <div style={{ padding: desktop ? "0 40px" : "0 16px" }}>
+
+          {/* ── Mobile top row ── */}
+          {!desktop && (
+            <div style={{ display: "flex", alignItems: "center", gap: "10px", padding: "12px 0 10px" }}>
+              <motion.div whileTap={{ scale: 0.88 }} onClick={() => setMenuOpen(true)}
+                style={{ width: "36px", height: "36px", borderRadius: "10px", background: "var(--bg-subtle)", border: "1px solid var(--border)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: "4px", cursor: "pointer", flexShrink: 0 }}>
+                {[0,1,2].map(i => (
+                  <div key={i} style={{ width: "14px", height: "1.5px", background: "var(--text-primary)", borderRadius: "2px" }} />
+                ))}
+              </motion.div>
+              <div style={{ flex: 1, fontSize: "14px", fontWeight: 700, color: "var(--text-primary)" }}>
+                Hi, {currentUser?.first_name} 👋
               </div>
             </div>
-            <motion.div whileTap={{ scale: 0.88 }} onClick={() => setMenuOpen(true)}
-              style={{ width: "38px", height: "38px", borderRadius: "10px", background: "var(--bg-subtle)", border: "1px solid var(--border)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: "5px", cursor: "pointer", flexShrink: 0 }}>
-              {[0,1,2].map(i => (
-                <div key={i} style={{ width: "16px", height: "2px", background: "var(--text-primary)", borderRadius: "2px" }} />
-              ))}
-            </motion.div>
-          </div>
-        )}
-
-        <div style={{ position: "relative", marginBottom: "0", maxWidth: desktop ? "560px" : "100%" }}>
-          <div style={{ position: "absolute", left: "14px", top: "50%", transform: "translateY(-50%)", color: "var(--text-muted)", fontSize: "15px", pointerEvents: "none" }}>🔍</div>
-          <input value={searchQ} onChange={e => setSearchQ(e.target.value)}
-            placeholder="Search events, venues, categories..."
-            style={{ width: "100%", padding: "13px 40px 13px 44px", border: "1.5px solid var(--border)", borderRadius: "14px", fontSize: "14px", outline: "none", background: "var(--bg-card)", color: "var(--text-primary)", boxSizing: "border-box", fontFamily: "var(--font-sans)" }}
-          />
-          {searchQ && (
-            <div onClick={() => setSearchQ("")}
-              style={{ position: "absolute", right: "14px", top: "50%", transform: "translateY(-50%)", cursor: "pointer", color: "var(--text-muted)", fontSize: "16px" }}>✕</div>
           )}
-        </div>
-      </div>
 
-      {/* ── Category chips — sticky ── */}
-      <div style={{ position: "sticky", top: 0, zIndex: 30, background: "var(--bg)", borderBottom: "1px solid var(--border)", padding: desktop ? "12px 40px" : "10px 16px", marginTop: "14px" }}>
-        <div style={{ display: "flex", gap: "8px", overflowX: "auto", scrollbarWidth: "none" }}>
-          {CATEGORIES.map(cat => {
-            const active = activeCategory === cat.key;
-            return (
-              <motion.div key={cat.key} whileTap={{ scale: 0.91 }} onClick={() => setActiveCategory(cat.key)}
-                style={{ flexShrink: 0, padding: "7px 16px", borderRadius: "99px", cursor: "pointer", fontSize: "12px", fontWeight: active ? 700 : 500, display: "flex", alignItems: "center", gap: "5px", transition: "all 0.15s", background: active ? "var(--brand)" : "var(--bg-card)", color: active ? "#fff" : "var(--text-secondary)", border: active ? "1.5px solid var(--brand)" : "1.5px solid var(--border)", boxShadow: active ? "0 2px 12px rgba(245,166,35,0.35)" : "none" }}>
-                <span>{cat.icon}</span>
-                <span>{cat.label}</span>
-              </motion.div>
-            );
-          })}
+          {/* ── Omni search bar ── */}
+          <div style={{ padding: desktop ? "12px 0 10px" : "0 0 10px" }}>
+            <div style={{
+              position: "relative",
+              maxWidth: desktop ? "100%" : "100%",
+            }}>
+              {/* Search icon */}
+              <div style={{ position: "absolute", left: "14px", top: "50%", transform: "translateY(-50%)", display: "flex", alignItems: "center", gap: "6px", pointerEvents: "none", zIndex: 1 }}>
+                <span style={{ fontSize: "13px", opacity: 0.5 }}>🔍</span>
+                {desktop && (
+                  <span style={{ fontSize: "11px", color: "var(--text-muted)", fontFamily: "var(--font-mono)", opacity: 0.5 }}>
+                    SEARCH
+                  </span>
+                )}
+              </div>
+
+              <input
+                value={searchQ}
+                onChange={e => setSearchQ(e.target.value)}
+                onFocus={() => setSearchFocused(true)}
+                onBlur={() => setSearchFocused(false)}
+                placeholder={desktop ? "Search events, venues, categories... [⌘K]" : "Search events..."}
+                style={{
+                  width: "100%",
+                  padding: desktop ? "11px 120px 11px 80px" : "11px 40px 11px 40px",
+                  background: searchFocused ? "var(--bg)" : "var(--bg-subtle)",
+                  border: searchFocused
+                    ? "1.5px solid rgba(245,166,35,0.6)"
+                    : "1.5px solid var(--border)",
+                  borderRadius: "11px",
+                  fontSize: "13px",
+                  color: "var(--text-primary)",
+                  outline: "none",
+                  boxSizing: "border-box",
+                  fontFamily: "var(--font-sans)",
+                  transition: "all 0.2s var(--ease-smooth)",
+                  boxShadow: searchFocused ? "0 0 0 3px rgba(245,166,35,0.12)" : "none",
+                }}
+              />
+
+              {/* Right side — kbd hint + clear */}
+              <div style={{ position: "absolute", right: "12px", top: "50%", transform: "translateY(-50%)", display: "flex", alignItems: "center", gap: "8px" }}>
+                {searchQ ? (
+                  <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} onClick={() => setSearchQ("")}
+                    style={{ cursor: "pointer", color: "var(--text-muted)", fontSize: "13px", fontWeight: 700, width: "18px", height: "18px", borderRadius: "50%", background: "var(--bg-subtle)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "10px" }}>
+                    ✕
+                  </motion.div>
+                ) : desktop ? (
+                  <div style={{ display: "flex", alignItems: "center", gap: "3px" }}>
+                    <kbd style={{ fontSize: "9px", padding: "2px 5px", borderRadius: "4px", background: "var(--bg-subtle)", border: "1px solid var(--border)", color: "var(--text-muted)", fontFamily: "var(--font-mono)" }}>⌘</kbd>
+                    <kbd style={{ fontSize: "9px", padding: "2px 5px", borderRadius: "4px", background: "var(--bg-subtle)", border: "1px solid var(--border)", color: "var(--text-muted)", fontFamily: "var(--font-mono)" }}>K</kbd>
+                  </div>
+                ) : null}
+              </div>
+            </div>
+          </div>
+
+          {/* ── Category chips — directly below search ── */}
+          <div style={{ display: "flex", gap: "6px", overflowX: "auto", scrollbarWidth: "none", paddingBottom: "10px" }}>
+            {CATEGORIES.map(cat => {
+              const active = activeCategory === cat.key;
+              return (
+                <motion.div key={cat.key} whileTap={{ scale: 0.9 }}
+                  onClick={() => setActiveCategory(cat.key)}
+                  style={{
+                    flexShrink: 0,
+                    padding: "5px 14px",
+                    borderRadius: "99px",
+                    cursor: "pointer",
+                    fontSize: "11px",
+                    fontWeight: active ? 700 : 500,
+                    display: "flex", alignItems: "center", gap: "5px",
+                    transition: "all 0.15s",
+                    background: active ? "var(--brand)" : "transparent",
+                    color: active ? "#fff" : "var(--text-secondary)",
+                    border: active ? "1px solid var(--brand)" : "1px solid var(--border)",
+                    boxShadow: active ? "var(--shadow-brand)" : "none",
+                    fontFamily: active ? "var(--font-sans)" : "var(--font-sans)",
+                  }}>
+                  <span style={{ fontFamily: "var(--font-mono)", fontSize: "10px" }}>{cat.icon}</span>
+                  <span>{cat.label}</span>
+                </motion.div>
+              );
+            })}
+          </div>
+
+          {/* ── Telemetry bar ── */}
+          <TelemetryBar
+            total={events.length}
+            filtered={filtered.length}
+            loading={loading}
+            category={activeCategory}
+          />
         </div>
       </div>
 
       {/* ── Resale Market banner ── */}
-      <div style={{ padding: desktop ? "12px 40px 0" : "12px 16px 0" }}>
+      <div style={{ padding: desktop ? "16px 40px 0" : "12px 16px 0" }}>
         <motion.div whileTap={{ scale: 0.98 }} onClick={() => setScreen("resaleMarket")}
-          style={{ background: "linear-gradient(135deg, rgba(124,58,237,0.08), rgba(37,99,235,0.06))", border: "1px solid rgba(124,58,237,0.2)", borderRadius: "14px", padding: "12px 16px", display: "flex", alignItems: "center", justifyContent: "space-between", cursor: "pointer" }}>
+          style={{
+            background: "linear-gradient(135deg, rgba(124,58,237,0.06), rgba(37,99,235,0.04))",
+            border: "1px solid rgba(124,58,237,0.18)",
+            borderRadius: "12px", padding: "11px 16px",
+            display: "flex", alignItems: "center",
+            justifyContent: "space-between", cursor: "pointer",
+            transition: "all 0.2s",
+          }}
+          onMouseEnter={e => { e.currentTarget.style.borderColor = "rgba(124,58,237,0.4)"; }}
+          onMouseLeave={e => { e.currentTarget.style.borderColor = "rgba(124,58,237,0.18)"; }}>
           <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-            <div style={{ width: "36px", height: "36px", borderRadius: "10px", background: "linear-gradient(135deg, #7c3aed, #2563eb)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "16px", flexShrink: 0 }}>🏷️</div>
+            <div style={{ width: "32px", height: "32px", borderRadius: "9px", background: "linear-gradient(135deg, #7c3aed, #2563eb)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "14px", flexShrink: 0 }}>🏷️</div>
             <div>
-              <div style={{ fontSize: "13px", fontWeight: 700, color: "var(--text-primary)" }}>Resale Market</div>
-              <div style={{ fontSize: "11px", color: "var(--text-muted)" }}>Fan-to-fan NFT ticket resales · 2% fee</div>
+              <div style={{ fontSize: "12px", fontWeight: 700, color: "var(--text-primary)" }}>Resale Market</div>
+              <div style={{ fontSize: "10px", color: "var(--text-muted)", fontFamily: "var(--font-mono)" }}>
+                FAN_TO_FAN · NFT_TRANSFER · 2%_FEE
+              </div>
             </div>
           </div>
-          <span style={{ color: "#7c3aed", fontSize: "16px", fontWeight: 700 }}>→</span>
+          <span style={{ color: "#7c3aed", fontSize: "14px", fontWeight: 700 }}>→</span>
         </motion.div>
       </div>
 
       {/* ── Events Grid ── */}
-      <div style={{ padding: desktop ? "20px 40px 0" : "16px 16px 0" }}>
+      <div style={{ padding: desktop ? "16px 40px 0" : "12px 16px 0" }}>
 
         {loading && (
-          <div style={{ display: "grid", gridTemplateColumns: desktop ? "repeat(3, 1fr)" : "1fr", gap: desktop ? "24px" : "14px" }}>
+          <div style={{ display: "grid", gridTemplateColumns: desktop ? "repeat(3, 1fr)" : "1fr", gap: desktop ? "20px" : "12px" }}>
             {[1,2,3,4,5,6].map(i => (
-              <div key={i} style={{ background: "var(--bg-card)", borderRadius: "18px", overflow: "hidden", border: "1px solid var(--border)" }}>
-                <div className="skeleton" style={{ height: desktop ? "240px" : "200px" }} />
-                <div style={{ padding: "14px 16px" }}>
-                  <div className="skeleton" style={{ height: "15px", width: "70%", marginBottom: "10px", borderRadius: "6px" }} />
-                  <div className="skeleton" style={{ height: "12px", width: "45%", borderRadius: "6px" }} />
+              <div key={i} style={{ background: "var(--bg-card)", borderRadius: "16px", overflow: "hidden", border: "1px solid var(--border)" }}>
+                <div className="skeleton" style={{ height: desktop ? "220px" : "190px" }} />
+                <div style={{ padding: "13px 15px" }}>
+                  <div className="skeleton" style={{ height: "14px", width: "70%", marginBottom: "8px", borderRadius: "6px" }} />
+                  <div className="skeleton" style={{ height: "11px", width: "45%", borderRadius: "6px" }} />
                 </div>
               </div>
             ))}
@@ -498,16 +645,20 @@ export default function AttendeeHome() {
         {!loading && filtered.length === 0 && (
           <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
             style={{ textAlign: "center", padding: "80px 20px" }}>
-            <div style={{ fontSize: "52px", marginBottom: "16px" }}>🔍</div>
-            <div style={{ fontWeight: 700, fontSize: "17px", color: "var(--text-primary)", marginBottom: "8px" }}>No events found</div>
+            <div style={{ fontSize: "10px", fontWeight: 700, color: "var(--text-muted)", letterSpacing: "2px", marginBottom: "16px", fontFamily: "var(--font-mono)" }}>
+              QUERY_RESULT: NULL
+            </div>
+            <div style={{ fontWeight: 700, fontSize: "16px", color: "var(--text-primary)", marginBottom: "8px" }}>No events found</div>
             <div style={{ fontSize: "13px", color: "var(--text-muted)" }}>Try a different search or category</div>
           </motion.div>
         )}
 
         {!loading && paginated.length > 0 && (
-          <div style={{ display: "grid", gridTemplateColumns: desktop ? "repeat(3, 1fr)" : "1fr", gap: desktop ? "24px" : "14px" }}>
+          <div style={{ display: "grid", gridTemplateColumns: desktop ? "repeat(3, 1fr)" : "1fr", gap: desktop ? "20px" : "12px" }}>
             {paginated.map((ev, i) => (
-              <motion.div key={ev.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
+              <motion.div key={ev.id}
+                initial={{ opacity: 0, y: 18 }}
+                animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: i * 0.04, duration: 0.3 }}>
                 <EventCard ev={ev} onClick={() => setOverlayEvent(ev)} />
               </motion.div>

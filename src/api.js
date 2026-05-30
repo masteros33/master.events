@@ -1,6 +1,5 @@
 const BASE_URL = "https://master-events-backend.onrender.com/api";
 
-// ── Token reader — localStorage first, cookie fallback ───────
 const getToken = () => {
   try {
     const ls = localStorage.getItem("access_token");
@@ -15,7 +14,6 @@ const headers = () => ({
   Authorization: `Bearer ${getToken()}`,
 });
 
-// ── AUTH ─────────────────────────────────────────────────────
 export const authAPI = {
   register: (data) =>
     fetch(`${BASE_URL}/auth/register/`, {
@@ -35,7 +33,6 @@ export const authAPI = {
     fetch(`${BASE_URL}/auth/me/`, { headers: headers() }).then(r => r.json()),
 };
 
-// ── EVENTS ───────────────────────────────────────────────────
 export const eventsAPI = {
   list: (params = "") =>
     fetch(`${BASE_URL}/events/${params}`, { headers: headers() }).then(r => r.json()),
@@ -60,7 +57,6 @@ export const eventsAPI = {
     }).then(r => r.json()),
 };
 
-// ── TICKETS ──────────────────────────────────────────────────
 export const ticketsAPI = {
   myTickets: () =>
     fetch(`${BASE_URL}/tickets/my/`, { headers: headers() }).then(r => r.json()),
@@ -72,7 +68,6 @@ export const ticketsAPI = {
       body: JSON.stringify(data),
     });
     const json = await res.json();
-    // Attach HTTP status so useStore can check it
     return { ...json, _status: res.status };
   },
 
@@ -103,15 +98,15 @@ export const ticketsAPI = {
       headers: headers(),
     }).then(r => r.json()),
 
+  // ── FIXED: was door-login/, now door-staff/login/ ────────
   doorStaffLogin: (code) =>
-    fetch(`${BASE_URL}/tickets/door-login/`, {
+    fetch(`${BASE_URL}/tickets/door-staff/login/`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ code }),
     }).then(r => r.json()),
 };
 
-// ── PAYMENTS ─────────────────────────────────────────────────
 export const paymentsAPI = {
   wallet: () =>
     fetch(`${BASE_URL}/payments/wallet/`, { headers: headers() }).then(r => r.json()),
@@ -125,4 +120,14 @@ export const paymentsAPI = {
 
   transactions: () =>
     fetch(`${BASE_URL}/payments/transactions/`, { headers: headers() }).then(r => r.json()),
+
+  attendeeWallet: () =>
+    fetch(`${BASE_URL}/payments/attendee-wallet/`, { headers: headers() }).then(r => r.json()),
+
+  attendeeWithdraw: (data) =>
+    fetch(`${BASE_URL}/payments/attendee-withdraw/`, {
+      method: "POST",
+      headers: headers(),
+      body: JSON.stringify(data),
+    }).then(r => r.json()),
 };

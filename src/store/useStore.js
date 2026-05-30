@@ -609,7 +609,9 @@ const useStore = create((set, get) => ({
         total_tickets: parseInt(addEventForm.totalTickets) || 100,
         sales_open:    true,
       };
-      if (addEventForm.image?.trim()) payload.image = addEventForm.image.trim();
+      if (addEventForm.image) {
+  payload.image = addEventForm.image;
+}
       const data = await eventsAPI.create(payload);
       if (data.id) {
         const cat = data.category || addEventForm.category || "other";

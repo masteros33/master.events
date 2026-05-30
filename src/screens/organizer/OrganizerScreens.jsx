@@ -1,10 +1,5 @@
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import {
-  AreaChart, Area, BarChart, Bar,
-  XAxis, YAxis, CartesianGrid, Tooltip,
-  ResponsiveContainer, Legend
-} from "recharts";
 import useStore from "../../store/useStore";
 import { eventsAPI } from "../../api";
 
@@ -44,30 +39,31 @@ const primaryBtn = {
   fontFamily: "var(--font-sans)",
 };
 
-// ── CSV download helper ───────────────────────────────────────
-function downloadCSV(rows, filename) {
+// ── CSV download ──────────────────────────────────────────────
+function downloadCSV(events) {
+  if (!events.length) return;
+  const rows = events.map(e => ({
+    Event:           e.name,
+    Date:            e.date,
+    Venue:           e.venue,
+    Category:        e.category,
+    "Ticket Price":  e.price,
+    "Tickets Sold":  e.ticketsSold,
+    "Total Tickets": e.totalTickets,
+    "Fill Rate %":   e.totalTickets > 0 ? Math.round((e.ticketsSold / e.totalTickets) * 100) : 0,
+    "Revenue (GHS)": Math.round(e.ticketsSold * e.price * 0.95),
+    "Platform Fee":  Math.round(e.ticketsSold * e.price * 0.05),
+    Status:          e.salesOpen ? "Live" : "Closed",
+  }));
   const header = Object.keys(rows[0]).join(",");
   const body   = rows.map(r => Object.values(r).map(v => `"${v}"`).join(",")).join("\n");
   const blob   = new Blob([header + "\n" + body], { type: "text/csv" });
   const url    = URL.createObjectURL(blob);
   const a      = document.createElement("a");
-  a.href = url; a.download = filename; a.click();
+  a.href = url;
+  a.download = `master-events-${new Date().toISOString().slice(0,10)}.csv`;
+  a.click();
   URL.revokeObjectURL(url);
-}
-
-// ── Custom tooltip for charts ─────────────────────────────────
-function ChartTooltip({ active, payload, label }) {
-  if (!active || !payload?.length) return null;
-  return (
-    <div style={{ background: "var(--bg-card)", border: "1px solid var(--border)", borderRadius: "10px", padding: "10px 14px", boxShadow: "var(--shadow-md)", fontFamily: "var(--font-sans)" }}>
-      <div style={{ fontSize: "11px", fontWeight: 700, color: "var(--text-muted)", marginBottom: "6px", fontFamily: "var(--font-mono)" }}>{label}</div>
-      {payload.map((p, i) => (
-        <div key={i} style={{ fontSize: "13px", fontWeight: 700, color: p.color, marginBottom: "2px" }}>
-          {p.name}: {p.name === "Revenue" ? "GHS " + Math.round(p.value).toLocaleString() : p.value}
-        </div>
-      ))}
-    </div>
-  );
 }
 
 // ── Telemetry bar ─────────────────────────────────────────────
@@ -98,17 +94,15 @@ function OrgTelemetry({ events, totalSold, totalRevenue }) {
   );
 }
 
-// ── Bento stat card ───────────────────────────────────────────
+// ── Bento stat ────────────────────────────────────────────────
 function BentoStat({ icon, value, label, sub, color, bg, large, onClick }) {
   return (
     <motion.div whileHover={{ y: -3, boxShadow: "var(--shadow-lg)", borderColor: color + "40" }}
       whileTap={onClick ? { scale: 0.98 } : {}} onClick={onClick}
-      style={{ background: "var(--bg-card)", border: "1px solid var(--border)", borderRadius: "18px", padding: large ? "24px" : "18px", boxShadow: "var(--shadow-sm)", transition: "all 0.22s var(--ease-smooth)", cursor: onClick ? "pointer" : "default", position: "relative", overflow: "hidden" }}>
-      <div style={{ position: "absolute", top: 0, right: 0, width: "120px", height: "120px", borderRadius: "50%", background: `radial-gradient(circle, ${color}10 0%, transparent 70%)`, transform: "translate(30%, -30%)", pointerEvents: "none" }} />
-      <div style={{ width: large ? "44px" : "36px", height: large ? "44px" : "36px", borderRadius: large ? "13px" : "11px", background: bg, display: "flex", alignItems: "center", justifyContent: "center", fontSize: large ? "20px" : "16px", marginBottom: large ? "14px" : "10px", border: "1px solid " + color + "20" }}>
-        {icon}
-      </div>
-      <div style={{ fontSize: large ? "28px" : "20px", fontWeight: 800, color, letterSpacing: "-0.5px", marginBottom: "3px", lineHeight: 1, fontFamily: "var(--font-sans)" }}>{value}</div>
+      style={{ background: "var(--bg-card)", border: "1px solid var(--border)", borderRadius: "18px", padding: large ? "24px" : "18px", boxShadow: "var(--shadow-sm)", transition: "all 0.22s", cursor: onClick ? "pointer" : "default", position: "relative", overflow: "hidden" }}>
+      <div style={{ position: "absolute", top: 0, right: 0, width: "120px", height: "120px", borderRadius: "50%", background: `radial-gradient(circle, ${color}10 0%, transparent 70%)`, transform: "translate(30%,-30%)", pointerEvents: "none" }} />
+      <div style={{ width: large ? "44px" : "36px", height: large ? "44px" : "36px", borderRadius: large ? "13px" : "11px", background: bg, display: "flex", alignItems: "center", justifyContent: "center", fontSize: large ? "20px" : "16px", marginBottom: large ? "14px" : "10px", border: "1px solid " + color + "20" }}>{icon}</div>
+      <div style={{ fontSize: large ? "28px" : "20px", fontWeight: 800, color, letterSpacing: "-0.5px", marginBottom: "3px", lineHeight: 1 }}>{value}</div>
       <div style={{ fontSize: "11px", color: "var(--text-muted)", fontFamily: "var(--font-mono)" }}>{label}</div>
       {sub && <div style={{ marginTop: "6px", fontSize: "10px", fontWeight: 700, color, background: color + "12", padding: "2px 8px", borderRadius: "99px", width: "fit-content", fontFamily: "var(--font-mono)" }}>{sub}</div>}
     </motion.div>
@@ -121,7 +115,7 @@ function EventCard({ ev, onClick }) {
   return (
     <motion.div whileHover={{ y: -4, boxShadow: "var(--shadow-lg)", borderColor: "rgba(245,166,35,0.4)" }}
       whileTap={{ scale: 0.98 }} onClick={onClick}
-      style={{ background: "var(--bg-card)", borderRadius: "16px", overflow: "hidden", cursor: "pointer", boxShadow: "var(--shadow-sm)", border: "1px solid var(--border)", transition: "all 0.22s var(--ease-smooth)" }}>
+      style={{ background: "var(--bg-card)", borderRadius: "16px", overflow: "hidden", cursor: "pointer", boxShadow: "var(--shadow-sm)", border: "1px solid var(--border)", transition: "all 0.22s" }}>
       <div style={{ height: "160px", position: "relative" }}>
         <img src={ev.image} alt={ev.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} onError={e => { e.target.src = categoryImages.other; }} />
         <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to bottom, rgba(0,0,0,0.04), rgba(0,0,0,0.75))" }} />
@@ -151,58 +145,27 @@ function EventCard({ ev, onClick }) {
   );
 }
 
-// ── Analytics section ─────────────────────────────────────────
+// ── Analytics — pure CSS, zero dependencies ───────────────────
 function AnalyticsSection({ events }) {
-  const desktop = isDesktop();
-
-  // Build chart data from events
-  const chartData = events.map(e => ({
-    name: e.name.length > 14 ? e.name.slice(0, 14) + "…" : e.name,
-    Tickets: e.ticketsSold,
-    Revenue: Math.round(e.ticketsSold * e.price * 0.95),
-    Capacity: e.totalTickets,
-  }));
-
-  // Summary stats
-  const totalRevenue  = events.reduce((s, e) => s + e.ticketsSold * e.price * 0.95, 0);
-  const totalSold     = events.reduce((s, e) => s + e.ticketsSold, 0);
-  const totalCapacity = events.reduce((s, e) => s + e.totalTickets, 0);
-  const avgFill       = totalCapacity > 0 ? Math.round((totalSold / totalCapacity) * 100) : 0;
-  const bestEvent     = [...events].sort((a,b) => b.ticketsSold * b.price - a.ticketsSold * a.price)[0];
-
-  const handleDownloadCSV = () => {
-    if (events.length === 0) return;
-    const rows = events.map(e => ({
-      Event:          e.name,
-      Date:           e.date,
-      Venue:          e.venue,
-      Category:       e.category,
-      "Ticket Price": e.price,
-      "Tickets Sold": e.ticketsSold,
-      "Total Tickets": e.totalTickets,
-      "Fill Rate %":  totalCapacity > 0 ? Math.round((e.ticketsSold / e.totalTickets) * 100) : 0,
-      "Revenue (GHS)": Math.round(e.ticketsSold * e.price * 0.95),
-      "Platform Fee":  Math.round(e.ticketsSold * e.price * 0.05),
-      Status:         e.salesOpen ? "Live" : "Closed",
-    }));
-    downloadCSV(rows, `master-events-report-${new Date().toISOString().slice(0,10)}.csv`);
-  };
+  const desktop      = isDesktop();
+  const totalRevenue = events.reduce((s, e) => s + e.ticketsSold * e.price * 0.95, 0);
+  const totalSold    = events.reduce((s, e) => s + e.ticketsSold, 0);
+  const totalCap     = events.reduce((s, e) => s + e.totalTickets, 0);
+  const avgFill      = totalCap > 0 ? Math.round((totalSold / totalCap) * 100) : 0;
+  const bestEvent    = [...events].sort((a,b) => b.ticketsSold * b.price - a.ticketsSold * a.price)[0];
+  const maxRevenue   = Math.max(...events.map(e => e.ticketsSold * e.price * 0.95), 1);
 
   return (
     <div style={{ marginBottom: "28px" }}>
-
-      {/* Section header */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
         <div>
           <div style={{ fontSize: "9px", color: "#f5a623", fontWeight: 700, letterSpacing: "2px", marginBottom: "3px", fontFamily: "var(--font-mono)" }}>ANALYTICS</div>
           <h2 style={{ fontWeight: 800, fontSize: "17px", color: "var(--text-primary)", letterSpacing: "-0.4px" }}>Performance Overview</h2>
         </div>
-        <motion.button whileHover={{ scale: 1.03, boxShadow: "var(--shadow-md)" }} whileTap={{ scale: 0.97 }}
-          onClick={handleDownloadCSV}
-          disabled={events.length === 0}
-          style={{ display: "flex", alignItems: "center", gap: "7px", padding: "9px 16px", background: events.length === 0 ? "var(--bg-subtle)" : "var(--bg-card)", border: "1.5px solid " + (events.length === 0 ? "var(--border)" : "#16a34a"), borderRadius: "10px", cursor: events.length === 0 ? "not-allowed" : "pointer", color: events.length === 0 ? "var(--text-muted)" : "#16a34a", fontWeight: 700, fontSize: "12px", fontFamily: "var(--font-sans)", transition: "all 0.2s" }}>
-          <span style={{ fontSize: "14px" }}>⬇️</span>
-          Download CSV
+        <motion.button whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}
+          onClick={() => downloadCSV(events)} disabled={events.length === 0}
+          style={{ display: "flex", alignItems: "center", gap: "7px", padding: "9px 16px", background: "var(--bg-card)", border: "1.5px solid #16a34a", borderRadius: "10px", cursor: "pointer", color: "#16a34a", fontWeight: 700, fontSize: "12px", transition: "all 0.2s", opacity: events.length === 0 ? 0.4 : 1 }}>
+          ⬇️ Download CSV
         </motion.button>
       </div>
 
@@ -213,53 +176,67 @@ function AnalyticsSection({ events }) {
         </div>
       ) : (
         <>
-          {/* KPI strip */}
+          {/* KPI cards */}
           <div style={{ display: "grid", gridTemplateColumns: desktop ? "repeat(4,1fr)" : "1fr 1fr", gap: "10px", marginBottom: "16px" }}>
             {[
-              ["📈", "Avg Fill Rate",  avgFill + "%",                                         "#f5a623", "rgba(245,166,35,0.08)"],
-              ["🏆", "Best Event",     bestEvent ? bestEvent.name.slice(0,14) + (bestEvent.name.length>14?"…":"") : "—", "#7c3aed", "rgba(124,58,237,0.08)"],
-              ["💵", "Avg Rev/Event",  events.length > 0 ? "GHS " + Math.round(totalRevenue / events.length).toLocaleString() : "—", "#16a34a", "rgba(22,163,74,0.08)"],
-              ["🎟", "Avg Sold/Event", events.length > 0 ? Math.round(totalSold / events.length) : "—", "#2563eb", "rgba(37,99,235,0.08)"],
-            ].map(([icon, label, value, color, bg]) => (
+              ["📈", "AVG_FILL",        avgFill + "%",                                                                                           "#f5a623"],
+              ["🏆", "BEST_EVENT",      bestEvent ? (bestEvent.name.length > 12 ? bestEvent.name.slice(0,12)+"…" : bestEvent.name) : "—",        "#7c3aed"],
+              ["💵", "AVG_REV/EVENT",   events.length > 0 ? "GHS " + Math.round(totalRevenue / events.length).toLocaleString() : "—",           "#16a34a"],
+              ["🎟", "AVG_SOLD/EVENT",  events.length > 0 ? Math.round(totalSold / events.length).toString() : "—",                             "#2563eb"],
+            ].map(([icon, label, value, color]) => (
               <div key={label} style={{ background: "var(--bg-card)", border: "1px solid var(--border)", borderRadius: "14px", padding: "14px", boxShadow: "var(--shadow-sm)" }}>
                 <div style={{ fontSize: "18px", marginBottom: "6px" }}>{icon}</div>
-                <div style={{ fontSize: "16px", fontWeight: 800, color, marginBottom: "2px", fontFamily: "var(--font-sans)" }}>{value}</div>
-                <div style={{ fontSize: "9px", color: "var(--text-muted)", fontFamily: "var(--font-mono)" }}>{label.toUpperCase().replace(/ /g, "_")}</div>
+                <div style={{ fontSize: "16px", fontWeight: 800, color, marginBottom: "2px" }}>{value}</div>
+                <div style={{ fontSize: "9px", color: "var(--text-muted)", fontFamily: "var(--font-mono)" }}>{label}</div>
               </div>
             ))}
           </div>
 
-          {/* Revenue chart */}
+          {/* Revenue bars — pure CSS */}
           <div style={{ background: "var(--bg-card)", border: "1px solid var(--border)", borderRadius: "16px", padding: "20px", marginBottom: "14px", boxShadow: "var(--shadow-sm)" }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
               <div style={{ fontSize: "13px", fontWeight: 700, color: "var(--text-primary)" }}>Revenue by Event</div>
               <div style={{ fontSize: "9px", color: "#16a34a", fontWeight: 700, fontFamily: "var(--font-mono)", background: "rgba(22,163,74,0.08)", padding: "2px 8px", borderRadius: "99px" }}>95%_PAYOUT</div>
             </div>
-            <ResponsiveContainer width="100%" height={200}>
-              <BarChart data={chartData} margin={{ top: 0, right: 0, left: -20, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
-                <XAxis dataKey="name" tick={{ fontSize: 9, fontFamily: "var(--font-mono)", fill: "var(--text-muted)" }} axisLine={false} tickLine={false} />
-                <YAxis tick={{ fontSize: 9, fontFamily: "var(--font-mono)", fill: "var(--text-muted)" }} axisLine={false} tickLine={false} />
-                <Tooltip content={<ChartTooltip />} />
-                <Bar dataKey="Revenue" fill="#f5a623" radius={[6,6,0,0]} />
-              </BarChart>
-            </ResponsiveContainer>
+            <div style={{ display: "flex", alignItems: "flex-end", gap: "8px", height: "120px" }}>
+              {events.map((e, i) => {
+                const rev = e.ticketsSold * e.price * 0.95;
+                const pct = Math.max(4, Math.round((rev / maxRevenue) * 100));
+                return (
+                  <div key={e.id} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", height: "100%" }}>
+                    <div style={{ flex: 1, width: "100%", display: "flex", alignItems: "flex-end" }}>
+                      <motion.div initial={{ height: 0 }} animate={{ height: pct + "%" }} transition={{ duration: 0.7, delay: i * 0.06, ease: "easeOut" }}
+                        style={{ width: "100%", background: "linear-gradient(to top, #f5a623, #ffb347)", borderRadius: "5px 5px 0 0", minHeight: "4px" }} />
+                    </div>
+                    <div style={{ fontSize: "8px", color: "var(--text-muted)", fontFamily: "var(--font-mono)", textAlign: "center", marginTop: "5px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", width: "100%" }}>
+                      {e.name.slice(0,8)}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
           </div>
 
-          {/* Tickets vs Capacity chart */}
+          {/* Fill rate bars */}
           <div style={{ background: "var(--bg-card)", border: "1px solid var(--border)", borderRadius: "16px", padding: "20px", boxShadow: "var(--shadow-sm)" }}>
             <div style={{ fontSize: "13px", fontWeight: 700, color: "var(--text-primary)", marginBottom: "16px" }}>Tickets Sold vs Capacity</div>
-            <ResponsiveContainer width="100%" height={180}>
-              <BarChart data={chartData} margin={{ top: 0, right: 0, left: -20, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
-                <XAxis dataKey="name" tick={{ fontSize: 9, fontFamily: "var(--font-mono)", fill: "var(--text-muted)" }} axisLine={false} tickLine={false} />
-                <YAxis tick={{ fontSize: 9, fontFamily: "var(--font-mono)", fill: "var(--text-muted)" }} axisLine={false} tickLine={false} />
-                <Tooltip content={<ChartTooltip />} />
-                <Legend wrapperStyle={{ fontSize: "10px", fontFamily: "var(--font-mono)" }} />
-                <Bar dataKey="Capacity" fill="var(--bg-subtle)" stroke="var(--border)" radius={[6,6,0,0]} />
-                <Bar dataKey="Tickets"  fill="#2563eb" radius={[6,6,0,0]} />
-              </BarChart>
-            </ResponsiveContainer>
+            <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+              {events.map(e => {
+                const pct = e.totalTickets > 0 ? Math.round((e.ticketsSold / e.totalTickets) * 100) : 0;
+                return (
+                  <div key={e.id}>
+                    <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "5px" }}>
+                      <span style={{ fontSize: "11px", fontWeight: 600, color: "var(--text-primary)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: "60%" }}>{e.name}</span>
+                      <span style={{ fontSize: "10px", color: pct > 80 ? "#dc2626" : "#16a34a", fontWeight: 700, fontFamily: "var(--font-mono)", flexShrink: 0 }}>{e.ticketsSold}/{e.totalTickets} · {pct}%</span>
+                    </div>
+                    <div style={{ height: "6px", background: "var(--bg-subtle)", borderRadius: "99px", overflow: "hidden" }}>
+                      <motion.div initial={{ width: 0 }} animate={{ width: Math.max(2, pct) + "%" }} transition={{ duration: 0.7, ease: "easeOut" }}
+                        style={{ height: "100%", background: pct > 80 ? "linear-gradient(90deg,#dc2626,#b91c1c)" : "linear-gradient(90deg,#2563eb,#3b82f6)", borderRadius: "99px" }} />
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
           </div>
         </>
       )}
@@ -293,27 +270,21 @@ export function OrganizerHome() {
 
   return (
     <div style={{ background: "var(--bg)", minHeight: "100%", padding: desktop ? "28px 40px 60px" : "16px 16px 120px" }}>
-
-      {/* Header */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "20px" }}>
         <div>
           <div style={{ fontSize: "9px", color: "#f5a623", fontWeight: 700, letterSpacing: "2px", marginBottom: "5px", fontFamily: "var(--font-mono)" }}>ORGANIZER_DASHBOARD</div>
           <h1 style={{ fontWeight: 800, fontSize: desktop ? "26px" : "22px", color: "var(--text-primary)", letterSpacing: "-0.6px", marginBottom: "3px" }}>
             {desktop ? `Welcome back, ${currentUser?.first_name}` : "Dashboard"}
           </h1>
-          <p style={{ color: "var(--text-muted)", fontSize: "13px" }}>
-            {desktop ? "Your event command center" : `Hi ${currentUser?.first_name} 👋`}
-          </p>
+          <p style={{ color: "var(--text-muted)", fontSize: "13px" }}>{desktop ? "Your event command center" : `Hi ${currentUser?.first_name} 👋`}</p>
         </div>
         <div style={{ display: "flex", gap: "8px", flexShrink: 0 }}>
           <div style={{ display: "flex", alignItems: "center", gap: "5px", padding: "5px 11px", borderRadius: "99px", background: "rgba(124,58,237,0.06)", border: "1px solid rgba(124,58,237,0.15)" }}>
-            <motion.div animate={{ scale: [1,1.4,1] }} transition={{ repeat: Infinity, duration: 2 }}
-              style={{ width: "5px", height: "5px", borderRadius: "50%", background: "#7c3aed" }} />
+            <motion.div animate={{ scale: [1,1.4,1] }} transition={{ repeat: Infinity, duration: 2 }} style={{ width: "5px", height: "5px", borderRadius: "50%", background: "#7c3aed" }} />
             <span style={{ fontSize: "9px", fontWeight: 700, color: "#7c3aed", fontFamily: "var(--font-mono)" }}>POLYGON</span>
           </div>
           {desktop && (
-            <motion.button whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}
-              onClick={() => setScreen("addEvent")}
+            <motion.button whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }} onClick={() => setScreen("addEvent")}
               style={{ padding: "8px 18px", background: "linear-gradient(135deg, #f5a623, #e8920f)", color: "#fff", border: "none", borderRadius: "10px", fontSize: "12px", fontWeight: 700, cursor: "pointer", boxShadow: "var(--shadow-brand)" }}>
               + New Event
             </motion.button>
@@ -329,7 +300,6 @@ export function OrganizerHome() {
         </div>
       ) : (
         <>
-          {/* Bento Grid */}
           {desktop ? (
             <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "14px", marginBottom: "24px" }}>
               <div style={{ gridColumn: "span 2" }}>
@@ -337,8 +307,6 @@ export function OrganizerHome() {
               </div>
               <BentoStat icon="🎟️" value={totalSold} label="TICKETS_SOLD" sub={fillRate + "% fill"} color="#2563eb" bg="rgba(37,99,235,0.1)" />
               <BentoStat icon="🎪" value={activeEvents} label="ACTIVE_EVENTS" sub={orgEvents.length + " total"} color="#f5a623" bg="rgba(245,166,35,0.1)" />
-
-              {/* Blockchain panel */}
               <div style={{ gridColumn: "span 2" }}>
                 <motion.div whileHover={{ y: -3, boxShadow: "var(--shadow-lg)" }}
                   style={{ background: "var(--bg-card)", border: "1px solid rgba(124,58,237,0.2)", borderRadius: "18px", padding: "20px", boxShadow: "var(--shadow-sm)", transition: "all 0.22s", position: "relative", overflow: "hidden", height: "100%" }}>
@@ -350,8 +318,7 @@ export function OrganizerHome() {
                       <div style={{ fontSize: "9px", color: "var(--text-muted)", fontFamily: "var(--font-mono)" }}>CONTRACT: 0x956F...0Daf</div>
                     </div>
                     <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: "4px" }}>
-                      <motion.div animate={{ opacity: [0.4,1,0.4] }} transition={{ duration: 2, repeat: Infinity }}
-                        style={{ width: "6px", height: "6px", borderRadius: "50%", background: "#4ade80" }} />
+                      <motion.div animate={{ opacity: [0.4,1,0.4] }} transition={{ duration: 2, repeat: Infinity }} style={{ width: "6px", height: "6px", borderRadius: "50%", background: "#4ade80" }} />
                       <span style={{ fontSize: "9px", fontWeight: 700, color: "#4ade80", fontFamily: "var(--font-mono)" }}>ONLINE</span>
                     </div>
                   </div>
@@ -365,8 +332,6 @@ export function OrganizerHome() {
                   </div>
                 </motion.div>
               </div>
-
-              {/* Payout split */}
               <motion.div whileHover={{ y: -3, boxShadow: "var(--shadow-lg)" }}
                 style={{ background: "var(--bg-card)", border: "1px solid var(--border)", borderRadius: "18px", padding: "18px", boxShadow: "var(--shadow-sm)", transition: "all 0.22s" }}>
                 <div style={{ fontSize: "9px", fontWeight: 700, color: "var(--text-muted)", letterSpacing: "1.5px", marginBottom: "12px", fontFamily: "var(--font-mono)" }}>PAYOUT_SPLIT</div>
@@ -389,8 +354,6 @@ export function OrganizerHome() {
                   </div>
                 </div>
               </motion.div>
-
-              {/* Top event */}
               {topEvent && (
                 <motion.div whileHover={{ y: -3, boxShadow: "var(--shadow-lg)", borderColor: "rgba(245,166,35,0.3)" }} whileTap={{ scale: 0.98 }}
                   onClick={() => { setViewingOrgEvent(topEvent); setScreen("orgEventDetail"); }}
@@ -416,7 +379,6 @@ export function OrganizerHome() {
             </div>
           )}
 
-          {/* Info banners */}
           <div style={{ display: "grid", gridTemplateColumns: desktop ? "1fr 1fr" : "1fr", gap: "12px", marginBottom: "24px" }}>
             <div style={{ background: "rgba(245,166,35,0.04)", border: "1px solid rgba(245,166,35,0.15)", borderRadius: "14px", padding: "14px 16px", display: "flex", alignItems: "center", gap: "12px" }}>
               <div style={{ width: "34px", height: "34px", borderRadius: "10px", background: "rgba(245,166,35,0.1)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "15px", flexShrink: 0 }}>💡</div>
@@ -434,10 +396,8 @@ export function OrganizerHome() {
             </div>
           </div>
 
-          {/* Analytics */}
           <AnalyticsSection events={orgEvents} />
 
-          {/* Events grid */}
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "14px" }}>
             <div style={{ fontWeight: 800, fontSize: "16px", color: "var(--text-primary)", letterSpacing: "-0.3px" }}>
               Your Events
@@ -534,8 +494,8 @@ export function OrganizerEvents() {
 
 // ── Organizer Alerts ──────────────────────────────────────────
 export function OrganizerAlerts() {
-  const orgEvents = useStore(s => s.orgEvents);
-  const desktop   = isDesktop();
+  const orgEvents    = useStore(s => s.orgEvents);
+  const desktop      = isDesktop();
   const totalRevenue = orgEvents.reduce((s, e) => s + e.ticketsSold * e.price * 0.95, 0);
   const totalSold    = orgEvents.reduce((s, e) => s + e.ticketsSold, 0);
 
@@ -569,7 +529,7 @@ export function OrganizerAlerts() {
   );
 }
 
-// ── Add Event — SCROLL FULLY FIXED ───────────────────────────
+// ── Add Event — SCROLL FIXED ──────────────────────────────────
 export function AddEvent() {
   const addEventForm    = useStore(s => s.addEventForm);
   const setAddEventForm = useStore(s => s.setAddEventForm);
@@ -605,20 +565,14 @@ export function AddEvent() {
   return (
     <div style={{
       background: "var(--bg)",
-      height: "100%",
+      height: "100%",          // ← must be 100% not minHeight
       display: "flex",
       flexDirection: "column",
-      overflow: "hidden",
-      position: "relative",
+      overflow: "hidden",      // ← clip children, don't scroll here
     }}>
-      {/* Sticky header */}
-      <div style={{
-        display: "flex", alignItems: "center",
-        padding: "14px 20px", gap: "14px",
-        background: "var(--bg-card)",
-        borderBottom: "1px solid var(--border)",
-        flexShrink: 0, zIndex: 10,
-      }}>
+
+      {/* Sticky header — never scrolls */}
+      <div style={{ flexShrink: 0, display: "flex", alignItems: "center", padding: "14px 20px", gap: "14px", background: "var(--bg-card)", borderBottom: "1px solid var(--border)", zIndex: 10 }}>
         <motion.button whileTap={{ scale: 0.9 }} onClick={() => setScreen("app")}
           style={{ width: "34px", height: "34px", borderRadius: "9px", background: "var(--bg-subtle)", border: "1px solid var(--border)", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", fontSize: "16px", color: "var(--text-primary)", flexShrink: 0 }}>
           ←
@@ -629,7 +583,7 @@ export function AddEvent() {
         </div>
       </div>
 
-      {/* ── THE SCROLL FIX: minHeight:0 + overflowY:scroll ── */}
+      {/* Scrollable body — KEY: flex:1 + minHeight:0 */}
       <div style={{
         flex: 1,
         minHeight: 0,
@@ -638,11 +592,7 @@ export function AddEvent() {
         WebkitOverflowScrolling: "touch",
         overscrollBehavior: "contain",
       }}>
-        <div style={{
-          padding: desktop ? "24px 40px 120px" : "14px 16px 120px",
-          maxWidth: desktop ? "800px" : "100%",
-          margin: "0 auto",
-        }}>
+        <div style={{ padding: desktop ? "24px 40px 120px" : "14px 16px 120px", maxWidth: desktop ? "800px" : "100%", margin: "0 auto" }}>
 
           {/* Category */}
           <div style={{ marginBottom: "18px" }}>
@@ -681,36 +631,25 @@ export function AddEvent() {
               <>
                 <input type="file" accept="image/jpeg,image/png,image/webp" id="event-image-upload" style={{ display: "none" }}
                   onChange={e => {
-                    const f = e.target.files[0];
-                    if (!f) return;
-                    // ── Resize + compress before base64 ──
+                    const f = e.target.files[0]; if (!f) return;
                     const canvas = document.createElement("canvas");
                     const img    = new Image();
                     const url    = URL.createObjectURL(f);
-                    img.onload   = () => {
-                      const MAX = 1200;
-                      let w = img.width, h = img.height;
+                    img.onload = () => {
+                      const MAX = 1200; let w = img.width, h = img.height;
                       if (w > MAX) { h = Math.round(h * MAX / w); w = MAX; }
                       canvas.width = w; canvas.height = h;
                       canvas.getContext("2d").drawImage(img, 0, 0, w, h);
-                      const base64 = canvas.toDataURL("image/jpeg", 0.82);
-                      setAddEventForm({ ...addEventForm, image: base64 });
+                      setAddEventForm({ ...addEventForm, image: canvas.toDataURL("image/jpeg", 0.82) });
                       URL.revokeObjectURL(url);
                     };
                     img.src = url;
                   }} />
                 <label htmlFor="event-image-upload" style={{ display: "block", padding: "20px 16px", background: "var(--bg-card)", border: "2px dashed var(--border)", borderRadius: "12px", textAlign: "center", cursor: "pointer" }}>
                   {addEventForm.image?.startsWith("data:") || addEventForm.image?.startsWith("http") ? (
-                    <>
-                      <img src={addEventForm.image} alt="preview" style={{ width: "100%", height: "140px", objectFit: "cover", borderRadius: "8px", marginBottom: "8px" }} />
-                      <div style={{ color: "#16a34a", fontSize: "11px", fontWeight: 700 }}>✅ Image ready · tap to change</div>
-                    </>
+                    <><img src={addEventForm.image} alt="preview" style={{ width: "100%", height: "140px", objectFit: "cover", borderRadius: "8px", marginBottom: "8px" }} /><div style={{ color: "#16a34a", fontSize: "11px", fontWeight: 700 }}>✅ Image ready · tap to change</div></>
                   ) : (
-                    <>
-                      <div style={{ fontSize: "28px", marginBottom: "8px" }}>📷</div>
-                      <div style={{ color: "var(--text-secondary)", fontSize: "12px", fontWeight: 600 }}>Tap to upload JPG or PNG</div>
-                      <div style={{ color: "var(--text-muted)", fontSize: "10px", marginTop: "2px" }}>Max 5MB · auto-compressed</div>
-                    </>
+                    <><div style={{ fontSize: "28px", marginBottom: "8px" }}>📷</div><div style={{ color: "var(--text-secondary)", fontSize: "12px", fontWeight: 600 }}>Tap to upload JPG or PNG</div><div style={{ color: "var(--text-muted)", fontSize: "10px", marginTop: "2px" }}>Max 5MB · auto-compressed</div></>
                   )}
                 </label>
               </>
@@ -748,9 +687,7 @@ export function AddEvent() {
             <span style={{ fontSize: "11px", color: "#7c3aed", fontWeight: 600 }}>Each ticket sold will be automatically minted as an NFT on Polygon blockchain</span>
           </div>
 
-          <motion.button
-            whileHover={{ scale: 1.02, boxShadow: "0 12px 32px rgba(245,166,35,0.4)" }}
-            whileTap={{ scale: 0.97 }}
+          <motion.button whileHover={{ scale: 1.02, boxShadow: "0 12px 32px rgba(245,166,35,0.4)" }} whileTap={{ scale: 0.97 }}
             onClick={() => { if (validate()) handleAddEvent(); }}
             style={{ ...primaryBtn, maxWidth: desktop ? "300px" : "100%", marginBottom: 0 }}>
             🎪 Create Event
@@ -790,35 +727,21 @@ export function OrganizerEventDetail() {
   };
 
   const startEdit = () => {
-    setEditForm({
-      name: ev.name, venue: ev.venue, date: ev.date,
-      time: ev.time || "", price: ev.price,
-      description: ev.description || "", image: ev.image || "",
-      category: ev.category || "other", city: ev.city || "",
-      totalTickets: ev.totalTickets, subtitle: ev.subtitle || "",
-    });
+    setEditForm({ name: ev.name, venue: ev.venue, date: ev.date, time: ev.time || "", price: ev.price, description: ev.description || "", image: ev.image || "", category: ev.category || "other", city: ev.city || "", totalTickets: ev.totalTickets, subtitle: ev.subtitle || "" });
     setEditing(true);
   };
 
   const saveEdit = () => {
-    setViewingOrgEvent({
-      ...ev, ...editForm,
-      price:        parseFloat(editForm.price),
-      totalTickets: parseInt(editForm.totalTickets) || ev.totalTickets,
-    });
+    setViewingOrgEvent({ ...ev, ...editForm, price: parseFloat(editForm.price), totalTickets: parseInt(editForm.totalTickets) || ev.totalTickets });
     setEditing(false);
   };
 
   // ── Edit form ─────────────────────────────────────────────
   if (editing) return (
-    <div style={{ background: "var(--bg)", height: "100%", display: "flex", flexDirection: "column", overflow: "hidden", position: "relative" }}>
-
-      {/* Header */}
-      <div style={{ display: "flex", alignItems: "center", padding: "14px 20px", gap: "12px", background: "var(--bg-card)", borderBottom: "1px solid var(--border)", flexShrink: 0, zIndex: 10 }}>
+    <div style={{ background: "var(--bg)", height: "100%", display: "flex", flexDirection: "column", overflow: "hidden" }}>
+      <div style={{ flexShrink: 0, display: "flex", alignItems: "center", padding: "14px 20px", gap: "12px", background: "var(--bg-card)", borderBottom: "1px solid var(--border)", zIndex: 10 }}>
         <motion.button whileTap={{ scale: 0.9 }} onClick={() => setEditing(false)}
-          style={{ width: "34px", height: "34px", borderRadius: "9px", background: "var(--bg-subtle)", border: "1px solid var(--border)", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", fontSize: "16px", color: "var(--text-primary)", flexShrink: 0 }}>
-          ←
-        </motion.button>
+          style={{ width: "34px", height: "34px", borderRadius: "9px", background: "var(--bg-subtle)", border: "1px solid var(--border)", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", fontSize: "16px", color: "var(--text-primary)", flexShrink: 0 }}>←</motion.button>
         <div style={{ flex: 1 }}>
           <div style={{ fontSize: "15px", fontWeight: 700, color: "var(--text-primary)" }}>Edit Event</div>
           <div style={{ fontSize: "10px", color: "var(--text-muted)", fontFamily: "var(--font-mono)" }}>EDITING: {ev.name.slice(0,28)}{ev.name.length > 28 ? "…" : ""}</div>
@@ -829,17 +752,16 @@ export function OrganizerEventDetail() {
         </motion.button>
       </div>
 
-      {/* Scrollable body — KEY: minHeight 0 */}
+      {/* Scrollable — KEY: flex:1 + minHeight:0 */}
       <div style={{ flex: 1, minHeight: 0, overflowY: "scroll", overflowX: "hidden", WebkitOverflowScrolling: "touch", overscrollBehavior: "contain" }}>
         <div style={{ padding: desktop ? "24px 40px 120px" : "14px 16px 120px", maxWidth: desktop ? "800px" : "100%", margin: "0 auto" }}>
 
-          {/* Category selector */}
+          {/* Category */}
           <div style={{ marginBottom: "18px" }}>
             <div style={{ fontSize: "12px", fontWeight: 600, color: "var(--text-secondary)", marginBottom: "9px" }}>Category</div>
             <div style={{ display: "flex", flexWrap: "wrap", gap: "7px" }}>
               {CATEGORIES.map(cat => (
-                <motion.div key={cat} whileTap={{ scale: 0.93 }}
-                  onClick={() => setEditForm(p => ({ ...p, category: cat }))}
+                <motion.div key={cat} whileTap={{ scale: 0.93 }} onClick={() => setEditForm(p => ({ ...p, category: cat }))}
                   style={{ padding: "6px 14px", borderRadius: "99px", cursor: "pointer", fontSize: "11px", fontWeight: 600, border: "1.5px solid " + (editForm.category === cat ? "#f5a623" : "var(--border)"), background: editForm.category === cat ? "rgba(245,166,35,0.08)" : "var(--bg-card)", color: editForm.category === cat ? "#f5a623" : "var(--text-secondary)", transition: "all 0.2s" }}>
                   {cat.charAt(0).toUpperCase() + cat.slice(1)}
                 </motion.div>
@@ -863,29 +785,16 @@ export function OrganizerEventDetail() {
                 <input type="file" accept="image/jpeg,image/png,image/webp" id="edit-image-upload" style={{ display: "none" }}
                   onChange={e => {
                     const f = e.target.files[0]; if (!f) return;
-                    const canvas = document.createElement("canvas");
-                    const img = new Image();
-                    const url = URL.createObjectURL(f);
-                    img.onload = () => {
-                      const MAX = 1200;
-                      let w = img.width, h = img.height;
-                      if (w > MAX) { h = Math.round(h * MAX / w); w = MAX; }
-                      canvas.width = w; canvas.height = h;
-                      canvas.getContext("2d").drawImage(img, 0, 0, w, h);
-                      setEditForm(p => ({ ...p, image: canvas.toDataURL("image/jpeg", 0.82) }));
-                      URL.revokeObjectURL(url);
-                    };
+                    const canvas = document.createElement("canvas"); const img = new Image(); const url = URL.createObjectURL(f);
+                    img.onload = () => { const MAX = 1200; let w = img.width, h = img.height; if (w > MAX) { h = Math.round(h * MAX / w); w = MAX; } canvas.width = w; canvas.height = h; canvas.getContext("2d").drawImage(img, 0, 0, w, h); setEditForm(p => ({ ...p, image: canvas.toDataURL("image/jpeg", 0.82) })); URL.revokeObjectURL(url); };
                     img.src = url;
                   }} />
                 <label htmlFor="edit-image-upload" style={{ display: "block", padding: "18px", background: "var(--bg-card)", border: "2px dashed var(--border)", borderRadius: "12px", textAlign: "center", cursor: "pointer" }}>
-                  {editForm.image
-                    ? <><img src={editForm.image} alt="preview" style={{ width: "100%", height: "140px", objectFit: "cover", borderRadius: "8px", marginBottom: "8px" }} /><div style={{ color: "#16a34a", fontSize: "11px", fontWeight: 700 }}>✅ Tap to change</div></>
-                    : <><div style={{ fontSize: "24px", marginBottom: "6px" }}>📷</div><div style={{ color: "var(--text-secondary)", fontSize: "12px" }}>Tap to upload</div></>}
+                  {editForm.image ? <><img src={editForm.image} alt="preview" style={{ width: "100%", height: "140px", objectFit: "cover", borderRadius: "8px", marginBottom: "8px" }} /><div style={{ color: "#16a34a", fontSize: "11px", fontWeight: 700 }}>✅ Tap to change</div></> : <><div style={{ fontSize: "24px", marginBottom: "6px" }}>📷</div><div style={{ color: "var(--text-secondary)", fontSize: "12px" }}>Tap to upload</div></>}
                 </label>
               </>
             ) : (
-              <input type="text" placeholder="https://..." value={editForm.image?.startsWith("data:") ? "" : (editForm.image || "")}
-                onChange={e => setEditForm(p => ({ ...p, image: e.target.value }))} style={inp} />
+              <input type="text" placeholder="https://..." value={editForm.image?.startsWith("data:") ? "" : (editForm.image || "")} onChange={e => setEditForm(p => ({ ...p, image: e.target.value }))} style={inp} />
             )}
           </div>
 
@@ -928,7 +837,7 @@ export function OrganizerEventDetail() {
             </motion.button>
           </div>
 
-          <motion.button whileHover={{ scale: 1.02, boxShadow: "0 12px 32px rgba(245,166,35,0.4)" }} whileTap={{ scale: 0.97 }} onClick={saveEdit}
+          <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }} onClick={saveEdit}
             style={{ ...primaryBtn, maxWidth: desktop ? "300px" : "100%", marginBottom: 0 }}>
             💾 Save Changes
           </motion.button>
@@ -940,8 +849,6 @@ export function OrganizerEventDetail() {
   // ── Detail view ───────────────────────────────────────────
   return (
     <div style={{ background: "var(--bg)", height: "100%", overflowY: "auto", WebkitOverflowScrolling: "touch", overscrollBehavior: "contain", paddingBottom: desktop ? "60px" : "100px" }}>
-
-      {/* Hero */}
       <div style={{ height: desktop ? "280px" : "220px", position: "relative", flexShrink: 0 }}>
         <img src={cover} alt={ev.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} onError={e => { e.target.src = categoryImages.other; }} />
         <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to bottom, rgba(0,0,0,0.25), rgba(0,0,0,0.85))" }} />
@@ -963,8 +870,6 @@ export function OrganizerEventDetail() {
       </div>
 
       <div style={{ padding: desktop ? "24px 40px" : "14px 16px" }}>
-
-        {/* Stats */}
         <div style={{ display: "grid", gridTemplateColumns: desktop ? "repeat(4,1fr)" : "1fr 1fr", gap: "10px", marginBottom: "14px" }}>
           {[
             ["REVENUE_95%",  "GHS " + revenue.toLocaleString(),         "#16a34a"],
@@ -980,7 +885,6 @@ export function OrganizerEventDetail() {
           ))}
         </div>
 
-        {/* Progress bar */}
         <div style={{ background: "var(--bg-card)", borderRadius: "12px", padding: "13px 15px", marginBottom: "12px", border: "1px solid var(--border)" }}>
           <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "7px" }}>
             <span style={{ fontSize: "12px", fontWeight: 600, color: "var(--text-secondary)" }}>Ticket Sales</span>
@@ -993,7 +897,6 @@ export function OrganizerEventDetail() {
           <div style={{ fontSize: "10px", color: "var(--text-muted)", marginTop: "4px", fontFamily: "var(--font-mono)" }}>{ev.totalTickets - ev.ticketsSold} REMAINING</div>
         </div>
 
-        {/* Description */}
         {ev.description && (
           <div style={{ background: "var(--bg-card)", borderRadius: "12px", padding: "13px 15px", marginBottom: "12px", border: "1px solid var(--border)" }}>
             <div style={{ fontSize: "10px", fontWeight: 700, color: "var(--text-muted)", marginBottom: "6px", fontFamily: "var(--font-mono)" }}>DESCRIPTION</div>
@@ -1001,7 +904,6 @@ export function OrganizerEventDetail() {
           </div>
         )}
 
-        {/* Actions */}
         <div style={{ display: "grid", gridTemplateColumns: desktop ? "1fr 1fr" : "1fr", gap: "10px", marginBottom: "12px" }}>
           <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }} onClick={() => toggleSales(ev.id)}
             style={{ ...primaryBtn, marginBottom: 0, background: ev.salesOpen ? "linear-gradient(135deg,#dc2626,#b91c1c)" : "linear-gradient(135deg,#16a34a,#15803d)" }}>
@@ -1013,7 +915,6 @@ export function OrganizerEventDetail() {
           </motion.button>
         </div>
 
-        {/* Door staff */}
         <div style={{ background: "var(--bg-card)", border: "1px solid var(--border)", borderRadius: "14px", padding: "16px", boxShadow: "var(--shadow-sm)" }}>
           <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "12px" }}>
             <div style={{ width: "32px", height: "32px", borderRadius: "9px", background: "rgba(245,166,35,0.1)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "14px" }}>🚪</div>
@@ -1022,8 +923,7 @@ export function OrganizerEventDetail() {
               <div style={{ fontSize: "10px", color: "var(--text-muted)", fontFamily: "var(--font-mono)" }}>SINGLE_USE · AUTO_EXPIRE</div>
             </div>
           </div>
-          <motion.button whileHover={{ borderColor: "#f5a623" }} whileTap={{ scale: 0.97 }}
-            onClick={() => generateDoorCode(ev.id, ev.name)}
+          <motion.button whileHover={{ borderColor: "#f5a623" }} whileTap={{ scale: 0.97 }} onClick={() => generateDoorCode(ev.id, ev.name)}
             style={{ width: "100%", padding: "10px", background: "rgba(245,166,35,0.06)", color: "#f5a623", border: "2px dashed rgba(245,166,35,0.3)", borderRadius: "10px", fontSize: "12px", fontWeight: 700, cursor: "pointer", marginBottom: "10px", transition: "border-color 0.2s" }}>
             + Generate Door Staff Code
           </motion.button>

@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from "react";
-import { motion, AnimatePresence, useScroll, useTransform } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import useStore from "../store/useStore";
 import ThemeToggle from "./ThemeToggle";
 import { useTheme } from "../hooks/useTheme";
@@ -20,7 +20,6 @@ const HERO_IMAGES = [
 const LOGIN_IMAGE  = "https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=1200&q=90";
 const SIGNUP_IMAGE = "https://images.unsplash.com/photo-1501281668745-f7f57925c3b4?w=1200&q=90";
 
-// ── Floating popup cards ──────────────────────────────────────
 function FloatingCards() {
   const [visible, setVisible] = useState(0);
   const cards = [
@@ -31,12 +30,10 @@ function FloatingCards() {
     { name: "GCTU Sports Day",       price: "FREE",    color: "#e17055", icon: "⚽", pos: { top: "78%", right: "8%" } },
     { name: "Blockchain Talk",       price: "Ghc 50",  color: "#00cec9", icon: "⛓️", pos: { top: "80%", left: "6%" } },
   ];
-
   useEffect(() => {
     const interval = setInterval(() => setVisible(v => (v + 1) % cards.length), 2200);
     return () => clearInterval(interval);
   }, []);
-
   return (
     <div style={{ position: "absolute", inset: 0, pointerEvents: "none", overflow: "hidden" }}>
       {cards.map((c, i) => (
@@ -48,16 +45,8 @@ function FloatingCards() {
               exit={{ opacity: 0, scale: 0.9, y: -8 }}
               transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
               style={{ position: "absolute", ...c.pos, width: "180px" }}>
-              <div style={{
-                background: "rgba(255,255,255,0.92)",
-                backdropFilter: "blur(16px)", WebkitBackdropFilter: "blur(16px)",
-                borderRadius: "14px", padding: "10px 13px",
-                boxShadow: "0 8px 32px rgba(0,0,0,0.15), 0 0 0 1px rgba(255,255,255,0.5)",
-                display: "flex", gap: "10px", alignItems: "center",
-              }}>
-                <div style={{ width: "36px", height: "36px", borderRadius: "10px", background: c.color + "18", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "18px", flexShrink: 0, border: "1px solid " + c.color + "30" }}>
-                  {c.icon}
-                </div>
+              <div style={{ background: "rgba(255,255,255,0.92)", backdropFilter: "blur(16px)", WebkitBackdropFilter: "blur(16px)", borderRadius: "14px", padding: "10px 13px", boxShadow: "0 8px 32px rgba(0,0,0,0.15), 0 0 0 1px rgba(255,255,255,0.5)", display: "flex", gap: "10px", alignItems: "center" }}>
+                <div style={{ width: "36px", height: "36px", borderRadius: "10px", background: c.color + "18", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "18px", flexShrink: 0, border: "1px solid " + c.color + "30" }}>{c.icon}</div>
                 <div style={{ minWidth: 0 }}>
                   <div style={{ fontWeight: 700, fontSize: "11px", color: "#0f0e0c", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{c.name}</div>
                   <div style={{ fontSize: "11px", color: c.color, fontWeight: 800, marginTop: "2px" }}>{c.price}</div>
@@ -74,13 +63,9 @@ function FloatingCards() {
   );
 }
 
-// ── Navbar ────────────────────────────────────────────────────
-// Desktop: logo left, links center, login+signup right
-// Mobile: logo centered, only theme toggle right — NO login/signup links
 function NavBar({ onNavigate }) {
   const [scrolled, setScrolled] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
-
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 30);
     const onResize = () => setIsMobile(window.innerWidth < 768);
@@ -91,78 +76,44 @@ function NavBar({ onNavigate }) {
 
   return (
     <motion.nav
-      initial={{ y: -20, opacity: 0 }}
-      animate={{ y: 0, opacity: 1 }}
-      transition={{ duration: 0.5 }}
-      style={{
-        position: "sticky", top: 0, zIndex: 50,
-        background: "var(--bg-card)",
-        backdropFilter: "blur(20px)", WebkitBackdropFilter: "blur(20px)",
-        borderBottom: "1px solid var(--border)",
-        boxShadow: scrolled ? "0 2px 16px rgba(0,0,0,0.08)" : "var(--shadow-sm)",
-        transition: "box-shadow 0.3s ease",
-      }}>
+      initial={{ y: -20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ duration: 0.5 }}
+      style={{ position: "sticky", top: 0, zIndex: 50, background: "var(--bg-card)", backdropFilter: "blur(20px)", WebkitBackdropFilter: "blur(20px)", borderBottom: "1px solid var(--border)", boxShadow: scrolled ? "0 2px 16px rgba(0,0,0,0.08)" : "var(--shadow-sm)", transition: "box-shadow 0.3s ease" }}>
 
       {isMobile ? (
-        /* ── MOBILE navbar — logo centered ── */
+        // ── MOBILE: logo centered, theme toggle right, nothing else ──
         <div style={{ padding: "0 20px", height: "60px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-          {/* Left spacer — same width as theme toggle for centering */}
           <div style={{ width: "36px" }} />
-
-          {/* Logo — perfectly centered */}
           <motion.div whileTap={{ scale: 0.97 }} onClick={() => onNavigate("home")}
             style={{ display: "flex", alignItems: "center", gap: "8px", cursor: "pointer" }}>
-            <div style={{ width: "32px", height: "32px", borderRadius: "10px", background: "linear-gradient(135deg, #f5a623, #e8920f)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "16px", boxShadow: "0 3px 10px rgba(245,166,35,0.35)", flexShrink: 0 }}>
-              🎟️
-            </div>
-            <span style={{ fontWeight: 800, fontSize: "16px", color: "var(--text-primary)", letterSpacing: "-0.3px", whiteSpace: "nowrap" }}>
-              Master Events
-            </span>
+            <div style={{ width: "32px", height: "32px", borderRadius: "10px", background: "linear-gradient(135deg, #f5a623, #e8920f)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "16px", boxShadow: "0 3px 10px rgba(245,166,35,0.35)" }}>🎟️</div>
+            <span style={{ fontWeight: 800, fontSize: "16px", color: "var(--text-primary)", letterSpacing: "-0.3px" }}>Master Events</span>
           </motion.div>
-
-          {/* Theme toggle — right */}
           <ThemeToggle compact={true} />
         </div>
       ) : (
-        /* ── DESKTOP navbar ── */
+        // ── DESKTOP: logo left, links center, auth right ──
         <div style={{ maxWidth: "1200px", margin: "0 auto", padding: "0 32px", height: "68px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-
-          {/* Logo */}
           <motion.div whileHover={{ scale: 1.02 }} onClick={() => onNavigate("home")}
             style={{ display: "flex", alignItems: "center", gap: "10px", cursor: "pointer" }}>
-            <div style={{ width: "38px", height: "38px", borderRadius: "12px", background: "linear-gradient(135deg, #f5a623, #e8920f)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "18px", boxShadow: "0 4px 14px rgba(245,166,35,0.4)" }}>
-              🎟️
-            </div>
-            <span style={{ fontWeight: 800, fontSize: "17px", color: "var(--text-primary)", letterSpacing: "-0.3px" }}>
-              Master Events
-            </span>
+            <div style={{ width: "38px", height: "38px", borderRadius: "12px", background: "linear-gradient(135deg, #f5a623, #e8920f)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "18px", boxShadow: "0 4px 14px rgba(245,166,35,0.4)" }}>🎟️</div>
+            <span style={{ fontWeight: 800, fontSize: "17px", color: "var(--text-primary)", letterSpacing: "-0.3px" }}>Master Events</span>
           </motion.div>
-
-          {/* Nav links */}
           <div style={{ display: "flex", alignItems: "center", gap: "28px" }}>
             {[["Events", "#events"], ["About", "about"]].map(([label, href]) => (
-              <motion.span key={label}
-                whileHover={{ color: "#f5a623" }}
-                onClick={() => href.startsWith("#")
-                  ? document.querySelector(href)?.scrollIntoView({ behavior: "smooth" })
-                  : onNavigate(href)}
+              <motion.span key={label} whileHover={{ color: "#f5a623" }}
+                onClick={() => href.startsWith("#") ? document.querySelector(href)?.scrollIntoView({ behavior: "smooth" }) : onNavigate(href)}
                 style={{ fontSize: "14px", fontWeight: 500, color: "var(--text-secondary)", cursor: "pointer", transition: "color 0.2s" }}>
                 {label}
               </motion.span>
             ))}
           </div>
-
-          {/* Right actions */}
           <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
             <ThemeToggle compact={true} />
-            <motion.span whileHover={{ color: "#f5a623" }}
-              onClick={() => onNavigate("login")}
+            <motion.span whileHover={{ color: "#f5a623" }} onClick={() => onNavigate("login")}
               style={{ fontSize: "14px", fontWeight: 600, color: "var(--text-secondary)", cursor: "pointer", transition: "color 0.2s" }}>
               Log in
             </motion.span>
-            <motion.button
-              whileHover={{ scale: 1.03, boxShadow: "0 8px 28px rgba(245,166,35,0.5)" }}
-              whileTap={{ scale: 0.97 }}
+            <motion.button whileHover={{ scale: 1.03, boxShadow: "0 8px 28px rgba(245,166,35,0.5)" }} whileTap={{ scale: 0.97 }}
               onClick={() => onNavigate("signup")}
               style={{ padding: "10px 22px", borderRadius: "12px", background: "linear-gradient(135deg, #f5a623, #e8920f)", color: "#fff", fontWeight: 700, fontSize: "14px", border: "none", cursor: "pointer", boxShadow: "0 4px 16px rgba(245,166,35,0.4)" }}>
               Sign up free
@@ -174,14 +125,11 @@ function NavBar({ onNavigate }) {
   );
 }
 
-// ── Stats ticker ──────────────────────────────────────────────
 function StatsTicker() {
   const stats = ["10K+ Tickets Sold", "50+ Events", "100% Verified", "0% Fake Tickets", "Ghana's #1 Platform", "NFT Powered", "MoMo Payments", "Polygon Blockchain"];
   return (
     <div style={{ background: "var(--brand)", padding: "9px 0", overflow: "hidden" }}>
-      <motion.div
-        animate={{ x: ["0%", "-50%"] }}
-        transition={{ duration: 22, repeat: Infinity, ease: "linear" }}
+      <motion.div animate={{ x: ["0%", "-50%"] }} transition={{ duration: 22, repeat: Infinity, ease: "linear" }}
         style={{ display: "flex", gap: "48px", whiteSpace: "nowrap" }}>
         {[...stats, ...stats].map((s, i) => (
           <span key={i} style={{ fontSize: "11px", fontWeight: 700, color: "#fff", letterSpacing: "0.8px" }}>
@@ -193,7 +141,6 @@ function StatsTicker() {
   );
 }
 
-// ── Landing Page ──────────────────────────────────────────────
 function LandingPage({ onNavigate }) {
   const [events,    setEvents]    = useState([]);
   const [heroIndex, setHeroIndex] = useState(0);
@@ -204,13 +151,11 @@ function LandingPage({ onNavigate }) {
     const interval = setInterval(() => setHeroIndex(i => (i + 1) % HERO_IMAGES.length), 5000);
     return () => clearInterval(interval);
   }, []);
-
   useEffect(() => {
     const onResize = () => setIsMobile(window.innerWidth < 768);
     window.addEventListener("resize", onResize);
     return () => window.removeEventListener("resize", onResize);
   }, []);
-
   useEffect(() => {
     fetch("https://master-events-backend.onrender.com/api/events/")
       .then(r => r.json())
@@ -234,87 +179,42 @@ function LandingPage({ onNavigate }) {
       <StatsTicker />
 
       {/* ── Hero ── */}
-      <section ref={heroRef} style={{
-        position: "relative", overflow: "hidden",
-        minHeight: "100svh",
-        display: "flex", flexDirection: "column",
-        alignItems: "center", justifyContent: "center",
-      }}>
+      <section ref={heroRef} style={{ position: "relative", overflow: "hidden", minHeight: "100svh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
 
-        {/* Rotating background images */}
         {HERO_IMAGES.map((img, i) => (
           <AnimatePresence key={i}>
             {heroIndex === i && (
-              <motion.div
-                initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-                transition={{ duration: 1.2 }}
+              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 1.2 }}
                 style={{ position: "absolute", inset: 0, zIndex: 0 }}>
-                <motion.img src={img} alt=""
-                  style={{ width: "100%", height: "100%", objectFit: "cover", objectPosition: "center" }}
-                  initial={{ scale: 1.05 }} animate={{ scale: 1 }}
-                  transition={{ duration: 6 }}
-                />
+                <motion.img src={img} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", objectPosition: "center" }}
+                  initial={{ scale: 1.05 }} animate={{ scale: 1 }} transition={{ duration: 6 }} />
               </motion.div>
             )}
           </AnimatePresence>
         ))}
 
-        {/* Dark overlays */}
         <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to bottom, rgba(0,0,0,0.52) 0%, rgba(0,0,0,0.32) 45%, rgba(0,0,0,0.72) 100%)", zIndex: 1 }} />
         <div style={{ position: "absolute", inset: 0, background: "radial-gradient(ellipse at center, transparent 30%, rgba(0,0,0,0.3) 100%)", zIndex: 1 }} />
-
-        {/* Floating cards */}
-        <div style={{ position: "absolute", inset: 0, zIndex: 2 }}>
-          <FloatingCards />
-        </div>
+        <div style={{ position: "absolute", inset: 0, zIndex: 2 }}><FloatingCards /></div>
 
         {/* Hero content */}
-        <div style={{
-          position: "relative", zIndex: 3,
-          textAlign: "center",
-          maxWidth: isMobile ? "100%" : "800px",
-          padding: isMobile ? "80px 24px 60px" : "100px 32px 80px",
-          display: "flex", flexDirection: "column",
-          alignItems: "center",
-        }}>
+        <div style={{ position: "relative", zIndex: 3, textAlign: "center", maxWidth: isMobile ? "100%" : "800px", padding: isMobile ? "80px 24px 60px" : "100px 32px 80px", display: "flex", flexDirection: "column", alignItems: "center" }}>
           <motion.div variants={stagger} initial="hidden" animate="show"
             style={{ display: "flex", flexDirection: "column", alignItems: "center", width: "100%" }}>
 
             {/* Badge */}
             <motion.div variants={fadeUp} style={{ marginBottom: "24px" }}>
-              <motion.div
-                animate={{ opacity: [0.75, 1, 0.75] }}
-                transition={{ duration: 2.5, repeat: Infinity }}
-                style={{
-                  display: "inline-flex", alignItems: "center", gap: "8px",
-                  padding: isMobile ? "6px 14px" : "7px 18px",
-                  borderRadius: "99px",
-                  background: "rgba(245,166,35,0.15)",
-                  border: "1px solid rgba(245,166,35,0.4)",
-                  color: "#f5a623",
-                  fontSize: isMobile ? "9px" : "11px",
-                  fontWeight: 700, letterSpacing: "1.5px",
-                  backdropFilter: "blur(8px)",
-                }}>
-                <motion.span
-                  animate={{ scale: [1, 1.4, 1] }}
-                  transition={{ duration: 1.5, repeat: Infinity }}
-                  style={{ width: "6px", height: "6px", borderRadius: "50%", background: "#f5a623", display: "inline-block" }}
-                />
+              <motion.div animate={{ opacity: [0.75, 1, 0.75] }} transition={{ duration: 2.5, repeat: Infinity }}
+                style={{ display: "inline-flex", alignItems: "center", gap: "8px", padding: isMobile ? "6px 14px" : "7px 18px", borderRadius: "99px", background: "rgba(245,166,35,0.15)", border: "1px solid rgba(245,166,35,0.4)", color: "#f5a623", fontSize: isMobile ? "9px" : "11px", fontWeight: 700, letterSpacing: "1.5px", backdropFilter: "blur(8px)" }}>
+                <motion.span animate={{ scale: [1, 1.4, 1] }} transition={{ duration: 1.5, repeat: Infinity }}
+                  style={{ width: "6px", height: "6px", borderRadius: "50%", background: "#f5a623", display: "inline-block" }} />
                 {isMobile ? "BLOCKCHAIN TICKETING" : "AFRICA'S BLOCKCHAIN TICKETING PLATFORM"}
               </motion.div>
             </motion.div>
 
             {/* Headline */}
             <motion.h1 variants={fadeUp}
-              style={{
-                fontSize: isMobile ? "clamp(38px, 10vw, 56px)" : "clamp(44px, 7vw, 88px)",
-                fontWeight: 900, lineHeight: 1.0,
-                letterSpacing: isMobile ? "-2px" : "-3px",
-                color: "#ffffff",
-                marginBottom: "20px",
-                textShadow: "0 2px 20px rgba(0,0,0,0.3)",
-              }}>
+              style={{ fontSize: isMobile ? "clamp(38px, 10vw, 56px)" : "clamp(44px, 7vw, 88px)", fontWeight: 900, lineHeight: 1.0, letterSpacing: isMobile ? "-2px" : "-3px", color: "#ffffff", marginBottom: "20px", textShadow: "0 2px 20px rgba(0,0,0,0.3)" }}>
               Find events that<br />
               <span style={{ background: "linear-gradient(135deg, #f5a623, #ffb347)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text" }}>
                 move you.
@@ -323,123 +223,40 @@ function LandingPage({ onNavigate }) {
 
             {/* Subtext */}
             <motion.p variants={fadeUp}
-              style={{
-                fontSize: isMobile ? "14px" : "clamp(15px, 2vw, 18px)",
-                color: "rgba(255,255,255,0.78)",
-                lineHeight: 1.7,
-                marginBottom: "32px",
-                maxWidth: isMobile ? "340px" : "520px",
-                textShadow: "0 1px 8px rgba(0,0,0,0.3)",
-              }}>
+              style={{ fontSize: isMobile ? "14px" : "clamp(15px, 2vw, 18px)", color: "rgba(255,255,255,0.78)", lineHeight: 1.7, marginBottom: "32px", maxWidth: isMobile ? "340px" : "520px", textShadow: "0 1px 8px rgba(0,0,0,0.3)" }}>
               {isMobile
                 ? "Buy and own NFT tickets on the blockchain. MoMo payments. Zero fakes."
                 : "From Afrobeats concerts in Accra to tech summits in Kumasi — discover, buy and own your tickets as NFTs on the blockchain."}
             </motion.p>
 
-            {/* Primary CTAs — Browse Events + Create Event */}
-            <motion.div variants={fadeUp} style={{
-              display: "flex", gap: "12px",
-              justifyContent: "center", flexWrap: "wrap",
-              marginBottom: "16px",
-              width: "100%", maxWidth: isMobile ? "360px" : "100%",
-            }}>
+            {/* CTAs — Browse Events + Create Event only, no auth buttons */}
+            <motion.div variants={fadeUp}
+              style={{ display: "flex", gap: "12px", justifyContent: "center", flexWrap: "wrap", marginBottom: "32px", width: "100%", maxWidth: isMobile ? "360px" : "100%" }}>
               <motion.button
-                whileHover={{ scale: 1.04, boxShadow: "0 16px 48px rgba(245,166,35,0.55)" }}
-                whileTap={{ scale: 0.97 }}
+                whileHover={{ scale: 1.04, boxShadow: "0 16px 48px rgba(245,166,35,0.55)" }} whileTap={{ scale: 0.97 }}
                 onClick={() => document.querySelector("#events")?.scrollIntoView({ behavior: "smooth" })}
-                style={{
-                  flex: isMobile ? 1 : "none",
-                  padding: isMobile ? "14px 20px" : "16px 38px",
-                  borderRadius: "14px",
-                  background: "linear-gradient(135deg, #f5a623, #e8920f)",
-                  color: "#fff", fontWeight: 700,
-                  fontSize: isMobile ? "14px" : "16px",
-                  border: "none", cursor: "pointer",
-                  boxShadow: "0 8px 32px rgba(245,166,35,0.45)",
-                  whiteSpace: "nowrap",
-                }}>
+                style={{ flex: isMobile ? 1 : "none", padding: isMobile ? "14px 20px" : "16px 38px", borderRadius: "14px", background: "linear-gradient(135deg, #f5a623, #e8920f)", color: "#fff", fontWeight: 700, fontSize: isMobile ? "14px" : "16px", border: "none", cursor: "pointer", boxShadow: "0 8px 32px rgba(245,166,35,0.45)", whiteSpace: "nowrap" }}>
                 Browse Events →
               </motion.button>
               <motion.button
-                whileHover={{ scale: 1.02, background: "rgba(255,255,255,0.18)" }}
-                whileTap={{ scale: 0.97 }}
+                whileHover={{ scale: 1.02, background: "rgba(255,255,255,0.18)" }} whileTap={{ scale: 0.97 }}
                 onClick={() => onNavigate("signup")}
-                style={{
-                  flex: isMobile ? 1 : "none",
-                  padding: isMobile ? "14px 20px" : "16px 38px",
-                  borderRadius: "14px",
-                  background: "rgba(255,255,255,0.1)",
-                  backdropFilter: "blur(12px)",
-                  color: "#fff", fontWeight: 700,
-                  fontSize: isMobile ? "14px" : "16px",
-                  border: "1.5px solid rgba(255,255,255,0.3)",
-                  cursor: "pointer", transition: "all 0.2s",
-                  whiteSpace: "nowrap",
-                }}>
+                style={{ flex: isMobile ? 1 : "none", padding: isMobile ? "14px 20px" : "16px 38px", borderRadius: "14px", background: "rgba(255,255,255,0.1)", backdropFilter: "blur(12px)", color: "#fff", fontWeight: 700, fontSize: isMobile ? "14px" : "16px", border: "1.5px solid rgba(255,255,255,0.3)", cursor: "pointer", transition: "all 0.2s", whiteSpace: "nowrap" }}>
                 Create Event
               </motion.button>
             </motion.div>
 
-            {/* Mobile auth buttons — Log In + Sign Up */}
-            {isMobile && (
-              <motion.div variants={fadeUp} style={{
-                display: "flex", gap: "10px",
-                width: "100%", maxWidth: "360px",
-                marginBottom: "32px",
-              }}>
-                <motion.button whileTap={{ scale: 0.97 }} onClick={() => onNavigate("login")}
-                  style={{
-                    flex: 1, padding: "13px",
-                    borderRadius: "12px",
-                    background: "rgba(255,255,255,0.08)",
-                    backdropFilter: "blur(12px)",
-                    color: "#fff", fontWeight: 700, fontSize: "14px",
-                    border: "1.5px solid rgba(255,255,255,0.22)",
-                    cursor: "pointer", transition: "all 0.2s",
-                  }}>
-                  Log In
-                </motion.button>
-                <motion.button whileTap={{ scale: 0.97 }} onClick={() => onNavigate("signup")}
-                  style={{
-                    flex: 1, padding: "13px",
-                    borderRadius: "12px",
-                    background: "linear-gradient(135deg, #f5a623, #e8920f)",
-                    color: "#fff", fontWeight: 700, fontSize: "14px",
-                    border: "none", cursor: "pointer",
-                    boxShadow: "0 4px 16px rgba(245,166,35,0.45)",
-                  }}>
-                  Sign Up
-                </motion.button>
-              </motion.div>
-            )}
-
-            {/* Stats block — flows naturally below buttons */}
+            {/* Stats block */}
             <motion.div variants={fadeUp}
-              style={{
-                display: "flex",
-                gap: isMobile ? "16px" : "clamp(20px, 4vw, 48px)",
-                flexWrap: "wrap",
-                justifyContent: "center",
-                padding: isMobile ? "16px 20px" : "24px 32px",
-                background: "rgba(0,0,0,0.3)",
-                backdropFilter: "blur(12px)",
-                borderRadius: "18px",
-                border: "1px solid rgba(255,255,255,0.1)",
-                width: "100%",
-                maxWidth: isMobile ? "360px" : "100%",
-              }}>
-              {[
-                ["10K+", "Tickets",  "#f5a623"],
-                ["50+",  "Events",   "#4ade80"],
-                ["100%", "Verified", "#60a5fa"],
-                ["0%",   "Fakes",    "#f87171"],
-              ].map(([val, label, color]) => (
+              style={{ display: "flex", gap: isMobile ? "16px" : "clamp(20px, 4vw, 48px)", flexWrap: "wrap", justifyContent: "center", padding: isMobile ? "16px 20px" : "24px 32px", background: "rgba(0,0,0,0.3)", backdropFilter: "blur(12px)", borderRadius: "18px", border: "1px solid rgba(255,255,255,0.1)", width: "100%", maxWidth: isMobile ? "360px" : "100%" }}>
+              {[["10K+","Tickets","#f5a623"],["50+","Events","#4ade80"],["100%","Verified","#60a5fa"],["0%","Fakes","#f87171"]].map(([val, label, color]) => (
                 <div key={label} style={{ textAlign: "center", flex: isMobile ? 1 : "none" }}>
                   <div style={{ fontSize: isMobile ? "20px" : "clamp(22px, 3vw, 34px)", fontWeight: 900, color, letterSpacing: "-1px" }}>{val}</div>
                   <div style={{ fontSize: isMobile ? "10px" : "11px", color: "rgba(255,255,255,0.6)", marginTop: "3px", fontWeight: 500 }}>{label}</div>
                 </div>
               ))}
             </motion.div>
+
           </motion.div>
         </div>
 
@@ -450,8 +267,7 @@ function LandingPage({ onNavigate }) {
               animate={{ width: heroIndex === i ? "24px" : "6px", opacity: heroIndex === i ? 1 : 0.4 }}
               transition={{ duration: 0.3 }}
               onClick={() => setHeroIndex(i)}
-              style={{ height: "6px", borderRadius: "3px", background: "#fff", cursor: "pointer" }}
-            />
+              style={{ height: "6px", borderRadius: "3px", background: "#fff", cursor: "pointer" }} />
           ))}
         </div>
       </section>
@@ -465,11 +281,8 @@ function LandingPage({ onNavigate }) {
               <h2 style={{ fontSize: "clamp(28px, 3vw, 40px)", fontWeight: 900, letterSpacing: "-1px", color: "var(--text-primary)" }}>Happening across Africa</h2>
             </div>
             <motion.span whileHover={{ x: 4 }} onClick={() => onNavigate("signup")}
-              style={{ fontSize: "14px", fontWeight: 700, color: "#f5a623", cursor: "pointer" }}>
-              View all →
-            </motion.span>
+              style={{ fontSize: "14px", fontWeight: 700, color: "#f5a623", cursor: "pointer" }}>View all →</motion.span>
           </motion.div>
-
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(270px, 1fr))", gap: "20px" }}>
             {(events.length > 0 ? events : Array(8).fill(null)).map((ev, i) => (
               <motion.div key={i} variants={fadeUp}
@@ -479,26 +292,15 @@ function LandingPage({ onNavigate }) {
                 <div style={{ height: "190px", position: "relative", background: "var(--bg-subtle)" }}>
                   {ev ? (
                     <>
-                      <img src={ev.image || catImg[ev.category] || catImg.other} alt={ev.name}
-                        style={{ width: "100%", height: "100%", objectFit: "cover" }}
-                        onError={e => { e.target.src = catImg.other; }} />
+                      <img src={ev.image || catImg[ev.category] || catImg.other} alt={ev.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} onError={e => { e.target.src = catImg.other; }} />
                       <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to bottom, transparent 35%, rgba(0,0,0,0.6))" }} />
-                      <div style={{ position: "absolute", top: "12px", left: "12px", padding: "4px 10px", borderRadius: "99px", background: "#f5a623", color: "#fff", fontSize: "10px", fontWeight: 700 }}>
-                        {ev.category}
-                      </div>
-                      {parseFloat(ev.price) === 0 && (
-                        <div style={{ position: "absolute", top: "12px", right: "12px", padding: "4px 10px", borderRadius: "99px", background: "#16a34a", color: "#fff", fontSize: "10px", fontWeight: 700 }}>
-                          FREE
-                        </div>
-                      )}
+                      <div style={{ position: "absolute", top: "12px", left: "12px", padding: "4px 10px", borderRadius: "99px", background: "#f5a623", color: "#fff", fontSize: "10px", fontWeight: 700 }}>{ev.category}</div>
+                      {parseFloat(ev.price) === 0 && <div style={{ position: "absolute", top: "12px", right: "12px", padding: "4px 10px", borderRadius: "99px", background: "#16a34a", color: "#fff", fontSize: "10px", fontWeight: 700 }}>FREE</div>}
                       <div style={{ position: "absolute", bottom: "10px", left: "12px", display: "flex", alignItems: "center", gap: "4px", background: "rgba(124,58,237,0.85)", backdropFilter: "blur(8px)", padding: "3px 8px", borderRadius: "99px" }}>
-                        <span style={{ fontSize: "8px" }}>⛓️</span>
-                        <span style={{ fontSize: "8px", fontWeight: 700, color: "#fff" }}>NFT Ticket</span>
+                        <span style={{ fontSize: "8px" }}>⛓️</span><span style={{ fontSize: "8px", fontWeight: 700, color: "#fff" }}>NFT Ticket</span>
                       </div>
                     </>
-                  ) : (
-                    <div className="skeleton" style={{ position: "absolute", inset: 0, borderRadius: 0 }} />
-                  )}
+                  ) : <div className="skeleton" style={{ position: "absolute", inset: 0, borderRadius: 0 }} />}
                 </div>
                 <div style={{ padding: "16px" }}>
                   {ev ? (
@@ -506,9 +308,7 @@ function LandingPage({ onNavigate }) {
                       <div style={{ fontWeight: 700, fontSize: "15px", color: "var(--text-primary)", marginBottom: "6px", lineHeight: 1.3 }}>{ev.name}</div>
                       <div style={{ fontSize: "12px", color: "var(--text-muted)", marginBottom: "14px" }}>📅 {ev.date} · 📍 {ev.venue}</div>
                       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                        <span style={{ fontWeight: 800, fontSize: "17px", color: "#f5a623" }}>
-                          {parseFloat(ev.price) === 0 ? "FREE" : "Ghc " + ev.price}
-                        </span>
+                        <span style={{ fontWeight: 800, fontSize: "17px", color: "#f5a623" }}>{parseFloat(ev.price) === 0 ? "FREE" : "Ghc " + ev.price}</span>
                         <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
                           style={{ padding: "8px 16px", borderRadius: "10px", background: "linear-gradient(135deg, #f5a623, #e8920f)", color: "#fff", fontSize: "12px", fontWeight: 700, border: "none", cursor: "pointer", boxShadow: "0 4px 12px rgba(245,166,35,0.3)" }}>
                           Get Tickets
@@ -568,27 +368,21 @@ function LandingPage({ onNavigate }) {
               <div style={{ position: "absolute", bottom: 0, left: 0, width: "300px", height: "300px", borderRadius: "50%", background: "radial-gradient(circle, rgba(124,58,237,0.08) 0%, transparent 70%)", transform: "translate(-30%, 30%)", pointerEvents: "none" }} />
               <div style={{ maxWidth: "520px", position: "relative", zIndex: 1 }}>
                 <div style={{ fontSize: "10px", fontWeight: 700, letterSpacing: "2px", color: "#f5a623", marginBottom: "16px", fontFamily: "var(--font-mono)" }}>FOR EVENT ORGANIZERS</div>
-                <h2 style={{ fontSize: "clamp(28px, 3vw, 46px)", fontWeight: 900, color: "#fff", letterSpacing: "-1.5px", lineHeight: 1.1, marginBottom: "16px" }}>
-                  Ready to host<br />your next event?
-                </h2>
-                <p style={{ fontSize: "16px", color: "rgba(255,255,255,0.5)", lineHeight: 1.7, marginBottom: "32px" }}>
-                  Create events, sell blockchain-verified tickets, manage door staff, and receive 95% directly to your MoMo wallet.
-                </p>
+                <h2 style={{ fontSize: "clamp(28px, 3vw, 46px)", fontWeight: 900, color: "#fff", letterSpacing: "-1.5px", lineHeight: 1.1, marginBottom: "16px" }}>Ready to host<br />your next event?</h2>
+                <p style={{ fontSize: "16px", color: "rgba(255,255,255,0.5)", lineHeight: 1.7, marginBottom: "32px" }}>Create events, sell blockchain-verified tickets, manage door staff, and receive 95% directly to your MoMo wallet.</p>
                 <div style={{ display: "flex", gap: "12px", flexWrap: "wrap" }}>
-                  <motion.button whileHover={{ scale: 1.03, boxShadow: "0 16px 40px rgba(245,166,35,0.5)" }}
-                    whileTap={{ scale: 0.97 }} onClick={() => onNavigate("signup")}
+                  <motion.button whileHover={{ scale: 1.03, boxShadow: "0 16px 40px rgba(245,166,35,0.5)" }} whileTap={{ scale: 0.97 }} onClick={() => onNavigate("signup")}
                     style={{ padding: "14px 28px", borderRadius: "14px", background: "linear-gradient(135deg, #f5a623, #e8920f)", color: "#fff", fontWeight: 700, fontSize: "15px", border: "none", cursor: "pointer", boxShadow: "0 8px 28px rgba(245,166,35,0.4)" }}>
                     Start Selling Tickets
                   </motion.button>
-                  <motion.button whileHover={{ background: "rgba(255,255,255,0.1)" }}
-                    onClick={() => onNavigate("about")}
+                  <motion.button whileHover={{ background: "rgba(255,255,255,0.1)" }} onClick={() => onNavigate("about")}
                     style={{ padding: "14px 28px", borderRadius: "14px", background: "rgba(255,255,255,0.06)", color: "rgba(255,255,255,0.7)", fontWeight: 600, fontSize: "15px", border: "1px solid rgba(255,255,255,0.12)", cursor: "pointer", transition: "background 0.2s" }}>
                     Learn More
                   </motion.button>
                 </div>
               </div>
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px", flexShrink: 0, position: "relative", zIndex: 1 }}>
-                {[["95%", "Payout Rate"], ["NFT", "Tickets"], ["MoMo", "Payments"], ["QR", "Scanning"]].map(([val, label]) => (
+                {[["95%","Payout Rate"],["NFT","Tickets"],["MoMo","Payments"],["QR","Scanning"]].map(([val, label]) => (
                   <motion.div key={label} whileHover={{ scale: 1.05, background: "rgba(255,255,255,0.1)" }}
                     style={{ padding: "20px", borderRadius: "16px", textAlign: "center", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", width: "110px", transition: "all 0.2s" }}>
                     <div style={{ fontWeight: 900, fontSize: "22px", color: "#f5a623", marginBottom: "4px" }}>{val}</div>
@@ -615,8 +409,7 @@ function LandingPage({ onNavigate }) {
                 { name: "Ama Owusu",    role: "Concert Attendee · Kumasi", quote: "I love that my ticket is an NFT — I can transfer it to my friend and it just works. No more fake tickets at the gate." },
                 { name: "Kofi Mensah",  role: "Tech Conference Organizer", quote: "The blockchain verification at the door was seamless. Our door staff just scanned QR codes and it told them instantly if the ticket was valid." },
               ].map((t, i) => (
-                <motion.div key={i} variants={fadeUp}
-                  whileHover={{ y: -5, boxShadow: "var(--shadow-lg)" }}
+                <motion.div key={i} variants={fadeUp} whileHover={{ y: -5, boxShadow: "var(--shadow-lg)" }}
                   style={{ background: "var(--bg-card)", borderRadius: "20px", padding: "28px", border: "1px solid var(--border)", boxShadow: "var(--shadow-sm)", transition: "all 0.25s" }}>
                   <div style={{ fontSize: "36px", color: "#f5a623", fontWeight: 900, lineHeight: 1, marginBottom: "16px", fontFamily: "Georgia, serif" }}>"</div>
                   <p style={{ fontSize: "14px", color: "var(--text-secondary)", lineHeight: 1.75, marginBottom: "20px" }}>{t.quote}</p>
@@ -647,9 +440,9 @@ function LandingPage({ onNavigate }) {
             </div>
             <div style={{ display: "flex", gap: "56px", flexWrap: "wrap" }}>
               {[
-                { title: "Platform", links: [["Browse Events", "#events"], ["Create Event", "signup"], ["Resale Market", "#"]] },
-                { title: "Company",  links: [["About", "about"], ["Contact", "mailto:mastereventgh@gmail.com"]] },
-                { title: "Legal",    links: [["Privacy", "#"], ["Terms", "#"], ["Security", "#"]] },
+                { title: "Platform", links: [["Browse Events","#events"],["Create Event","signup"],["Resale Market","#"]] },
+                { title: "Company",  links: [["About","about"],["Contact","mailto:mastereventgh@gmail.com"]] },
+                { title: "Legal",    links: [["Privacy","#"],["Terms","#"],["Security","#"]] },
               ].map(col => (
                 <div key={col.title}>
                   <div style={{ fontWeight: 700, fontSize: "11px", letterSpacing: "1.2px", color: "var(--text-muted)", marginBottom: "14px", textTransform: "uppercase", fontFamily: "var(--font-mono)" }}>{col.title}</div>
@@ -667,9 +460,7 @@ function LandingPage({ onNavigate }) {
             </div>
           </div>
           <div style={{ borderTop: "1px solid var(--border)", paddingTop: "24px", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "12px" }}>
-            <span style={{ fontSize: "12px", color: "var(--text-muted)", fontFamily: "var(--font-mono)" }}>
-              © 2026 Master Events Ghana · Secured by Polygon Blockchain
-            </span>
+            <span style={{ fontSize: "12px", color: "var(--text-muted)", fontFamily: "var(--font-mono)" }}>© 2026 Master Events Ghana · Secured by Polygon Blockchain</span>
             <ThemeToggle compact={false} />
           </div>
         </div>
@@ -678,7 +469,6 @@ function LandingPage({ onNavigate }) {
   );
 }
 
-// ── About Page ────────────────────────────────────────────────
 function AboutPage({ onNavigate }) {
   return (
     <div style={{ minHeight: "100vh", background: "var(--bg)", fontFamily: "var(--font-sans)" }}>
@@ -697,8 +487,7 @@ function AboutPage({ onNavigate }) {
             { icon: "🌍", title: "Built for Africa",      body: "From Afrobeats concerts in Accra to tech summits in Lagos — Master Events is designed for Africa's vibrant and growing events scene.", color: "#7c3aed" },
             { icon: "👥", title: "The Team",              body: "Built by students at Ghana Communication Technology University (GCTU) as a final-year CS project — combining blockchain, mobile, and payments innovation.", color: "#0891b2" },
           ].map((item, i) => (
-            <motion.div key={i} variants={fadeUp}
-              whileHover={{ y: -3, boxShadow: "var(--shadow-lg)" }}
+            <motion.div key={i} variants={fadeUp} whileHover={{ y: -3, boxShadow: "var(--shadow-lg)" }}
               style={{ display: "flex", gap: "20px", background: "var(--bg-card)", borderRadius: "20px", padding: "28px", marginBottom: "14px", border: "1px solid var(--border)", boxShadow: "var(--shadow-sm)", transition: "all 0.2s" }}>
               <div style={{ width: "56px", height: "56px", borderRadius: "16px", background: item.color + "12", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "26px", flexShrink: 0, border: "1px solid " + item.color + "20" }}>{item.icon}</div>
               <div>
@@ -717,7 +506,6 @@ function AboutPage({ onNavigate }) {
   );
 }
 
-// ── Auth Split-Screen Panel ───────────────────────────────────
 export function AuthImagePanel({ image, title, headline, highlight, sub, features, stats }) {
   return (
     <div style={{ flex: 1, position: "relative", overflow: "hidden", display: "flex", alignItems: "flex-end", minHeight: "100vh" }}>
@@ -736,12 +524,12 @@ export function AuthImagePanel({ image, title, headline, highlight, sub, feature
         </h2>
         <p style={{ color: "rgba(255,255,255,0.55)", fontSize: "15px", lineHeight: 1.7, marginBottom: "32px" }}>{sub}</p>
         <div style={{ display: "flex", flexDirection: "column", gap: "12px", marginBottom: "36px" }}>
-          {features.map(([icon, title, sub]) => (
-            <div key={title} style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+          {features.map(([icon, ftitle, fsub]) => (
+            <div key={ftitle} style={{ display: "flex", alignItems: "center", gap: "12px" }}>
               <div style={{ width: "36px", height: "36px", borderRadius: "10px", background: "rgba(245,166,35,0.15)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "16px", flexShrink: 0, border: "1px solid rgba(245,166,35,0.2)" }}>{icon}</div>
               <div>
-                <div style={{ fontWeight: 700, fontSize: "13px", color: "#fff" }}>{title}</div>
-                <div style={{ fontSize: "11px", color: "rgba(255,255,255,0.38)", marginTop: "1px" }}>{sub}</div>
+                <div style={{ fontWeight: 700, fontSize: "13px", color: "#fff" }}>{ftitle}</div>
+                <div style={{ fontSize: "11px", color: "rgba(255,255,255,0.38)", marginTop: "1px" }}>{fsub}</div>
               </div>
             </div>
           ))}
@@ -759,7 +547,6 @@ export function AuthImagePanel({ image, title, headline, highlight, sub, feature
   );
 }
 
-// ── Main Export ───────────────────────────────────────────────
 export default function PhoneFrame({ children }) {
   const setScreen  = useStore(s => s.setScreen);
   const screen     = useStore(s => s.screen);

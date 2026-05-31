@@ -1,8 +1,11 @@
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import useStore from "../../store/useStore";
+import { ticketsAPI } from "../../api";
 
 const API = "https://master-events-backend.onrender.com";
+const BRAND   = "#F97316";
+const BRAND_D = "#EA6C0A";
 const isDesktop = () => window.innerWidth > 768;
 
 const categoryImages = {
@@ -15,46 +18,33 @@ const categoryImages = {
   other:    "https://images.unsplash.com/photo-1492684223066-81342ee5ff30?w=600",
 };
 
-export default function ResaleMarketplace() {
+export default function ResaleMarket() {
   const setScreen        = useStore(s => s.setScreen);
-  const setCheckoutEvent = useStore(s => s.setCheckoutEvent);
-  const setTicketQty     = useStore(s => s.setTicketQty);
+  const setViewingTicket = useStore(s => s.setViewingTicket);
   const currentUser      = useStore(s => s.currentUser);
-  const myTickets        = useStore(s => s.myTickets);
 
   const [listings,  setListings]  = useState([]);
   const [loading,   setLoading]   = useState(true);
-  const [buying,    setBuying]    = useState(null); // ticket_id being purchased
-  const [buyError,  setBuyError]  = useState("");
-  const [searchQ,   setSearchQ]   = useState("");
+  const [selected,  setSelected]  = useState(null);  // ticket being bought
+  const [paying,    setPaying]    = useState(false);
+  const [payError,  setPayError]  = useState("");
+  const [payDone,   setPayDone]   = useState(false);
+  const [newTicket, setNewTicket] = useState(null);
   const desktop = isDesktop();
 
   useEffect(() => {
-    fetch(`${API}/api/tickets/resale/`)
-      .then(r => r.json())
+    ticketsAPI.resaleListings()
       .then(data => { setListings(Array.isArray(data) ? data : []); setLoading(false); })
       .catch(() => setLoading(false));
   }, []);
 
-  const filtered = listings.filter(l =>
-    l.event?.name?.toLowerCase().includes(searchQ.toLowerCase()) ||
-    l.event?.venue?.toLowerCase().includes(searchQ.toLowerCase())
-  );
-
-  // Check if user already owns a ticket for this event
-  const ownsTicket = (eventId) =>
-    myTickets.some(t => t.event?.id === eventId && t.status === "active");
-
-  // Check if this is the user's own listing
-  const isOwnListing = (listing) =>
-    listing.seller === currentUser?.first_name;
-
   const handleBuy = async (listing) => {
-    if (!currentUser) { setScreen("login"); return; }
-    setBuying(listing.ticket_id);
-    setBuyError("");
+    if (paying) return;
+    setSelected(listing);
+    setPayError("");
+    setPaying(true);
 
-    const total        = listing.resale_price;
+    const total = Math.round(listing.resale_price * 100) / 100;
     const totalPesewas = Math.round(total * 100);
 
     // Load Paystack
@@ -67,250 +57,295 @@ export default function ResaleMarketplace() {
         document.head.appendChild(s);
       });
     } catch {
-      setBuyError("Failed to load payment gateway.");
-      setBuying(null); return;
+      setPayError("Failed to load payment gateway.");
+      setPaying(false); return;
     }
 
-    // Initialize via backend
+    // Initialize payment
     let accessCode, payRef;
     try {
       const token = localStorage.getItem("access_token") || "";
-      const res = await fetch(`${API}/api/payments/initialize/`, {
+      const initRes = await fetch(`${API}/api/payments/initialize/`, {
         method: "POST",
         headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
         body: JSON.stringify({
           amount:     total,
           event_id:   listing.event.id,
           event_name: listing.event.name,
-          quantity:   listing.quantity,
+          quantity:   1,
         }),
       });
-      const data = await res.json();
-      if (!res.ok || !data.access_code) {
-        setBuyError(data.error || "Failed to initialize payment.");
-        setBuying(null); return;
+      const initData = await initRes.json();
+      if (!initRes.ok || !initData.access_code) {
+        setPayError(initData.error || "Failed to initialize payment.");
+        setPaying(false); return;
       }
-      accessCode = data.access_code;
-      payRef     = data.reference;
+      accessCode = initData.access_code;
+      payRef     = initData.reference;
     } catch {
-      setBuyError("Connection error. Try again.");
-      setBuying(null); return;
+      setPayError("Connection error. Please try again.");
+      setPaying(false); return;
     }
 
-    // Open Paystack
+    // doHandle — prevents double fire
+    const doHandle = (() => {
+      let called = false;
+      return async (ref) => {
+        if (called) return;
+        called = true;
+        try {
+          const result = await ticketsAPI.buyResale({
+            ticket_id:         listing.ticket_id,
+            payment_reference: ref,
+          });
+          if (result._status === 201 || result.ticket_id) {
+            setNewTicket(result);
+            setPayDone(true);
+            setListings(prev => prev.filter(l => l.ticket_id !== listing.ticket_id));
+          } else {
+            setPayError(result.error || "Purchase failed. Please try again.");
+          }
+        } catch {
+          setPayError("Server error. Check My Tickets — your ticket may have been issued.");
+        } finally {
+          setPaying(false);
+        }
+      };
+    })();
+
+    const openPaystack = () => {
+      try {
+        const handler = window.PaystackPop.setup({
+          key:         import.meta.env.VITE_PAYSTACK_PUBLIC_KEY || "",
+          email:       currentUser?.email || "",
+          amount:      totalPesewas,
+          currency:    "GHS",
+          channels:    ["mobile_money", "card"],
+          ref:         payRef,
+          access_code: accessCode,
+          onClose:     () => { setPaying(false); },
+          callback:    (r) => { doHandle(r.reference || payRef); },
+        });
+        handler.openIframe();
+      } catch {
+        window.open(`https://checkout.paystack.com/${accessCode}`, "_blank");
+        setTimeout(() => { setPaying(false); setPayError("Complete payment in the new tab, then check My Tickets."); }, 3000);
+      }
+    };
+
     try {
       window.PaystackPop.resumeTransaction(accessCode, {
-        onClose: () => { setBuying(null); },
-        callback: async (r) => {
-          const ref = r.reference || payRef;
-          try {
-            const token = localStorage.getItem("access_token") || "";
-            const res = await fetch(`${API}/api/tickets/resale/buy/`, {
-              method: "POST",
-              headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
-              body: JSON.stringify({ ticket_id: listing.ticket_id, payment_reference: ref }),
-            });
-            const data = await res.json();
-            if (res.ok) {
-              // Remove from listings
-              setListings(prev => prev.filter(l => l.ticket_id !== listing.ticket_id));
-              // Add to store
-              useStore.getState().setViewingTicket({
-                id:           data.ticket_id,
-                ticket_id:    data.ticket_id,
-                event:        listing.event,
-                qty:          listing.quantity,
-                quantity:     listing.quantity,
-                status:       "active",
-                dynamic_qr:   data.dynamic_qr   || null,
-                qr_base64:    data.dynamic_qr   || null,
-                qr_image_url: data.qr_image_url || null,
-                qr_image:     data.qr_image     || null,
-                nft_tx_hash:  data.nft_tx_hash  || null,
-                nft_token_id: data.nft_token_id || null,
-                nft_minting:  true,
-                purchasedAt:  new Date().toLocaleDateString(),
-                owner: `${currentUser?.first_name || ""} ${currentUser?.last_name || ""}`.trim(),
-              });
-              setScreen("paymentSuccess");
-            } else {
-              setBuyError(data.error || "Purchase failed.");
-            }
-          } catch {
-            setBuyError("Connection error completing purchase.");
-          }
-          setBuying(null);
-        },
+        onClose:  () => { setPaying(false); },
+        callback: (r) => { doHandle(r.reference || payRef); },
       });
     } catch {
-      setBuying(null);
-      setBuyError("Payment gateway error.");
+      openPaystack();
     }
   };
+
+  // ── Payment success screen ──
+  if (payDone && newTicket) {
+    return (
+      <div style={{ background: "var(--bg)", minHeight: "100%", display: "flex", alignItems: "center", justifyContent: "center", padding: "24px" }}>
+        <motion.div initial={{ opacity: 0, scale: 0.92 }} animate={{ opacity: 1, scale: 1 }}
+          style={{ background: "var(--bg-card)", borderRadius: "22px", padding: desktop ? "40px 36px" : "28px 20px", maxWidth: "440px", width: "100%", textAlign: "center", border: "1px solid var(--border)", boxShadow: "var(--shadow-lg)" }}>
+          <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: "spring", stiffness: 400, damping: 20, delay: 0.1 }}
+            style={{ width: "72px", height: "72px", borderRadius: "50%", background: "#16a34a", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "32px", margin: "0 auto 20px", boxShadow: "0 4px 20px rgba(22,163,74,0.3)" }}>✅</motion.div>
+          <h2 style={{ fontSize: "22px", fontWeight: 800, color: "var(--text-primary)", marginBottom: "8px", letterSpacing: "-0.5px" }}>Ticket Purchased!</h2>
+          <p style={{ color: "var(--text-muted)", fontSize: "14px", lineHeight: 1.6, marginBottom: "24px" }}>
+            Your resale ticket for <strong style={{ color: "var(--text-primary)" }}>{selected?.event?.name}</strong> is confirmed. NFT minting on Polygon.
+          </p>
+          <div style={{ background: "rgba(124,58,237,0.05)", border: "1px solid rgba(124,58,237,0.15)", borderRadius: "12px", padding: "12px 16px", marginBottom: "22px", display: "flex", alignItems: "center", gap: "10px" }}>
+            <span style={{ fontSize: "18px" }}>⛓️</span>
+            <div style={{ textAlign: "left" }}>
+              <div style={{ fontSize: "12px", fontWeight: 700, color: "#7c3aed" }}>NFT Ownership Transfer</div>
+              <div style={{ fontSize: "11px", color: "var(--text-muted)", marginTop: "2px" }}>On-chain transfer in progress · Polygon Amoy</div>
+            </div>
+          </div>
+          <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}
+            onClick={() => {
+              if (newTicket) setViewingTicket(newTicket);
+              setScreen("ticketView");
+            }}
+            style={{ width: "100%", padding: "15px", background: `linear-gradient(135deg, ${BRAND}, ${BRAND_D})`, color: "#fff", border: "none", borderRadius: "13px", fontSize: "15px", fontWeight: 700, cursor: "pointer", boxShadow: "var(--shadow-brand)", marginBottom: "10px", fontFamily: "var(--font-sans)" }}>
+            View My Ticket
+          </motion.button>
+          <motion.button whileTap={{ scale: 0.97 }} onClick={() => setScreen("app")}
+            style={{ width: "100%", padding: "13px", background: "transparent", border: "1px solid var(--border)", borderRadius: "13px", color: "var(--text-muted)", cursor: "pointer", fontSize: "14px", fontFamily: "var(--font-sans)" }}>
+            Back to Events
+          </motion.button>
+        </motion.div>
+      </div>
+    );
+  }
 
   return (
     <div style={{ background: "var(--bg)", minHeight: "100%", paddingBottom: desktop ? "60px" : "100px" }}>
 
       {/* Header */}
-      <div style={{ padding: desktop ? "32px 40px 0" : "16px 16px 0" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "6px" }}>
-          <motion.button whileTap={{ scale: 0.9 }} onClick={() => setScreen("app")}
-            style={{ background: "none", border: "none", cursor: "pointer", color: "var(--text-muted)", fontSize: "20px", padding: 0, display: desktop ? "none" : "block" }}>
-            ←
-          </motion.button>
-          <h1 style={{ fontSize: desktop ? "26px" : "22px", fontWeight: 900, color: "var(--text-primary)", letterSpacing: "-0.5px", margin: 0 }}>
-            Resale Market
-          </h1>
-        </div>
-        <p style={{ fontSize: "13px", color: "var(--text-muted)", marginBottom: "16px" }}>
-          Fan-to-fan ticket resales · NFT ownership transfers on Polygon · 2% fee
-        </p>
+      <div style={{ padding: desktop ? "28px 40px 0" : "16px 16px 0" }}>
+        <motion.button whileTap={{ scale: 0.9 }} onClick={() => setScreen("app")}
+          style={{ display: "flex", alignItems: "center", gap: "8px", background: "none", border: "none", cursor: "pointer", color: "var(--text-muted)", fontSize: "13px", fontWeight: 500, padding: "0 0 16px", fontFamily: "var(--font-sans)" }}>
+          ← Back
+        </motion.button>
 
-        {/* Search */}
-        <div style={{ position: "relative", maxWidth: desktop ? "480px" : "100%", marginBottom: "20px" }}>
-          <div style={{ position: "absolute", left: "14px", top: "50%", transform: "translateY(-50%)", pointerEvents: "none", fontSize: "14px" }}>🔍</div>
-          <input value={searchQ} onChange={e => setSearchQ(e.target.value)}
-            placeholder="Search events or venues..."
-            style={{ width: "100%", padding: "12px 40px 12px 40px", border: "1.5px solid var(--border)", borderRadius: "14px", fontSize: "14px", outline: "none", background: "var(--bg-card)", color: "var(--text-primary)", boxSizing: "border-box", fontFamily: "var(--font-sans)" }}
-          />
-          {searchQ && <div onClick={() => setSearchQ("")} style={{ position: "absolute", right: "14px", top: "50%", transform: "translateY(-50%)", cursor: "pointer", color: "var(--text-muted)" }}>✕</div>}
+        <div style={{ display: "flex", alignItems: "center", gap: "14px", marginBottom: "6px" }}>
+          <div style={{ width: "42px", height: "42px", borderRadius: "13px", background: "linear-gradient(135deg, #7c3aed, #2563eb)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "20px", flexShrink: 0 }}>🏷️</div>
+          <div>
+            <h1 style={{ fontWeight: 900, fontSize: desktop ? "26px" : "20px", color: "var(--text-primary)", letterSpacing: "-0.6px", marginBottom: "3px" }}>Resale Market</h1>
+            <div style={{ fontSize: "11px", color: "var(--text-muted)", fontFamily: "var(--font-mono)" }}>FAN_TO_FAN · NFT_TRANSFER · 2%_FEE</div>
+          </div>
         </div>
 
-        {/* Error */}
-        <AnimatePresence>
-          {buyError && (
-            <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
-              style={{ background: "var(--error-bg)", border: "1px solid rgba(220,38,38,0.2)", borderRadius: "12px", padding: "12px 16px", marginBottom: "16px", color: "var(--error)", fontSize: "13px" }}>
-              ⚠️ {buyError}
-            </motion.div>
-          )}
-        </AnimatePresence>
+        {/* Info strip */}
+        <div style={{ display: "flex", gap: "8px", marginTop: "16px", marginBottom: "4px", flexWrap: "wrap" }}>
+          {[
+            ["🔒", "Secure checkout via Paystack"],
+            ["⛓️", "NFT transfers on-chain automatically"],
+            ["💰", "Seller keeps 98% of sale"],
+          ].map(([icon, text]) => (
+            <div key={text} style={{ display: "flex", alignItems: "center", gap: "5px", padding: "5px 11px", borderRadius: "99px", background: "var(--bg-subtle)", border: "1px solid var(--border)" }}>
+              <span style={{ fontSize: "11px" }}>{icon}</span>
+              <span style={{ fontSize: "10px", color: "var(--text-secondary)", fontWeight: 600 }}>{text}</span>
+            </div>
+          ))}
+        </div>
       </div>
 
-      {/* Listings */}
-      <div style={{ padding: desktop ? "0 40px" : "0 16px" }}>
+      {/* Error banner */}
+      <AnimatePresence>
+        {payError && (
+          <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
+            style={{ margin: desktop ? "12px 40px 0" : "12px 16px 0", background: "var(--error-bg)", border: "1px solid rgba(220,38,38,0.2)", borderRadius: "12px", padding: "12px 16px", color: "var(--error)", fontSize: "13px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <span>⚠️ {payError}</span>
+            <motion.div whileTap={{ scale: 0.9 }} onClick={() => setPayError("")}
+              style={{ cursor: "pointer", fontWeight: 700, fontSize: "14px", color: "var(--text-muted)" }}>✕</motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
-        {/* Skeleton */}
-        {loading && (
-          <div style={{ display: "grid", gridTemplateColumns: desktop ? "repeat(3, 1fr)" : "1fr", gap: "14px" }}>
+      {/* Listings */}
+      <div style={{ padding: desktop ? "16px 40px 0" : "14px 16px 0" }}>
+        {loading ? (
+          <div style={{ display: "grid", gridTemplateColumns: desktop ? "repeat(3,1fr)" : "1fr", gap: desktop ? "18px" : "12px" }}>
             {[1,2,3].map(i => (
-              <div key={i} style={{ background: "var(--bg-card)", borderRadius: "18px", overflow: "hidden", border: "1px solid var(--border)" }}>
-                <div className="skeleton" style={{ height: "160px" }} />
+              <div key={i} style={{ background: "var(--bg-card)", borderRadius: "16px", overflow: "hidden", border: "1px solid var(--border)" }}>
+                <div className="skeleton" style={{ height: "180px" }} />
                 <div style={{ padding: "14px" }}>
-                  <div className="skeleton" style={{ height: "14px", width: "70%", marginBottom: "8px", borderRadius: "6px" }} />
-                  <div className="skeleton" style={{ height: "12px", width: "45%", borderRadius: "6px" }} />
+                  <div className="skeleton" style={{ height: "14px", width: "70%", marginBottom: "10px" }} />
+                  <div className="skeleton" style={{ height: "11px", width: "45%" }} />
                 </div>
               </div>
             ))}
           </div>
-        )}
-
-        {/* Empty */}
-        {!loading && filtered.length === 0 && (
+        ) : listings.length === 0 ? (
           <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
-            style={{ textAlign: "center", padding: "80px 20px" }}>
-            <div style={{ fontSize: "52px", marginBottom: "16px" }}>🏷️</div>
-            <div style={{ fontWeight: 700, fontSize: "17px", color: "var(--text-primary)", marginBottom: "8px" }}>
-              {searchQ ? "No listings match your search" : "No resale tickets right now"}
-            </div>
-            <div style={{ fontSize: "13px", color: "var(--text-muted)", marginBottom: "24px" }}>
-              {searchQ ? "Try a different search" : "Check back later — fans list tickets here when they can't attend"}
-            </div>
-            <motion.button whileTap={{ scale: 0.97 }} onClick={() => setScreen("app")}
-              style={{ padding: "12px 28px", background: "var(--brand)", color: "#fff", border: "none", borderRadius: "12px", fontWeight: 700, fontSize: "14px", cursor: "pointer", fontFamily: "var(--font-sans)", boxShadow: "var(--shadow-brand)" }}>
-              Browse Events
-            </motion.button>
+            style={{ textAlign: "center", padding: "80px 24px", background: "var(--bg-card)", borderRadius: "20px", border: "1px solid var(--border)", marginTop: "8px" }}>
+            <div style={{ fontSize: "48px", marginBottom: "14px" }}>🏷️</div>
+            <div style={{ fontWeight: 800, fontSize: "17px", color: "var(--text-primary)", marginBottom: "8px" }}>No resale listings</div>
+            <div style={{ fontSize: "13px", color: "var(--text-muted)", lineHeight: 1.6 }}>When attendees list tickets for resale, they'll appear here.</div>
           </motion.div>
-        )}
-
-        {/* Cards */}
-        {!loading && filtered.length > 0 && (
-          <div style={{ display: "grid", gridTemplateColumns: desktop ? "repeat(3, 1fr)" : "1fr", gap: "14px" }}>
-            {filtered.map((listing, i) => {
-              const ev        = listing.event;
-              const isBuying  = buying === listing.ticket_id;
-              const isOwn     = isOwnListing(listing);
-              const alreadyOwns = ownsTicket(ev?.id);
-              const discount  = ev ? Math.round(((listing.original_price - listing.resale_price) / listing.original_price) * 100) : 0;
-              const image     = ev?.image || categoryImages[ev?.category] || categoryImages.other;
+        ) : (
+          <div style={{ display: "grid", gridTemplateColumns: desktop ? "repeat(3,1fr)" : "1fr", gap: desktop ? "18px" : "12px" }}>
+            {listings.map((listing, i) => {
+              const ev          = listing.event;
+              const isBuying    = paying && selected?.ticket_id === listing.ticket_id;
+              const isOwn       = listing.seller === currentUser?.first_name;
+              const img         = ev.image || categoryImages[ev.category] || categoryImages.other;
+              const savingsPct  = Math.round(((listing.original_price - listing.resale_price) / listing.original_price) * 100);
 
               return (
                 <motion.div key={listing.ticket_id}
-                  initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: i * 0.04 }}
+                  initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}
                   style={{ background: "var(--bg-card)", borderRadius: "18px", overflow: "hidden", border: "1px solid var(--border)", boxShadow: "var(--shadow-sm)" }}>
 
-                  {/* Image */}
+                  {/* Event image */}
                   <div style={{ height: "160px", position: "relative" }}>
-                    <img src={image} alt={ev?.name}
-                      style={{ width: "100%", height: "100%", objectFit: "cover" }}
-                      onError={e => { e.target.src = categoryImages.other; }}
-                    />
-                    <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to bottom, rgba(0,0,0,0.05), rgba(0,0,0,0.65))" }} />
+                    <img src={img} alt={ev.name} style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                      onError={e => { e.target.src = categoryImages.other; }} />
+                    <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to bottom, rgba(0,0,0,0.05), rgba(0,0,0,0.72))" }} />
 
-                    {/* Discount badge */}
-                    {discount > 0 && (
-                      <div style={{ position: "absolute", top: "10px", left: "10px", background: "#16a34a", color: "#fff", fontSize: "10px", fontWeight: 700, padding: "3px 8px", borderRadius: "99px" }}>
-                        {discount}% OFF
+                    {/* NFT badge */}
+                    <div style={{ position: "absolute", top: "10px", left: "10px", display: "flex", alignItems: "center", gap: "4px", background: "rgba(124,58,237,0.85)", backdropFilter: "blur(8px)", padding: "3px 9px", borderRadius: "99px" }}>
+                      <span style={{ fontSize: "8px" }}>⛓️</span>
+                      <span style={{ fontSize: "8px", fontWeight: 700, color: "#fff", fontFamily: "var(--font-mono)" }}>NFT</span>
+                    </div>
+
+                    {/* Savings badge */}
+                    {savingsPct > 0 && (
+                      <div style={{ position: "absolute", top: "10px", right: "10px", background: "#16a34a", color: "#fff", fontSize: "9px", fontWeight: 700, padding: "3px 9px", borderRadius: "99px", fontFamily: "var(--font-mono)" }}>
+                        -{savingsPct}%
                       </div>
                     )}
 
-                    {/* NFT badge */}
-                    <div style={{ position: "absolute", top: "10px", right: "10px", display: "flex", alignItems: "center", gap: "4px", background: "rgba(124,58,237,0.88)", backdropFilter: "blur(8px)", padding: "3px 8px", borderRadius: "99px" }}>
-                      <span style={{ fontSize: "9px" }}>⛓️</span>
-                      <span style={{ fontSize: "9px", fontWeight: 700, color: "#fff" }}>NFT</span>
-                    </div>
-
-                    {/* Event name overlay */}
+                    {/* Event name at bottom */}
                     <div style={{ position: "absolute", bottom: "10px", left: "12px", right: "12px" }}>
-                      <div style={{ color: "#fff", fontWeight: 700, fontSize: "14px", lineHeight: 1.2, marginBottom: "2px" }}>{ev?.name}</div>
-                      <div style={{ color: "rgba(255,255,255,0.65)", fontSize: "10px" }}>📍 {ev?.venue} · {ev?.date}</div>
+                      <div style={{ color: "#fff", fontWeight: 700, fontSize: "14px", lineHeight: 1.25, marginBottom: "2px" }}>{ev.name}</div>
+                      <div style={{ color: "rgba(255,255,255,0.6)", fontSize: "10px", fontFamily: "var(--font-mono)" }}>📍 {ev.venue} · {ev.date}</div>
                     </div>
                   </div>
 
-                  {/* Body */}
-                  <div style={{ padding: "12px 14px" }}>
-                    {/* Price */}
-                    <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "10px" }}>
-                      <div style={{ fontSize: "22px", fontWeight: 800, color: "var(--brand)", letterSpacing: "-0.5px" }}>
-                        GHS {listing.resale_price}
-                      </div>
-                      {listing.original_price !== listing.resale_price && (
-                        <div style={{ fontSize: "12px", color: "var(--text-muted)", textDecoration: "line-through" }}>
-                          GHS {listing.original_price}
+                  {/* Card body */}
+                  <div style={{ padding: "14px 16px" }}>
+                    {/* Price row */}
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginBottom: "12px" }}>
+                      <div>
+                        <div style={{ fontSize: "22px", fontWeight: 900, color: BRAND, letterSpacing: "-0.5px", lineHeight: 1 }}>
+                          GHS {listing.resale_price.toLocaleString()}
                         </div>
-                      )}
+                        <div style={{ fontSize: "11px", color: "var(--text-muted)", marginTop: "3px", fontFamily: "var(--font-mono)" }}>
+                          Original: GHS {listing.original_price.toLocaleString()}
+                        </div>
+                      </div>
+                      <div style={{ textAlign: "right" }}>
+                        <div style={{ fontSize: "10px", color: "var(--text-muted)", fontFamily: "var(--font-mono)" }}>Sold by</div>
+                        <div style={{ fontSize: "12px", fontWeight: 700, color: "var(--text-primary)" }}>{listing.seller || "Fan"}</div>
+                      </div>
                     </div>
 
-                    {/* Seller + qty */}
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "12px" }}>
-                      <div style={{ fontSize: "11px", color: "var(--text-muted)" }}>
-                        Sold by <span style={{ color: "var(--text-secondary)", fontWeight: 600 }}>{listing.seller}</span>
-                        {isOwn && <span style={{ color: "#f5a623", marginLeft: "4px" }}>(you)</span>}
-                      </div>
-                      <div style={{ fontSize: "11px", color: "var(--text-muted)" }}>×{listing.quantity}</div>
+                    {/* Ticket meta */}
+                    <div style={{ display: "flex", gap: "8px", marginBottom: "14px", flexWrap: "wrap" }}>
+                      {[
+                        ["🎟️", listing.quantity + "x ticket"],
+                        ...(listing.nft_token_id ? [["⛓️", "NFT #" + listing.nft_token_id]] : [["⛓️", "NFT verified"]]),
+                      ].map(([icon, text]) => (
+                        <div key={text} style={{ display: "flex", alignItems: "center", gap: "4px", padding: "3px 9px", borderRadius: "99px", background: "var(--bg-subtle)", border: "1px solid var(--border)" }}>
+                          <span style={{ fontSize: "10px" }}>{icon}</span>
+                          <span style={{ fontSize: "10px", color: "var(--text-secondary)", fontWeight: 600, fontFamily: "var(--font-mono)" }}>{text}</span>
+                        </div>
+                      ))}
                     </div>
 
                     {/* Buy button */}
                     {isOwn ? (
-                      <div style={{ width: "100%", padding: "11px", background: "var(--bg-subtle)", borderRadius: "11px", textAlign: "center", fontSize: "12px", color: "var(--text-muted)", border: "1px solid var(--border)" }}>
+                      <div style={{ textAlign: "center", padding: "10px", background: "var(--bg-subtle)", borderRadius: "11px", fontSize: "12px", color: "var(--text-muted)", fontWeight: 600 }}>
                         Your listing
                       </div>
-                    ) : alreadyOwns ? (
-                      <div style={{ width: "100%", padding: "11px", background: "var(--bg-subtle)", borderRadius: "11px", textAlign: "center", fontSize: "12px", color: "var(--text-muted)", border: "1px solid var(--border)" }}>
-                        You own this event's ticket
-                      </div>
                     ) : (
-                      <motion.button whileTap={{ scale: 0.96 }} onClick={() => handleBuy(listing)}
-                        disabled={!!buying}
-                        style={{ width: "100%", padding: "11px", background: isBuying ? "var(--bg-subtle)" : "var(--brand)", color: isBuying ? "var(--text-muted)" : "#fff", border: "none", borderRadius: "11px", fontSize: "13px", fontWeight: 700, cursor: buying ? "not-allowed" : "pointer", fontFamily: "var(--font-sans)", display: "flex", alignItems: "center", justifyContent: "center", gap: "8px", transition: "all 0.2s" }}>
+                      <motion.button
+                        whileHover={!isBuying ? { scale: 1.02 } : {}}
+                        whileTap={!isBuying ? { scale: 0.97 } : {}}
+                        onClick={() => handleBuy(listing)}
+                        disabled={isBuying || paying}
+                        style={{
+                          width: "100%", padding: "13px",
+                          background: isBuying ? "var(--bg-subtle)" : `linear-gradient(135deg, ${BRAND}, ${BRAND_D})`,
+                          color: isBuying ? "var(--text-muted)" : "#fff",
+                          border: "none", borderRadius: "11px",
+                          fontSize: "14px", fontWeight: 700,
+                          cursor: isBuying || paying ? "not-allowed" : "pointer",
+                          boxShadow: isBuying ? "none" : "var(--shadow-brand)",
+                          display: "flex", alignItems: "center", justifyContent: "center", gap: "8px",
+                          fontFamily: "var(--font-sans)", transition: "all 0.2s",
+                          opacity: paying && !isBuying ? 0.5 : 1,
+                        }}>
                         {isBuying ? (
                           <>
                             <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 0.7, ease: "linear" }}
-                              style={{ width: "14px", height: "14px", borderRadius: "50%", border: "2px solid rgba(0,0,0,0.2)", borderTopColor: "var(--text-muted)", flexShrink: 0 }} />
+                              style={{ width: "16px", height: "16px", borderRadius: "50%", border: "2px solid rgba(0,0,0,0.2)", borderTopColor: "var(--text-muted)", flexShrink: 0 }} />
                             Processing...
                           </>
-                        ) : `Buy for GHS ${listing.resale_price} →`}
+                        ) : `Buy for GHS ${listing.resale_price.toLocaleString()} →`}
                       </motion.button>
                     )}
                   </div>
@@ -320,17 +355,6 @@ export default function ResaleMarketplace() {
           </div>
         )}
       </div>
-
-      {/* Stats footer */}
-      {!loading && listings.length > 0 && (
-        <div style={{ margin: desktop ? "32px 40px 0" : "24px 16px 0", padding: "14px 16px", borderRadius: "14px", background: "rgba(124,58,237,0.04)", border: "1px solid rgba(124,58,237,0.12)", display: "flex", alignItems: "center", gap: "12px" }}>
-          <div style={{ width: "36px", height: "36px", borderRadius: "10px", background: "linear-gradient(135deg, #7c3aed, #2563eb)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "16px", flexShrink: 0 }}>⛓️</div>
-          <div>
-            <div style={{ fontSize: "11px", fontWeight: 700, color: "#7c3aed", marginBottom: "2px" }}>NFT OWNERSHIP TRANSFER</div>
-            <div style={{ fontSize: "11px", color: "var(--text-muted)" }}>When you buy a resale ticket, NFT ownership moves to your wallet on Polygon automatically.</div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

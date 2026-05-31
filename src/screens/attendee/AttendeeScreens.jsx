@@ -226,20 +226,23 @@ export function AttendeeTickets() {
 }
 
 export function AttendeeAlerts() {
-  const myTickets = useStore(s => s.myTickets);
-  const desktop = isDesktop();
+  const myTickets    = useStore(s => s.myTickets);
+  const setViewingTicket = useStore(s => s.setViewingTicket);
+  const setScreen    = useStore(s => s.setScreen);
+  const desktop      = isDesktop();
 
   const alerts = myTickets.length > 0 ? [
-    // Blockchain confirmation alerts first
+    // Blockchain confirmation alerts
     ...myTickets
       .filter(t => t.nft_tx_hash)
       .map(t => ({
-        icon: "⛓️",
-        color: "#7c3aed",
-        title: "NFT Confirmed on Polygon",
-        body: `Your ticket for ${t.event?.name} has been minted as NFT #${t.nft_token_id || "✓"} on the Polygon blockchain.`,
-        time: t.purchasedAt || "Recently",
-        txHash: t.nft_tx_hash,
+        icon:    "⛓️",
+        color:   "#7c3aed",
+        title:   "NFT Confirmed on Polygon",
+        body:    `Your ticket for ${t.event?.name} has been minted on the Polygon blockchain.`,
+        time:    t.purchasedAt || "Recently",
+        txHash:  t.nft_tx_hash,
+        ticket:  t,
       })),
     // Status alerts
     ...myTickets.map(t => ({
@@ -248,22 +251,23 @@ export function AttendeeAlerts() {
       title: t.status === "redeemed" ? "Ticket Used at Event"
            : t.status === "resale"   ? "Listed on Resale Market"
            :                           "NFT Ticket Purchased",
-      body: `Your ticket for ${t.event?.name} on ${t.event?.date}.`,
-      time: t.purchasedAt || "Recently",
+      body:   `Your ticket for ${t.event?.name} on ${t.event?.date} at ${t.event?.venue}.`,
+      time:   t.purchasedAt || "Recently",
       txHash: null,
+      ticket: t,
     })),
   ] : [{
     icon: "🔔", color: "#f5a623",
     title: "No alerts yet",
-    body: "Purchase a ticket and your blockchain confirmations will appear here.",
-    time: "Now",
+    body:  "Purchase a ticket and your blockchain confirmations will appear here.",
+    time:  "Now",
     txHash: null,
+    ticket: null,
   }];
 
   return (
     <div style={{ background: "var(--bg)", minHeight: "100%", padding: desktop ? "32px 40px 100px" : "16px 16px 100px" }}>
 
-      {/* Header */}
       <div style={{ marginBottom: "20px" }}>
         <div style={{ fontWeight: 900, fontSize: desktop ? "28px" : "22px", color: "var(--text-primary)", letterSpacing: "-0.5px", marginBottom: "6px" }}>Alerts</div>
         <div style={{ fontSize: "13px", color: "var(--text-muted)" }}>Blockchain confirmations & ticket activity</div>
@@ -275,21 +279,32 @@ export function AttendeeAlerts() {
             whileHover={{ y: -2, boxShadow: "var(--shadow-md)" }}
             style={{ background: "var(--bg-card)", borderRadius: "16px", padding: "14px 16px", marginBottom: "10px", display: "flex", gap: "12px", alignItems: "flex-start", boxShadow: "var(--shadow-sm)", border: "1px solid var(--border)", transition: "box-shadow 0.2s" }}>
 
-            {/* Icon */}
             <div style={{ width: "42px", height: "42px", borderRadius: "12px", background: a.color + "15", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "20px", flexShrink: 0, border: `1px solid ${a.color}25` }}>
               {a.icon}
             </div>
 
-            {/* Content */}
             <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{ fontWeight: 700, fontSize: "13px", color: "var(--text-primary)", marginBottom: "3px" }}>{a.title}</div>
-              <div style={{ fontSize: "12px", color: "var(--text-secondary)", lineHeight: 1.5, marginBottom: "6px" }}>{a.body}</div>
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+              <div style={{ fontSize: "12px", color: "var(--text-secondary)", lineHeight: 1.5, marginBottom: "8px" }}>{a.body}</div>
+
+              <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
                 <div style={{ fontSize: "10px", color: "var(--text-muted)" }}>{a.time}</div>
+
+                {/* View ticket button */}
+                {a.ticket && a.ticket.ticket_id && (
+                  <motion.div whileTap={{ scale: 0.95 }}
+                    onClick={() => { setViewingTicket(a.ticket); setScreen("ticketView"); }}
+                    style={{ fontSize: "10px", fontWeight: 700, color: "#f5a623", cursor: "pointer", background: "rgba(245,166,35,0.08)", padding: "3px 8px", borderRadius: "99px", border: "1px solid rgba(245,166,35,0.2)" }}>
+                    View Ticket →
+                  </motion.div>
+                )}
+
+                {/* Verify on-chain — Amoy testnet */}
                 {a.txHash && (
-                  <a href={`https://polygonscan.com/tx/${a.txHash}`} target="_blank" rel="noreferrer"
+                  <a href={`https://amoy.polygonscan.com/tx/${a.txHash}`}
+                    target="_blank" rel="noreferrer"
                     style={{ fontSize: "10px", fontWeight: 700, color: "#7c3aed", textDecoration: "none", background: "rgba(124,58,237,0.08)", padding: "3px 8px", borderRadius: "99px", border: "1px solid rgba(124,58,237,0.15)" }}>
-                    View on chain ↗
+                    Verify on Amoy ↗
                   </a>
                 )}
               </div>
@@ -298,11 +313,10 @@ export function AttendeeAlerts() {
         ))}
       </div>
 
-      {/* Trust footer */}
       <div style={{ marginTop: "24px", padding: "14px 16px", borderRadius: "16px", background: "rgba(124,58,237,0.04)", border: "1px solid rgba(124,58,237,0.12)", display: "flex", alignItems: "center", gap: "12px", maxWidth: desktop ? "640px" : "100%" }}>
         <div style={{ width: "36px", height: "36px", borderRadius: "10px", background: "linear-gradient(135deg, #7c3aed, #2563eb)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "16px", flexShrink: 0 }}>⛓️</div>
         <div>
-          <div style={{ fontSize: "11px", fontWeight: 700, color: "#7c3aed", marginBottom: "2px" }}>POWERED BY POLYGON BLOCKCHAIN</div>
+          <div style={{ fontSize: "11px", fontWeight: 700, color: "#7c3aed", marginBottom: "2px" }}>POWERED BY POLYGON AMOY TESTNET</div>
           <div style={{ fontSize: "11px", color: "var(--text-muted)", lineHeight: 1.4 }}>All tickets are NFTs. Ownership is permanent, verifiable, and cannot be faked.</div>
         </div>
       </div>

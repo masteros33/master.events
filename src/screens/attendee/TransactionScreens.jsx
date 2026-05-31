@@ -581,40 +581,49 @@ export function Checkout() {
     } catch { setPayError("Connection error initializing payment."); setPaying(false); return; }
 
    // ── In Checkout, replace the doHandle + PaystackPop block ──
+// REPLACE WITH:
 const doHandle = (() => {
-  let called = false;  // ← prevents double-fire
+  let called = false;
   return (ref) => {
     if (called) return;
     called = true;
-    var tid = setTimeout(() => {
+    const tid = setTimeout(() => {
       setPaying(false);
-      setPayError("Server warming up. Payment received — check My Tickets in ~1 min. Ref: " + ref);
+      setPayError("Payment received — your ticket will appear in My Tickets shortly. Ref: " + ref);
     }, 90000);
     handleBuyTicket(ref)
       .then(() => { clearTimeout(tid); setPaying(false); })
-      .catch(() => { clearTimeout(tid); setPaying(false); setPayError("Ticket creation failed. Ref: " + ref); });
+      .catch(() => { clearTimeout(tid); setPaying(false); });
   };
 })();
 
+const openPaystack = () => {
+  try {
+    const handler = window.PaystackPop.setup({
+      key:         import.meta.env.VITE_PAYSTACK_PUBLIC_KEY || "",
+      email:       currentUser?.email || "",
+      amount:      total * 100,
+      currency:    "GHS",
+      channels:    ["mobile_money", "card"],
+      ref:         payRef,
+      access_code: accessCode,
+      onClose:     () => { setPaying(false); },
+      callback:    (r) => { doHandle(r.reference || payRef); },
+    });
+    handler.openIframe();
+  } catch {
+    window.open(`https://checkout.paystack.com/${accessCode}`, "_blank");
+    setTimeout(() => { setPaying(false); setPayError("Complete payment in the new tab, then check My Tickets."); }, 3000);
+  }
+};
+
 try {
   window.PaystackPop.resumeTransaction(accessCode, {
-    onClose:  () => { setPaying(false); setPayError(""); },
+    onClose:  () => { setPaying(false); },
     callback: (r) => { doHandle(r.reference || payRef); },
   });
 } catch {
-  try {
-    const handler = window.PaystackPop.setup({
-      key: import.meta.env.VITE_PAYSTACK_PUBLIC_KEY,
-      email: currentUser?.email,
-      amount: total * 100,
-      currency: "GHS",
-      channels: ["mobile_money", "card"],
-      ref: payRef, access_code: accessCode,
-      onClose:  () => { setPaying(false); setPayError(""); },
-      callback: (r) => { doHandle(r.reference || payRef); },
-    });
-    handler.openIframe();
-  } catch (e2) { setPayError("Payment gateway error: " + e2.message); setPaying(false); }
+  openPaystack();
 }
   };
 

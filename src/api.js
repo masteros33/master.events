@@ -98,13 +98,53 @@ export const ticketsAPI = {
       headers: headers(),
     }).then(r => r.json()),
 
-  // ── FIXED: was door-login/, now door-staff/login/ ────────
   doorStaffLogin: (code) =>
     fetch(`${BASE_URL}/tickets/door-staff/login/`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ code }),
     }).then(r => r.json()),
+
+  // ── Resale marketplace ────────────────────────────────────
+  resaleListings: () =>
+    fetch(`${BASE_URL}/tickets/resale/`, {
+      headers: headers(),
+    }).then(r => r.json()),
+
+  buyResale: async (data) => {
+    const res = await fetch(`${BASE_URL}/tickets/resale/buy/`, {
+      method: "POST",
+      headers: headers(),
+      body: JSON.stringify(data),
+    });
+    const json = await res.json();
+    return { ...json, _status: res.status };
+  },
+
+  listForResale: (data) =>
+    fetch(`${BASE_URL}/tickets/resale/list/`, {
+      method: "POST",
+      headers: headers(),
+      body: JSON.stringify(data),
+    }).then(r => r.json()),
+
+  cancelResale: (ticket_id) =>
+    fetch(`${BASE_URL}/tickets/resale/cancel/`, {
+      method: "POST",
+      headers: headers(),
+      body: JSON.stringify({ ticket_id }),
+    }).then(r => r.json()),
+
+  // ── Payment init ──────────────────────────────────────────
+  initializePayment: async (data) => {
+    const res = await fetch(`${BASE_URL}/payments/initialize/`, {
+      method: "POST",
+      headers: headers(),
+      body: JSON.stringify(data),
+    });
+    const json = await res.json();
+    return { ...json, _status: res.status };
+  },
 };
 
 export const paymentsAPI = {

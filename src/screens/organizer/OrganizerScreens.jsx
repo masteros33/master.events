@@ -43,7 +43,6 @@ const primaryBtn = {
   fontFamily: "var(--font-sans)",
 };
 
-// ── CSV download ──────────────────────────────────────────────
 function downloadCSV(events) {
   if (!events.length) return;
   const rows = events.map(e => ({
@@ -64,7 +63,6 @@ function downloadCSV(events) {
   URL.revokeObjectURL(url);
 }
 
-// ── Stat card ─────────────────────────────────────────────────
 function StatCard({ icon, value, label, sub, color, onClick, large }) {
   return (
     <motion.div
@@ -76,24 +74,18 @@ function StatCard({ icon, value, label, sub, color, onClick, large }) {
       <div style={{ fontSize: large ? "26px" : "22px", marginBottom: "12px" }}>{icon}</div>
       <div style={{ fontSize: large ? "30px" : "24px", fontWeight: 900, color, letterSpacing: "-1px", marginBottom: "4px", lineHeight: 1 }}>{value}</div>
       <div style={{ fontSize: "13px", fontWeight: 600, color: "var(--text-primary)", marginBottom: sub ? "6px" : 0 }}>{label}</div>
-      {sub && (
-        <div style={{ fontSize: "11px", fontWeight: 700, color, background: color + "10", padding: "3px 10px", borderRadius: "99px", width: "fit-content", fontFamily: "var(--font-mono)" }}>
-          {sub}
-        </div>
-      )}
+      {sub && <div style={{ fontSize: "11px", fontWeight: 700, color, background: color + "10", padding: "3px 10px", borderRadius: "99px", width: "fit-content", fontFamily: "var(--font-mono)" }}>{sub}</div>}
     </motion.div>
   );
 }
 
-// ── Real SVG bar chart — built from actual event data ─────────
 function RevenueChart({ events }) {
   if (!events.length) return null;
-  const data     = events.map(e => ({ name: e.name, value: Math.round(e.ticketsSold * e.price * 0.95) }));
-  const maxVal   = Math.max(...data.map(d => d.value), 1);
-  const chartH   = 140;
-  const barW     = Math.min(48, Math.floor(560 / data.length) - 12);
-  const gap      = Math.max(8, Math.floor(560 / data.length) - barW);
-
+  const data   = events.map(e => ({ name: e.name, value: Math.round(e.ticketsSold * e.price * 0.95) }));
+  const maxVal = Math.max(...data.map(d => d.value), 1);
+  const chartH = 140;
+  const barW   = Math.min(48, Math.floor(560 / data.length) - 12);
+  const gap    = Math.max(8, Math.floor(560 / data.length) - barW);
   return (
     <div style={{ background: "var(--bg-card)", border: "1px solid var(--border)", borderRadius: "18px", padding: "22px", boxShadow: "var(--shadow-sm)" }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
@@ -101,69 +93,38 @@ function RevenueChart({ events }) {
           <div style={{ fontSize: "11px", fontWeight: 700, color: BRAND, letterSpacing: "1.5px", marginBottom: "3px", fontFamily: "var(--font-mono)" }}>REVENUE_BY_EVENT</div>
           <div style={{ fontSize: "16px", fontWeight: 800, color: "var(--text-primary)", letterSpacing: "-0.4px" }}>Your Earnings</div>
         </div>
-        <motion.button whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}
-          onClick={() => downloadCSV(events)}
+        <motion.button whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }} onClick={() => downloadCSV(events)}
           style={{ display: "flex", alignItems: "center", gap: "6px", padding: "8px 14px", background: "var(--bg-subtle)", border: `1.5px solid ${BRAND}40`, borderRadius: "10px", cursor: "pointer", color: BRAND, fontWeight: 700, fontSize: "12px", transition: "all 0.2s", fontFamily: "var(--font-sans)" }}>
           ⬇️ CSV
         </motion.button>
       </div>
-
-      {/* SVG chart */}
       <div style={{ overflowX: "auto", overflowY: "hidden" }}>
         <svg width="100%" viewBox={`0 0 ${Math.max(data.length * (barW + gap) + 24, 300)} ${chartH + 48}`} style={{ minWidth: "280px" }}>
-          {/* Y grid lines */}
           {[0, 0.25, 0.5, 0.75, 1].map((pct, i) => (
             <g key={i}>
-              <line x1="0" y1={chartH * (1 - pct)} x2="100%" y2={chartH * (1 - pct)}
-                stroke="var(--border)" strokeWidth="1" strokeDasharray="4 4" />
-              {pct > 0 && (
-                <text x="2" y={chartH * (1 - pct) - 4} fontSize="9" fill="var(--text-muted)" fontFamily="var(--font-mono)">
-                  {Math.round(maxVal * pct).toLocaleString()}
-                </text>
-              )}
+              <line x1="0" y1={chartH * (1 - pct)} x2="100%" y2={chartH * (1 - pct)} stroke="var(--border)" strokeWidth="1" strokeDasharray="4 4" />
+              {pct > 0 && <text x="2" y={chartH * (1 - pct) - 4} fontSize="9" fill="var(--text-muted)" fontFamily="var(--font-mono)">{Math.round(maxVal * pct).toLocaleString()}</text>}
             </g>
           ))}
-
-          {/* Bars */}
           {data.map((d, i) => {
-            const barH   = Math.max(4, Math.round((d.value / maxVal) * chartH));
-            const x      = i * (barW + gap) + gap / 2;
-            const y      = chartH - barH;
+            const barH = Math.max(4, Math.round((d.value / maxVal) * chartH));
+            const x    = i * (barW + gap) + gap / 2;
+            const y    = chartH - barH;
             return (
               <g key={i}>
-                {/* Bar background */}
-                <rect x={x} y={0} width={barW} height={chartH} rx="6"
-                  fill="var(--bg-subtle)" />
-                {/* Animated bar */}
-                <motion.rect
-                  x={x} y={y} width={barW} height={barH} rx="6"
-                  fill={`url(#barGrad${i})`}
-                  initial={{ height: 0, y: chartH }}
-                  animate={{ height: barH, y }}
-                  transition={{ duration: 0.7, delay: i * 0.08, ease: "easeOut" }}
-                />
-                {/* Value label */}
-                {d.value > 0 && (
-                  <text x={x + barW / 2} y={y - 6} textAnchor="middle" fontSize="9"
-                    fill={BRAND} fontWeight="700" fontFamily="var(--font-mono)">
-                    {d.value > 999 ? (d.value / 1000).toFixed(1) + "k" : d.value}
-                  </text>
-                )}
-                {/* Event name */}
-                <text x={x + barW / 2} y={chartH + 18} textAnchor="middle" fontSize="9"
-                  fill="var(--text-muted)" fontFamily="var(--font-mono)">
-                  {d.name.slice(0, 7)}{d.name.length > 7 ? "…" : ""}
-                </text>
+                <rect x={x} y={0} width={barW} height={chartH} rx="6" fill="var(--bg-subtle)" />
+                <motion.rect x={x} y={y} width={barW} height={barH} rx="6" fill={`url(#barGrad${i})`}
+                  initial={{ height: 0, y: chartH }} animate={{ height: barH, y }}
+                  transition={{ duration: 0.7, delay: i * 0.08, ease: "easeOut" }} />
+                {d.value > 0 && <text x={x + barW / 2} y={y - 6} textAnchor="middle" fontSize="9" fill={BRAND} fontWeight="700" fontFamily="var(--font-mono)">{d.value > 999 ? (d.value / 1000).toFixed(1) + "k" : d.value}</text>}
+                <text x={x + barW / 2} y={chartH + 18} textAnchor="middle" fontSize="9" fill="var(--text-muted)" fontFamily="var(--font-mono)">{d.name.slice(0, 7)}{d.name.length > 7 ? "…" : ""}</text>
               </g>
             );
           })}
-
-          {/* Gradient defs */}
           <defs>
             {data.map((_, i) => (
               <linearGradient key={i} id={`barGrad${i}`} x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor={BRAND} />
-                <stop offset="100%" stopColor={BRAND_D} />
+                <stop offset="0%" stopColor={BRAND} /><stop offset="100%" stopColor={BRAND_D} />
               </linearGradient>
             ))}
           </defs>
@@ -173,7 +134,6 @@ function RevenueChart({ events }) {
   );
 }
 
-// ── Fill rate progress bars ───────────────────────────────────
 function FillRateChart({ events }) {
   if (!events.length) return null;
   return (
@@ -194,11 +154,8 @@ function FillRateChart({ events }) {
                 </div>
               </div>
               <div style={{ height: "8px", background: "var(--bg-subtle)", borderRadius: "99px", overflow: "hidden" }}>
-                <motion.div
-                  initial={{ width: 0 }} animate={{ width: Math.max(2, pct) + "%" }}
-                  transition={{ duration: 0.8, ease: "easeOut" }}
-                  style={{ height: "100%", background: pct >= 90 ? "linear-gradient(90deg,#dc2626,#b91c1c)" : pct >= 60 ? `linear-gradient(90deg, ${BRAND}, ${BRAND_D})` : "linear-gradient(90deg,#16a34a,#22c55e)", borderRadius: "99px" }}
-                />
+                <motion.div initial={{ width: 0 }} animate={{ width: Math.max(2, pct) + "%" }} transition={{ duration: 0.8, ease: "easeOut" }}
+                  style={{ height: "100%", background: pct >= 90 ? "linear-gradient(90deg,#dc2626,#b91c1c)" : pct >= 60 ? `linear-gradient(90deg, ${BRAND}, ${BRAND_D})` : "linear-gradient(90deg,#16a34a,#22c55e)", borderRadius: "99px" }} />
               </div>
             </div>
           );
@@ -208,13 +165,10 @@ function FillRateChart({ events }) {
   );
 }
 
-// ── Event card ────────────────────────────────────────────────
 function EventCard({ ev, onClick }) {
   const soldPct = ev.totalTickets > 0 ? Math.round((ev.ticketsSold / ev.totalTickets) * 100) : 0;
   return (
-    <motion.div
-      whileHover={{ y: -4, boxShadow: "var(--shadow-lg)", borderColor: BRAND + "50" }}
-      whileTap={{ scale: 0.98 }} onClick={onClick}
+    <motion.div whileHover={{ y: -4, boxShadow: "var(--shadow-lg)", borderColor: BRAND + "50" }} whileTap={{ scale: 0.98 }} onClick={onClick}
       style={{ background: "var(--bg-card)", borderRadius: "18px", overflow: "hidden", cursor: "pointer", boxShadow: "var(--shadow-sm)", border: "1px solid var(--border)", transition: "all 0.22s" }}>
       <div style={{ height: "168px", position: "relative" }}>
         <img src={ev.image} alt={ev.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} onError={e => { e.target.src = categoryImages.other; }} />
@@ -245,11 +199,12 @@ function EventCard({ ev, onClick }) {
   );
 }
 
-// ── Organizer Dashboard ───────────────────────────────────────
+// ── ORGANIZER HOME — setActiveTab ADDED, all wallet onClick FIXED ──
 export function OrganizerHome() {
   const orgEvents          = useStore(s => s.orgEvents);
   const setOrgEvents       = useStore(s => s.setOrgEvents);
   const setScreen          = useStore(s => s.setScreen);
+  const setActiveTab       = useStore(s => s.setActiveTab);   // ← ADDED
   const setViewingOrgEvent = useStore(s => s.setViewingOrgEvent);
   const currentUser        = useStore(s => s.currentUser);
   const [loading, setLoading] = useState(true);
@@ -268,10 +223,11 @@ export function OrganizerHome() {
   const fillRate      = totalCapacity > 0 ? Math.round((totalSold / totalCapacity) * 100) : 0;
   const topEvent      = [...orgEvents].sort((a, b) => b.ticketsSold * b.price - a.ticketsSold * a.price)[0];
 
+  // ── wallet nav helper — used everywhere ──────────────────
+  const goWallet = () => { setActiveTab("wallet"); setScreen("app"); };
+
   return (
     <div style={{ background: "var(--bg)", minHeight: "100%", padding: desktop ? "28px 40px 60px" : "16px 16px 120px" }}>
-
-      {/* Header */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "28px" }}>
         <div>
           <div style={{ fontSize: "11px", color: BRAND, fontWeight: 700, letterSpacing: "2px", marginBottom: "6px", fontFamily: "var(--font-mono)" }}>ORGANIZER_DASHBOARD</div>
@@ -302,7 +258,6 @@ export function OrganizerHome() {
         </div>
       ) : (
         <>
-          {/* ── Stat cards ── */}
           {desktop ? (
             <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "14px", marginBottom: "24px" }}>
               <div style={{ gridColumn: "span 2" }}>
@@ -310,25 +265,22 @@ export function OrganizerHome() {
                   value={"GHS " + Math.round(totalRevenue).toLocaleString()}
                   label="Total Revenue (95% Payout)"
                   sub={fillRate + "% avg fill rate"}
-                  color="#16a34a" onClick={() => setScreen("wallet")} />
+                  color="#16a34a" onClick={goWallet} />
               </div>
               <StatCard icon="🎟️" value={totalSold} label="Tickets Sold" sub={fillRate + "% fill"} color="#2563eb" />
               <StatCard icon="🎪" value={activeEvents} label="Live Events" sub={orgEvents.length + " total"} color={BRAND} />
             </div>
           ) : (
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px", marginBottom: "20px" }}>
-              <StatCard icon="💰" value={"GHS " + Math.round(totalRevenue).toLocaleString()} label="Revenue" color="#16a34a" onClick={() => setScreen("wallet")} />
+              <StatCard icon="💰" value={"GHS " + Math.round(totalRevenue).toLocaleString()} label="Revenue" color="#16a34a" onClick={goWallet} />
               <StatCard icon="🎟️" value={totalSold} label="Sold" sub={fillRate + "%"} color="#2563eb" />
               <StatCard icon="🎪" value={activeEvents} label="Live" sub={orgEvents.length + " total"} color={BRAND} />
               <StatCard icon="⛓️" value={totalSold} label="NFT Minted" color="#7c3aed" />
             </div>
           )}
 
-          {/* ── Desktop-only cards row ── */}
           {desktop && (
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "14px", marginBottom: "28px" }}>
-
-              {/* Blockchain card */}
               <div style={{ background: "#0e0d0b", border: "1px solid rgba(124,58,237,0.2)", borderRadius: "18px", padding: "20px", boxShadow: "var(--shadow-sm)", position: "relative", overflow: "hidden" }}>
                 <div style={{ position: "absolute", top: 0, right: 0, width: "140px", height: "140px", borderRadius: "50%", background: "radial-gradient(circle, rgba(124,58,237,0.1) 0%, transparent 70%)", transform: "translate(30%,-30%)", pointerEvents: "none" }} />
                 <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "16px" }}>
@@ -352,7 +304,6 @@ export function OrganizerHome() {
                 </div>
               </div>
 
-              {/* Payout split */}
               <div style={{ background: "var(--bg-card)", border: "1px solid var(--border)", borderRadius: "18px", padding: "20px", boxShadow: "var(--shadow-sm)" }}>
                 <div style={{ fontSize: "11px", fontWeight: 700, color: "var(--text-muted)", letterSpacing: "1.5px", marginBottom: "16px", fontFamily: "var(--font-mono)" }}>PAYOUT_SPLIT</div>
                 <div style={{ marginBottom: "14px" }}>
@@ -361,8 +312,7 @@ export function OrganizerHome() {
                     <span style={{ fontSize: "13px", fontWeight: 800, color: "#16a34a", fontFamily: "var(--font-mono)" }}>GHS {Math.round(totalRevenue).toLocaleString()}</span>
                   </div>
                   <div style={{ height: "7px", background: "var(--bg-subtle)", borderRadius: "99px", overflow: "hidden" }}>
-                    <motion.div initial={{ width: 0 }} animate={{ width: "95%" }} transition={{ duration: 1 }}
-                      style={{ height: "100%", background: "linear-gradient(90deg,#16a34a,#22c55e)", borderRadius: "99px" }} />
+                    <motion.div initial={{ width: 0 }} animate={{ width: "95%" }} transition={{ duration: 1 }} style={{ height: "100%", background: "linear-gradient(90deg,#16a34a,#22c55e)", borderRadius: "99px" }} />
                   </div>
                 </div>
                 <div>
@@ -371,17 +321,16 @@ export function OrganizerHome() {
                     <span style={{ fontSize: "13px", color: "var(--text-muted)", fontFamily: "var(--font-mono)" }}>GHS {Math.round(totalRevenue * 0.053).toLocaleString()}</span>
                   </div>
                   <div style={{ height: "7px", background: "var(--bg-subtle)", borderRadius: "99px", overflow: "hidden" }}>
-                    <motion.div initial={{ width: 0 }} animate={{ width: "5%" }} transition={{ duration: 1 }}
-                      style={{ height: "100%", background: "#dc2626", borderRadius: "99px" }} />
+                    <motion.div initial={{ width: 0 }} animate={{ width: "5%" }} transition={{ duration: 1 }} style={{ height: "100%", background: "#dc2626", borderRadius: "99px" }} />
                   </div>
                 </div>
-                <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }} onClick={() => setScreen("wallet")}
+                {/* ── FIXED: was setScreen("wallet") ── */}
+                <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }} onClick={goWallet}
                   style={{ width: "100%", padding: "11px", marginTop: "18px", background: `linear-gradient(135deg, ${BRAND}, ${BRAND_D})`, color: "#fff", border: "none", borderRadius: "11px", fontSize: "13px", fontWeight: 700, cursor: "pointer", boxShadow: "var(--shadow-brand)" }}>
                   Withdraw to MoMo →
                 </motion.button>
               </div>
 
-              {/* Top event */}
               {topEvent ? (
                 <motion.div whileHover={{ y: -3, boxShadow: "var(--shadow-lg)" }} whileTap={{ scale: 0.98 }}
                   onClick={() => { setViewingOrgEvent(topEvent); setScreen("orgEventDetail"); }}
@@ -411,7 +360,6 @@ export function OrganizerHome() {
             </div>
           )}
 
-          {/* ── Real Charts — only if there's data ── */}
           {orgEvents.length > 0 && (
             <div style={{ display: "grid", gridTemplateColumns: desktop ? "1fr 1fr" : "1fr", gap: "16px", marginBottom: "28px" }}>
               <RevenueChart events={orgEvents} />
@@ -419,7 +367,6 @@ export function OrganizerHome() {
             </div>
           )}
 
-          {/* ── Info banners ── */}
           <div style={{ display: "grid", gridTemplateColumns: desktop ? "1fr 1fr" : "1fr", gap: "12px", marginBottom: "28px" }}>
             <div style={{ background: BRAND_GL, border: `1px solid ${BRAND}20`, borderRadius: "14px", padding: "15px 18px", display: "flex", alignItems: "center", gap: "14px" }}>
               <div style={{ width: "36px", height: "36px", borderRadius: "11px", background: BRAND_GL, display: "flex", alignItems: "center", justifyContent: "center", fontSize: "17px", flexShrink: 0, border: `1px solid ${BRAND}20` }}>💡</div>
@@ -437,12 +384,9 @@ export function OrganizerHome() {
             </div>
           </div>
 
-          {/* ── Events list ── */}
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
             <div>
-              <div style={{ fontWeight: 800, fontSize: "18px", color: "var(--text-primary)", letterSpacing: "-0.4px" }}>
-                Your Events
-              </div>
+              <div style={{ fontWeight: 800, fontSize: "18px", color: "var(--text-primary)", letterSpacing: "-0.4px" }}>Your Events</div>
               {orgEvents.length > 0 && (
                 <div style={{ fontSize: "12px", color: "var(--text-muted)", marginTop: "2px", fontFamily: "var(--font-mono)" }}>
                   {orgEvents.length} event{orgEvents.length !== 1 ? "s" : ""} · {activeEvents} live
@@ -481,7 +425,6 @@ export function OrganizerHome() {
   );
 }
 
-// ── My Events ─────────────────────────────────────────────────
 export function OrganizerEvents() {
   const orgEvents          = useStore(s => s.orgEvents);
   const setOrgEvents       = useStore(s => s.setOrgEvents);
@@ -489,13 +432,9 @@ export function OrganizerEvents() {
   const setScreen          = useStore(s => s.setScreen);
   const [loading, setLoading] = useState(true);
   const desktop = isDesktop();
-
   useEffect(() => {
-    eventsAPI.myEvents()
-      .then(data => { if (Array.isArray(data)) setOrgEvents(data.map(mapEvent)); setLoading(false); })
-      .catch(() => setLoading(false));
+    eventsAPI.myEvents().then(data => { if (Array.isArray(data)) setOrgEvents(data.map(mapEvent)); setLoading(false); }).catch(() => setLoading(false));
   }, []);
-
   return (
     <div style={{ background: "var(--bg)", minHeight: "100%", padding: desktop ? "28px 40px 60px" : "16px 16px 120px" }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "24px" }}>
@@ -513,10 +452,7 @@ export function OrganizerEvents() {
           {[1,2,3].map(i => (
             <div key={i} style={{ background: "var(--bg-card)", borderRadius: "18px", overflow: "hidden", border: "1px solid var(--border)" }}>
               <div className="skeleton" style={{ height: "168px" }} />
-              <div style={{ padding: "14px 16px" }}>
-                <div className="skeleton" style={{ height: "14px", width: "60%", marginBottom: "10px" }} />
-                <div className="skeleton" style={{ height: "4px" }} />
-              </div>
+              <div style={{ padding: "14px 16px" }}><div className="skeleton" style={{ height: "14px", width: "60%", marginBottom: "10px" }} /><div className="skeleton" style={{ height: "4px" }} /></div>
             </div>
           ))}
         </div>
@@ -528,29 +464,24 @@ export function OrganizerEvents() {
         </div>
       ) : (
         <div style={{ display: "grid", gridTemplateColumns: desktop ? "repeat(3,1fr)" : "1fr", gap: desktop ? "16px" : "12px" }}>
-          {orgEvents.map(ev => (
-            <EventCard key={ev.id} ev={ev} onClick={() => { setViewingOrgEvent(ev); setScreen("orgEventDetail"); }} />
-          ))}
+          {orgEvents.map(ev => <EventCard key={ev.id} ev={ev} onClick={() => { setViewingOrgEvent(ev); setScreen("orgEventDetail"); }} />)}
         </div>
       )}
     </div>
   );
 }
 
-// ── Organizer Alerts ──────────────────────────────────────────
 export function OrganizerAlerts() {
   const orgEvents    = useStore(s => s.orgEvents);
   const desktop      = isDesktop();
   const totalRevenue = orgEvents.reduce((s, e) => s + e.ticketsSold * e.price * 0.95, 0);
   const totalSold    = orgEvents.reduce((s, e) => s + e.ticketsSold, 0);
-
   const alerts = orgEvents.length > 0 ? [
     { icon: "⛓️", color: "#7c3aed", title: "NFT Tickets Active on Polygon", body: `${totalSold} NFT tickets minted across ${orgEvents.length} event${orgEvents.length > 1 ? "s" : ""}. All ownership records are immutable on-chain.`, time: "LIVE" },
     { icon: "💰", color: "#16a34a", title: "Revenue Update", body: `Your events have generated GHS ${Math.round(totalRevenue).toLocaleString()} at 95% payout rate.`, time: "NOW" },
     { icon: "🎪", color: BRAND, title: "Active Events", body: `You have ${orgEvents.filter(e => e.salesOpen).length} event${orgEvents.filter(e => e.salesOpen).length !== 1 ? "s" : ""} with ticket sales open.`, time: "TODAY" },
     { icon: "🔒", color: "#2563eb", title: "Security: HMAC QR Active", body: "All QR codes rotate every 10 seconds. Screenshot sharing is cryptographically prevented.", time: "ALWAYS" },
   ] : [{ icon: "🔔", color: BRAND, title: "No alerts yet", body: "Create an event and start selling tickets to see alerts here.", time: "NOW" }];
-
   return (
     <div style={{ background: "var(--bg)", minHeight: "100%", padding: desktop ? "28px 40px 60px" : "16px 16px 120px" }}>
       <div style={{ fontSize: "11px", color: BRAND, fontWeight: 700, letterSpacing: "2px", marginBottom: "4px", fontFamily: "var(--font-mono)" }}>NOTIFICATIONS</div>
@@ -574,7 +505,6 @@ export function OrganizerAlerts() {
   );
 }
 
-// ── Add Event ─────────────────────────────────────────────────
 export function AddEvent() {
   const addEventForm    = useStore(s => s.addEventForm);
   const setAddEventForm = useStore(s => s.setAddEventForm);
@@ -583,7 +513,6 @@ export function AddEvent() {
   const [imageType, setImageType] = useState("upload");
   const [errors,    setErrors]    = useState({});
   const desktop = isDesktop();
-
   const validate = () => {
     const e = {};
     if (!addEventForm.name?.trim())  e.name         = "Event name is required";
@@ -594,43 +523,30 @@ export function AddEvent() {
     setErrors(e);
     return Object.keys(e).length === 0;
   };
-
   const fields = [
-    ["name",         "Event Name",         "text",   "e.g. Afrobeats Night 2026",      true],
-    ["subtitle",     "Subtitle (optional)", "text",   "e.g. The biggest night in Accra", false],
-    ["date",         "Date",               "date",   "",                                true],
-    ["time",         "Time",               "time",   "",                                false],
-    ["venue",        "Venue",              "text",   "e.g. Accra Sports Stadium",       true],
-    ["city",         "City",               "text",   "e.g. Accra",                      false],
-    ["price",        "Ticket Price (GHS)", "number", "e.g. 150",                        true],
-    ["totalTickets", "Total Tickets",      "number", "e.g. 500",                        true],
-    ["description",  "Description",        "text",   "Tell people about your event",    false],
+    ["name","Event Name","text","e.g. Afrobeats Night 2026",true],
+    ["subtitle","Subtitle (optional)","text","e.g. The biggest night in Accra",false],
+    ["date","Date","date","",true],["time","Time","time","",false],
+    ["venue","Venue","text","e.g. Accra Sports Stadium",true],
+    ["city","City","text","e.g. Accra",false],
+    ["price","Ticket Price (GHS)","number","e.g. 150",true],
+    ["totalTickets","Total Tickets","number","e.g. 500",true],
+    ["description","Description","text","Tell people about your event",false],
   ];
-
   return (
     <div style={{ background: "var(--bg)", height: "100%", display: "flex", flexDirection: "column", overflow: "hidden" }}>
-
-      {/* Header */}
       <div style={{ flexShrink: 0, display: "flex", alignItems: "center", padding: "14px 20px", gap: "14px", background: "var(--bg-card)", borderBottom: "1px solid var(--border)", zIndex: 10 }}>
         <motion.button whileTap={{ scale: 0.9 }} onClick={() => setScreen("app")}
-          style={{ width: "36px", height: "36px", borderRadius: "10px", background: "var(--bg-subtle)", border: "1px solid var(--border)", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", fontSize: "17px", color: "var(--text-primary)", flexShrink: 0 }}>
-          ←
-        </motion.button>
+          style={{ width: "36px", height: "36px", borderRadius: "10px", background: "var(--bg-subtle)", border: "1px solid var(--border)", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", fontSize: "17px", color: "var(--text-primary)", flexShrink: 0 }}>←</motion.button>
         <div style={{ flex: 1 }}>
           <div style={{ fontSize: "16px", fontWeight: 800, color: "var(--text-primary)", letterSpacing: "-0.3px" }}>Create Event</div>
           <div style={{ fontSize: "11px", color: "#7c3aed", marginTop: "2px", fontFamily: "var(--font-mono)" }}>⛓️ NFT tickets auto-minted on Polygon Amoy</div>
         </div>
       </div>
-
-      {/* Scrollable */}
       <div style={{ flex: 1, minHeight: 0, overflowY: "scroll", overflowX: "hidden", WebkitOverflowScrolling: "touch", overscrollBehavior: "contain" }}>
         <div style={{ padding: desktop ? "28px 40px 120px" : "16px 16px 120px", maxWidth: desktop ? "760px" : "100%", margin: "0 auto" }}>
-
-          {/* Category */}
           <div style={{ marginBottom: "20px" }}>
-            <div style={{ fontSize: "13px", fontWeight: 600, color: "var(--text-secondary)", marginBottom: "10px" }}>
-              Category <span style={{ color: "var(--error)" }}>*</span>
-            </div>
+            <div style={{ fontSize: "13px", fontWeight: 600, color: "var(--text-secondary)", marginBottom: "10px" }}>Category <span style={{ color: "var(--error)" }}>*</span></div>
             <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
               {CATEGORIES.map(cat => (
                 <motion.div key={cat} whileTap={{ scale: 0.93 }}
@@ -640,12 +556,8 @@ export function AddEvent() {
                 </motion.div>
               ))}
             </div>
-            <AnimatePresence>
-              {errors.category && <motion.div initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} style={{ color: "var(--error)", fontSize: "12px", marginTop: "6px" }}>⚠️ {errors.category}</motion.div>}
-            </AnimatePresence>
+            <AnimatePresence>{errors.category && <motion.div initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} style={{ color: "var(--error)", fontSize: "12px", marginTop: "6px" }}>⚠️ {errors.category}</motion.div>}</AnimatePresence>
           </div>
-
-          {/* Image */}
           <div style={{ marginBottom: "20px" }}>
             <div style={{ fontSize: "13px", fontWeight: 600, color: "var(--text-secondary)", marginBottom: "10px" }}>Event Image</div>
             <div style={{ display: "flex", gap: "8px", marginBottom: "10px" }}>
@@ -662,14 +574,7 @@ export function AddEvent() {
                   onChange={e => {
                     const f = e.target.files[0]; if (!f) return;
                     const canvas = document.createElement("canvas"); const img = new Image(); const url = URL.createObjectURL(f);
-                    img.onload = () => {
-                      const MAX = 1200; let w = img.width, h = img.height;
-                      if (w > MAX) { h = Math.round(h * MAX / w); w = MAX; }
-                      canvas.width = w; canvas.height = h;
-                      canvas.getContext("2d").drawImage(img, 0, 0, w, h);
-                      setAddEventForm({ ...addEventForm, image: canvas.toDataURL("image/jpeg", 0.82) });
-                      URL.revokeObjectURL(url);
-                    };
+                    img.onload = () => { const MAX = 1200; let w = img.width, h = img.height; if (w > MAX) { h = Math.round(h * MAX / w); w = MAX; } canvas.width = w; canvas.height = h; canvas.getContext("2d").drawImage(img, 0, 0, w, h); setAddEventForm({ ...addEventForm, image: canvas.toDataURL("image/jpeg", 0.82) }); URL.revokeObjectURL(url); };
                     img.src = url;
                   }} />
                 <label htmlFor="event-image-upload" style={{ display: "block", padding: "22px 18px", background: "var(--bg-card)", border: `2px dashed ${BRAND}35`, borderRadius: "14px", textAlign: "center", cursor: "pointer" }}>
@@ -681,36 +586,27 @@ export function AddEvent() {
                 </label>
               </>
             ) : (
-              <input type="text" placeholder="https://..." value={addEventForm.image?.startsWith("data:") ? "" : (addEventForm.image || "")}
-                onChange={e => setAddEventForm({ ...addEventForm, image: e.target.value })} style={inp} />
+              <input type="text" placeholder="https://..." value={addEventForm.image?.startsWith("data:") ? "" : (addEventForm.image || "")} onChange={e => setAddEventForm({ ...addEventForm, image: e.target.value })} style={inp} />
             )}
           </div>
-
-          {/* Fields */}
           <div style={{ display: "grid", gridTemplateColumns: desktop ? "1fr 1fr" : "1fr", gap: desktop ? "0 28px" : "0" }}>
             {fields.map(([key, label, type, placeholder, required]) => (
               <div key={key} style={{ marginBottom: "16px" }}>
-                <div style={{ fontSize: "13px", fontWeight: 600, color: "var(--text-secondary)", marginBottom: "7px" }}>
-                  {label} {required && <span style={{ color: "var(--error)" }}>*</span>}
-                </div>
+                <div style={{ fontSize: "13px", fontWeight: 600, color: "var(--text-secondary)", marginBottom: "7px" }}>{label} {required && <span style={{ color: "var(--error)" }}>*</span>}</div>
                 <input type={type} placeholder={placeholder} value={addEventForm[key] || ""}
                   onChange={e => { setAddEventForm({ ...addEventForm, [key]: e.target.value }); if (errors[key]) setErrors(p => ({ ...p, [key]: null })); }}
                   style={{ ...inp, marginBottom: 0, borderColor: errors[key] ? "var(--error)" : "var(--border)", colorScheme: "light dark" }}
                   onFocus={e => { e.target.style.borderColor = BRAND; e.target.style.background = "var(--bg-card)"; e.target.style.boxShadow = `0 0 0 3px ${BRAND}15`; }}
                   onBlur={e => { e.target.style.borderColor = errors[key] ? "var(--error)" : "var(--border)"; e.target.style.background = "var(--bg-subtle)"; e.target.style.boxShadow = "none"; }}
                 />
-                <AnimatePresence>
-                  {errors[key] && <motion.div initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} style={{ color: "var(--error)", fontSize: "11px", marginTop: "4px" }}>⚠️ {errors[key]}</motion.div>}
-                </AnimatePresence>
+                <AnimatePresence>{errors[key] && <motion.div initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} style={{ color: "var(--error)", fontSize: "11px", marginTop: "4px" }}>⚠️ {errors[key]}</motion.div>}</AnimatePresence>
               </div>
             ))}
           </div>
-
           <div style={{ background: "rgba(124,58,237,0.05)", border: "1px solid rgba(124,58,237,0.15)", borderRadius: "13px", padding: "13px 16px", marginBottom: "24px", marginTop: "4px", display: "flex", alignItems: "center", gap: "10px" }}>
             <span style={{ fontSize: "16px" }}>⛓️</span>
             <span style={{ fontSize: "13px", color: "#7c3aed", fontWeight: 600 }}>Each ticket sold will be automatically minted as an NFT on Polygon blockchain</span>
           </div>
-
           <motion.button whileHover={{ scale: 1.02, boxShadow: `0 14px 36px ${BRAND}40` }} whileTap={{ scale: 0.97 }}
             onClick={() => { if (validate()) handleAddEvent(); }}
             style={{ ...primaryBtn, maxWidth: desktop ? "320px" : "100%", marginBottom: 0, fontSize: "15px" }}>
@@ -722,7 +618,6 @@ export function AddEvent() {
   );
 }
 
-// ── Event Detail ──────────────────────────────────────────────
 export function OrganizerEventDetail() {
   const viewingOrgEvent    = useStore(s => s.viewingOrgEvent);
   const setViewingOrgEvent = useStore(s => s.setViewingOrgEvent);
@@ -744,21 +639,10 @@ export function OrganizerEventDetail() {
   const soldPct = ev.totalTickets > 0 ? Math.round((ev.ticketsSold / ev.totalTickets) * 100) : 0;
   const cover   = ev.image || categoryImages[ev.category] || categoryImages.other;
 
-  const copyCode = code => {
-    navigator.clipboard?.writeText(code).catch(() => {});
-    setCopiedCode(code); setTimeout(() => setCopiedCode(null), 2000);
-  };
+  const copyCode = code => { navigator.clipboard?.writeText(code).catch(() => {}); setCopiedCode(code); setTimeout(() => setCopiedCode(null), 2000); };
+  const startEdit = () => { setEditForm({ name: ev.name, venue: ev.venue, date: ev.date, time: ev.time || "", price: ev.price, description: ev.description || "", image: ev.image || "", category: ev.category || "other", city: ev.city || "", totalTickets: ev.totalTickets, subtitle: ev.subtitle || "" }); setEditing(true); };
+  const saveEdit  = () => { setViewingOrgEvent({ ...ev, ...editForm, price: parseFloat(editForm.price), totalTickets: parseInt(editForm.totalTickets) || ev.totalTickets }); setEditing(false); };
 
-  const startEdit = () => {
-    setEditForm({ name: ev.name, venue: ev.venue, date: ev.date, time: ev.time || "", price: ev.price, description: ev.description || "", image: ev.image || "", category: ev.category || "other", city: ev.city || "", totalTickets: ev.totalTickets, subtitle: ev.subtitle || "" });
-    setEditing(true);
-  };
-  const saveEdit = () => {
-    setViewingOrgEvent({ ...ev, ...editForm, price: parseFloat(editForm.price), totalTickets: parseInt(editForm.totalTickets) || ev.totalTickets });
-    setEditing(false);
-  };
-
-  // ── Edit form ─────────────────────────────────────────────
   if (editing) return (
     <div style={{ background: "var(--bg)", height: "100%", display: "flex", flexDirection: "column", overflow: "hidden" }}>
       <div style={{ flexShrink: 0, display: "flex", alignItems: "center", padding: "14px 20px", gap: "12px", background: "var(--bg-card)", borderBottom: "1px solid var(--border)", zIndex: 10 }}>
@@ -773,10 +657,8 @@ export function OrganizerEventDetail() {
           💾 Save
         </motion.button>
       </div>
-
       <div style={{ flex: 1, minHeight: 0, overflowY: "scroll", overflowX: "hidden", WebkitOverflowScrolling: "touch", overscrollBehavior: "contain" }}>
         <div style={{ padding: desktop ? "28px 40px 120px" : "16px 16px 120px", maxWidth: desktop ? "760px" : "100%", margin: "0 auto" }}>
-          {/* Category */}
           <div style={{ marginBottom: "20px" }}>
             <div style={{ fontSize: "13px", fontWeight: 600, color: "var(--text-secondary)", marginBottom: "10px" }}>Category</div>
             <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
@@ -788,7 +670,6 @@ export function OrganizerEventDetail() {
               ))}
             </div>
           </div>
-          {/* Image */}
           <div style={{ marginBottom: "20px" }}>
             <div style={{ fontSize: "13px", fontWeight: 600, color: "var(--text-secondary)", marginBottom: "10px" }}>Event Image</div>
             <div style={{ display: "flex", gap: "8px", marginBottom: "10px" }}>
@@ -819,9 +700,7 @@ export function OrganizerEventDetail() {
           <div style={{ display: "grid", gridTemplateColumns: desktop ? "1fr 1fr" : "1fr", gap: desktop ? "0 28px" : "0" }}>
             {[["name","Event Name","text",true],["subtitle","Subtitle","text",false],["date","Date","date",true],["time","Time","time",false],["venue","Venue","text",true],["city","City","text",false],["price","Ticket Price (GHS)","number",true],["totalTickets","Total Tickets","number",false],["description","Description","text",false]].map(([key, label, type, required]) => (
               <div key={key} style={{ marginBottom: "16px" }}>
-                <div style={{ fontSize: "13px", fontWeight: 600, color: "var(--text-secondary)", marginBottom: "7px" }}>
-                  {label} {required && <span style={{ color: "var(--error)" }}>*</span>}
-                </div>
+                <div style={{ fontSize: "13px", fontWeight: 600, color: "var(--text-secondary)", marginBottom: "7px" }}>{label} {required && <span style={{ color: "var(--error)" }}>*</span>}</div>
                 <input type={type} value={editForm[key] ?? ""}
                   onChange={e => setEditForm(p => ({ ...p, [key]: e.target.value }))}
                   style={{ ...inp, marginBottom: 0, colorScheme: "light dark" }}
@@ -850,7 +729,6 @@ export function OrganizerEventDetail() {
     </div>
   );
 
-  // ── Detail view ───────────────────────────────────────────
   return (
     <div style={{ background: "var(--bg)", height: "100%", overflowY: "auto", WebkitOverflowScrolling: "touch", overscrollBehavior: "contain", paddingBottom: desktop ? "60px" : "100px" }}>
       <div style={{ height: desktop ? "280px" : "220px", position: "relative", flexShrink: 0 }}>
@@ -872,26 +750,16 @@ export function OrganizerEventDetail() {
           <div style={{ color: "rgba(255,255,255,0.55)", fontSize: "12px", fontFamily: "var(--font-mono)" }}>📍 {ev.venue} · {ev.date}</div>
         </div>
       </div>
-
       <div style={{ padding: desktop ? "24px 40px" : "16px 16px" }}>
-        {/* Stat row */}
         <div style={{ display: "grid", gridTemplateColumns: desktop ? "repeat(4,1fr)" : "1fr 1fr", gap: "12px", marginBottom: "16px" }}>
-          {[
-            ["💰", "Revenue (95%)",  "GHS " + revenue.toLocaleString(),      "#16a34a"],
-            ["🏦", "Platform Fee",   "GHS " + fee.toLocaleString(),           "#dc2626"],
-            ["🎟️", "Tickets Sold",  ev.ticketsSold + "/" + ev.totalTickets,  "#2563eb"],
-            ["🚪", "Admitted",       (ev.admittedCount || 0) + " ppl",        BRAND],
-          ].map(([icon, label, value, color]) => (
-            <motion.div key={label} whileHover={{ y: -2 }}
-              style={{ background: "var(--bg-card)", border: "1px solid var(--border)", borderRadius: "14px", padding: "14px 16px", boxShadow: "var(--shadow-sm)" }}>
+          {[["💰","Revenue (95%)","GHS " + revenue.toLocaleString(),"#16a34a"],["🏦","Platform Fee","GHS " + fee.toLocaleString(),"#dc2626"],["🎟️","Tickets Sold",ev.ticketsSold + "/" + ev.totalTickets,"#2563eb"],["🚪","Admitted",(ev.admittedCount || 0) + " ppl",BRAND]].map(([icon, label, value, color]) => (
+            <motion.div key={label} whileHover={{ y: -2 }} style={{ background: "var(--bg-card)", border: "1px solid var(--border)", borderRadius: "14px", padding: "14px 16px", boxShadow: "var(--shadow-sm)" }}>
               <div style={{ fontSize: "16px", marginBottom: "6px" }}>{icon}</div>
               <div style={{ fontSize: "18px", fontWeight: 900, color, marginBottom: "3px", letterSpacing: "-0.5px" }}>{value}</div>
               <div style={{ fontSize: "11px", color: "var(--text-muted)", fontWeight: 600 }}>{label}</div>
             </motion.div>
           ))}
         </div>
-
-        {/* Fill bar */}
         <div style={{ background: "var(--bg-card)", borderRadius: "14px", padding: "15px 17px", marginBottom: "14px", border: "1px solid var(--border)" }}>
           <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "8px" }}>
             <span style={{ fontSize: "13px", fontWeight: 700, color: "var(--text-primary)" }}>Ticket Sales Progress</span>
@@ -903,15 +771,12 @@ export function OrganizerEventDetail() {
           </div>
           <div style={{ fontSize: "12px", color: "var(--text-muted)", marginTop: "6px", fontFamily: "var(--font-mono)" }}>{ev.totalTickets - ev.ticketsSold} tickets remaining</div>
         </div>
-
         {ev.description && (
           <div style={{ background: "var(--bg-card)", borderRadius: "14px", padding: "15px 17px", marginBottom: "14px", border: "1px solid var(--border)" }}>
             <div style={{ fontSize: "11px", fontWeight: 700, color: "var(--text-muted)", marginBottom: "8px", fontFamily: "var(--font-mono)" }}>DESCRIPTION</div>
             <div style={{ fontSize: "14px", color: "var(--text-secondary)", lineHeight: 1.7 }}>{ev.description}</div>
           </div>
         )}
-
-        {/* Action buttons */}
         <div style={{ display: "grid", gridTemplateColumns: desktop ? "1fr 1fr" : "1fr", gap: "10px", marginBottom: "14px" }}>
           <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }} onClick={() => toggleSales(ev.id)}
             style={{ ...primaryBtn, marginBottom: 0, background: ev.salesOpen ? "linear-gradient(135deg,#dc2626,#b91c1c)" : "linear-gradient(135deg,#16a34a,#15803d)", fontSize: "14px" }}>
@@ -922,8 +787,6 @@ export function OrganizerEventDetail() {
             🔍 Scan Tickets
           </motion.button>
         </div>
-
-        {/* Door staff */}
         <div style={{ background: "var(--bg-card)", border: "1px solid var(--border)", borderRadius: "16px", padding: "18px", boxShadow: "var(--shadow-sm)" }}>
           <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "14px" }}>
             <div style={{ width: "36px", height: "36px", borderRadius: "11px", background: BRAND_GL, display: "flex", alignItems: "center", justifyContent: "center", fontSize: "17px", border: `1px solid ${BRAND}20` }}>🚪</div>
@@ -932,8 +795,7 @@ export function OrganizerEventDetail() {
               <div style={{ fontSize: "12px", color: "var(--text-muted)", fontFamily: "var(--font-mono)" }}>Single-use codes · auto-expire on first use</div>
             </div>
           </div>
-          <motion.button whileHover={{ borderColor: BRAND }} whileTap={{ scale: 0.97 }}
-            onClick={() => generateDoorCode(ev.id, ev.name)}
+          <motion.button whileHover={{ borderColor: BRAND }} whileTap={{ scale: 0.97 }} onClick={() => generateDoorCode(ev.id, ev.name)}
             style={{ width: "100%", padding: "11px", background: BRAND_GL, color: BRAND, border: `2px dashed ${BRAND}40`, borderRadius: "11px", fontSize: "13px", fontWeight: 700, cursor: "pointer", marginBottom: "12px", transition: "border-color 0.2s", fontFamily: "var(--font-sans)" }}>
             + Generate Door Staff Code
           </motion.button>

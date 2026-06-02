@@ -623,13 +623,10 @@ export default function App() {
   if (screen === "doorStaffLogin") return <DoorStaffLogin />;
   if (screen === "doorStaffScan")  return <DoorStaffScan />;
 
-  if (desktop && !isLoggedIn) {
-    if (screen === "signup") return <Signup />;
-    if (screen === "role")   return <RoleSelect />;
-    return <Login />;
-  }
-  if (desktop && isLoggedIn) return <DesktopAppLayout />;
+ if (desktop && isLoggedIn) return <DesktopAppLayout />;
 
+  // Desktop non-logged-in + all mobile — goes through PhoneFrame
+  // PhoneFrame renders landing, about, login, signup based on screen state
   return (
     <>
       <PhoneFrame>
@@ -638,4 +635,4 @@ export default function App() {
       <CookieBanner />
     </>
   );
-}
+  }

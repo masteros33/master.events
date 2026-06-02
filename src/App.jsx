@@ -7,6 +7,7 @@ import { Signup, RoleSelect } from "./screens/auth/Signup";
 import ResetPassword from "./screens/auth/ResetPassword";
 import AttendeeHome from "./screens/attendee/AttendeeHome";
 import ResaleMarketplace from "./screens/attendee/ResaleMarketplace";
+import CookieBanner from "./components/CookieBanner";
 import Settings from "./screens/attendee/Settings";
 import { AttendeeTickets, AttendeeAlerts } from "./screens/attendee/AttendeeScreens";
 import {
@@ -55,15 +56,12 @@ function MobileTopHeader({ onMenuOpen, title }) {
       boxShadow: "0 1px 0 var(--border)",
       flexShrink: 0,
     }}>
-      {/* Brand mark */}
       <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
         <div style={{ width: "30px", height: "30px", borderRadius: "9px", background: `linear-gradient(135deg, ${BRAND}, #EA6C0A)`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: "14px", boxShadow: `0 3px 10px ${BRAND}35` }}>🎟️</div>
         <span style={{ fontWeight: 800, fontSize: "15px", color: "var(--text-primary)", letterSpacing: "-0.3px" }}>
           {title || "Master Events"}
         </span>
       </div>
-
-      {/* Right: theme + hamburger */}
       <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
         <motion.button whileTap={{ scale: 0.88 }} onClick={() => setTheme(nextTheme)}
           style={{ width: "34px", height: "34px", borderRadius: "9px", background: "var(--bg-subtle)", border: "1px solid var(--border)", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}>
@@ -89,16 +87,16 @@ function MobileDrawer({ open, onClose }) {
   const currentUser  = useStore(s => s.currentUser);
 
   const attendeeNav = [
-    { id: "home",    icon: Home,         label: "Discover",      tab: true },
-    { id: "tickets", icon: Ticket,       label: "My Tickets",    tab: true },
-    { id: "alerts",  icon: Bell,         label: "Alerts",        tab: true },
-    { id: "resaleMarket", icon: ShoppingBag, label: "Resale Market", tab: false, screen: "resaleMarket" },
+    { id: "home",         icon: Home,         label: "Discover",      tab: true },
+    { id: "tickets",      icon: Ticket,       label: "My Tickets",    tab: true },
+    { id: "alerts",       icon: Bell,         label: "Alerts",        tab: true },
+    { id: "resaleMarket", icon: ShoppingBag,  label: "Resale Market", tab: false, screen: "resaleMarket" },
   ];
   const orgNav = [
-    { id: "dashboard", icon: LayoutDashboard, label: "Dashboard",   tab: true },
-    { id: "events",    icon: CalendarDays,    label: "My Events",   tab: true },
-    { id: "wallet",    icon: Wallet,          label: "Wallet",      tab: true },
-    { id: "alerts",    icon: Bell,            label: "Alerts",      tab: true },
+    { id: "dashboard", icon: LayoutDashboard, label: "Dashboard", tab: true },
+    { id: "events",    icon: CalendarDays,    label: "My Events", tab: true },
+    { id: "wallet",    icon: Wallet,          label: "Wallet",    tab: true },
+    { id: "alerts",    icon: Bell,            label: "Alerts",    tab: true },
   ];
   const navItems = role === "organizer" ? orgNav : attendeeNav;
 
@@ -117,12 +115,10 @@ function MobileDrawer({ open, onClose }) {
     <AnimatePresence>
       {open && (
         <>
-          {/* Backdrop */}
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
             onClick={onClose}
             style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.6)", zIndex: 200, backdropFilter: "blur(6px)" }} />
 
-          {/* Drawer */}
           <motion.div
             initial={{ x: "100%" }} animate={{ x: 0 }} exit={{ x: "100%" }}
             transition={{ type: "spring", stiffness: 320, damping: 32 }}
@@ -135,7 +131,7 @@ function MobileDrawer({ open, onClose }) {
               borderLeft: "1px solid var(--border)",
             }}>
 
-            {/* Drawer header */}
+            {/* Header */}
             <div style={{ padding: "16px 20px", borderBottom: "1px solid var(--border)", display: "flex", alignItems: "center", justifyContent: "space-between", flexShrink: 0 }}>
               <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
                 <Avatar seed={currentUser?.email} name={currentUser?.first_name} size={38}
@@ -165,7 +161,7 @@ function MobileDrawer({ open, onClose }) {
               </div>
             </div>
 
-            {/* Nav links — flex-1 pushes footer down */}
+            {/* Nav */}
             <nav style={{ flex: 1, padding: "8px 12px", overflowY: "auto" }}>
               <div style={{ fontSize: "9px", fontWeight: 700, color: "var(--text-muted)", letterSpacing: "1.5px", padding: "8px 8px 6px", fontFamily: "var(--font-mono)" }}>NAVIGATE</div>
               {navItems.map(item => {
@@ -189,7 +185,6 @@ function MobileDrawer({ open, onClose }) {
                 );
               })}
 
-              {/* Organizer actions */}
               {role === "organizer" && (
                 <>
                   <div style={{ fontSize: "9px", fontWeight: 700, color: "var(--text-muted)", letterSpacing: "1.5px", padding: "14px 8px 6px", fontFamily: "var(--font-mono)" }}>ACTIONS</div>
@@ -209,9 +204,8 @@ function MobileDrawer({ open, onClose }) {
               )}
             </nav>
 
-            {/* Footer — anchored to bottom */}
+            {/* Footer */}
             <div style={{ borderTop: "1px solid var(--border)", padding: "12px", flexShrink: 0, paddingBottom: "calc(12px + env(safe-area-inset-bottom, 0px))" }}>
-              {/* Settings */}
               <motion.div whileTap={{ scale: 0.97 }}
                 onClick={() => { onClose(); setScreen("settings"); }}
                 style={{
@@ -225,7 +219,6 @@ function MobileDrawer({ open, onClose }) {
                 <span style={{ fontSize: "14px", fontWeight: 500, color: screen === "settings" ? BRAND : "var(--text-primary)" }}>Account Settings</span>
               </motion.div>
 
-              {/* Logout */}
               <motion.button whileTap={{ scale: 0.97 }}
                 onClick={() => { onClose(); handleLogout(); }}
                 style={{
@@ -289,7 +282,6 @@ function MobileAppShell() {
     ? screenTitles[screen]
     : tabTitles[activeTab] || "Master Events";
 
-  // Full screen routes (no top nav)
   const fullScreenMap = {
     checkout: <Checkout />, ticketView: <TicketView />,
     resale: <Resale />, resaleSuccess: <ResaleSuccess />,
@@ -298,13 +290,11 @@ function MobileAppShell() {
     scanTicket: <OrganizerScan />,
   };
 
-  // Screens that still need top nav
   const navScreenMap = {
     resaleMarket: <ResaleMarketplace />,
     settings:     <Settings />,
   };
 
-  // Pure full screen (no header)
   if (fullScreenMap[screen]) {
     return (
       <div className="app-shell">
@@ -351,7 +341,6 @@ function DesktopTopbar({ navItems, activeTab, isFullScreen, screen, screenTitles
   const setSearchQ = useStore(s => s.setSearchQ);
   const themeOpts  = { light: Sun, dark: Moon, system: Monitor };
   const themeOrder = ["light", "dark", "system"];
-  const nextTheme  = themeOrder[(themeOrder.indexOf(theme) + 1) % 3];
   const ThemeIcon  = themeOpts[theme] || Sun;
   const pageTitle  = isFullScreen
     ? screenTitles[screen] || "Master Events"
@@ -383,7 +372,8 @@ function DesktopTopbar({ navItems, activeTab, isFullScreen, screen, screenTitles
           <motion.div animate={{ scale: [1,1.5,1] }} transition={{ repeat: Infinity, duration: 2 }} style={{ width: "6px", height: "6px", borderRadius: "50%", background: "#16a34a" }} />
           <span style={{ fontSize: "10px", fontWeight: 700, color: "#16a34a", fontFamily: "var(--font-mono)" }}>AMOY</span>
         </div>
-        <motion.div whileTap={{ scale: 0.88 }} onClick={() => setTheme(themeOrder[(themeOrder.indexOf(theme) + 1) % 3])}
+        <motion.div whileTap={{ scale: 0.88 }}
+          onClick={() => setTheme(["light","dark","system"][(["light","dark","system"].indexOf(theme) + 1) % 3])}
           style={{ width: "32px", height: "32px", borderRadius: "9px", background: "var(--bg-subtle)", border: "1px solid var(--border)", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", transition: "all 0.2s" }}
           onMouseEnter={e => { e.currentTarget.style.borderColor = BRAND; e.currentTarget.style.background = `${BRAND}08`; }}
           onMouseLeave={e => { e.currentTarget.style.borderColor = "var(--border)"; e.currentTarget.style.background = "var(--bg-subtle)"; }}>
@@ -407,15 +397,15 @@ function DesktopAppLayout() {
   const [collapsed, setCollapsed] = React.useState(false);
 
   const attendeeNav = [
-    { id: "home",    Icon: Home,          label: "Discover" },
-    { id: "tickets", Icon: Ticket,        label: "My Tickets" },
-    { id: "alerts",  Icon: Bell,          label: "Alerts" },
+    { id: "home",    Icon: Home,          label: "Discover"    },
+    { id: "tickets", Icon: Ticket,        label: "My Tickets"  },
+    { id: "alerts",  Icon: Bell,          label: "Alerts"      },
   ];
   const orgNav = [
     { id: "dashboard", Icon: LayoutDashboard, label: "Dashboard" },
     { id: "events",    Icon: CalendarDays,    label: "My Events" },
-    { id: "wallet",    Icon: Wallet,          label: "Wallet" },
-    { id: "alerts",    Icon: Bell,            label: "Alerts" },
+    { id: "wallet",    Icon: Wallet,          label: "Wallet"    },
+    { id: "alerts",    Icon: Bell,            label: "Alerts"    },
   ];
   const navItems     = role === "organizer" ? orgNav : attendeeNav;
   const isFullScreen = FULL_SCREENS.includes(screen);
@@ -529,14 +519,14 @@ function DesktopAppLayout() {
           {role === "organizer" && (
             <div style={{ marginTop: "8px" }}>
               {!collapsed && <div style={{ fontSize: "9px", fontWeight: 700, color: "var(--text-muted)", letterSpacing: "1.5px", padding: "8px 10px 6px", fontFamily: "var(--font-mono)" }}>ACTIONS</div>}
-              <motion.div whileTap={{ scale: 0.94 }} onClick={() => setScreen("addEvent")} title={collapsed ? "Create Event" : ""}
+              <motion.div whileTap={{ scale: 0.94 }} onClick={() => setScreen("addEvent")}
                 style={{ display: "flex", alignItems: "center", gap: "10px", padding: collapsed ? "10px 0" : "9px 12px", justifyContent: collapsed ? "center" : "flex-start", borderRadius: "10px", cursor: "pointer", border: collapsed ? "none" : "1.5px dashed rgba(249,115,22,0.3)", color: BRAND, transition: "all 0.18s ease", marginBottom: "3px" }}
                 onMouseEnter={e => { e.currentTarget.style.background = `${BRAND}07`; }}
                 onMouseLeave={e => { e.currentTarget.style.background = "transparent"; }}>
                 <PlusCircle size={16} color={BRAND} style={{ flexShrink: 0 }} />
                 {!collapsed && <span style={{ fontWeight: 600, fontSize: "13px" }}>Create Event</span>}
               </motion.div>
-              <motion.div whileTap={{ scale: 0.94 }} onClick={() => setScreen("scanTicket")} title={collapsed ? "Scan Tickets" : ""}
+              <motion.div whileTap={{ scale: 0.94 }} onClick={() => setScreen("scanTicket")}
                 style={{ display: "flex", alignItems: "center", gap: "10px", padding: collapsed ? "10px 0" : "9px 12px", justifyContent: collapsed ? "center" : "flex-start", borderRadius: "10px", cursor: "pointer", color: "var(--text-secondary)", transition: "all 0.18s ease" }}
                 onMouseEnter={e => { e.currentTarget.style.background = "var(--bg-hover)"; }}
                 onMouseLeave={e => { e.currentTarget.style.background = "transparent"; }}>
@@ -545,7 +535,6 @@ function DesktopAppLayout() {
               </motion.div>
             </div>
           )}
-          {/* Settings link */}
           <div style={{ marginTop: "8px" }}>
             <NavItem icon={SettingsIcon} label="Settings" active={screen === "settings"}
               collapsed={collapsed} title={collapsed ? "Settings" : ""}
@@ -575,16 +564,21 @@ function DesktopAppLayout() {
           </div>
         </div>
       </main>
+
+      <CookieBanner />
     </div>
   );
 }
 
 // ── Mobile App Content ────────────────────────────────────────
 function MobileAppContent() {
-  const screen     = useStore(s => s.screen);
-  const isLoggedIn = useStore(s => s.isLoggedIn);
+  const screen = useStore(s => s.screen);
 
-  const authRoutes = { login: <Login />, signup: <Signup />, role: <RoleSelect />, resetPassword: <ResetPassword /> };
+  const authRoutes = {
+    login: <Login />, signup: <Signup />,
+    role: <RoleSelect />, resetPassword: <ResetPassword />
+  };
+
   if (authRoutes[screen]) return (
     <div key={screen} className="screen-enter app-shell" style={{ background: "var(--bg)" }}>
       {authRoutes[screen]}
@@ -623,7 +617,6 @@ export default function App() {
     return () => window.removeEventListener("resize", handler);
   }, []);
 
-  // Top-level screens — no login required
   if (screen === "adminGateway")   return <AdminLogin />;
   if (screen === "adminDashboard") return <AdminDashboard />;
   if (screen === "resetPassword")  return <ResetPassword />;
@@ -638,8 +631,11 @@ export default function App() {
   if (desktop && isLoggedIn) return <DesktopAppLayout />;
 
   return (
-    <PhoneFrame>
-      <MobileAppContent />
-    </PhoneFrame>
+    <>
+      <PhoneFrame>
+        <MobileAppContent />
+      </PhoneFrame>
+      <CookieBanner />
+    </>
   );
 }

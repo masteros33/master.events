@@ -1,17 +1,20 @@
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import useStore from "../../store/useStore";
-import { Avatar } from "../../utils/avatar";
+import {
+  Avatar, AVATAR_PRESETS, getSavedAvatarSeed,
+  saveAvatarSeed, naviiUrl
+} from "../../utils/avatar";
 import { useTheme } from "../../hooks/useTheme";
 import {
-  User, Mail, Phone, Shield, LogOut, ChevronRight,
-  Sun, Moon, Monitor, Bell, Lock, Wallet, Globe,
-  CheckCircle, Edit3, Save, X
+  User, Mail, Shield, LogOut, ChevronRight,
+  Sun, Moon, Monitor, Bell, Wallet, Globe,
+  CheckCircle, Edit3, Save, Link2, Cookie,
+  FileText, Lock
 } from "lucide-react";
 
 const isDesktop = () => window.innerWidth > 768;
-
-const BRAND = "#F97316";
+const BRAND     = "#F97316";
 
 function SectionHeader({ title }) {
   return (
@@ -27,8 +30,7 @@ function SectionHeader({ title }) {
 
 function SettingRow({ icon: Icon, label, value, action, danger, onClick, toggle, checked, onToggle, color }) {
   return (
-    <motion.div whileTap={onClick ? { scale: 0.99 } : {}}
-      onClick={onClick}
+    <motion.div whileTap={onClick ? { scale: 0.99 } : {}} onClick={onClick}
       style={{
         display: "flex", alignItems: "center", gap: "14px",
         padding: "14px 16px", background: "var(--bg-card)",
@@ -53,12 +55,7 @@ function SettingRow({ icon: Icon, label, value, action, danger, onClick, toggle,
       </div>
       {toggle ? (
         <motion.div whileTap={{ scale: 0.9 }} onClick={e => { e.stopPropagation(); onToggle(); }}
-          style={{
-            width: "44px", height: "24px", borderRadius: "99px", cursor: "pointer",
-            background: checked ? BRAND : "var(--bg-subtle)",
-            border: `1px solid ${checked ? BRAND : "var(--border)"}`,
-            position: "relative", transition: "all 0.2s",
-          }}>
+          style={{ width: "44px", height: "24px", borderRadius: "99px", cursor: "pointer", background: checked ? BRAND : "var(--bg-subtle)", border: `1px solid ${checked ? BRAND : "var(--border)"}`, position: "relative", transition: "all 0.2s" }}>
           <motion.div animate={{ x: checked ? 22 : 2 }} transition={{ type: "spring", stiffness: 500, damping: 30 }}
             style={{ position: "absolute", top: "2px", width: "18px", height: "18px", borderRadius: "50%", background: checked ? "#fff" : "var(--text-muted)" }} />
         </motion.div>
@@ -71,14 +68,119 @@ function SettingRow({ icon: Icon, label, value, action, danger, onClick, toggle,
   );
 }
 
+// ── Avatar Picker Modal ───────────────────────────────────────
+function AvatarPickerModal({ currentSeed, onSelect, onClose }) {
+  const [selected, setSelected] = useState(currentSeed);
+  const [hovered,  setHovered]  = useState(null);
+
+  return (
+    <>
+      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+        onClick={onClose}
+        style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.7)", zIndex: 300, backdropFilter: "blur(8px)" }} />
+
+      <motion.div
+        initial={{ opacity: 0, y: 40 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 40 }}
+        transition={{ type: "spring", stiffness: 340, damping: 30 }}
+        style={{
+          position: "fixed", bottom: 0, left: 0, right: 0,
+          margin: "0 auto", maxWidth: "520px",
+          background: "var(--bg-card)",
+          borderRadius: "24px 24px 0 0",
+          padding: "24px 20px calc(24px + env(safe-area-inset-bottom, 0px))",
+          zIndex: 301,
+          border: "1px solid var(--border)",
+          borderBottom: "none",
+          maxHeight: "85vh",
+          display: "flex", flexDirection: "column",
+        }}>
+
+        {/* Handle */}
+        <div style={{ width: "40px", height: "4px", borderRadius: "2px", background: "var(--border-strong)", margin: "0 auto 20px" }} />
+
+        <div style={{ fontWeight: 800, fontSize: "18px", color: "var(--text-primary)", marginBottom: "6px", letterSpacing: "-0.3px" }}>
+          Choose Your Avatar
+        </div>
+        <div style={{ fontSize: "13px", color: "var(--text-muted)", marginBottom: "20px" }}>
+          Pick a character — it stays consistent across your account
+        </div>
+
+        {/* Grid */}
+        <div style={{ flex: 1, overflowY: "auto", marginBottom: "16px" }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(6, 1fr)", gap: "10px" }}>
+            {AVATAR_PRESETS.map(seed => {
+              const isSelected = selected === seed;
+              const isHovered  = hovered === seed;
+              return (
+                <motion.div key={seed}
+                  whileTap={{ scale: 0.92 }}
+                  onClick={() => setSelected(seed)}
+                  onMouseEnter={() => setHovered(seed)}
+                  onMouseLeave={() => setHovered(null)}
+                  style={{
+                    position: "relative", cursor: "pointer",
+                    borderRadius: "14px", padding: "4px",
+                    background: isSelected ? `${BRAND}15` : isHovered ? "var(--bg-subtle)" : "transparent",
+                    border: isSelected ? `2px solid ${BRAND}` : "2px solid transparent",
+                    transition: "all 0.15s",
+                  }}>
+                  <Avatar seed={seed} size={44}
+                    style={{ width: "100%", height: "auto", aspectRatio: "1", borderRadius: "10px" }} />
+                  {isSelected && (
+                    <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }}
+                      style={{
+                        position: "absolute", top: "2px", right: "2px",
+                        width: "16px", height: "16px", borderRadius: "50%",
+                        background: BRAND, display: "flex", alignItems: "center", justifyContent: "center",
+                        border: "2px solid var(--bg-card)",
+                      }}>
+                      <CheckCircle size={9} color="#fff" />
+                    </motion.div>
+                  )}
+                </motion.div>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Preview + confirm */}
+        <div style={{ display: "flex", alignItems: "center", gap: "14px", padding: "16px", background: "var(--bg-subtle)", borderRadius: "14px", marginBottom: "14px", border: "1px solid var(--border)" }}>
+          <Avatar seed={selected} size={52}
+            style={{ border: `3px solid ${BRAND}40`, borderRadius: "50%", flexShrink: 0 }} />
+          <div>
+            <div style={{ fontSize: "13px", fontWeight: 700, color: "var(--text-primary)" }}>Preview</div>
+            <div style={{ fontSize: "11px", color: "var(--text-muted)", fontFamily: "var(--font-mono)", marginTop: "2px" }}>
+              {selected}
+            </div>
+          </div>
+        </div>
+
+        <div style={{ display: "flex", gap: "10px" }}>
+          <motion.button whileTap={{ scale: 0.97 }} onClick={onClose}
+            style={{ flex: 1, padding: "13px", background: "var(--bg-subtle)", border: "1px solid var(--border)", borderRadius: "12px", fontWeight: 600, fontSize: "14px", cursor: "pointer", color: "var(--text-secondary)", fontFamily: "var(--font-sans)" }}>
+            Cancel
+          </motion.button>
+          <motion.button whileTap={{ scale: 0.97 }} onClick={() => { onSelect(selected); onClose(); }}
+            style={{ flex: 2, padding: "13px", background: `linear-gradient(135deg, ${BRAND}, #EA6C0A)`, border: "none", borderRadius: "12px", fontWeight: 700, fontSize: "14px", cursor: "pointer", color: "#fff", fontFamily: "var(--font-sans)" }}>
+            Apply Avatar
+          </motion.button>
+        </div>
+      </motion.div>
+    </>
+  );
+}
+
+// ── Main Settings ─────────────────────────────────────────────
 export default function Settings() {
   const setScreen    = useStore(s => s.setScreen);
   const setActiveTab = useStore(s => s.setActiveTab);
   const currentUser  = useStore(s => s.currentUser);
   const handleLogout = useStore(s => s.handleLogout);
-  const { theme, resolvedTheme, setTheme } = useTheme();
+  const { theme, setTheme } = useTheme();
   const desktop = isDesktop();
 
+  const [avatarSeed,   setAvatarSeed]   = useState(() => getSavedAvatarSeed(currentUser?.email));
+  const [showPicker,   setShowPicker]   = useState(false);
   const [editing,      setEditing]      = useState(false);
   const [editName,     setEditName]     = useState(currentUser?.first_name || "");
   const [editPhone,    setEditPhone]    = useState("");
@@ -87,31 +189,36 @@ export default function Settings() {
   const [saved,        setSaved]        = useState(false);
 
   const themeOptions = [
-    { id: "light",  icon: Sun,     label: "Light" },
-    { id: "dark",   icon: Moon,    label: "Dark" },
+    { id: "light",  icon: Sun,     label: "Light"  },
+    { id: "dark",   icon: Moon,    label: "Dark"   },
     { id: "system", icon: Monitor, label: "System" },
   ];
+
+  const handleAvatarSelect = (seed) => {
+    setAvatarSeed(seed);
+    saveAvatarSeed(currentUser?.email, seed);
+  };
 
   const handleSave = () => {
     setSaved(true);
     setEditing(false);
-    setTimeout(() => setSaved(false), 2000);
+    setTimeout(() => setSaved(false), 2500);
   };
 
   return (
     <div style={{ background: "var(--bg)", minHeight: "100%", paddingBottom: "60px" }}>
 
-      {/* ── Header ── */}
+      {/* Header */}
       <div style={{
         position: "sticky", top: 0, zIndex: 20,
         background: "var(--bg-card)", borderBottom: "1px solid var(--border)",
         padding: desktop ? "0 40px" : "0 16px",
         height: "60px", display: "flex", alignItems: "center",
-        justifyContent: "space-between", gap: "16px",
+        justifyContent: "space-between",
       }}>
         <motion.button whileTap={{ scale: 0.9 }}
           onClick={() => { setScreen("app"); setActiveTab(undefined); }}
-          style={{ display: "flex", alignItems: "center", gap: "8px", background: "none", border: "none", cursor: "pointer", color: "var(--text-muted)", fontSize: "13px", fontWeight: 500, fontFamily: "var(--font-sans)", padding: 0 }}>
+          style={{ display: "flex", alignItems: "center", gap: "6px", background: "none", border: "none", cursor: "pointer", color: "var(--text-muted)", fontSize: "13px", fontWeight: 500, fontFamily: "var(--font-sans)", padding: 0 }}>
           ← Back
         </motion.button>
         <div style={{ fontWeight: 800, fontSize: "16px", color: "var(--text-primary)", letterSpacing: "-0.3px" }}>Settings</div>
@@ -122,30 +229,54 @@ export default function Settings() {
 
         {/* ── Profile card ── */}
         <div style={{ background: "var(--bg-card)", borderRadius: "20px", border: "1px solid var(--border)", overflow: "hidden", marginBottom: "8px" }}>
-          <div style={{
-            padding: "24px", background: `linear-gradient(135deg, ${BRAND}10, transparent)`,
-            borderBottom: "1px solid var(--border)",
-          }}>
+          <div style={{ padding: "24px", background: `linear-gradient(135deg, ${BRAND}08, transparent)`, borderBottom: "1px solid var(--border)" }}>
             <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
-              <div style={{ position: "relative" }}>
-                <Avatar seed={currentUser?.email} name={currentUser?.first_name} size={64}
+
+              {/* Tappable avatar */}
+              <motion.div whileTap={{ scale: 0.94 }} onClick={() => setShowPicker(true)}
+                style={{ position: "relative", cursor: "pointer", flexShrink: 0 }}>
+                <Avatar seed={avatarSeed} size={64}
                   style={{ border: `3px solid ${BRAND}40`, borderRadius: "50%" }} />
-                <div style={{ position: "absolute", bottom: 0, right: 0, width: "20px", height: "20px", borderRadius: "50%", background: BRAND, display: "flex", alignItems: "center", justifyContent: "center", border: "2px solid var(--bg-card)" }}>
+                <motion.div
+                  whileHover={{ scale: 1.1 }}
+                  style={{
+                    position: "absolute", bottom: 0, right: 0,
+                    width: "22px", height: "22px", borderRadius: "50%",
+                    background: `linear-gradient(135deg, ${BRAND}, #EA6C0A)`,
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                    border: "2px solid var(--bg-card)",
+                    boxShadow: `0 2px 8px ${BRAND}40`,
+                  }}>
                   <Edit3 size={10} color="#fff" />
-                </div>
-              </div>
+                </motion.div>
+              </motion.div>
+
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ fontWeight: 900, fontSize: "20px", color: "var(--text-primary)", letterSpacing: "-0.5px" }}>
                   {currentUser?.first_name} {currentUser?.last_name}
                 </div>
                 <div style={{ fontSize: "13px", color: "var(--text-muted)", marginTop: "2px" }}>{currentUser?.email}</div>
                 <div style={{ marginTop: "8px", display: "inline-flex", alignItems: "center", gap: "5px", padding: "3px 10px", borderRadius: "99px", background: `${BRAND}12`, border: `1px solid ${BRAND}25` }}>
-                  <span style={{ fontSize: "10px", fontWeight: 700, color: BRAND, letterSpacing: "0.5px" }}>
-                    🎟️ ATTENDEE
-                  </span>
+                  <span style={{ fontSize: "10px", fontWeight: 700, color: BRAND, letterSpacing: "0.5px" }}>🎟️ ATTENDEE</span>
                 </div>
               </div>
             </div>
+
+            {/* Tap hint */}
+            <motion.div whileTap={{ scale: 0.98 }} onClick={() => setShowPicker(true)}
+              style={{ marginTop: "14px", display: "flex", alignItems: "center", gap: "8px", padding: "10px 14px", background: `${BRAND}06`, border: `1px solid ${BRAND}18`, borderRadius: "11px", cursor: "pointer" }}>
+              <div style={{ display: "flex", gap: "4px" }}>
+                {AVATAR_PRESETS.slice(0, 5).map(seed => (
+                  <Avatar key={seed} seed={seed} size={20}
+                    style={{ border: seed === avatarSeed ? `2px solid ${BRAND}` : "2px solid transparent", borderRadius: "50%" }} />
+                ))}
+                <div style={{ width: "20px", height: "20px", borderRadius: "50%", background: "var(--bg-subtle)", border: "1px solid var(--border)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "9px", color: "var(--text-muted)", fontWeight: 700 }}>
+                  +{AVATAR_PRESETS.length - 5}
+                </div>
+              </div>
+              <span style={{ fontSize: "12px", fontWeight: 600, color: BRAND, marginLeft: "4px" }}>Change Avatar</span>
+              <ChevronRight size={14} color={BRAND} style={{ marginLeft: "auto" }} />
+            </motion.div>
           </div>
 
           {/* Edit form */}
@@ -201,13 +332,13 @@ export default function Settings() {
           </div>
         </div>
 
-        {/* ── Account info ── */}
+        {/* Account */}
         <SectionHeader title="Account" />
         <SettingRow icon={Mail}   label="Email Address" value={currentUser?.email} color="#2563eb" />
         <SettingRow icon={User}   label="Full Name" value={`${currentUser?.first_name || ""} ${currentUser?.last_name || ""}`.trim() || "Not set"} color={BRAND} onClick={() => setEditing(true)} action="Edit" />
-        <SettingRow icon={Shield} label="Password" value="Last changed: unknown" color="#7c3aed" onClick={() => {}} action="Change" />
+        <SettingRow icon={Lock}   label="Password" value="Change your password" color="#7c3aed" onClick={() => {}} action="Change" />
 
-        {/* ── Appearance ── */}
+        {/* Appearance */}
         <SectionHeader title="Appearance" />
         <div style={{ background: "var(--bg-card)", borderRadius: "14px", border: "1px solid var(--border)", padding: "16px", marginBottom: "6px" }}>
           <div style={{ fontSize: "13px", fontWeight: 600, color: "var(--text-primary)", marginBottom: "12px" }}>Theme</div>
@@ -216,13 +347,7 @@ export default function Settings() {
               const active = theme === id;
               return (
                 <motion.button key={id} whileTap={{ scale: 0.95 }} onClick={() => setTheme(id)}
-                  style={{
-                    flex: 1, padding: "12px 8px", borderRadius: "12px", cursor: "pointer",
-                    border: active ? `1.5px solid ${BRAND}` : "1.5px solid var(--border)",
-                    background: active ? `${BRAND}10` : "var(--bg-subtle)",
-                    display: "flex", flexDirection: "column", alignItems: "center", gap: "6px",
-                    transition: "all 0.15s", fontFamily: "var(--font-sans)",
-                  }}>
+                  style={{ flex: 1, padding: "12px 8px", borderRadius: "12px", cursor: "pointer", border: active ? `1.5px solid ${BRAND}` : "1.5px solid var(--border)", background: active ? `${BRAND}10` : "var(--bg-subtle)", display: "flex", flexDirection: "column", alignItems: "center", gap: "6px", transition: "all 0.15s", fontFamily: "var(--font-sans)" }}>
                   <Icon size={18} color={active ? BRAND : "var(--text-muted)"} />
                   <span style={{ fontSize: "11px", fontWeight: active ? 700 : 500, color: active ? BRAND : "var(--text-secondary)" }}>{label}</span>
                 </motion.button>
@@ -231,17 +356,17 @@ export default function Settings() {
           </div>
         </div>
 
-        {/* ── Notifications ── */}
+        {/* Notifications */}
         <SectionHeader title="Notifications" />
-        <SettingRow icon={Bell} label="Push Notifications" value="Email alerts for ticket activity" color="#16a34a"
+        <SettingRow icon={Bell} label="Email Notifications" value="Ticket activity, NFT confirmations, sales" color="#16a34a"
           toggle checked={notifs} onToggle={() => setNotifs(!notifs)} />
 
-        {/* ── Blockchain ── */}
+        {/* Blockchain */}
         <SectionHeader title="Blockchain" />
         <div style={{ background: "var(--bg-card)", borderRadius: "14px", border: "1px solid rgba(124,58,237,0.2)", padding: "16px", marginBottom: "6px" }}>
           <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "12px" }}>
             <div style={{ width: "36px", height: "36px", borderRadius: "10px", background: "rgba(124,58,237,0.1)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-              <span style={{ fontSize: "16px" }}>⛓️</span>
+              <Link2 size={17} color="#a78bfa" />
             </div>
             <div>
               <div style={{ fontSize: "13px", fontWeight: 700, color: "#a78bfa" }}>Polygon Amoy Testnet</div>
@@ -262,28 +387,35 @@ export default function Settings() {
         </div>
         <SettingRow icon={Wallet} label="Connect Wallet" value="Link your MetaMask for NFT management" color="#7c3aed" onClick={() => {}} action="Connect" />
 
-        {/* ── About ── */}
-        <SectionHeader title="About" />
-        <SettingRow icon={Globe}  label="Version" value="Master Events v1.0 · Built on Polygon" color="#0891b2" />
-        <SettingRow icon={Shield} label="Privacy Policy" color="var(--text-muted)" onClick={() => {}} />
-        <SettingRow icon={Shield} label="Terms of Service" color="var(--text-muted)" onClick={() => {}} />
+        {/* Legal */}
+        <SectionHeader title="Legal & Privacy" />
+        <SettingRow icon={FileText} label="Privacy Policy"    color="var(--text-muted)" onClick={() => setScreen("privacy")} />
+        <SettingRow icon={Shield}   label="Terms of Service"  color="var(--text-muted)" onClick={() => setScreen("privacy")} />
+        <SettingRow icon={Cookie}   label="Cookie Preferences" value="Manage what we track" color="var(--text-muted)" onClick={() => {
+          localStorage.removeItem("me_cookie_consent");
+          window.location.reload();
+        }} />
 
-        {/* ── Danger zone ── */}
+        {/* About */}
+        <SectionHeader title="About" />
+        <SettingRow icon={Globe} label="Version" value="Master Events v1.0 · Built on Polygon" color="#0891b2" />
+
+        {/* Danger */}
         <SectionHeader title="Account Actions" />
         <SettingRow icon={LogOut} label="Log Out" danger onClick={() => setShowLogout(true)} />
 
-        {/* ── Logout confirm modal ── */}
+        {/* Logout modal */}
         <AnimatePresence>
           {showLogout && (
             <>
               <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
                 onClick={() => setShowLogout(false)}
                 style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.6)", zIndex: 200, backdropFilter: "blur(4px)" }} />
-              <motion.div initial={{ opacity: 0, scale: 0.92, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.92 }}
+              <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 20 }}
                 style={{ position: "fixed", bottom: 0, left: 0, right: 0, margin: "0 auto", maxWidth: "480px", background: "var(--bg-card)", borderRadius: "24px 24px 0 0", padding: "24px 24px calc(24px + env(safe-area-inset-bottom, 0px))", zIndex: 201, border: "1px solid var(--border)", borderBottom: "none" }}>
                 <div style={{ width: "40px", height: "4px", borderRadius: "2px", background: "var(--border-strong)", margin: "0 auto 20px" }} />
                 <div style={{ fontWeight: 800, fontSize: "18px", color: "var(--text-primary)", marginBottom: "8px", letterSpacing: "-0.3px" }}>Log out?</div>
-                <div style={{ fontSize: "14px", color: "var(--text-muted)", marginBottom: "24px", lineHeight: 1.6 }}>You'll need to sign in again to access your tickets and account.</div>
+                <div style={{ fontSize: "14px", color: "var(--text-muted)", marginBottom: "24px", lineHeight: 1.6 }}>You'll need to sign in again to access your tickets and wallet.</div>
                 <div style={{ display: "flex", gap: "10px" }}>
                   <motion.button whileTap={{ scale: 0.97 }} onClick={() => setShowLogout(false)}
                     style={{ flex: 1, padding: "14px", background: "var(--bg-subtle)", border: "1px solid var(--border)", borderRadius: "13px", fontWeight: 600, fontSize: "14px", cursor: "pointer", color: "var(--text-secondary)", fontFamily: "var(--font-sans)" }}>
@@ -296,6 +428,17 @@ export default function Settings() {
                 </div>
               </motion.div>
             </>
+          )}
+        </AnimatePresence>
+
+        {/* Avatar picker modal */}
+        <AnimatePresence>
+          {showPicker && (
+            <AvatarPickerModal
+              currentSeed={avatarSeed}
+              onSelect={handleAvatarSelect}
+              onClose={() => setShowPicker(false)}
+            />
           )}
         </AnimatePresence>
       </div>

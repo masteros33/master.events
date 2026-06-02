@@ -338,11 +338,8 @@ export default function AttendeeHome() {
   const overlayEvent     = useStore(s => s.overlayEvent);
   const searchQ          = useStore(s => s.searchQ);
   const setSearchQ       = useStore(s => s.setSearchQ);
-  const handleLogout     = useStore(s => s.handleLogout);
   const currentUser      = useStore(s => s.currentUser);
-
   const [activeCategory, setActiveCategory] = useState("all");
-  const [menuOpen,       setMenuOpen]       = useState(false);
   const [page,           setPage]           = useState(1);
   const [searchFocused,  setSearchFocused]  = useState(false);
   const desktop = isDesktop();
@@ -419,60 +416,7 @@ export default function AttendeeHome() {
   return (
     <div style={{ background: "var(--bg)", minHeight: "100%", paddingBottom: desktop ? "60px" : "100px" }}>
 
-      {/* ── Mobile slide-over drawer ── */}
-      <AnimatePresence>
-        {!desktop && menuOpen && (
-          <>
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-              onClick={() => setMenuOpen(false)}
-              style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.55)", zIndex: 100, backdropFilter: "blur(6px)" }} />
-            <motion.div initial={{ x: "-100%" }} animate={{ x: 0 }} exit={{ x: "-100%" }}
-              transition={{ type: "spring", stiffness: 320, damping: 32 }}
-              style={{ position: "fixed", top: 0, left: 0, width: "78%", maxWidth: "300px", height: "100%", background: "var(--bg-card)", zIndex: 101, display: "flex", flexDirection: "column", boxShadow: "4px 0 32px rgba(0,0,0,0.2)", borderRight: "1px solid var(--border)" }}>
-
-              <div style={{ padding: "52px 20px 16px", borderBottom: "1px solid var(--border)" }}>
-                <div style={{ display: "flex", alignItems: "center", gap: "9px" }}>
-                  <div style={{ width: "30px", height: "30px", borderRadius: "9px", background: "linear-gradient(135deg, #f5a623, #e8920f)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                    <span style={{ fontSize: "14px" }}>🎟️</span>
-                  </div>
-                  <span style={{ fontWeight: 800, fontSize: "15px", color: "var(--text-primary)", letterSpacing: "-0.3px" }}>Master Events</span>
-                </div>
-              </div>
-
-              <div style={{ flex: 1, padding: "12px", overflowY: "auto" }}>
-                {[
-                  ["◈", "Discover",      "home"],
-                  ["🎟", "My Tickets",   "tickets"],
-                  ["🔔", "Alerts",       "alerts"],
-                ].map(([icon, label, tabId]) => {
-                  const isActive = activeTab === tabId;
-                  return (
-                    <motion.div key={label} whileTap={{ scale: 0.97 }}
-                      onClick={() => { setMenuOpen(false); setActiveTab(tabId); setScreen("app"); }}
-                      style={{
-                        display: "flex", alignItems: "center", gap: "12px",
-                        padding: "12px 10px", cursor: "pointer", borderRadius: "10px",
-                        background: isActive ? "rgba(245,166,35,0.08)" : "transparent",
-                        border: isActive ? "1px solid rgba(245,166,35,0.2)" : "1px solid transparent",
-                        marginBottom: "3px", transition: "all 0.15s",
-                      }}>
-                      <span style={{ fontSize: "14px", fontFamily: "var(--font-mono)", color: isActive ? "#f5a623" : "var(--text-muted)" }}>{icon}</span>
-                      <span style={{ fontSize: "14px", fontWeight: 600, color: isActive ? "#f5a623" : "var(--text-primary)" }}>{label}</span>
-                    </motion.div>
-                  );
-                })}
-              </div>
-
-              <div style={{ padding: "12px 12px 28px", borderTop: "1px solid var(--border)" }}>
-                <motion.button whileTap={{ scale: 0.97 }} onClick={handleLogout}
-                  style={{ width: "100%", padding: "13px", background: "var(--error-bg)", border: "1px solid rgba(220,38,38,0.15)", color: "var(--error)", borderRadius: "11px", fontWeight: 700, cursor: "pointer", fontSize: "13px", fontFamily: "var(--font-sans)" }}>
-                  Log Out
-                </motion.button>
-              </div>
-            </motion.div>
-          </>
-        )}
-      </AnimatePresence>
+    
 
       {/* ══════════════════════════════════════════════════════
           UNIFIED COMMAND BAR
@@ -489,19 +433,18 @@ export default function AttendeeHome() {
         <div style={{ padding: desktop ? "0 40px" : "0 16px" }}>
 
           {/* ── Mobile top row ── */}
-          {!desktop && (
-            <div style={{ display: "flex", alignItems: "center", gap: "10px", padding: "12px 0 10px" }}>
-              <motion.div whileTap={{ scale: 0.88 }} onClick={() => setMenuOpen(true)}
-                style={{ width: "36px", height: "36px", borderRadius: "10px", background: "var(--bg-subtle)", border: "1px solid var(--border)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: "4px", cursor: "pointer", flexShrink: 0 }}>
-                {[0,1,2].map(i => (
-                  <div key={i} style={{ width: "14px", height: "1.5px", background: "var(--text-primary)", borderRadius: "2px" }} />
-                ))}
-              </motion.div>
-              <div style={{ flex: 1, fontSize: "14px", fontWeight: 700, color: "var(--text-primary)" }}>
-                Hi, {currentUser?.first_name} 👋
+         {/* ── Mobile top row ── */}
+            {!desktop && (
+              <div style={{ padding: "12px 0 10px" }}>
+                <div style={{ fontSize: "15px", fontWeight: 700, color: "var(--text-primary)" }}>
+                  Hi, {currentUser?.first_name} 👋
+                </div>
+                <div style={{ fontSize: "11px", color: "var(--text-muted)", marginTop: "2px", fontFamily: "var(--font-mono)" }}>
+                  What are you looking for today?
+                </div>
               </div>
-            </div>
-          )}
+            )}
+
 
           {/* ── Omni search bar ── */}
           <div style={{ padding: desktop ? "12px 0 10px" : "0 0 10px" }}>

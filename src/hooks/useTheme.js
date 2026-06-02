@@ -1,54 +1,66 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 
-const THEME_KEY = "me-theme";
+const STORAGE_KEY = "me_theme";
 
-// ── Cookie helper (no lib needed) ─────────────────────────────
-function setCookie(name, value, days = 365) {
-  try {
-    const expires = new Date(Date.now() + days * 864e5).toUTCString();
-    document.cookie = `${name}=${encodeURIComponent(value)};expires=${expires};path=/;SameSite=Lax`;
-  } catch {}
+function getSystemTheme() {
+  if (typeof window === "undefined") return "dark";
+  return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
 }
-function getCookie(name) {
-  try {
-    const match = document.cookie.match(new RegExp("(^| )" + name + "=([^;]+)"));
-    return match ? decodeURIComponent(match[2]) : null;
-  } catch { return null; }
+
+function getResolvedTheme(pref) {
+  if (pref === "system" || !pref) return getSystemTheme();
+  return pref;
 }
+
+function applyTheme(resolved) {
+  const root = document.documentElement;
+  root.setAttribute("data-theme", resolved);
+  root.style.colorScheme = resolved;
+}
+
+// ── Inject blocking script — prevents flash on first load ──
+const THEME_SCRIPT = `
+(function(){
+  try {
+    var stored = localStorage.getItem('me_theme');
+    var resolved = stored && stored !== 'system'
+      ? stored
+      : (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+    document.documentElement.setAttribute('data-theme', resolved);
+    document.documentElement.style.colorScheme = resolved;
+  } catch(e){}
+})();
+`;
 
 export function useTheme() {
-  const [theme, setThemeState] = useState(() => {
-    try {
-      return localStorage.getItem(THEME_KEY) || getCookie(THEME_KEY) || "system";
-    } catch { return "system"; }
+  const [preference, setPreference] = useState(() => {
+    try { return localStorage.getItem(STORAGE_KEY) || "system"; }
+    catch { return "system"; }
   });
 
+  const resolved = getResolvedTheme(preference);
+
+  // Apply on mount + preference change
   useEffect(() => {
-    const root = document.documentElement;
+    applyTheme(resolved);
+  }, [resolved]);
 
-    const apply = (t) => {
-      if (t === "dark") {
-        root.setAttribute("data-theme", "dark");
-      } else if (t === "light") {
-        root.setAttribute("data-theme", "light");
-      } else {
-        const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-        root.setAttribute("data-theme", prefersDark ? "dark" : "light");
-      }
-    };
+  // Listen for OS theme changes when pref is "system"
+  useEffect(() => {
+    if (preference !== "system") return;
+    const mq = window.matchMedia("(prefers-color-scheme: dark)");
+    const handler = (e) => applyTheme(e.matches ? "dark" : "light");
+    mq.addEventListener("change", handler);
+    return () => mq.removeEventListener("change", handler);
+  }, [preference]);
 
-    apply(theme);
-    try { localStorage.setItem(THEME_KEY, theme); } catch {}
-    setCookie(THEME_KEY, theme);
+  const setTheme = useCallback((pref) => {
+    setPreference(pref);
+    try { localStorage.setItem(STORAGE_KEY, pref); } catch {}
+    applyTheme(getResolvedTheme(pref));
+  }, []);
 
-    if (theme === "system") {
-      const mq = window.matchMedia("(prefers-color-scheme: dark)");
-      const handler = () => apply("system");
-      mq.addEventListener("change", handler);
-      return () => mq.removeEventListener("change", handler);
-    }
-  }, [theme]);
-
-  const setTheme = (t) => setThemeState(t);
-  return { theme, setTheme };
+  return { theme: preference, resolvedTheme: resolved, setTheme };
 }
+
+export { THEME_SCRIPT };

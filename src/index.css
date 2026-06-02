@@ -216,3 +216,15 @@ input, button, select, textarea {
 
 /* ── Mobile safe area ────────────────────────────────────── */
 .safe-bottom { padding-bottom: env(safe-area-inset-bottom, 0px); }
+
+
+/* ── No bottom nav — remove legacy padding ── */
+.tab-content {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  padding-bottom: 0;  /* was relying on bottom nav height */
+}

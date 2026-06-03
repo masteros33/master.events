@@ -204,21 +204,31 @@ const useStore = create((set, get) => ({
     set({ role, screen: "app", activeTab: firstTab });
   },
 
-  handleLogout: () => {
-    clearSession();
-    toast.success("Logged out successfully");
-    set({
-      screen: "home",
-      currentUser: null, role: null,
-      isLoggedIn: false, menuOpen: false,
-      email: "", password: "", loginError: "", activeTab: "home",
-      overlayEvent: null, checkoutEvent: null,
-      doorStaffUser: null, doorCode: "", doorCodeError: "",
-      doorStaffInvites: {}, orgEvents: [], myTickets: [],
-      newTicketCount: 0, showSuccessToast: false, successToastTicket: null,
-    });
-  },
+  handleLogout: async () => {
+  // Blacklist refresh token on backend before clearing
+  try {
+    const refresh = localStorage.getItem("refresh_token");
+    const access  = localStorage.getItem("access_token");
+    if (refresh && access) {
+      await fetch("https://master-events-backend.onrender.com/api/accounts/logout/", {
+        method:  "POST",
+        headers: {
+          "Content-Type":  "application/json",
+          "Authorization": `Bearer ${access}`,
+        },
+        body: JSON.stringify({ refresh }),
+      });
+    }
+  } catch (e) {
+    console.log("Logout blacklist failed (non-critical):", e);
+  }
+  // Always clear local state regardless of API result
+  clearSession();
+  toast.success("Logged out successfully");
+  set({
+    screen: "home",
 
+    
   // ── Onboarding ─────────────────────────────────────────────
   onboardSlide: 0,
   setOnboardSlide: (v) => set({ onboardSlide: v }),

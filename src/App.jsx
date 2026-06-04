@@ -23,6 +23,7 @@ import { DoorStaffLogin, DoorStaffScan, OrganizerScan } from "./screens/doorstaf
 import { AdminLogin, AdminDashboard } from "./screens/admin/SuperAdmin";
 import { useTheme } from "./hooks/useTheme";
 import { Avatar } from "./utils/avatar";
+import toast from "react-hot-toast";
 import {
   Home, Ticket, Bell, LayoutDashboard, CalendarDays, Wallet,
   LogOut, Sun, Moon, Monitor, ChevronLeft, ChevronRight,
@@ -87,10 +88,10 @@ function MobileDrawer({ open, onClose }) {
   const currentUser  = useStore(s => s.currentUser);
 
   const attendeeNav = [
-    { id: "home",         icon: Home,         label: "Discover",      tab: true },
-    { id: "tickets",      icon: Ticket,       label: "My Tickets",    tab: true },
-    { id: "alerts",       icon: Bell,         label: "Alerts",        tab: true },
-    { id: "resaleMarket", icon: ShoppingBag,  label: "Resale Market", tab: false, screen: "resaleMarket" },
+    { id: "home",         icon: Home,        label: "Discover",      tab: true },
+    { id: "tickets",      icon: Ticket,      label: "My Tickets",    tab: true },
+    { id: "alerts",       icon: Bell,        label: "Alerts",        tab: true },
+    { id: "resaleMarket", icon: ShoppingBag, label: "Resale Market", tab: false, screen: "resaleMarket" },
   ];
   const orgNav = [
     { id: "dashboard", icon: LayoutDashboard, label: "Dashboard", tab: true },
@@ -261,8 +262,7 @@ function MobileTabContent() {
 
 // ── Mobile App Shell ──────────────────────────────────────────
 function MobileAppShell() {
-  const screen    = useStore(s => s.screen);
-  const activeTab = useStore(s => s.activeTab);
+  const screen  = useStore(s => s.screen);
   const [drawerOpen, setDrawerOpen] = React.useState(false);
 
   const screenTitles = {
@@ -280,7 +280,7 @@ function MobileAppShell() {
 
   const currentTitle = FULL_SCREENS.includes(screen)
     ? screenTitles[screen]
-    : tabTitles[activeTab] || "Master Events";
+    : tabTitles[useStore.getState().activeTab] || "Master Events";
 
   const fullScreenMap = {
     checkout: <Checkout />, ticketView: <TicketView />,
@@ -340,7 +340,6 @@ function DesktopTopbar({ navItems, activeTab, isFullScreen, screen, screenTitles
   const searchQ    = useStore(s => s.searchQ);
   const setSearchQ = useStore(s => s.setSearchQ);
   const themeOpts  = { light: Sun, dark: Moon, system: Monitor };
-  const themeOrder = ["light", "dark", "system"];
   const ThemeIcon  = themeOpts[theme] || Sun;
   const pageTitle  = isFullScreen
     ? screenTitles[screen] || "Master Events"
@@ -397,9 +396,9 @@ function DesktopAppLayout() {
   const [collapsed, setCollapsed] = React.useState(false);
 
   const attendeeNav = [
-    { id: "home",    Icon: Home,          label: "Discover"    },
-    { id: "tickets", Icon: Ticket,        label: "My Tickets"  },
-    { id: "alerts",  Icon: Bell,          label: "Alerts"      },
+    { id: "home",    Icon: Home,          label: "Discover"   },
+    { id: "tickets", Icon: Ticket,        label: "My Tickets" },
+    { id: "alerts",  Icon: Bell,          label: "Alerts"     },
   ];
   const orgNav = [
     { id: "dashboard", Icon: LayoutDashboard, label: "Dashboard" },
@@ -599,34 +598,74 @@ export default function App() {
   const [desktop, setDesktop] = React.useState(window.innerWidth > 768);
   useTheme();
 
+  // ── URL param handler — runs once on mount ────────────────
   React.useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const uid    = params.get("uid");
     const token  = params.get("token");
+    const verify = params.get("verify");
+
+    // Password reset
     if (uid && token) {
       useStore.getState().setResetPasswordParams({ uid, token });
       useStore.getState().setScreen("resetPassword");
+      return;
     }
-    if (params.get("admin") === "1") useStore.getState().setScreen("adminGateway");
-    if (params.get("door")  === "1") useStore.getState().setScreen("doorStaffLogin");
+
+    // Admin gateway
+    if (params.get("admin") === "1") {
+      useStore.getState().setScreen("adminGateway");
+      return;
+    }
+
+    // Door staff
+    if (params.get("door") === "1") {
+      useStore.getState().setScreen("doorStaffLogin");
+      return;
+    }
+
+    // Email verification
+    if (verify) {
+      fetch("https://master-events-backend.onrender.com/api/accounts/verify-email/", {
+        method:  "POST",
+        headers: { "Content-Type": "application/json" },
+        body:    JSON.stringify({ token: verify }),
+      })
+        .then(r => r.json())
+        .then(data => {
+          // Clear the verify param from URL
+          window.history.replaceState({}, "", "/");
+          if (data.message && !data.error) {
+            useStore.getState().setScreen("login");
+            setTimeout(() => toast.success("✅ Email verified! You can now log in."), 400);
+          } else {
+            useStore.getState().setScreen("login");
+            setTimeout(() => toast.error(data.error || "Verification failed. Please try again."), 400);
+          }
+        })
+        .catch(() => {
+          window.history.replaceState({}, "", "/");
+          useStore.getState().setScreen("login");
+        });
+    }
   }, []);
 
+  // ── Resize handler ────────────────────────────────────────
   React.useEffect(() => {
     const handler = () => setDesktop(window.innerWidth > 768);
     window.addEventListener("resize", handler);
     return () => window.removeEventListener("resize", handler);
   }, []);
 
+  // ── Top-level screens — no login required ─────────────────
   if (screen === "adminGateway")   return <AdminLogin />;
   if (screen === "adminDashboard") return <AdminDashboard />;
   if (screen === "resetPassword")  return <ResetPassword />;
   if (screen === "doorStaffLogin") return <DoorStaffLogin />;
   if (screen === "doorStaffScan")  return <DoorStaffScan />;
 
- if (desktop && isLoggedIn) return <DesktopAppLayout />;
+  if (desktop && isLoggedIn) return <DesktopAppLayout />;
 
-  // Desktop non-logged-in + all mobile — goes through PhoneFrame
-  // PhoneFrame renders landing, about, login, signup based on screen state
   return (
     <>
       <PhoneFrame>
@@ -635,4 +674,4 @@ export default function App() {
       <CookieBanner />
     </>
   );
-  }
+}

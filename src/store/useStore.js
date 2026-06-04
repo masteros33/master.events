@@ -204,31 +204,37 @@ const useStore = create((set, get) => ({
     set({ role, screen: "app", activeTab: firstTab });
   },
 
+  // ── Logout — blacklists refresh token then clears state ───
   handleLogout: async () => {
-  // Blacklist refresh token on backend before clearing
-  try {
-    const refresh = localStorage.getItem("refresh_token");
-    const access  = localStorage.getItem("access_token");
-    if (refresh && access) {
-      await fetch("https://master-events-backend.onrender.com/api/accounts/logout/", {
-        method:  "POST",
-        headers: {
-          "Content-Type":  "application/json",
-          "Authorization": `Bearer ${access}`,
-        },
-        body: JSON.stringify({ refresh }),
-      });
+    try {
+      const refresh = localStorage.getItem("refresh_token");
+      const access  = localStorage.getItem("access_token");
+      if (refresh && access) {
+        await fetch("https://master-events-backend.onrender.com/api/accounts/logout/", {
+          method:  "POST",
+          headers: {
+            "Content-Type":  "application/json",
+            "Authorization": `Bearer ${access}`,
+          },
+          body: JSON.stringify({ refresh }),
+        });
+      }
+    } catch (e) {
+      console.log("Logout blacklist failed (non-critical):", e);
     }
-  } catch (e) {
-    console.log("Logout blacklist failed (non-critical):", e);
-  }
-  // Always clear local state regardless of API result
-  clearSession();
-  toast.success("Logged out successfully");
-  set({
-    screen: "home",
+    clearSession();
+    toast.success("Logged out successfully");
+    set({
+      screen:      "home",
+      currentUser: null,
+      role:        null,
+      isLoggedIn:  false,
+      activeTab:   "home",
+      myTickets:   [],
+      orgEvents:   [],
+    });
+  },
 
-    
   // ── Onboarding ─────────────────────────────────────────────
   onboardSlide: 0,
   setOnboardSlide: (v) => set({ onboardSlide: v }),
@@ -273,7 +279,6 @@ const useStore = create((set, get) => ({
     const { checkoutEvent, ticketQty, payMethod, myTickets } = get();
     const loadingToast = toast.loading("Verifying payment...");
 
-    // ── Helper: build ticket object from backend ticket data ──
     const buildTicket = (found) => ({
       id:           found.ticket_id || found.id,
       ticket_id:    found.ticket_id || found.id,
@@ -287,7 +292,7 @@ const useStore = create((set, get) => ({
         city:     found.event?.city     || checkoutEvent?.city,
         category: found.event?.category || checkoutEvent?.category,
         price:    found.event?.price    || checkoutEvent?.price,
-        image:    found.event?.image    || checkoutEvent?.image,  // ← always falls back to checkoutEvent image
+        image:    found.event?.image    || checkoutEvent?.image,
       },
       qty:          found.quantity || ticketQty,
       quantity:     found.quantity || ticketQty,
@@ -310,7 +315,6 @@ const useStore = create((set, get) => ({
       nft_minting:  true,
     });
 
-    // ── Helper: show success screen with ticket ───────────────
     const showSuccess = (ticket) => {
       toast.dismiss();
       set({
@@ -327,7 +331,6 @@ const useStore = create((set, get) => ({
       toast.success("🎉 Payment confirmed! Ticket is yours.");
     };
 
-    // ── Helper: fetch latest ticket after 409 or timeout ─────
     const fetchAndShow = async () => {
       await new Promise(r => setTimeout(r, 2000));
       const tickets = await ticketsAPI.myTickets();
@@ -350,27 +353,23 @@ const useStore = create((set, get) => ({
       try {
         const controller = new AbortController();
         const timeoutId  = setTimeout(() => controller.abort(), 120000);
-        const res = await fetch(
-          `${BACKEND}/api/tickets/purchase/`,
-          {
-            method:  "POST",
-            headers: {
-              "Content-Type":  "application/json",
-              "Authorization": `Bearer ${localStorage.getItem("access_token") || ""}`,
-            },
-            body: JSON.stringify({
-              event_id:          checkoutEvent.id,
-              quantity:          ticketQty,
-              payment_reference: reference,
-            }),
-            signal: controller.signal,
-          }
-        );
+        const res = await fetch(`${BACKEND}/api/tickets/purchase/`, {
+          method:  "POST",
+          headers: {
+            "Content-Type":  "application/json",
+            "Authorization": `Bearer ${localStorage.getItem("access_token") || ""}`,
+          },
+          body: JSON.stringify({
+            event_id:          checkoutEvent.id,
+            quantity:          ticketQty,
+            payment_reference: reference,
+          }),
+          signal: controller.signal,
+        });
         clearTimeout(timeoutId);
         data = { ...await res.json(), _status: res.status };
 
       } catch (fetchErr) {
-        // ── Network timeout / failure — ticket may exist already ──
         toast.dismiss(loadingToast);
         toast.loading("Payment received — confirming ticket...");
         try {
@@ -388,9 +387,6 @@ const useStore = create((set, get) => ({
         return;
       }
 
-      // ── 409 = duplicate reference = ticket already created ───
-      // This happens when Paystack fires the callback twice.
-      // Treat it as success — fetch the existing ticket and show it.
       if (data._status === 409) {
         toast.dismiss(loadingToast);
         toast.loading("Confirming your ticket...");
@@ -409,7 +405,6 @@ const useStore = create((set, get) => ({
         return;
       }
 
-      // ── Normal success (201 / 200) ────────────────────────────
       const ticketId  = data.ticket_id || data.id || data.pk;
       const isSuccess = data._status === 201 || data._status === 200 || !!ticketId;
 
@@ -428,7 +423,7 @@ const useStore = create((set, get) => ({
             date:        eventData.date        || checkoutEvent.date,
             time:        eventData.time        || checkoutEvent.time,
             price:       eventData.price       || checkoutEvent.price,
-            image:       eventData.image       || checkoutEvent.image,  // ← always uses real event image
+            image:       eventData.image       || checkoutEvent.image,
           },
           qty:          ticketQty,
           quantity:     data.quantity          || ticketQty,
@@ -620,8 +615,8 @@ const useStore = create((set, get) => ({
         sales_open:    true,
       };
       if (addEventForm.image) {
-  payload.image = addEventForm.image;
-}
+        payload.image = addEventForm.image;
+      }
       const data = await eventsAPI.create(payload);
       if (data.id) {
         const cat = data.category || addEventForm.category || "other";

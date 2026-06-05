@@ -352,7 +352,7 @@ export default function Settings() {
     }
     setConnectingWallet(true);
     const t = toast.loading("Connecting wallet...");
-    try:
+  
     try {
       const accounts = await window.ethereum.request({ method: "eth_requestAccounts" });
       const address  = accounts[0];

@@ -3,18 +3,18 @@ import { motion, AnimatePresence } from "framer-motion";
 import useStore from "../../store/useStore";
 import {
   Avatar, AVATAR_PRESETS, getSavedAvatarSeed,
-  saveAvatarSeed, naviiUrl
+  saveAvatarSeed
 } from "../../utils/avatar";
 import { useTheme } from "../../hooks/useTheme";
 import {
   User, Mail, Shield, LogOut, ChevronRight,
   Sun, Moon, Monitor, Bell, Wallet, Globe,
   CheckCircle, Edit3, Save, Link2, Cookie,
-  FileText, Lock
+  FileText, Lock, Eye, EyeOff
 } from "lucide-react";
 import toast from "react-hot-toast";
 
-const BACKEND = "https://master-events-backend.onrender.com";
+const BACKEND   = "https://master-events-backend.onrender.com";
 const isDesktop = () => window.innerWidth > 768;
 const BRAND     = "#F97316";
 
@@ -80,60 +80,40 @@ function AvatarPickerModal({ currentSeed, onSelect, onClose }) {
       <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
         onClick={onClose}
         style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.7)", zIndex: 300, backdropFilter: "blur(8px)" }} />
-
       <motion.div
         initial={{ opacity: 0, y: 40 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 40 }}
         transition={{ type: "spring", stiffness: 340, damping: 30 }}
         style={{
           position: "fixed", bottom: 0, left: 0, right: 0,
           margin: "0 auto", maxWidth: "520px",
-          background: "var(--bg-card)",
-          borderRadius: "24px 24px 0 0",
+          background: "var(--bg-card)", borderRadius: "24px 24px 0 0",
           padding: "24px 20px calc(24px + env(safe-area-inset-bottom, 0px))",
-          zIndex: 301,
-          border: "1px solid var(--border)",
-          borderBottom: "none",
-          maxHeight: "85vh",
-          display: "flex", flexDirection: "column",
+          zIndex: 301, border: "1px solid var(--border)", borderBottom: "none",
+          maxHeight: "85vh", display: "flex", flexDirection: "column",
         }}>
-
         <div style={{ width: "40px", height: "4px", borderRadius: "2px", background: "var(--border-strong)", margin: "0 auto 20px" }} />
-
-        <div style={{ fontWeight: 800, fontSize: "18px", color: "var(--text-primary)", marginBottom: "6px", letterSpacing: "-0.3px" }}>
-          Choose Your Avatar
-        </div>
-        <div style={{ fontSize: "13px", color: "var(--text-muted)", marginBottom: "20px" }}>
-          Pick a character — it stays consistent across your account
-        </div>
-
+        <div style={{ fontWeight: 800, fontSize: "18px", color: "var(--text-primary)", marginBottom: "6px", letterSpacing: "-0.3px" }}>Choose Your Avatar</div>
+        <div style={{ fontSize: "13px", color: "var(--text-muted)", marginBottom: "20px" }}>Pick a character — it stays consistent across your account</div>
         <div style={{ flex: 1, overflowY: "auto", marginBottom: "16px" }}>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(6, 1fr)", gap: "10px" }}>
             {AVATAR_PRESETS.map(seed => {
               const isSelected = selected === seed;
               const isHovered  = hovered === seed;
               return (
-                <motion.div key={seed}
-                  whileTap={{ scale: 0.92 }}
+                <motion.div key={seed} whileTap={{ scale: 0.92 }}
                   onClick={() => setSelected(seed)}
                   onMouseEnter={() => setHovered(seed)}
                   onMouseLeave={() => setHovered(null)}
                   style={{
-                    position: "relative", cursor: "pointer",
-                    borderRadius: "14px", padding: "4px",
+                    position: "relative", cursor: "pointer", borderRadius: "14px", padding: "4px",
                     background: isSelected ? `${BRAND}15` : isHovered ? "var(--bg-subtle)" : "transparent",
                     border: isSelected ? `2px solid ${BRAND}` : "2px solid transparent",
                     transition: "all 0.15s",
                   }}>
-                  <Avatar seed={seed} size={44}
-                    style={{ width: "100%", height: "auto", aspectRatio: "1", borderRadius: "10px" }} />
+                  <Avatar seed={seed} size={44} style={{ width: "100%", height: "auto", aspectRatio: "1", borderRadius: "10px" }} />
                   {isSelected && (
                     <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }}
-                      style={{
-                        position: "absolute", top: "2px", right: "2px",
-                        width: "16px", height: "16px", borderRadius: "50%",
-                        background: BRAND, display: "flex", alignItems: "center", justifyContent: "center",
-                        border: "2px solid var(--bg-card)",
-                      }}>
+                      style={{ position: "absolute", top: "2px", right: "2px", width: "16px", height: "16px", borderRadius: "50%", background: BRAND, display: "flex", alignItems: "center", justifyContent: "center", border: "2px solid var(--bg-card)" }}>
                       <CheckCircle size={9} color="#fff" />
                     </motion.div>
                   )}
@@ -142,18 +122,13 @@ function AvatarPickerModal({ currentSeed, onSelect, onClose }) {
             })}
           </div>
         </div>
-
         <div style={{ display: "flex", alignItems: "center", gap: "14px", padding: "16px", background: "var(--bg-subtle)", borderRadius: "14px", marginBottom: "14px", border: "1px solid var(--border)" }}>
-          <Avatar seed={selected} size={52}
-            style={{ border: `3px solid ${BRAND}40`, borderRadius: "50%", flexShrink: 0 }} />
+          <Avatar seed={selected} size={52} style={{ border: `3px solid ${BRAND}40`, borderRadius: "50%", flexShrink: 0 }} />
           <div>
             <div style={{ fontSize: "13px", fontWeight: 700, color: "var(--text-primary)" }}>Preview</div>
-            <div style={{ fontSize: "11px", color: "var(--text-muted)", fontFamily: "var(--font-mono)", marginTop: "2px" }}>
-              {selected}
-            </div>
+            <div style={{ fontSize: "11px", color: "var(--text-muted)", fontFamily: "var(--font-mono)", marginTop: "2px" }}>{selected}</div>
           </div>
         </div>
-
         <div style={{ display: "flex", gap: "10px" }}>
           <motion.button whileTap={{ scale: 0.97 }} onClick={onClose}
             style={{ flex: 1, padding: "13px", background: "var(--bg-subtle)", border: "1px solid var(--border)", borderRadius: "12px", fontWeight: 600, fontSize: "14px", cursor: "pointer", color: "var(--text-secondary)", fontFamily: "var(--font-sans)" }}>
@@ -169,27 +144,152 @@ function AvatarPickerModal({ currentSeed, onSelect, onClose }) {
   );
 }
 
+// ── Password Change Modal ─────────────────────────────────────
+function PasswordModal({ onClose }) {
+  const [current,    setCurrent]    = useState("");
+  const [newPass,    setNewPass]    = useState("");
+  const [confirm,    setConfirm]    = useState("");
+  const [showCur,    setShowCur]    = useState(false);
+  const [showNew,    setShowNew]    = useState(false);
+  const [saving,     setSaving]     = useState(false);
+
+  const handleSave = async () => {
+    if (!current || !newPass || !confirm) { toast.error("Fill all fields"); return; }
+    if (newPass.length < 8)               { toast.error("Min 8 characters"); return; }
+    if (newPass !== confirm)              { toast.error("Passwords don't match"); return; }
+
+    setSaving(true);
+    const t = toast.loading("Changing password...");
+    try {
+      const res = await fetch(`${BACKEND}/api/accounts/me/change-password/`, {
+        method:  "POST",
+        headers: {
+          "Content-Type":  "application/json",
+          "Authorization": `Bearer ${localStorage.getItem("access_token") || ""}`,
+        },
+        body: JSON.stringify({ current_password: current, new_password: newPass }),
+      });
+      const data = await res.json();
+      toast.dismiss(t);
+      if (res.ok) {
+        toast.success("Password changed successfully!");
+        onClose();
+      } else {
+        toast.error(data.error || "Failed to change password");
+      }
+    } catch {
+      toast.dismiss(t);
+      toast.error("Connection error. Try again.");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const inputStyle = {
+    width: "100%", padding: "11px 42px 11px 14px",
+    background: "var(--bg-subtle)", border: "1.5px solid var(--border)",
+    borderRadius: "10px", fontSize: "14px", color: "var(--text-primary)",
+    outline: "none", fontFamily: "var(--font-sans)", boxSizing: "border-box",
+  };
+
+  return (
+    <>
+      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+        onClick={onClose}
+        style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.65)", zIndex: 300, backdropFilter: "blur(8px)" }} />
+      <motion.div
+        initial={{ opacity: 0, y: 40 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 40 }}
+        transition={{ type: "spring", stiffness: 340, damping: 30 }}
+        style={{
+          position: "fixed", bottom: 0, left: 0, right: 0,
+          margin: "0 auto", maxWidth: "480px",
+          background: "var(--bg-card)", borderRadius: "24px 24px 0 0",
+          padding: "24px 24px calc(24px + env(safe-area-inset-bottom, 0px))",
+          zIndex: 301, border: "1px solid var(--border)", borderBottom: "none",
+        }}>
+        <div style={{ width: "40px", height: "4px", borderRadius: "2px", background: "var(--border-strong)", margin: "0 auto 20px" }} />
+        <div style={{ fontWeight: 800, fontSize: "18px", color: "var(--text-primary)", marginBottom: "6px", letterSpacing: "-0.3px" }}>Change Password</div>
+        <div style={{ fontSize: "13px", color: "var(--text-muted)", marginBottom: "20px" }}>Your new password must be at least 8 characters.</div>
+
+        {/* Current password */}
+        <div style={{ marginBottom: "12px" }}>
+          <div style={{ fontSize: "12px", fontWeight: 600, color: "var(--text-secondary)", marginBottom: "6px" }}>Current Password</div>
+          <div style={{ position: "relative" }}>
+            <input type={showCur ? "text" : "password"} value={current} onChange={e => setCurrent(e.target.value)}
+              placeholder="Enter current password" style={inputStyle}
+              onFocus={e => { e.target.style.borderColor = BRAND; e.target.style.boxShadow = `0 0 0 3px ${BRAND}15`; }}
+              onBlur={e => { e.target.style.borderColor = "var(--border)"; e.target.style.boxShadow = "none"; }} />
+            <div onClick={() => setShowCur(!showCur)}
+              style={{ position: "absolute", right: "12px", top: "50%", transform: "translateY(-50%)", cursor: "pointer" }}>
+              {showCur ? <EyeOff size={15} color="var(--text-muted)" /> : <Eye size={15} color="var(--text-muted)" />}
+            </div>
+          </div>
+        </div>
+
+        {/* New password */}
+        <div style={{ marginBottom: "12px" }}>
+          <div style={{ fontSize: "12px", fontWeight: 600, color: "var(--text-secondary)", marginBottom: "6px" }}>New Password</div>
+          <div style={{ position: "relative" }}>
+            <input type={showNew ? "text" : "password"} value={newPass} onChange={e => setNewPass(e.target.value)}
+              placeholder="Min 8 characters" style={inputStyle}
+              onFocus={e => { e.target.style.borderColor = BRAND; e.target.style.boxShadow = `0 0 0 3px ${BRAND}15`; }}
+              onBlur={e => { e.target.style.borderColor = "var(--border)"; e.target.style.boxShadow = "none"; }} />
+            <div onClick={() => setShowNew(!showNew)}
+              style={{ position: "absolute", right: "12px", top: "50%", transform: "translateY(-50%)", cursor: "pointer" }}>
+              {showNew ? <EyeOff size={15} color="var(--text-muted)" /> : <Eye size={15} color="var(--text-muted)" />}
+            </div>
+          </div>
+        </div>
+
+        {/* Confirm */}
+        <div style={{ marginBottom: "20px" }}>
+          <div style={{ fontSize: "12px", fontWeight: 600, color: "var(--text-secondary)", marginBottom: "6px" }}>Confirm New Password</div>
+          <input type="password" value={confirm} onChange={e => setConfirm(e.target.value)}
+            placeholder="Repeat new password" style={inputStyle}
+            onFocus={e => { e.target.style.borderColor = BRAND; e.target.style.boxShadow = `0 0 0 3px ${BRAND}15`; }}
+            onBlur={e => { e.target.style.borderColor = "var(--border)"; e.target.style.boxShadow = "none"; }} />
+          {confirm && newPass && confirm !== newPass && (
+            <div style={{ fontSize: "11px", color: "#dc2626", marginTop: "4px" }}>Passwords don't match</div>
+          )}
+        </div>
+
+        <div style={{ display: "flex", gap: "10px" }}>
+          <motion.button whileTap={{ scale: 0.97 }} onClick={onClose}
+            style={{ flex: 1, padding: "13px", background: "var(--bg-subtle)", border: "1px solid var(--border)", borderRadius: "12px", fontWeight: 600, fontSize: "14px", cursor: "pointer", color: "var(--text-secondary)", fontFamily: "var(--font-sans)" }}>
+            Cancel
+          </motion.button>
+          <motion.button whileTap={{ scale: 0.97 }} onClick={handleSave} disabled={saving}
+            style={{ flex: 2, padding: "13px", background: saving ? "var(--bg-subtle)" : `linear-gradient(135deg, ${BRAND}, #EA6C0A)`, border: "none", borderRadius: "12px", fontWeight: 700, fontSize: "14px", cursor: saving ? "not-allowed" : "pointer", color: saving ? "var(--text-muted)" : "#fff", fontFamily: "var(--font-sans)" }}>
+            {saving ? "Saving..." : "Change Password"}
+          </motion.button>
+        </div>
+      </motion.div>
+    </>
+  );
+}
+
 // ── Main Settings ─────────────────────────────────────────────
 export default function Settings() {
-  const setScreen    = useStore(s => s.setScreen);
-  const setActiveTab = useStore(s => s.setActiveTab);
-  const currentUser  = useStore(s => s.currentUser);
-  const handleLogout = useStore(s => s.handleLogout);
-  const setCurrentUser = useStore(s => s.setCurrentUser || (() => {}));
+  const setScreen      = useStore(s => s.setScreen);
+  const setActiveTab   = useStore(s => s.setActiveTab);
+  const currentUser    = useStore(s => s.currentUser);
+  const handleLogout   = useStore(s => s.handleLogout);
   const { theme, setTheme } = useTheme();
   const desktop = isDesktop();
 
-  const [avatarSeed,  setAvatarSeed]  = useState(() => getSavedAvatarSeed(currentUser?.email));
-  const [showPicker,  setShowPicker]  = useState(false);
-  const [editing,     setEditing]     = useState(false);
-  const [editFirst,   setEditFirst]   = useState(currentUser?.first_name || "");
-  const [editLast,    setEditLast]    = useState(currentUser?.last_name  || "");
-  const [editPhone,   setEditPhone]   = useState(currentUser?.phone      || "");
-  const [saving,      setSaving]      = useState(false);
-  const [notifs,      setNotifs]      = useState(true);
-  const [showLogout,  setShowLogout]  = useState(false);
+  const [avatarSeed,    setAvatarSeed]    = useState(() => getSavedAvatarSeed(currentUser?.email));
+  const [showPicker,    setShowPicker]    = useState(false);
+  const [showPassword,  setShowPassword]  = useState(false);
+  const [editing,       setEditing]       = useState(false);
+  const [editFirst,     setEditFirst]     = useState(currentUser?.first_name || "");
+  const [editLast,      setEditLast]      = useState(currentUser?.last_name  || "");
+  const [editPhone,     setEditPhone]     = useState(currentUser?.phone      || "");
+  const [saving,        setSaving]        = useState(false);
+  const [notifs,        setNotifs]        = useState(true);
+  const [showLogout,    setShowLogout]    = useState(false);
+  const [walletAddress, setWalletAddress] = useState(currentUser?.wallet_address || "");
+  const [connectingWallet, setConnectingWallet] = useState(false);
 
-  // live name shown in profile card
   const [displayFirst, setDisplayFirst] = useState(currentUser?.first_name || "");
   const [displayLast,  setDisplayLast]  = useState(currentUser?.last_name  || "");
 
@@ -205,58 +305,89 @@ export default function Settings() {
   };
 
   const handleSave = async () => {
-    if (!editFirst.trim()) {
-      toast.error("First name cannot be empty");
-      return;
-    }
+    if (!editFirst.trim()) { toast.error("First name cannot be empty"); return; }
     setSaving(true);
-    const loadingToast = toast.loading("Saving...");
+    const t = toast.loading("Saving...");
     try {
-      const access = localStorage.getItem("access_token") || "";
       const res = await fetch(`${BACKEND}/api/accounts/me/update/`, {
         method:  "PATCH",
         headers: {
           "Content-Type":  "application/json",
-          "Authorization": `Bearer ${access}`,
+          "Authorization": `Bearer ${localStorage.getItem("access_token") || ""}`,
         },
-        body: JSON.stringify({
-          first_name: editFirst.trim(),
-          last_name:  editLast.trim(),
-          phone:      editPhone.trim(),
-        }),
+        body: JSON.stringify({ first_name: editFirst.trim(), last_name: editLast.trim(), phone: editPhone.trim() }),
       });
       const data = await res.json();
       if (res.ok) {
-        // Update display name locally
         setDisplayFirst(data.user.first_name);
         setDisplayLast(data.user.last_name);
-        // Update useStore currentUser
-        const store = useStore.getState();
+        const store  = useStore.getState();
+        const saved  = JSON.parse(localStorage.getItem("me_session") || "{}");
         if (store.currentUser) {
-          const updated = { ...store.currentUser, ...data.user };
-          store.currentUser = updated;
-          // Also update saved session
-          const saved = JSON.parse(localStorage.getItem("me_session") || "{}");
+          Object.assign(store.currentUser, data.user);
           if (saved.currentUser) {
-            saved.currentUser = updated;
+            saved.currentUser = { ...saved.currentUser, ...data.user };
             localStorage.setItem("me_session", JSON.stringify(saved));
           }
         }
-        toast.dismiss(loadingToast);
+        toast.dismiss(t);
         toast.success("Profile updated!");
         setEditing(false);
       } else {
-        toast.dismiss(loadingToast);
-        const err = data.first_name?.[0] || data.last_name?.[0] || data.phone?.[0] || data.detail || "Update failed";
-        toast.error(err);
+        toast.dismiss(t);
+        toast.error(data.first_name?.[0] || data.detail || "Update failed");
       }
-    } catch (e) {
-      toast.dismiss(loadingToast);
-      toast.error("Connection error. Try again.");
+    } catch {
+      toast.dismiss(t);
+      toast.error("Connection error.");
     } finally {
       setSaving(false);
     }
   };
+
+  const handleConnectWallet = async () => {
+    if (!window.ethereum) {
+      toast.error("MetaMask not found. Please install MetaMask.");
+      return;
+    }
+    setConnectingWallet(true);
+    const t = toast.loading("Connecting wallet...");
+    try:
+    try {
+      const accounts = await window.ethereum.request({ method: "eth_requestAccounts" });
+      const address  = accounts[0];
+      if (!address) { toast.dismiss(t); toast.error("No account found"); setConnectingWallet(false); return; }
+
+      // Save to backend
+      const res = await fetch(`${BACKEND}/api/accounts/me/wallet/`, {
+        method:  "PATCH",
+        headers: {
+          "Content-Type":  "application/json",
+          "Authorization": `Bearer ${localStorage.getItem("access_token") || ""}`,
+        },
+        body: JSON.stringify({ wallet_address: address }),
+      });
+      const data = await res.json();
+      toast.dismiss(t);
+      if (res.ok) {
+        setWalletAddress(address);
+        const store = useStore.getState();
+        if (store.currentUser) store.currentUser.wallet_address = address;
+        toast.success("Wallet connected!");
+      } else {
+        toast.error(data.error || "Failed to save wallet");
+      }
+    } catch (e) {
+      toast.dismiss(t);
+      if (e.code === 4001) toast.error("Connection rejected by user");
+      else toast.error("Could not connect wallet");
+    } finally {
+      setConnectingWallet(false);
+    }
+  };
+
+  const truncateAddress = (addr) =>
+    addr ? `${addr.slice(0, 6)}...${addr.slice(-4)}` : null;
 
   return (
     <div style={{ background: "var(--bg)", minHeight: "100%", paddingBottom: "60px" }}>
@@ -266,8 +397,7 @@ export default function Settings() {
         position: "sticky", top: 0, zIndex: 20,
         background: "var(--bg-card)", borderBottom: "1px solid var(--border)",
         padding: desktop ? "0 40px" : "0 16px",
-        height: "60px", display: "flex", alignItems: "center",
-        justifyContent: "space-between",
+        height: "60px", display: "flex", alignItems: "center", justifyContent: "space-between",
       }}>
         <motion.button whileTap={{ scale: 0.9 }}
           onClick={() => { setScreen("app"); setActiveTab(undefined); }}
@@ -284,25 +414,14 @@ export default function Settings() {
         <div style={{ background: "var(--bg-card)", borderRadius: "20px", border: "1px solid var(--border)", overflow: "hidden", marginBottom: "8px" }}>
           <div style={{ padding: "24px", background: `linear-gradient(135deg, ${BRAND}08, transparent)`, borderBottom: "1px solid var(--border)" }}>
             <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
-
-              {/* Tappable avatar */}
               <motion.div whileTap={{ scale: 0.94 }} onClick={() => setShowPicker(true)}
                 style={{ position: "relative", cursor: "pointer", flexShrink: 0 }}>
-                <Avatar seed={avatarSeed} size={64}
-                  style={{ border: `3px solid ${BRAND}40`, borderRadius: "50%" }} />
+                <Avatar seed={avatarSeed} size={64} style={{ border: `3px solid ${BRAND}40`, borderRadius: "50%" }} />
                 <motion.div whileHover={{ scale: 1.1 }}
-                  style={{
-                    position: "absolute", bottom: 0, right: 0,
-                    width: "22px", height: "22px", borderRadius: "50%",
-                    background: `linear-gradient(135deg, ${BRAND}, #EA6C0A)`,
-                    display: "flex", alignItems: "center", justifyContent: "center",
-                    border: "2px solid var(--bg-card)",
-                    boxShadow: `0 2px 8px ${BRAND}40`,
-                  }}>
+                  style={{ position: "absolute", bottom: 0, right: 0, width: "22px", height: "22px", borderRadius: "50%", background: `linear-gradient(135deg, ${BRAND}, #EA6C0A)`, display: "flex", alignItems: "center", justifyContent: "center", border: "2px solid var(--bg-card)", boxShadow: `0 2px 8px ${BRAND}40` }}>
                   <Edit3 size={10} color="#fff" />
                 </motion.div>
               </motion.div>
-
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ fontWeight: 900, fontSize: "20px", color: "var(--text-primary)", letterSpacing: "-0.5px" }}>
                   {displayFirst} {displayLast}
@@ -314,7 +433,6 @@ export default function Settings() {
               </div>
             </div>
 
-            {/* Avatar strip */}
             <motion.div whileTap={{ scale: 0.98 }} onClick={() => setShowPicker(true)}
               style={{ marginTop: "14px", display: "flex", alignItems: "center", gap: "8px", padding: "10px 14px", background: `${BRAND}06`, border: `1px solid ${BRAND}18`, borderRadius: "11px", cursor: "pointer" }}>
               <div style={{ display: "flex", gap: "4px" }}>
@@ -334,8 +452,7 @@ export default function Settings() {
           {/* Edit form */}
           <AnimatePresence>
             {editing && (
-              <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }}
-                style={{ overflow: "hidden" }}>
+              <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} style={{ overflow: "hidden" }}>
                 <div style={{ padding: "16px 24px", borderBottom: "1px solid var(--border)" }}>
                   <div style={{ display: "flex", gap: "10px", marginBottom: "10px" }}>
                     <div style={{ flex: 1 }}>
@@ -343,16 +460,14 @@ export default function Settings() {
                       <input value={editFirst} onChange={e => setEditFirst(e.target.value)}
                         style={{ width: "100%", padding: "11px 14px", background: "var(--bg-subtle)", border: "1.5px solid var(--border)", borderRadius: "10px", fontSize: "14px", color: "var(--text-primary)", outline: "none", fontFamily: "var(--font-sans)", boxSizing: "border-box" }}
                         onFocus={e => { e.target.style.borderColor = BRAND; e.target.style.boxShadow = `0 0 0 3px ${BRAND}15`; }}
-                        onBlur={e => { e.target.style.borderColor = "var(--border)"; e.target.style.boxShadow = "none"; }}
-                      />
+                        onBlur={e => { e.target.style.borderColor = "var(--border)"; e.target.style.boxShadow = "none"; }} />
                     </div>
                     <div style={{ flex: 1 }}>
                       <div style={{ fontSize: "12px", fontWeight: 600, color: "var(--text-secondary)", marginBottom: "6px" }}>Last Name</div>
                       <input value={editLast} onChange={e => setEditLast(e.target.value)}
                         style={{ width: "100%", padding: "11px 14px", background: "var(--bg-subtle)", border: "1.5px solid var(--border)", borderRadius: "10px", fontSize: "14px", color: "var(--text-primary)", outline: "none", fontFamily: "var(--font-sans)", boxSizing: "border-box" }}
                         onFocus={e => { e.target.style.borderColor = BRAND; e.target.style.boxShadow = `0 0 0 3px ${BRAND}15`; }}
-                        onBlur={e => { e.target.style.borderColor = "var(--border)"; e.target.style.boxShadow = "none"; }}
-                      />
+                        onBlur={e => { e.target.style.borderColor = "var(--border)"; e.target.style.boxShadow = "none"; }} />
                     </div>
                   </div>
                   <div style={{ fontSize: "12px", fontWeight: 600, color: "var(--text-secondary)", marginBottom: "6px" }}>Phone (optional)</div>
@@ -360,8 +475,7 @@ export default function Settings() {
                     placeholder="e.g. 0241234567" type="tel"
                     style={{ width: "100%", padding: "11px 14px", background: "var(--bg-subtle)", border: "1.5px solid var(--border)", borderRadius: "10px", fontSize: "14px", color: "var(--text-primary)", outline: "none", fontFamily: "var(--font-sans)", boxSizing: "border-box" }}
                     onFocus={e => { e.target.style.borderColor = BRAND; e.target.style.boxShadow = `0 0 0 3px ${BRAND}15`; }}
-                    onBlur={e => { e.target.style.borderColor = "var(--border)"; e.target.style.boxShadow = "none"; }}
-                  />
+                    onBlur={e => { e.target.style.borderColor = "var(--border)"; e.target.style.boxShadow = "none"; }} />
                   <div style={{ display: "flex", gap: "8px", marginTop: "14px" }}>
                     <motion.button whileTap={{ scale: 0.97 }} onClick={handleSave} disabled={saving}
                       style={{ flex: 2, padding: "12px", background: saving ? "var(--bg-subtle)" : `linear-gradient(135deg, ${BRAND}, #EA6C0A)`, color: saving ? "var(--text-muted)" : "#fff", border: "none", borderRadius: "11px", fontWeight: 700, fontSize: "13px", cursor: saving ? "not-allowed" : "pointer", fontFamily: "var(--font-sans)", display: "flex", alignItems: "center", justifyContent: "center", gap: "6px" }}>
@@ -389,9 +503,9 @@ export default function Settings() {
 
         {/* Account */}
         <SectionHeader title="Account" />
-        <SettingRow icon={Mail} label="Email Address" value={currentUser?.email} color="#2563eb" />
-        <SettingRow icon={User} label="Full Name" value={`${displayFirst} ${displayLast}`.trim() || "Not set"} color={BRAND} onClick={() => setEditing(true)} action="Edit" />
-        <SettingRow icon={Lock} label="Password" value="Change your password" color="#7c3aed" onClick={() => {}} action="Change" />
+        <SettingRow icon={Mail}  label="Email Address" value={currentUser?.email} color="#2563eb" />
+        <SettingRow icon={User}  label="Full Name" value={`${displayFirst} ${displayLast}`.trim() || "Not set"} color={BRAND} onClick={() => setEditing(true)} action="Edit" />
+        <SettingRow icon={Lock}  label="Password" value="Change your account password" color="#7c3aed" onClick={() => setShowPassword(true)} />
 
         {/* Appearance */}
         <SectionHeader title="Appearance" />
@@ -440,12 +554,49 @@ export default function Settings() {
             </div>
           </div>
         </div>
-        <SettingRow icon={Wallet} label="Connect Wallet" value="Link your MetaMask for NFT management" color="#7c3aed" onClick={() => {}} action="Connect" />
+
+        {/* Connect Wallet */}
+        <motion.div
+          whileTap={{ scale: 0.99 }}
+          onClick={connectingWallet ? undefined : handleConnectWallet}
+          style={{
+            display: "flex", alignItems: "center", gap: "14px",
+            padding: "14px 16px", background: "var(--bg-card)",
+            borderRadius: "14px", marginBottom: "6px",
+            border: walletAddress ? "1px solid rgba(124,58,237,0.3)" : "1px solid var(--border)",
+            cursor: connectingWallet ? "not-allowed" : "pointer",
+            transition: "all 0.15s",
+          }}
+          onMouseEnter={e => { if (!connectingWallet) e.currentTarget.style.borderColor = "rgba(124,58,237,0.5)"; }}
+          onMouseLeave={e => { e.currentTarget.style.borderColor = walletAddress ? "rgba(124,58,237,0.3)" : "var(--border)"; }}>
+          <div style={{ width: "36px", height: "36px", borderRadius: "10px", flexShrink: 0, background: "rgba(124,58,237,0.1)", display: "flex", alignItems: "center", justifyContent: "center", border: "1px solid rgba(124,58,237,0.2)" }}>
+            <Wallet size={16} color="#a78bfa" />
+          </div>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ fontSize: "14px", fontWeight: 600, color: "var(--text-primary)", lineHeight: 1.3 }}>
+              {walletAddress ? "Wallet Connected" : "Connect Wallet"}
+            </div>
+            <div style={{ fontSize: "12px", color: walletAddress ? "#a78bfa" : "var(--text-muted)", marginTop: "2px", fontFamily: walletAddress ? "var(--font-mono)" : "var(--font-sans)" }}>
+              {walletAddress ? truncateAddress(walletAddress) : "Link your MetaMask for NFT management"}
+            </div>
+          </div>
+          {walletAddress ? (
+            <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+              <motion.div animate={{ scale: [1,1.4,1] }} transition={{ duration: 2, repeat: Infinity }}
+                style={{ width: "6px", height: "6px", borderRadius: "50%", background: "#4ade80" }} />
+              <span style={{ fontSize: "10px", fontWeight: 700, color: "#4ade80", fontFamily: "var(--font-mono)" }}>LINKED</span>
+            </div>
+          ) : connectingWallet ? (
+            <span style={{ fontSize: "12px", color: BRAND, fontWeight: 600 }}>Connecting...</span>
+          ) : (
+            <ChevronRight size={16} color="var(--text-muted)" />
+          )}
+        </motion.div>
 
         {/* Legal */}
         <SectionHeader title="Legal & Privacy" />
-        <SettingRow icon={FileText} label="Privacy Policy"    color="var(--text-muted)" onClick={() => setScreen("privacy")} />
-        <SettingRow icon={Shield}   label="Terms of Service"  color="var(--text-muted)" onClick={() => setScreen("privacy")} />
+        <SettingRow icon={FileText} label="Privacy Policy"     color="var(--text-muted)" onClick={() => setScreen("privacy")} />
+        <SettingRow icon={Shield}   label="Terms of Service"   color="var(--text-muted)" onClick={() => setScreen("privacy")} />
         <SettingRow icon={Cookie}   label="Cookie Preferences" value="Manage what we track" color="var(--text-muted)" onClick={() => {
           localStorage.removeItem("me_cookie_consent");
           window.location.reload();
@@ -489,11 +640,14 @@ export default function Settings() {
         {/* Avatar picker */}
         <AnimatePresence>
           {showPicker && (
-            <AvatarPickerModal
-              currentSeed={avatarSeed}
-              onSelect={handleAvatarSelect}
-              onClose={() => setShowPicker(false)}
-            />
+            <AvatarPickerModal currentSeed={avatarSeed} onSelect={handleAvatarSelect} onClose={() => setShowPicker(false)} />
+          )}
+        </AnimatePresence>
+
+        {/* Password modal */}
+        <AnimatePresence>
+          {showPassword && (
+            <PasswordModal onClose={() => setShowPassword(false)} />
           )}
         </AnimatePresence>
       </div>

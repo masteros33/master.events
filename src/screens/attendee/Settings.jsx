@@ -12,7 +12,9 @@ import {
   CheckCircle, Edit3, Save, Link2, Cookie,
   FileText, Lock
 } from "lucide-react";
+import toast from "react-hot-toast";
 
+const BACKEND = "https://master-events-backend.onrender.com";
 const isDesktop = () => window.innerWidth > 768;
 const BRAND     = "#F97316";
 
@@ -95,7 +97,6 @@ function AvatarPickerModal({ currentSeed, onSelect, onClose }) {
           display: "flex", flexDirection: "column",
         }}>
 
-        {/* Handle */}
         <div style={{ width: "40px", height: "4px", borderRadius: "2px", background: "var(--border-strong)", margin: "0 auto 20px" }} />
 
         <div style={{ fontWeight: 800, fontSize: "18px", color: "var(--text-primary)", marginBottom: "6px", letterSpacing: "-0.3px" }}>
@@ -105,7 +106,6 @@ function AvatarPickerModal({ currentSeed, onSelect, onClose }) {
           Pick a character — it stays consistent across your account
         </div>
 
-        {/* Grid */}
         <div style={{ flex: 1, overflowY: "auto", marginBottom: "16px" }}>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(6, 1fr)", gap: "10px" }}>
             {AVATAR_PRESETS.map(seed => {
@@ -143,7 +143,6 @@ function AvatarPickerModal({ currentSeed, onSelect, onClose }) {
           </div>
         </div>
 
-        {/* Preview + confirm */}
         <div style={{ display: "flex", alignItems: "center", gap: "14px", padding: "16px", background: "var(--bg-subtle)", borderRadius: "14px", marginBottom: "14px", border: "1px solid var(--border)" }}>
           <Avatar seed={selected} size={52}
             style={{ border: `3px solid ${BRAND}40`, borderRadius: "50%", flexShrink: 0 }} />
@@ -176,17 +175,23 @@ export default function Settings() {
   const setActiveTab = useStore(s => s.setActiveTab);
   const currentUser  = useStore(s => s.currentUser);
   const handleLogout = useStore(s => s.handleLogout);
+  const setCurrentUser = useStore(s => s.setCurrentUser || (() => {}));
   const { theme, setTheme } = useTheme();
   const desktop = isDesktop();
 
-  const [avatarSeed,   setAvatarSeed]   = useState(() => getSavedAvatarSeed(currentUser?.email));
-  const [showPicker,   setShowPicker]   = useState(false);
-  const [editing,      setEditing]      = useState(false);
-  const [editName,     setEditName]     = useState(currentUser?.first_name || "");
-  const [editPhone,    setEditPhone]    = useState("");
-  const [notifs,       setNotifs]       = useState(true);
-  const [showLogout,   setShowLogout]   = useState(false);
-  const [saved,        setSaved]        = useState(false);
+  const [avatarSeed,  setAvatarSeed]  = useState(() => getSavedAvatarSeed(currentUser?.email));
+  const [showPicker,  setShowPicker]  = useState(false);
+  const [editing,     setEditing]     = useState(false);
+  const [editFirst,   setEditFirst]   = useState(currentUser?.first_name || "");
+  const [editLast,    setEditLast]    = useState(currentUser?.last_name  || "");
+  const [editPhone,   setEditPhone]   = useState(currentUser?.phone      || "");
+  const [saving,      setSaving]      = useState(false);
+  const [notifs,      setNotifs]      = useState(true);
+  const [showLogout,  setShowLogout]  = useState(false);
+
+  // live name shown in profile card
+  const [displayFirst, setDisplayFirst] = useState(currentUser?.first_name || "");
+  const [displayLast,  setDisplayLast]  = useState(currentUser?.last_name  || "");
 
   const themeOptions = [
     { id: "light",  icon: Sun,     label: "Light"  },
@@ -199,10 +204,58 @@ export default function Settings() {
     saveAvatarSeed(currentUser?.email, seed);
   };
 
-  const handleSave = () => {
-    setSaved(true);
-    setEditing(false);
-    setTimeout(() => setSaved(false), 2500);
+  const handleSave = async () => {
+    if (!editFirst.trim()) {
+      toast.error("First name cannot be empty");
+      return;
+    }
+    setSaving(true);
+    const loadingToast = toast.loading("Saving...");
+    try {
+      const access = localStorage.getItem("access_token") || "";
+      const res = await fetch(`${BACKEND}/api/accounts/me/update/`, {
+        method:  "PATCH",
+        headers: {
+          "Content-Type":  "application/json",
+          "Authorization": `Bearer ${access}`,
+        },
+        body: JSON.stringify({
+          first_name: editFirst.trim(),
+          last_name:  editLast.trim(),
+          phone:      editPhone.trim(),
+        }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        // Update display name locally
+        setDisplayFirst(data.user.first_name);
+        setDisplayLast(data.user.last_name);
+        // Update useStore currentUser
+        const store = useStore.getState();
+        if (store.currentUser) {
+          const updated = { ...store.currentUser, ...data.user };
+          store.currentUser = updated;
+          // Also update saved session
+          const saved = JSON.parse(localStorage.getItem("me_session") || "{}");
+          if (saved.currentUser) {
+            saved.currentUser = updated;
+            localStorage.setItem("me_session", JSON.stringify(saved));
+          }
+        }
+        toast.dismiss(loadingToast);
+        toast.success("Profile updated!");
+        setEditing(false);
+      } else {
+        toast.dismiss(loadingToast);
+        const err = data.first_name?.[0] || data.last_name?.[0] || data.phone?.[0] || data.detail || "Update failed";
+        toast.error(err);
+      }
+    } catch (e) {
+      toast.dismiss(loadingToast);
+      toast.error("Connection error. Try again.");
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -237,8 +290,7 @@ export default function Settings() {
                 style={{ position: "relative", cursor: "pointer", flexShrink: 0 }}>
                 <Avatar seed={avatarSeed} size={64}
                   style={{ border: `3px solid ${BRAND}40`, borderRadius: "50%" }} />
-                <motion.div
-                  whileHover={{ scale: 1.1 }}
+                <motion.div whileHover={{ scale: 1.1 }}
                   style={{
                     position: "absolute", bottom: 0, right: 0,
                     width: "22px", height: "22px", borderRadius: "50%",
@@ -253,16 +305,16 @@ export default function Settings() {
 
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ fontWeight: 900, fontSize: "20px", color: "var(--text-primary)", letterSpacing: "-0.5px" }}>
-                  {currentUser?.first_name} {currentUser?.last_name}
+                  {displayFirst} {displayLast}
                 </div>
                 <div style={{ fontSize: "13px", color: "var(--text-muted)", marginTop: "2px" }}>{currentUser?.email}</div>
                 <div style={{ marginTop: "8px", display: "inline-flex", alignItems: "center", gap: "5px", padding: "3px 10px", borderRadius: "99px", background: `${BRAND}12`, border: `1px solid ${BRAND}25` }}>
-                  <span style={{ fontSize: "10px", fontWeight: 700, color: BRAND, letterSpacing: "0.5px" }}>🎟️ ATTENDEE</span>
+                  <span style={{ fontSize: "10px", fontWeight: 700, color: BRAND, letterSpacing: "0.5px" }}>🎟️ {currentUser?.role?.toUpperCase() || "ATTENDEE"}</span>
                 </div>
               </div>
             </div>
 
-            {/* Tap hint */}
+            {/* Avatar strip */}
             <motion.div whileTap={{ scale: 0.98 }} onClick={() => setShowPicker(true)}
               style={{ marginTop: "14px", display: "flex", alignItems: "center", gap: "8px", padding: "10px 14px", background: `${BRAND}06`, border: `1px solid ${BRAND}18`, borderRadius: "11px", cursor: "pointer" }}>
               <div style={{ display: "flex", gap: "4px" }}>
@@ -285,12 +337,24 @@ export default function Settings() {
               <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }}
                 style={{ overflow: "hidden" }}>
                 <div style={{ padding: "16px 24px", borderBottom: "1px solid var(--border)" }}>
-                  <div style={{ fontSize: "12px", fontWeight: 600, color: "var(--text-secondary)", marginBottom: "6px" }}>Display Name</div>
-                  <input value={editName} onChange={e => setEditName(e.target.value)}
-                    style={{ width: "100%", padding: "11px 14px", background: "var(--bg-subtle)", border: "1.5px solid var(--border)", borderRadius: "10px", fontSize: "14px", color: "var(--text-primary)", outline: "none", fontFamily: "var(--font-sans)", boxSizing: "border-box", marginBottom: "10px" }}
-                    onFocus={e => { e.target.style.borderColor = BRAND; e.target.style.boxShadow = `0 0 0 3px ${BRAND}15`; }}
-                    onBlur={e => { e.target.style.borderColor = "var(--border)"; e.target.style.boxShadow = "none"; }}
-                  />
+                  <div style={{ display: "flex", gap: "10px", marginBottom: "10px" }}>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontSize: "12px", fontWeight: 600, color: "var(--text-secondary)", marginBottom: "6px" }}>First Name</div>
+                      <input value={editFirst} onChange={e => setEditFirst(e.target.value)}
+                        style={{ width: "100%", padding: "11px 14px", background: "var(--bg-subtle)", border: "1.5px solid var(--border)", borderRadius: "10px", fontSize: "14px", color: "var(--text-primary)", outline: "none", fontFamily: "var(--font-sans)", boxSizing: "border-box" }}
+                        onFocus={e => { e.target.style.borderColor = BRAND; e.target.style.boxShadow = `0 0 0 3px ${BRAND}15`; }}
+                        onBlur={e => { e.target.style.borderColor = "var(--border)"; e.target.style.boxShadow = "none"; }}
+                      />
+                    </div>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontSize: "12px", fontWeight: 600, color: "var(--text-secondary)", marginBottom: "6px" }}>Last Name</div>
+                      <input value={editLast} onChange={e => setEditLast(e.target.value)}
+                        style={{ width: "100%", padding: "11px 14px", background: "var(--bg-subtle)", border: "1.5px solid var(--border)", borderRadius: "10px", fontSize: "14px", color: "var(--text-primary)", outline: "none", fontFamily: "var(--font-sans)", boxSizing: "border-box" }}
+                        onFocus={e => { e.target.style.borderColor = BRAND; e.target.style.boxShadow = `0 0 0 3px ${BRAND}15`; }}
+                        onBlur={e => { e.target.style.borderColor = "var(--border)"; e.target.style.boxShadow = "none"; }}
+                      />
+                    </div>
+                  </div>
                   <div style={{ fontSize: "12px", fontWeight: 600, color: "var(--text-secondary)", marginBottom: "6px" }}>Phone (optional)</div>
                   <input value={editPhone} onChange={e => setEditPhone(e.target.value)}
                     placeholder="e.g. 0241234567" type="tel"
@@ -299,11 +363,11 @@ export default function Settings() {
                     onBlur={e => { e.target.style.borderColor = "var(--border)"; e.target.style.boxShadow = "none"; }}
                   />
                   <div style={{ display: "flex", gap: "8px", marginTop: "14px" }}>
-                    <motion.button whileTap={{ scale: 0.97 }} onClick={handleSave}
-                      style={{ flex: 2, padding: "12px", background: `linear-gradient(135deg, ${BRAND}, #EA6C0A)`, color: "#fff", border: "none", borderRadius: "11px", fontWeight: 700, fontSize: "13px", cursor: "pointer", fontFamily: "var(--font-sans)", display: "flex", alignItems: "center", justifyContent: "center", gap: "6px" }}>
-                      <Save size={14} /> Save Changes
+                    <motion.button whileTap={{ scale: 0.97 }} onClick={handleSave} disabled={saving}
+                      style={{ flex: 2, padding: "12px", background: saving ? "var(--bg-subtle)" : `linear-gradient(135deg, ${BRAND}, #EA6C0A)`, color: saving ? "var(--text-muted)" : "#fff", border: "none", borderRadius: "11px", fontWeight: 700, fontSize: "13px", cursor: saving ? "not-allowed" : "pointer", fontFamily: "var(--font-sans)", display: "flex", alignItems: "center", justifyContent: "center", gap: "6px" }}>
+                      <Save size={14} /> {saving ? "Saving..." : "Save Changes"}
                     </motion.button>
-                    <motion.button whileTap={{ scale: 0.97 }} onClick={() => setEditing(false)}
+                    <motion.button whileTap={{ scale: 0.97 }} onClick={() => { setEditing(false); setEditFirst(displayFirst); setEditLast(displayLast); }}
                       style={{ flex: 1, padding: "12px", background: "var(--bg-subtle)", color: "var(--text-secondary)", border: "1px solid var(--border)", borderRadius: "11px", fontWeight: 600, fontSize: "13px", cursor: "pointer", fontFamily: "var(--font-sans)" }}>
                       Cancel
                     </motion.button>
@@ -314,17 +378,8 @@ export default function Settings() {
           </AnimatePresence>
 
           <div style={{ padding: "12px 24px" }}>
-            <AnimatePresence>
-              {saved && (
-                <motion.div initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
-                  style={{ display: "flex", alignItems: "center", gap: "8px", padding: "10px 14px", background: "rgba(22,163,74,0.08)", border: "1px solid rgba(22,163,74,0.2)", borderRadius: "10px", marginBottom: "10px" }}>
-                  <CheckCircle size={14} color="#16a34a" />
-                  <span style={{ fontSize: "13px", fontWeight: 600, color: "#16a34a" }}>Profile updated!</span>
-                </motion.div>
-              )}
-            </AnimatePresence>
             {!editing && (
-              <motion.button whileTap={{ scale: 0.97 }} onClick={() => setEditing(true)}
+              <motion.button whileTap={{ scale: 0.97 }} onClick={() => { setEditing(true); setEditFirst(displayFirst); setEditLast(displayLast); setEditPhone(currentUser?.phone || ""); }}
                 style={{ width: "100%", padding: "11px", background: "var(--bg-subtle)", border: "1px solid var(--border)", borderRadius: "11px", color: "var(--text-secondary)", fontWeight: 600, fontSize: "13px", cursor: "pointer", fontFamily: "var(--font-sans)", display: "flex", alignItems: "center", justifyContent: "center", gap: "7px" }}>
                 <Edit3 size={14} /> Edit Profile
               </motion.button>
@@ -334,9 +389,9 @@ export default function Settings() {
 
         {/* Account */}
         <SectionHeader title="Account" />
-        <SettingRow icon={Mail}   label="Email Address" value={currentUser?.email} color="#2563eb" />
-        <SettingRow icon={User}   label="Full Name" value={`${currentUser?.first_name || ""} ${currentUser?.last_name || ""}`.trim() || "Not set"} color={BRAND} onClick={() => setEditing(true)} action="Edit" />
-        <SettingRow icon={Lock}   label="Password" value="Change your password" color="#7c3aed" onClick={() => {}} action="Change" />
+        <SettingRow icon={Mail} label="Email Address" value={currentUser?.email} color="#2563eb" />
+        <SettingRow icon={User} label="Full Name" value={`${displayFirst} ${displayLast}`.trim() || "Not set"} color={BRAND} onClick={() => setEditing(true)} action="Edit" />
+        <SettingRow icon={Lock} label="Password" value="Change your password" color="#7c3aed" onClick={() => {}} action="Change" />
 
         {/* Appearance */}
         <SectionHeader title="Appearance" />
@@ -404,7 +459,7 @@ export default function Settings() {
         <SectionHeader title="Account Actions" />
         <SettingRow icon={LogOut} label="Log Out" danger onClick={() => setShowLogout(true)} />
 
-        {/* Logout modal */}
+        {/* Logout confirm */}
         <AnimatePresence>
           {showLogout && (
             <>
@@ -431,7 +486,7 @@ export default function Settings() {
           )}
         </AnimatePresence>
 
-        {/* Avatar picker modal */}
+        {/* Avatar picker */}
         <AnimatePresence>
           {showPicker && (
             <AvatarPickerModal

@@ -29,48 +29,6 @@ const ITEMS_PER_PAGE_DESKTOP = 9;
 const ITEMS_PER_PAGE_MOBILE  = 6;
 const isDesktop = () => window.innerWidth > 768;
 
-// ── Telemetry status bar ──────────────────────────────────────
-function TelemetryBar({ total, filtered, loading, category }) {
-  const [ms] = useState(() => Math.floor(Math.random() * 18) + 8);
-  const desktop = isDesktop();
-
-  return (
-    <div style={{
-      display: "flex", alignItems: "center", gap: desktop ? "24px" : "14px",
-      padding: "8px 0", flexWrap: "wrap",
-      fontFamily: "var(--font-mono)",
-    }}>
-      {[
-        ["TOTAL_EVT",    loading ? "···" : total.toString().padStart(3, "0"),    "#f5a623"],
-        ["FILTERED",     loading ? "···" : filtered.toString().padStart(3, "0"), "#60a5fa"],
-        ["NET",          "ONLINE",    "#4ade80"],
-        ["CHAIN",        "AMOY",      "#a78bfa"],
-        ["IDX_TIME",     ms + "ms",   "var(--text-muted)"],
-        ...(category !== "all" ? [["CAT", category.toUpperCase(), "#f5a623"]] : []),
-      ].map(([key, val, color]) => (
-        <div key={key} style={{ display: "flex", alignItems: "center", gap: "5px" }}>
-          <span style={{ fontSize: "9px", color: "var(--text-muted)", letterSpacing: "0.8px" }}>{key}</span>
-          <span style={{ fontSize: "9px", color: "var(--border-strong)", marginTop: "1px" }}>:</span>
-          <motion.span
-            key={val}
-            initial={{ opacity: 0, y: -4 }}
-            animate={{ opacity: 1, y: 0 }}
-            style={{ fontSize: "9px", fontWeight: 700, color, letterSpacing: "0.5px" }}>
-            {val}
-          </motion.span>
-        </div>
-      ))}
-      <motion.div
-        animate={{ opacity: [0.4, 1, 0.4] }}
-        transition={{ duration: 2, repeat: Infinity }}
-        style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: "4px" }}>
-        <div style={{ width: "5px", height: "5px", borderRadius: "50%", background: "#4ade80" }} />
-        <span style={{ fontSize: "8px", fontWeight: 700, color: "#4ade80", letterSpacing: "1px" }}>LIVE</span>
-      </motion.div>
-    </div>
-  );
-}
-
 // ── Event Card ────────────────────────────────────────────────
 function EventCard({ ev, onClick }) {
   const [hovered, setHovered] = useState(false);
@@ -106,35 +64,13 @@ function EventCard({ ev, onClick }) {
           onError={e => { e.target.src = categoryImages.other; }}
         />
         <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to bottom, rgba(0,0,0,0.06) 0%, rgba(0,0,0,0.62) 100%)" }} />
-
-        {/* Category badge */}
-        <div style={{
-          position: "absolute", top: "11px", right: "11px",
-          background: "var(--brand)", color: "#fff",
-          fontSize: "9px", fontWeight: 700, padding: "3px 9px",
-          borderRadius: "99px", letterSpacing: "0.5px",
-          fontFamily: "var(--font-mono)",
-        }}>
+        <div style={{ position: "absolute", top: "11px", right: "11px", background: "var(--brand)", color: "#fff", fontSize: "9px", fontWeight: 700, padding: "3px 9px", borderRadius: "99px", letterSpacing: "0.5px", fontFamily: "var(--font-mono)" }}>
           {ev.category.toUpperCase()}
         </div>
-
-        {/* Free badge */}
         {ev.price === 0 && (
-          <div style={{
-            position: "absolute", top: "11px", left: "11px",
-            background: "#16a34a", color: "#fff",
-            fontSize: "9px", fontWeight: 700, padding: "3px 9px", borderRadius: "99px",
-            fontFamily: "var(--font-mono)",
-          }}>FREE</div>
+          <div style={{ position: "absolute", top: "11px", left: "11px", background: "#16a34a", color: "#fff", fontSize: "9px", fontWeight: 700, padding: "3px 9px", borderRadius: "99px", fontFamily: "var(--font-mono)" }}>FREE</div>
         )}
-
-        {/* NFT badge */}
-        <div style={{
-          position: "absolute", bottom: "11px", left: "11px",
-          display: "flex", alignItems: "center", gap: "4px",
-          background: "rgba(124,58,237,0.85)", backdropFilter: "blur(8px)",
-          padding: "3px 8px", borderRadius: "99px",
-        }}>
+        <div style={{ position: "absolute", bottom: "11px", left: "11px", display: "flex", alignItems: "center", gap: "4px", background: "rgba(124,58,237,0.85)", backdropFilter: "blur(8px)", padding: "3px 8px", borderRadius: "99px" }}>
           <span style={{ fontSize: "8px" }}>⛓️</span>
           <span style={{ fontSize: "8px", fontWeight: 700, color: "#fff", fontFamily: "var(--font-mono)" }}>NFT</span>
         </div>
@@ -154,15 +90,8 @@ function EventCard({ ev, onClick }) {
           <div style={{ color: "var(--brand)", fontWeight: 800, fontSize: "17px", letterSpacing: "-0.5px" }}>
             {ev.price === 0 ? "FREE" : `GHS ${ev.price}`}
           </div>
-          <motion.div
-            animate={{ x: hovered ? 3 : 0 }}
-            transition={{ duration: 0.18 }}
-            style={{
-              fontSize: "11px", fontWeight: 600,
-              color: hovered ? "var(--brand)" : "var(--text-muted)",
-              display: "flex", alignItems: "center", gap: "3px",
-              transition: "color 0.18s",
-            }}>
+          <motion.div animate={{ x: hovered ? 3 : 0 }} transition={{ duration: 0.18 }}
+            style={{ fontSize: "11px", fontWeight: 600, color: hovered ? "var(--brand)" : "var(--text-muted)", display: "flex", alignItems: "center", gap: "3px", transition: "color 0.18s" }}>
             View <span>→</span>
           </motion.div>
         </div>
@@ -203,23 +132,19 @@ function EventDetailOverlay({ ev, onBack, onCheckout }) {
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}
       style={{ background: "var(--bg)", height: "100%", display: "flex", flexDirection: "column", overflow: "hidden" }}>
       <div style={{ flex: 1, overflowY: "auto", WebkitOverflowScrolling: "touch" }}>
-
         <div style={{ height: "65vh", minHeight: "360px", maxHeight: "560px", position: "relative" }}>
           <img src={ev.image} alt={ev.name}
             style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
             onError={e => { e.target.src = categoryImages.other; }} />
           <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to bottom, rgba(0,0,0,0.12) 0%, rgba(0,0,0,0.82) 100%)" }} />
-
           <motion.button whileTap={{ scale: 0.9 }} onClick={onBack}
             style={{ position: "absolute", top: "18px", left: "18px", width: "38px", height: "38px", borderRadius: "11px", background: "rgba(255,255,255,0.12)", backdropFilter: "blur(12px)", border: "1px solid rgba(255,255,255,0.18)", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", fontSize: "17px", color: "#fff", zIndex: 10 }}>
             ←
           </motion.button>
-
           <div style={{ position: "absolute", top: "18px", right: "18px", display: "flex", alignItems: "center", gap: "5px", background: "rgba(124,58,237,0.85)", backdropFilter: "blur(8px)", padding: "5px 11px", borderRadius: "99px" }}>
             <span style={{ fontSize: "10px" }}>⛓️</span>
             <span style={{ fontSize: "9px", fontWeight: 700, color: "#fff", fontFamily: "var(--font-mono)" }}>NFT · POLYGON AMOY</span>
           </div>
-
           <div style={{ position: "absolute", bottom: "24px", left: "20px", right: "20px" }}>
             <div style={{ display: "inline-block", background: "var(--brand)", color: "#fff", fontSize: "9px", fontWeight: 700, padding: "3px 10px", borderRadius: "99px", marginBottom: "10px", letterSpacing: "0.5px", fontFamily: "var(--font-mono)" }}>
               {ev.category.toUpperCase()}
@@ -248,14 +173,12 @@ function EventDetailOverlay({ ev, onBack, onCheckout }) {
                 </div>
               ))}
             </div>
-
             <div style={{ marginBottom: "24px" }}>
               <div style={{ fontSize: "9px", fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "1.5px", marginBottom: "12px", fontFamily: "var(--font-mono)" }}>ABOUT_EVENT</div>
               <div style={{ fontSize: "15px", color: "var(--text-secondary)", lineHeight: 1.85 }}>
                 {ev.description?.trim() || "No description provided."}
               </div>
             </div>
-
             <div style={{ background: "rgba(124,58,237,0.05)", border: "1px solid rgba(124,58,237,0.15)", borderRadius: "12px", padding: "14px 16px", display: "flex", alignItems: "center", gap: "12px" }}>
               <span style={{ fontSize: "20px" }}>⛓️</span>
               <div>
@@ -263,7 +186,6 @@ function EventDetailOverlay({ ev, onBack, onCheckout }) {
                 <div style={{ fontSize: "11px", color: "var(--text-muted)", marginTop: "2px" }}>NFT minted · Screenshot-proof · Cannot be duplicated</div>
               </div>
             </div>
-
             {!desktop && (
               <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }} onClick={onCheckout}
                 style={{ width: "100%", padding: "17px", background: "linear-gradient(135deg, #f5a623, #e8920f)", color: "#fff", border: "none", borderRadius: "14px", fontSize: "16px", fontWeight: 700, cursor: "pointer", boxShadow: "var(--shadow-brand)", fontFamily: "var(--font-sans)", marginTop: "24px" }}>
@@ -282,10 +204,10 @@ function EventDetailOverlay({ ev, onBack, onCheckout }) {
                   </div>
                 </div>
                 {[
-                  ["📅", "DATE",    ev.date || "TBA"],
-                  ["🕐", "TIME",    ev.time ? ev.time.substring(0, 5) : "TBA"],
-                  ["🎟", "LEFT",    remaining.toString()],
-                  ["📍", "VENUE",   ev.venue || "TBA"],
+                  ["📅", "DATE",  ev.date || "TBA"],
+                  ["🕐", "TIME",  ev.time ? ev.time.substring(0, 5) : "TBA"],
+                  ["🎟", "LEFT",  remaining.toString()],
+                  ["📍", "VENUE", ev.venue || "TBA"],
                 ].map(([icon, label, val]) => (
                   <div key={label} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "9px 0", borderBottom: "1px solid var(--border)" }}>
                     <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
@@ -310,7 +232,7 @@ function EventDetailOverlay({ ev, onBack, onCheckout }) {
                       style={{ height: "100%", borderRadius: "99px", background: remaining < 20 ? "#dc2626" : "var(--brand)" }} />
                   </div>
                 </div>
-                <motion.button whileHover={{ scale: 1.02, boxShadow: "var(--shadow-brand-lg)" }} whileTap={{ scale: 0.97 }} onClick={onCheckout}
+                <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }} onClick={onCheckout}
                   style={{ width: "100%", padding: "15px", background: "linear-gradient(135deg, #f5a623, #e8920f)", color: "#fff", border: "none", borderRadius: "13px", fontSize: "14px", fontWeight: 700, cursor: "pointer", boxShadow: "var(--shadow-brand)", fontFamily: "var(--font-sans)", marginBottom: "10px" }}>
                   {ev.price === 0 ? "Get Free Ticket" : `Buy Ticket — GHS ${ev.price}`}
                 </motion.button>
@@ -330,8 +252,6 @@ function EventDetailOverlay({ ev, onBack, onCheckout }) {
 // ── Main AttendeeHome ─────────────────────────────────────────
 export default function AttendeeHome() {
   const setScreen        = useStore(s => s.setScreen);
-  const activeTab        = useStore(s => s.activeTab);
-  const setActiveTab     = useStore(s => s.setActiveTab);
   const setCheckoutEvent = useStore(s => s.setCheckoutEvent);
   const setTicketQty     = useStore(s => s.setTicketQty);
   const setOverlayEvent  = useStore(s => s.setOverlayEvent);
@@ -416,14 +336,7 @@ export default function AttendeeHome() {
   return (
     <div style={{ background: "var(--bg)", minHeight: "100%", paddingBottom: desktop ? "60px" : "100px" }}>
 
-    
-
-      {/* ══════════════════════════════════════════════════════
-          UNIFIED COMMAND BAR
-          - Omni search at top
-          - Category chips directly below
-          - Telemetry bar below chips
-      ══════════════════════════════════════════════════════ */}
+      {/* ── Sticky command bar ── */}
       <div style={{
         position: "sticky", top: 0, zIndex: 30,
         background: "var(--bg-card)",
@@ -432,36 +345,25 @@ export default function AttendeeHome() {
       }}>
         <div style={{ padding: desktop ? "0 40px" : "0 16px" }}>
 
-          {/* ── Mobile top row ── */}
-         {/* ── Mobile top row ── */}
-            {!desktop && (
-              <div style={{ padding: "12px 0 10px" }}>
-                <div style={{ fontSize: "15px", fontWeight: 700, color: "var(--text-primary)" }}>
-                  Hi, {currentUser?.first_name} 👋
-                </div>
-                <div style={{ fontSize: "11px", color: "var(--text-muted)", marginTop: "2px", fontFamily: "var(--font-mono)" }}>
-                  What are you looking for today?
-                </div>
+          {/* Mobile greeting */}
+          {!desktop && (
+            <div style={{ padding: "12px 0 10px" }}>
+              <div style={{ fontSize: "15px", fontWeight: 700, color: "var(--text-primary)" }}>
+                Hi, {currentUser?.first_name} 👋
               </div>
-            )}
+              <div style={{ fontSize: "11px", color: "var(--text-muted)", marginTop: "2px", fontFamily: "var(--font-mono)" }}>
+                What are you looking for today?
+              </div>
+            </div>
+          )}
 
-
-          {/* ── Omni search bar ── */}
+          {/* Search bar */}
           <div style={{ padding: desktop ? "12px 0 10px" : "0 0 10px" }}>
-            <div style={{
-              position: "relative",
-              maxWidth: desktop ? "100%" : "100%",
-            }}>
-              {/* Search icon */}
+            <div style={{ position: "relative" }}>
               <div style={{ position: "absolute", left: "14px", top: "50%", transform: "translateY(-50%)", display: "flex", alignItems: "center", gap: "6px", pointerEvents: "none", zIndex: 1 }}>
                 <span style={{ fontSize: "13px", opacity: 0.5 }}>🔍</span>
-                {desktop && (
-                  <span style={{ fontSize: "11px", color: "var(--text-muted)", fontFamily: "var(--font-mono)", opacity: 0.5 }}>
-                    SEARCH
-                  </span>
-                )}
+                {desktop && <span style={{ fontSize: "11px", color: "var(--text-muted)", fontFamily: "var(--font-mono)", opacity: 0.5 }}>SEARCH</span>}
               </div>
-
               <input
                 value={searchQ}
                 onChange={e => setSearchQ(e.target.value)}
@@ -472,25 +374,17 @@ export default function AttendeeHome() {
                   width: "100%",
                   padding: desktop ? "11px 120px 11px 80px" : "11px 40px 11px 40px",
                   background: searchFocused ? "var(--bg)" : "var(--bg-subtle)",
-                  border: searchFocused
-                    ? "1.5px solid rgba(245,166,35,0.6)"
-                    : "1.5px solid var(--border)",
-                  borderRadius: "11px",
-                  fontSize: "13px",
-                  color: "var(--text-primary)",
-                  outline: "none",
-                  boxSizing: "border-box",
-                  fontFamily: "var(--font-sans)",
+                  border: searchFocused ? "1.5px solid rgba(245,166,35,0.6)" : "1.5px solid var(--border)",
+                  borderRadius: "11px", fontSize: "13px", color: "var(--text-primary)",
+                  outline: "none", boxSizing: "border-box", fontFamily: "var(--font-sans)",
                   transition: "all 0.2s var(--ease-smooth)",
                   boxShadow: searchFocused ? "0 0 0 3px rgba(245,166,35,0.12)" : "none",
                 }}
               />
-
-              {/* Right side — kbd hint + clear */}
               <div style={{ position: "absolute", right: "12px", top: "50%", transform: "translateY(-50%)", display: "flex", alignItems: "center", gap: "8px" }}>
                 {searchQ ? (
                   <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} onClick={() => setSearchQ("")}
-                    style={{ cursor: "pointer", color: "var(--text-muted)", fontSize: "13px", fontWeight: 700, width: "18px", height: "18px", borderRadius: "50%", background: "var(--bg-subtle)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "10px" }}>
+                    style={{ cursor: "pointer", width: "18px", height: "18px", borderRadius: "50%", background: "var(--bg-subtle)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "10px", color: "var(--text-muted)" }}>
                     ✕
                   </motion.div>
                 ) : desktop ? (
@@ -503,7 +397,7 @@ export default function AttendeeHome() {
             </div>
           </div>
 
-          {/* ── Category chips — directly below search ── */}
+          {/* Category chips */}
           <div style={{ display: "flex", gap: "6px", overflowX: "auto", scrollbarWidth: "none", paddingBottom: "10px" }}>
             {CATEGORIES.map(cat => {
               const active = activeCategory === cat.key;
@@ -511,19 +405,13 @@ export default function AttendeeHome() {
                 <motion.div key={cat.key} whileTap={{ scale: 0.9 }}
                   onClick={() => setActiveCategory(cat.key)}
                   style={{
-                    flexShrink: 0,
-                    padding: "5px 14px",
-                    borderRadius: "99px",
-                    cursor: "pointer",
-                    fontSize: "11px",
-                    fontWeight: active ? 700 : 500,
-                    display: "flex", alignItems: "center", gap: "5px",
-                    transition: "all 0.15s",
+                    flexShrink: 0, padding: "5px 14px", borderRadius: "99px",
+                    cursor: "pointer", fontSize: "11px", fontWeight: active ? 700 : 500,
+                    display: "flex", alignItems: "center", gap: "5px", transition: "all 0.15s",
                     background: active ? "var(--brand)" : "transparent",
                     color: active ? "#fff" : "var(--text-secondary)",
                     border: active ? "1px solid var(--brand)" : "1px solid var(--border)",
                     boxShadow: active ? "var(--shadow-brand)" : "none",
-                    fontFamily: active ? "var(--font-sans)" : "var(--font-sans)",
                   }}>
                   <span style={{ fontFamily: "var(--font-mono)", fontSize: "10px" }}>{cat.icon}</span>
                   <span>{cat.label}</span>
@@ -531,46 +419,28 @@ export default function AttendeeHome() {
               );
             })}
           </div>
-
-          {/* ── Telemetry bar ── */}
-          <TelemetryBar
-            total={events.length}
-            filtered={filtered.length}
-            loading={loading}
-            category={activeCategory}
-          />
         </div>
       </div>
 
-      {/* ── Resale Market banner ── */}
+      {/* Resale Market banner */}
       <div style={{ padding: desktop ? "16px 40px 0" : "12px 16px 0" }}>
         <motion.div whileTap={{ scale: 0.98 }} onClick={() => setScreen("resaleMarket")}
-          style={{
-            background: "linear-gradient(135deg, rgba(124,58,237,0.06), rgba(37,99,235,0.04))",
-            border: "1px solid rgba(124,58,237,0.18)",
-            borderRadius: "12px", padding: "11px 16px",
-            display: "flex", alignItems: "center",
-            justifyContent: "space-between", cursor: "pointer",
-            transition: "all 0.2s",
-          }}
+          style={{ background: "linear-gradient(135deg, rgba(124,58,237,0.06), rgba(37,99,235,0.04))", border: "1px solid rgba(124,58,237,0.18)", borderRadius: "12px", padding: "11px 16px", display: "flex", alignItems: "center", justifyContent: "space-between", cursor: "pointer", transition: "all 0.2s" }}
           onMouseEnter={e => { e.currentTarget.style.borderColor = "rgba(124,58,237,0.4)"; }}
           onMouseLeave={e => { e.currentTarget.style.borderColor = "rgba(124,58,237,0.18)"; }}>
           <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
             <div style={{ width: "32px", height: "32px", borderRadius: "9px", background: "linear-gradient(135deg, #7c3aed, #2563eb)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "14px", flexShrink: 0 }}>🏷️</div>
             <div>
               <div style={{ fontSize: "12px", fontWeight: 700, color: "var(--text-primary)" }}>Resale Market</div>
-              <div style={{ fontSize: "10px", color: "var(--text-muted)", fontFamily: "var(--font-mono)" }}>
-                FAN_TO_FAN · NFT_TRANSFER · 2%_FEE
-              </div>
+              <div style={{ fontSize: "10px", color: "var(--text-muted)", fontFamily: "var(--font-mono)" }}>FAN_TO_FAN · NFT_TRANSFER · 2%_FEE</div>
             </div>
           </div>
           <span style={{ color: "#7c3aed", fontSize: "14px", fontWeight: 700 }}>→</span>
         </motion.div>
       </div>
 
-      {/* ── Events Grid ── */}
+      {/* Events Grid */}
       <div style={{ padding: desktop ? "16px 40px 0" : "12px 16px 0" }}>
-
         {loading && (
           <div style={{ display: "grid", gridTemplateColumns: desktop ? "repeat(3, 1fr)" : "1fr", gap: desktop ? "20px" : "12px" }}>
             {[1,2,3,4,5,6].map(i => (
@@ -588,9 +458,7 @@ export default function AttendeeHome() {
         {!loading && filtered.length === 0 && (
           <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
             style={{ textAlign: "center", padding: "80px 20px" }}>
-            <div style={{ fontSize: "10px", fontWeight: 700, color: "var(--text-muted)", letterSpacing: "2px", marginBottom: "16px", fontFamily: "var(--font-mono)" }}>
-              QUERY_RESULT: NULL
-            </div>
+            <div style={{ fontSize: "10px", fontWeight: 700, color: "var(--text-muted)", letterSpacing: "2px", marginBottom: "16px", fontFamily: "var(--font-mono)" }}>QUERY_RESULT: NULL</div>
             <div style={{ fontWeight: 700, fontSize: "16px", color: "var(--text-primary)", marginBottom: "8px" }}>No events found</div>
             <div style={{ fontSize: "13px", color: "var(--text-muted)" }}>Try a different search or category</div>
           </motion.div>
@@ -599,10 +467,7 @@ export default function AttendeeHome() {
         {!loading && paginated.length > 0 && (
           <div style={{ display: "grid", gridTemplateColumns: desktop ? "repeat(3, 1fr)" : "1fr", gap: desktop ? "20px" : "12px" }}>
             {paginated.map((ev, i) => (
-              <motion.div key={ev.id}
-                initial={{ opacity: 0, y: 18 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: i * 0.04, duration: 0.3 }}>
+              <motion.div key={ev.id} initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.04, duration: 0.3 }}>
                 <EventCard ev={ev} onClick={() => setOverlayEvent(ev)} />
               </motion.div>
             ))}

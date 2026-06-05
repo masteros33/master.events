@@ -9,6 +9,7 @@ import AttendeeHome from "./screens/attendee/AttendeeHome";
 import ResaleMarketplace from "./screens/attendee/ResaleMarketplace";
 import CookieBanner from "./components/CookieBanner";
 import Settings from "./screens/attendee/Settings";
+import PrivacyPolicy from "./screens/attendee/PrivacyPolicy";
 import { AttendeeTickets, AttendeeAlerts } from "./screens/attendee/AttendeeScreens";
 import {
   Checkout, TicketView, Resale, ResaleSuccess,
@@ -36,7 +37,7 @@ const BRAND = "#F97316";
 const FULL_SCREENS = [
   "checkout", "ticketView", "resale", "resaleSuccess",
   "transfer", "paymentSuccess", "addEvent", "orgEventDetail",
-  "scanTicket", "resaleMarket", "settings",
+  "scanTicket", "resaleMarket", "settings", "privacy",
 ];
 
 const APP_MODE_SCREENS = [
@@ -272,11 +273,18 @@ function MobileAppShell() {
   const [drawerOpen, setDrawerOpen] = React.useState(false);
 
   const screenTitles = {
-    checkout: "Checkout", ticketView: "My Ticket", resale: "List for Resale",
-    resaleSuccess: "Listed!", transfer: "Transfer Ticket",
-    paymentSuccess: "Payment Successful!", addEvent: "Create Event",
-    orgEventDetail: "Event Details", scanTicket: "Scan Tickets",
-    resaleMarket: "Resale Market", settings: "Settings",
+    checkout:       "Checkout",
+    ticketView:     "My Ticket",
+    resale:         "List for Resale",
+    resaleSuccess:  "Listed!",
+    transfer:       "Transfer Ticket",
+    paymentSuccess: "Payment Successful!",
+    addEvent:       "Create Event",
+    orgEventDetail: "Event Details",
+    scanTicket:     "Scan Tickets",
+    resaleMarket:   "Resale Market",
+    settings:       "Settings",
+    privacy:        "Privacy Policy",
   };
 
   const tabTitles = {
@@ -289,16 +297,21 @@ function MobileAppShell() {
     : tabTitles[useStore.getState().activeTab] || "Master Events";
 
   const fullScreenMap = {
-    checkout: <Checkout />, ticketView: <TicketView />,
-    resale: <Resale />, resaleSuccess: <ResaleSuccess />,
-    transfer: <Transfer />, paymentSuccess: <PaymentSuccess />,
-    addEvent: <AddEvent />, orgEventDetail: <OrganizerEventDetail />,
-    scanTicket: <OrganizerScan />,
+    checkout:       <Checkout />,
+    ticketView:     <TicketView />,
+    resale:         <Resale />,
+    resaleSuccess:  <ResaleSuccess />,
+    transfer:       <Transfer />,
+    paymentSuccess: <PaymentSuccess />,
+    addEvent:       <AddEvent />,
+    orgEventDetail: <OrganizerEventDetail />,
+    scanTicket:     <OrganizerScan />,
   };
 
   const navScreenMap = {
     resaleMarket: <ResaleMarketplace />,
     settings:     <Settings />,
+    privacy:      <PrivacyPolicy />,
   };
 
   if (fullScreenMap[screen]) {
@@ -416,24 +429,39 @@ function DesktopAppLayout() {
   const isFullScreen = FULL_SCREENS.includes(screen);
 
   const screenTitles = {
-    checkout: "Checkout", ticketView: "Your Ticket", resale: "Resell Ticket",
-    resaleSuccess: "Listed!", transfer: "Transfer Ticket",
-    paymentSuccess: "Payment Successful", addEvent: "Create Event",
-    orgEventDetail: "Event Details", scanTicket: "Scan Tickets",
-    doorStaffLogin: "Door Staff", doorStaffScan: "Door Scanner",
-    resaleMarket: "Resale Market", settings: "Account Settings",
+    checkout:       "Checkout",
+    ticketView:     "Your Ticket",
+    resale:         "Resell Ticket",
+    resaleSuccess:  "Listed!",
+    transfer:       "Transfer Ticket",
+    paymentSuccess: "Payment Successful",
+    addEvent:       "Create Event",
+    orgEventDetail: "Event Details",
+    scanTicket:     "Scan Tickets",
+    doorStaffLogin: "Door Staff",
+    doorStaffScan:  "Door Scanner",
+    resaleMarket:   "Resale Market",
+    settings:       "Account Settings",
+    privacy:        "Privacy Policy",
   };
 
   const renderContent = () => {
     if (isFullScreen) {
       const map = {
-        checkout: <Checkout />, ticketView: <TicketView />,
-        resale: <Resale />, resaleSuccess: <ResaleSuccess />,
-        transfer: <Transfer />, paymentSuccess: <PaymentSuccess />,
-        addEvent: <AddEvent />, orgEventDetail: <OrganizerEventDetail />,
-        scanTicket: <OrganizerScan />, doorStaffLogin: <DoorStaffLogin />,
-        doorStaffScan: <DoorStaffScan />, resaleMarket: <ResaleMarketplace />,
-        settings: <Settings />,
+        checkout:       <Checkout />,
+        ticketView:     <TicketView />,
+        resale:         <Resale />,
+        resaleSuccess:  <ResaleSuccess />,
+        transfer:       <Transfer />,
+        paymentSuccess: <PaymentSuccess />,
+        addEvent:       <AddEvent />,
+        orgEventDetail: <OrganizerEventDetail />,
+        scanTicket:     <OrganizerScan />,
+        doorStaffLogin: <DoorStaffLogin />,
+        doorStaffScan:  <DoorStaffScan />,
+        resaleMarket:   <ResaleMarketplace />,
+        settings:       <Settings />,
+        privacy:        <PrivacyPolicy />,
       };
       return map[screen];
     }
@@ -604,7 +632,7 @@ export default function App() {
   const [desktop, setDesktop] = React.useState(window.innerWidth > 768);
   useTheme();
 
-  // ── app-mode class — locks scroll for app, frees it for landing ──
+  // ── app-mode body class ───────────────────────────────────
   React.useEffect(() => {
     const isAppMode = isLoggedIn || APP_MODE_SCREENS.includes(screen);
     if (isAppMode) {

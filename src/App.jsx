@@ -39,6 +39,12 @@ const FULL_SCREENS = [
   "scanTicket", "resaleMarket", "settings",
 ];
 
+const APP_MODE_SCREENS = [
+  "login", "signup", "role", "resetPassword",
+  "adminGateway", "adminDashboard",
+  "doorStaffLogin", "doorStaffScan", "app",
+];
+
 // ── Mobile Top Header ─────────────────────────────────────────
 function MobileTopHeader({ onMenuOpen, title }) {
   const { theme, setTheme } = useTheme();
@@ -598,33 +604,36 @@ export default function App() {
   const [desktop, setDesktop] = React.useState(window.innerWidth > 768);
   useTheme();
 
-  // ── URL param handler — runs once on mount ────────────────
+  // ── app-mode class — locks scroll for app, frees it for landing ──
+  React.useEffect(() => {
+    const isAppMode = isLoggedIn || APP_MODE_SCREENS.includes(screen);
+    if (isAppMode) {
+      document.body.classList.add("app-mode");
+    } else {
+      document.body.classList.remove("app-mode");
+    }
+  }, [isLoggedIn, screen]);
+
+  // ── URL param handler ─────────────────────────────────────
   React.useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const uid    = params.get("uid");
     const token  = params.get("token");
     const verify = params.get("verify");
 
-    // Password reset
     if (uid && token) {
       useStore.getState().setResetPasswordParams({ uid, token });
       useStore.getState().setScreen("resetPassword");
       return;
     }
-
-    // Admin gateway
     if (params.get("admin") === "1") {
       useStore.getState().setScreen("adminGateway");
       return;
     }
-
-    // Door staff
     if (params.get("door") === "1") {
       useStore.getState().setScreen("doorStaffLogin");
       return;
     }
-
-    // Email verification
     if (verify) {
       fetch("https://master-events-backend.onrender.com/api/accounts/verify-email/", {
         method:  "POST",
@@ -633,7 +642,6 @@ export default function App() {
       })
         .then(r => r.json())
         .then(data => {
-          // Clear the verify param from URL
           window.history.replaceState({}, "", "/");
           if (data.message && !data.error) {
             useStore.getState().setScreen("login");
@@ -657,7 +665,7 @@ export default function App() {
     return () => window.removeEventListener("resize", handler);
   }, []);
 
-  // ── Top-level screens — no login required ─────────────────
+  // ── Top-level screens ─────────────────────────────────────
   if (screen === "adminGateway")   return <AdminLogin />;
   if (screen === "adminDashboard") return <AdminDashboard />;
   if (screen === "resetPassword")  return <ResetPassword />;

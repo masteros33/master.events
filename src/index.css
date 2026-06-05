@@ -84,18 +84,16 @@ body {
   color: var(--text-primary);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  overflow: hidden;
-  height: 100dvh;
   font-size: 15px;
   line-height: 1.5;
+  /* overflow and height controlled by .app-shell and .landing-page */
 }
 
 #root {
-  height: 100dvh;
-  overflow: hidden;
   display: flex;
   flex-direction: column;
-}
+  min-height: 100dvh;
+}    
 
 /* ── Typography scale ────────────────────────────────────── */
 /* Minimum 11px for any label, 13px for body, 15px primary */
@@ -160,10 +158,7 @@ input, button, select, textarea {
 ::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 99px; }
 ::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
 
-/* ── Nav height ──────────────────────────────────────────── */
-@supports (height: 100dvh) {
-  body, #root { height: 100dvh; }
-}
+
 
 /* ── Selection color ─────────────────────────────────────── */
 ::selection {
@@ -227,4 +222,15 @@ input, button, select, textarea {
   -webkit-overflow-scrolling: touch;
   overscroll-behavior: contain;
   padding-bottom: 0;  /* was relying on bottom nav height */
+}
+
+/* ── App shell needs overflow locked — landing page does not ── */
+body.app-mode {
+  overflow: hidden;
+  height: 100dvh;
+}
+
+body.app-mode #root {
+  height: 100dvh;
+  overflow: hidden;
 }

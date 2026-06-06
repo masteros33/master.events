@@ -34,8 +34,14 @@ export const authAPI = {
 };
 
 export const eventsAPI = {
-  list: (params = "") =>
-    fetch(`${BASE_URL}/events/${params}`, { headers: headers() }).then(r => r.json()),
+  list: (params = "") => {
+    const token = getToken();
+    return fetch(`${BASE_URL}/events/${params}`, {
+      headers: token
+        ? { "Content-Type": "application/json", Authorization: `Bearer ${token}` }
+        : { "Content-Type": "application/json" },
+    }).then(r => r.json());
+  },
 
   detail: (id) =>
     fetch(`${BASE_URL}/events/${id}/`, { headers: headers() }).then(r => r.json()),

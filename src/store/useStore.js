@@ -4,7 +4,7 @@ import { DEMO_ORG_EVENTS } from "../constants/data";
 import { authAPI, eventsAPI, ticketsAPI } from "../api";
 
 const BACKEND = "https://master-events-backend.onrender.com";
-const ping = () => fetch(BACKEND + "/api/events/").catch(() => {});
+const ping = () => fetch(BACKEND + "/health/").catch(() => {});
 ping();
 setInterval(ping, 5 * 60 * 1000);
 
@@ -204,13 +204,13 @@ const useStore = create((set, get) => ({
     set({ role, screen: "app", activeTab: firstTab });
   },
 
-  // ── Logout — blacklists refresh token then clears state ───
+  // ── Logout ─────────────────────────────────────────────────
   handleLogout: async () => {
     try {
       const refresh = localStorage.getItem("refresh_token");
       const access  = localStorage.getItem("access_token");
       if (refresh && access) {
-        await fetch("https://master-events-backend.onrender.com/api/accounts/logout/", {
+        await fetch(`${BACKEND}/api/auth/logout/`, {
           method:  "POST",
           headers: {
             "Content-Type":  "application/json",

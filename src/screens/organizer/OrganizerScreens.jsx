@@ -625,11 +625,18 @@ export function OrganizerEventDetail() {
   const generateDoorCode   = useStore(s => s.generateDoorCode);
   const doorStaffInvites   = useStore(s => s.doorStaffInvites);
   const setScreen          = useStore(s => s.setScreen);
+
   const [editing,       setEditing]       = useState(false);
   const [editForm,      setEditForm]      = useState({});
   const [editImageType, setEditImageType] = useState("upload");
   const [copiedCode,    setCopiedCode]    = useState(null);
+  const [activeTab,     setActiveTab]     = useState("overview"); // overview | holders
+  const [holders,       setHolders]       = useState([]);
+  const [holdersLoading, setHoldersLoading] = useState(false);
+  const [holderSearch,  setHolderSearch]  = useState("");
   const desktop = isDesktop();
+
+  const API = "https://master-events-backend.onrender.com";
 
   if (!viewingOrgEvent) return null;
   const ev      = viewingOrgEvent;
@@ -639,10 +646,56 @@ export function OrganizerEventDetail() {
   const soldPct = ev.totalTickets > 0 ? Math.round((ev.ticketsSold / ev.totalTickets) * 100) : 0;
   const cover   = ev.image || categoryImages[ev.category] || categoryImages.other;
 
-  const copyCode = code => { navigator.clipboard?.writeText(code).catch(() => {}); setCopiedCode(code); setTimeout(() => setCopiedCode(null), 2000); };
+  const fetchHolders = async () => {
+    if (holders.length > 0) return; // already loaded
+    setHoldersLoading(true);
+    try {
+      const token = localStorage.getItem("access_token") || "";
+      const res   = await fetch(`${API}/api/tickets/event/${ev.id}/`, {
+        headers: { "Authorization": `Bearer ${token}` },
+      });
+      const data = await res.json();
+      setHolders(Array.isArray(data) ? data : []);
+    } catch {
+      setHolders([]);
+    } finally {
+      setHoldersLoading(false);
+    }
+  };
+
+  const handleTabChange = (tab) => {
+    setActiveTab(tab);
+    if (tab === "holders") fetchHolders();
+  };
+
+  const filteredHolders = holders.filter(t => {
+    if (!holderSearch) return true;
+    const q = holderSearch.toLowerCase();
+    return (
+      (t.owner?.first_name + " " + t.owner?.last_name).toLowerCase().includes(q) ||
+      (t.owner?.email || "").toLowerCase().includes(q) ||
+      (t.ticket_id || "").toLowerCase().includes(q)
+    );
+  });
+
+  const statusColor = {
+    active:      "#16a34a",
+    redeemed:    "#6b7280",
+    resale:      "#dc2626",
+    transferred: "#2563eb",
+  };
+  const statusLabel = {
+    active:      "Active",
+    redeemed:    "Redeemed",
+    resale:      "Resale",
+    transferred: "Transferred",
+  };
+
+  const copyCode  = code => { navigator.clipboard?.writeText(code).catch(() => {}); setCopiedCode(code); setTimeout(() => setCopiedCode(null), 2000); };
   const startEdit = () => { setEditForm({ name: ev.name, venue: ev.venue, date: ev.date, time: ev.time || "", price: ev.price, description: ev.description || "", image: ev.image || "", category: ev.category || "other", city: ev.city || "", totalTickets: ev.totalTickets, subtitle: ev.subtitle || "" }); setEditing(true); };
   const saveEdit  = () => { setViewingOrgEvent({ ...ev, ...editForm, price: parseFloat(editForm.price), totalTickets: parseInt(editForm.totalTickets) || ev.totalTickets }); setEditing(false); };
 
+  // ── Edit mode ─────────────────────────────────────────────
   if (editing) return (
     <div style={{ background: "var(--bg)", height: "100%", display: "flex", flexDirection: "column", overflow: "hidden" }}>
       <div style={{ flexShrink: 0, display: "flex", alignItems: "center", padding: "14px 20px", gap: "12px", background: "var(--bg-card)", borderBottom: "1px solid var(--border)", zIndex: 10 }}>
@@ -729,8 +782,11 @@ export function OrganizerEventDetail() {
     </div>
   );
 
+  // ── Main detail view ──────────────────────────────────────
   return (
     <div style={{ background: "var(--bg)", height: "100%", overflowY: "auto", WebkitOverflowScrolling: "touch", overscrollBehavior: "contain", paddingBottom: desktop ? "60px" : "100px" }}>
+
+      {/* Hero image */}
       <div style={{ height: desktop ? "280px" : "220px", position: "relative", flexShrink: 0 }}>
         <img src={cover} alt={ev.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} onError={e => { e.target.src = categoryImages.other; }} />
         <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to bottom, rgba(0,0,0,0.2), rgba(0,0,0,0.85))" }} />
@@ -750,71 +806,257 @@ export function OrganizerEventDetail() {
           <div style={{ color: "rgba(255,255,255,0.55)", fontSize: "12px", fontFamily: "var(--font-mono)" }}>📍 {ev.venue} · {ev.date}</div>
         </div>
       </div>
-      <div style={{ padding: desktop ? "24px 40px" : "16px 16px" }}>
-        <div style={{ display: "grid", gridTemplateColumns: desktop ? "repeat(4,1fr)" : "1fr 1fr", gap: "12px", marginBottom: "16px" }}>
-          {[["💰","Revenue (95%)","GHS " + revenue.toLocaleString(),"#16a34a"],["🏦","Platform Fee","GHS " + fee.toLocaleString(),"#dc2626"],["🎟️","Tickets Sold",ev.ticketsSold + "/" + ev.totalTickets,"#2563eb"],["🚪","Admitted",(ev.admittedCount || 0) + " ppl",BRAND]].map(([icon, label, value, color]) => (
-            <motion.div key={label} whileHover={{ y: -2 }} style={{ background: "var(--bg-card)", border: "1px solid var(--border)", borderRadius: "14px", padding: "14px 16px", boxShadow: "var(--shadow-sm)" }}>
-              <div style={{ fontSize: "16px", marginBottom: "6px" }}>{icon}</div>
-              <div style={{ fontSize: "18px", fontWeight: 900, color, marginBottom: "3px", letterSpacing: "-0.5px" }}>{value}</div>
-              <div style={{ fontSize: "11px", color: "var(--text-muted)", fontWeight: 600 }}>{label}</div>
-            </motion.div>
-          ))}
-        </div>
-        <div style={{ background: "var(--bg-card)", borderRadius: "14px", padding: "15px 17px", marginBottom: "14px", border: "1px solid var(--border)" }}>
-          <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "8px" }}>
-            <span style={{ fontSize: "13px", fontWeight: 700, color: "var(--text-primary)" }}>Ticket Sales Progress</span>
-            <span style={{ fontSize: "13px", fontWeight: 800, color: soldPct > 80 ? "#dc2626" : BRAND, fontFamily: "var(--font-mono)" }}>{soldPct}%</span>
+
+      {/* Tab bar */}
+      <div style={{ position: "sticky", top: 0, zIndex: 20, background: "var(--bg-card)", borderBottom: "1px solid var(--border)", padding: "0 " + (desktop ? "40px" : "16px"), display: "flex", gap: "4px" }}>
+        {[
+          { id: "overview", label: "Overview",       icon: "📊" },
+          { id: "holders",  label: "Ticket Holders", icon: "👥", count: ev.ticketsSold },
+        ].map(tab => (
+          <motion.button key={tab.id} whileTap={{ scale: 0.96 }}
+            onClick={() => handleTabChange(tab.id)}
+            style={{
+              padding: "14px 16px", background: "none", border: "none",
+              borderBottom: activeTab === tab.id ? `2px solid ${BRAND}` : "2px solid transparent",
+              cursor: "pointer", fontFamily: "var(--font-sans)",
+              fontSize: "13px", fontWeight: activeTab === tab.id ? 700 : 500,
+              color: activeTab === tab.id ? BRAND : "var(--text-muted)",
+              display: "flex", alignItems: "center", gap: "6px",
+              transition: "all 0.15s",
+            }}>
+            <span>{tab.icon}</span>
+            <span>{tab.label}</span>
+            {tab.count !== undefined && (
+              <span style={{ fontSize: "10px", fontWeight: 700, background: activeTab === tab.id ? `${BRAND}15` : "var(--bg-subtle)", color: activeTab === tab.id ? BRAND : "var(--text-muted)", padding: "2px 7px", borderRadius: "99px", fontFamily: "var(--font-mono)" }}>
+                {tab.count}
+              </span>
+            )}
+          </motion.button>
+        ))}
+      </div>
+
+      {/* ── OVERVIEW TAB ── */}
+      {activeTab === "overview" && (
+        <div style={{ padding: desktop ? "24px 40px" : "16px 16px" }}>
+
+          {/* Stat cards */}
+          <div style={{ display: "grid", gridTemplateColumns: desktop ? "repeat(4,1fr)" : "1fr 1fr", gap: "12px", marginBottom: "16px" }}>
+            {[
+              ["💰", "Revenue (95%)", "GHS " + revenue.toLocaleString(), "#16a34a"],
+              ["🏦", "Platform Fee",  "GHS " + fee.toLocaleString(),     "#dc2626"],
+              ["🎟️","Tickets Sold",  ev.ticketsSold + "/" + ev.totalTickets, "#2563eb"],
+              ["🚪","Admitted",      (ev.admittedCount || 0) + " ppl",   BRAND],
+            ].map(([icon, label, value, color]) => (
+              <motion.div key={label} whileHover={{ y: -2 }}
+                style={{ background: "var(--bg-card)", border: "1px solid var(--border)", borderRadius: "14px", padding: "14px 16px", boxShadow: "var(--shadow-sm)" }}>
+                <div style={{ fontSize: "16px", marginBottom: "6px" }}>{icon}</div>
+                <div style={{ fontSize: "18px", fontWeight: 900, color, marginBottom: "3px", letterSpacing: "-0.5px" }}>{value}</div>
+                <div style={{ fontSize: "11px", color: "var(--text-muted)", fontWeight: 600 }}>{label}</div>
+              </motion.div>
+            ))}
           </div>
-          <div style={{ height: "7px", background: "var(--bg-subtle)", borderRadius: "99px", overflow: "hidden" }}>
-            <motion.div initial={{ width: 0 }} animate={{ width: soldPct + "%" }} transition={{ duration: 0.9 }}
-              style={{ height: "100%", background: soldPct > 80 ? "linear-gradient(90deg,#dc2626,#b91c1c)" : `linear-gradient(90deg,${BRAND},${BRAND_D})`, borderRadius: "99px" }} />
-          </div>
-          <div style={{ fontSize: "12px", color: "var(--text-muted)", marginTop: "6px", fontFamily: "var(--font-mono)" }}>{ev.totalTickets - ev.ticketsSold} tickets remaining</div>
-        </div>
-        {ev.description && (
+
+          {/* Progress bar */}
           <div style={{ background: "var(--bg-card)", borderRadius: "14px", padding: "15px 17px", marginBottom: "14px", border: "1px solid var(--border)" }}>
-            <div style={{ fontSize: "11px", fontWeight: 700, color: "var(--text-muted)", marginBottom: "8px", fontFamily: "var(--font-mono)" }}>DESCRIPTION</div>
-            <div style={{ fontSize: "14px", color: "var(--text-secondary)", lineHeight: 1.7 }}>{ev.description}</div>
+            <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "8px" }}>
+              <span style={{ fontSize: "13px", fontWeight: 700, color: "var(--text-primary)" }}>Ticket Sales Progress</span>
+              <span style={{ fontSize: "13px", fontWeight: 800, color: soldPct > 80 ? "#dc2626" : BRAND, fontFamily: "var(--font-mono)" }}>{soldPct}%</span>
+            </div>
+            <div style={{ height: "7px", background: "var(--bg-subtle)", borderRadius: "99px", overflow: "hidden" }}>
+              <motion.div initial={{ width: 0 }} animate={{ width: soldPct + "%" }} transition={{ duration: 0.9 }}
+                style={{ height: "100%", background: soldPct > 80 ? "linear-gradient(90deg,#dc2626,#b91c1c)" : `linear-gradient(90deg,${BRAND},${BRAND_D})`, borderRadius: "99px" }} />
+            </div>
+            <div style={{ fontSize: "12px", color: "var(--text-muted)", marginTop: "6px", fontFamily: "var(--font-mono)" }}>{ev.totalTickets - ev.ticketsSold} tickets remaining</div>
           </div>
-        )}
-        <div style={{ display: "grid", gridTemplateColumns: desktop ? "1fr 1fr" : "1fr", gap: "10px", marginBottom: "14px" }}>
-          <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }} onClick={() => toggleSales(ev.id)}
-            style={{ ...primaryBtn, marginBottom: 0, background: ev.salesOpen ? "linear-gradient(135deg,#dc2626,#b91c1c)" : "linear-gradient(135deg,#16a34a,#15803d)", fontSize: "14px" }}>
-            {ev.salesOpen ? "⏸ Pause Sales" : "▶ Resume Sales"}
-          </motion.button>
-          <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }} onClick={() => setScreen("scanTicket")}
-            style={{ ...primaryBtn, marginBottom: 0, background: "var(--bg-card)", border: "1.5px solid var(--border)", boxShadow: "none", color: "var(--text-primary)", fontSize: "14px" }}>
-            🔍 Scan Tickets
-          </motion.button>
-        </div>
-        <div style={{ background: "var(--bg-card)", border: "1px solid var(--border)", borderRadius: "16px", padding: "18px", boxShadow: "var(--shadow-sm)" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "14px" }}>
-            <div style={{ width: "36px", height: "36px", borderRadius: "11px", background: BRAND_GL, display: "flex", alignItems: "center", justifyContent: "center", fontSize: "17px", border: `1px solid ${BRAND}20` }}>🚪</div>
-            <div>
-              <div style={{ fontWeight: 700, fontSize: "14px", color: "var(--text-primary)" }}>Door Staff Access</div>
-              <div style={{ fontSize: "12px", color: "var(--text-muted)", fontFamily: "var(--font-mono)" }}>Single-use codes · auto-expire on first use</div>
+
+          {ev.description && (
+            <div style={{ background: "var(--bg-card)", borderRadius: "14px", padding: "15px 17px", marginBottom: "14px", border: "1px solid var(--border)" }}>
+              <div style={{ fontSize: "11px", fontWeight: 700, color: "var(--text-muted)", marginBottom: "8px", fontFamily: "var(--font-mono)" }}>DESCRIPTION</div>
+              <div style={{ fontSize: "14px", color: "var(--text-secondary)", lineHeight: 1.7 }}>{ev.description}</div>
+            </div>
+          )}
+
+          {/* Action buttons */}
+          <div style={{ display: "grid", gridTemplateColumns: desktop ? "1fr 1fr" : "1fr", gap: "10px", marginBottom: "14px" }}>
+            <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }} onClick={() => toggleSales(ev.id)}
+              style={{ ...primaryBtn, marginBottom: 0, background: ev.salesOpen ? "linear-gradient(135deg,#dc2626,#b91c1c)" : "linear-gradient(135deg,#16a34a,#15803d)", fontSize: "14px" }}>
+              {ev.salesOpen ? "⏸ Pause Sales" : "▶ Resume Sales"}
+            </motion.button>
+            <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }} onClick={() => setScreen("scanTicket")}
+              style={{ ...primaryBtn, marginBottom: 0, background: "var(--bg-card)", border: "1.5px solid var(--border)", boxShadow: "none", color: "var(--text-primary)", fontSize: "14px" }}>
+              🔍 Scan Tickets
+            </motion.button>
+          </div>
+
+          {/* Door staff section */}
+          <div style={{ background: "var(--bg-card)", border: "1px solid var(--border)", borderRadius: "16px", padding: "18px", boxShadow: "var(--shadow-sm)" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "14px" }}>
+              <div style={{ width: "36px", height: "36px", borderRadius: "11px", background: BRAND_GL, display: "flex", alignItems: "center", justifyContent: "center", fontSize: "17px", border: `1px solid ${BRAND}20` }}>🚪</div>
+              <div>
+                <div style={{ fontWeight: 700, fontSize: "14px", color: "var(--text-primary)" }}>Door Staff Access</div>
+                <div style={{ fontSize: "12px", color: "var(--text-muted)", fontFamily: "var(--font-mono)" }}>Single-use codes · auto-expire on first use</div>
+              </div>
+            </div>
+            <motion.button whileHover={{ borderColor: BRAND }} whileTap={{ scale: 0.97 }} onClick={() => generateDoorCode(ev.id, ev.name)}
+              style={{ width: "100%", padding: "11px", background: BRAND_GL, color: BRAND, border: `2px dashed ${BRAND}40`, borderRadius: "11px", fontSize: "13px", fontWeight: 700, cursor: "pointer", marginBottom: "12px", transition: "border-color 0.2s", fontFamily: "var(--font-sans)" }}>
+              + Generate Door Staff Code
+            </motion.button>
+            {invites.map(inv => (
+              <motion.div key={inv.code} whileTap={{ scale: 0.98 }} onClick={() => copyCode(inv.code)}
+                style={{ background: inv.used ? "var(--bg-subtle)" : BRAND_GL, border: `1px solid ${inv.used ? "var(--border)" : BRAND + "30"}`, borderRadius: "11px", padding: "10px 14px", marginBottom: "8px", display: "flex", justifyContent: "space-between", alignItems: "center", cursor: "pointer" }}>
+                <span style={{ fontFamily: "var(--font-mono)", fontWeight: 800, color: inv.used ? "var(--text-muted)" : BRAND, fontSize: "14px", letterSpacing: "1.5px" }}>{inv.code}</span>
+                <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                  <span style={{ fontSize: "10px", color: inv.used ? "var(--text-muted)" : "#16a34a", fontWeight: 700, fontFamily: "var(--font-mono)" }}>{inv.used ? "USED" : "ACTIVE"}</span>
+                  {!inv.used && <span style={{ fontSize: "10px", color: copiedCode === inv.code ? "#16a34a" : "var(--text-muted)", fontFamily: "var(--font-mono)" }}>{copiedCode === inv.code ? "✓ COPIED" : "TAP TO COPY"}</span>}
+                </div>
+              </motion.div>
+            ))}
+            <div style={{ padding: "10px 13px", borderRadius: "10px", background: "rgba(37,99,235,0.05)", border: "1px solid rgba(37,99,235,0.12)", marginTop: "6px", display: "flex", alignItems: "center", gap: "8px" }}>
+              <span style={{ fontSize: "13px" }}>🔒</span>
+              <span style={{ fontSize: "13px", color: "#2563eb", fontWeight: 600 }}>Door staff can only scan tickets — cannot manage events</span>
             </div>
           </div>
-          <motion.button whileHover={{ borderColor: BRAND }} whileTap={{ scale: 0.97 }} onClick={() => generateDoorCode(ev.id, ev.name)}
-            style={{ width: "100%", padding: "11px", background: BRAND_GL, color: BRAND, border: `2px dashed ${BRAND}40`, borderRadius: "11px", fontSize: "13px", fontWeight: 700, cursor: "pointer", marginBottom: "12px", transition: "border-color 0.2s", fontFamily: "var(--font-sans)" }}>
-            + Generate Door Staff Code
-          </motion.button>
-          {invites.map(inv => (
-            <motion.div key={inv.code} whileTap={{ scale: 0.98 }} onClick={() => copyCode(inv.code)}
-              style={{ background: inv.used ? "var(--bg-subtle)" : BRAND_GL, border: `1px solid ${inv.used ? "var(--border)" : BRAND + "30"}`, borderRadius: "11px", padding: "10px 14px", marginBottom: "8px", display: "flex", justifyContent: "space-between", alignItems: "center", cursor: "pointer" }}>
-              <span style={{ fontFamily: "var(--font-mono)", fontWeight: 800, color: inv.used ? "var(--text-muted)" : BRAND, fontSize: "14px", letterSpacing: "1.5px" }}>{inv.code}</span>
-              <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                <span style={{ fontSize: "10px", color: inv.used ? "var(--text-muted)" : "#16a34a", fontWeight: 700, fontFamily: "var(--font-mono)" }}>{inv.used ? "USED" : "ACTIVE"}</span>
-                {!inv.used && <span style={{ fontSize: "10px", color: copiedCode === inv.code ? "#16a34a" : "var(--text-muted)", fontFamily: "var(--font-mono)" }}>{copiedCode === inv.code ? "✓ COPIED" : "TAP TO COPY"}</span>}
-              </div>
-            </motion.div>
-          ))}
-          <div style={{ padding: "10px 13px", borderRadius: "10px", background: "rgba(37,99,235,0.05)", border: "1px solid rgba(37,99,235,0.12)", marginTop: "6px", display: "flex", alignItems: "center", gap: "8px" }}>
-            <span style={{ fontSize: "13px" }}>🔒</span>
-            <span style={{ fontSize: "13px", color: "#2563eb", fontWeight: 600 }}>Door staff can only scan tickets — cannot manage events</span>
-          </div>
         </div>
-      </div>
+      )}
+
+      {/* ── TICKET HOLDERS TAB ── */}
+      {activeTab === "holders" && (
+        <div style={{ padding: desktop ? "24px 40px" : "16px 16px" }}>
+
+          {/* Summary bar */}
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "10px", marginBottom: "16px" }}>
+            {[
+              ["🎟️", holders.filter(t => t.status === "active").length,    "Active",    "#16a34a"],
+              ["✅",  holders.filter(t => t.status === "redeemed").length,  "Redeemed",  "#6b7280"],
+              ["🏷️", holders.filter(t => t.status === "resale").length,    "On Resale", "#dc2626"],
+            ].map(([icon, count, label, color]) => (
+              <div key={label} style={{ background: "var(--bg-card)", borderRadius: "12px", padding: "12px 14px", border: "1px solid var(--border)", textAlign: "center" }}>
+                <div style={{ fontSize: "18px", marginBottom: "4px" }}>{icon}</div>
+                <div style={{ fontSize: "20px", fontWeight: 900, color, marginBottom: "2px" }}>{holdersLoading ? "—" : count}</div>
+                <div style={{ fontSize: "10px", color: "var(--text-muted)", fontWeight: 600 }}>{label}</div>
+              </div>
+            ))}
+          </div>
+
+          {/* Search */}
+          <div style={{ position: "relative", marginBottom: "14px" }}>
+            <input
+              value={holderSearch}
+              onChange={e => setHolderSearch(e.target.value)}
+              placeholder="Search by name, email or ticket ID..."
+              style={{ width: "100%", padding: "10px 14px 10px 36px", background: "var(--bg-subtle)", border: "1.5px solid var(--border)", borderRadius: "10px", fontSize: "13px", color: "var(--text-primary)", outline: "none", fontFamily: "var(--font-sans)", boxSizing: "border-box" }}
+              onFocus={e => { e.target.style.borderColor = BRAND; e.target.style.boxShadow = `0 0 0 3px ${BRAND}12`; }}
+              onBlur={e => { e.target.style.borderColor = "var(--border)"; e.target.style.boxShadow = "none"; }}
+            />
+            <span style={{ position: "absolute", left: "12px", top: "50%", transform: "translateY(-50%)", fontSize: "13px", opacity: 0.4 }}>🔍</span>
+            {holderSearch && (
+              <span onClick={() => setHolderSearch("")}
+                style={{ position: "absolute", right: "12px", top: "50%", transform: "translateY(-50%)", cursor: "pointer", fontSize: "12px", color: "var(--text-muted)", fontWeight: 700 }}>✕</span>
+            )}
+          </div>
+
+          {/* Holders list */}
+          {holdersLoading ? (
+            <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+              {[1,2,3,4,5].map(i => (
+                <div key={i} className="skeleton" style={{ height: "64px", borderRadius: "12px" }} />
+              ))}
+            </div>
+          ) : filteredHolders.length === 0 ? (
+            <div style={{ textAlign: "center", padding: "60px 20px", background: "var(--bg-card)", borderRadius: "16px", border: "1px solid var(--border)" }}>
+              <div style={{ fontSize: "40px", marginBottom: "12px" }}>👥</div>
+              <div style={{ fontWeight: 700, fontSize: "16px", color: "var(--text-primary)", marginBottom: "6px" }}>
+                {holderSearch ? "No results found" : "No ticket holders yet"}
+              </div>
+              <div style={{ fontSize: "13px", color: "var(--text-muted)" }}>
+                {holderSearch ? "Try a different search term" : "Ticket holders will appear here once someone buys a ticket"}
+              </div>
+            </div>
+          ) : (
+            <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+              {/* Desktop: table header */}
+              {desktop && (
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 100px 120px", gap: "12px", padding: "8px 14px", fontSize: "10px", fontWeight: 700, color: "var(--text-muted)", letterSpacing: "1px", fontFamily: "var(--font-mono)" }}>
+                  <span>HOLDER</span>
+                  <span>TICKET ID</span>
+                  <span>QTY</span>
+                  <span>STATUS</span>
+                </div>
+              )}
+
+              {filteredHolders.map((t, i) => {
+                const ownerName  = ((t.owner?.first_name || "") + " " + (t.owner?.last_name || "")).trim() || "Unknown";
+                const ownerEmail = t.owner?.email || "—";
+                const color      = statusColor[t.status] || "#6b7280";
+                const label      = statusLabel[t.status] || t.status;
+                const isResale   = t.is_resale;
+
+                return (
+                  <motion.div key={t.ticket_id || i}
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: i * 0.03 }}
+                    style={{
+                      background: "var(--bg-card)",
+                      borderRadius: "12px",
+                      padding: desktop ? "12px 14px" : "12px 14px",
+                      border: "1px solid var(--border)",
+                      display: desktop ? "grid" : "flex",
+                      gridTemplateColumns: desktop ? "1fr 1fr 100px 120px" : undefined,
+                      flexDirection: desktop ? undefined : "row",
+                      alignItems: "center",
+                      gap: "12px",
+                      transition: "border-color 0.15s",
+                    }}
+                    onMouseEnter={e => { e.currentTarget.style.borderColor = `${BRAND}40`; }}
+                    onMouseLeave={e => { e.currentTarget.style.borderColor = "var(--border)"; }}>
+
+                    {/* Holder info */}
+                    <div style={{ minWidth: 0, flex: desktop ? undefined : 1 }}>
+                      <div style={{ fontSize: "13px", fontWeight: 700, color: "var(--text-primary)", marginBottom: "2px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                        {ownerName}
+                        {isResale && <span style={{ marginLeft: "6px", fontSize: "9px", fontWeight: 700, color: "#7c3aed", background: "rgba(124,58,237,0.1)", padding: "1px 6px", borderRadius: "99px" }}>RESALE</span>}
+                      </div>
+                      <div style={{ fontSize: "11px", color: "var(--text-muted)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{ownerEmail}</div>
+                    </div>
+
+                    {/* Ticket ID */}
+                    <div style={{ fontFamily: "var(--font-mono)", fontSize: "10px", color: "var(--text-muted)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", display: desktop ? "block" : "none" }}>
+                      {String(t.ticket_id || "").slice(0, 16)}…
+                      {t.nft_token_id && <div style={{ fontSize: "9px", color: "#7c3aed", marginTop: "2px" }}>NFT #{t.nft_token_id}</div>}
+                    </div>
+
+                    {/* Qty */}
+                    <div style={{ display: desktop ? "block" : "none" }}>
+                      <span style={{ fontSize: "13px", fontWeight: 700, color: BRAND, fontFamily: "var(--font-mono)" }}>×{t.quantity || 1}</span>
+                    </div>
+
+                    {/* Status badge */}
+                    <div>
+                      <span style={{
+                        fontSize: "10px", fontWeight: 700,
+                        color, background: color + "15",
+                        padding: "4px 10px", borderRadius: "99px",
+                        border: `1px solid ${color}25`,
+                        fontFamily: "var(--font-mono)",
+                        whiteSpace: "nowrap",
+                      }}>
+                        {label.toUpperCase()}
+                      </span>
+                    </div>
+                  </motion.div>
+                );
+              })}
+
+              {/* Count footer */}
+              <div style={{ textAlign: "center", padding: "12px", fontSize: "11px", color: "var(--text-muted)", fontFamily: "var(--font-mono)" }}>
+                {filteredHolders.length} of {holders.length} holders
+                {holderSearch && ` matching "${holderSearch}"`}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }

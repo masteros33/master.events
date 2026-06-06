@@ -264,12 +264,13 @@ export default function AttendeeHome() {
   const [searchFocused,  setSearchFocused]  = useState(false);
   const desktop = isDesktop();
 
+  
   const { data: eventsData, isLoading: loading } = useQuery({
-    queryKey: ["events"],
-    queryFn: () =>
-      eventsAPI.list().then(data =>
-        Array.isArray(data)
-          ? data.map(e => ({
+      queryKey: ["events"],
+      queryFn: () =>
+        eventsAPI.list().then(data =>
+          Array.isArray(data)
+            ? data.map(e => ({
               id:           e.id,
               name:         e.name,
               description:  e.description || "",

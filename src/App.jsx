@@ -9,6 +9,7 @@ import AttendeeHome from "./screens/attendee/AttendeeHome";
 import ResaleMarketplace from "./screens/attendee/ResaleMarketplace";
 import CookieBanner from "./components/CookieBanner";
 import Settings from "./screens/attendee/Settings";
+import AttendeeWallet from "./screens/attendee/AttendeeWallet";
 import PrivacyPolicy from "./screens/attendee/PrivacyPolicy";
 import { AttendeeTickets, AttendeeAlerts } from "./screens/attendee/AttendeeScreens";
 import {
@@ -37,7 +38,7 @@ const BRAND = "#F97316";
 const FULL_SCREENS = [
   "checkout", "ticketView", "resale", "resaleSuccess",
   "transfer", "paymentSuccess", "addEvent", "orgEventDetail",
-  "scanTicket", "resaleMarket", "settings", "privacy",
+  "scanTicket", "resaleMarket", "settings", "privacy", "attendeeWallet",
 ];
 
 const APP_MODE_SCREENS = [
@@ -285,6 +286,7 @@ function MobileAppShell() {
     resaleMarket:   "Resale Market",
     settings:       "Settings",
     privacy:        "Privacy Policy",
+    attendeeWallet: "My Wallet",
   };
 
   const tabTitles = {
@@ -312,6 +314,7 @@ function MobileAppShell() {
     resaleMarket: <ResaleMarketplace />,
     settings:     <Settings />,
     privacy:      <PrivacyPolicy />,
+    attendeeWallet: <AttendeeWallet />,
   };
 
   if (fullScreenMap[screen]) {
@@ -443,6 +446,7 @@ function DesktopAppLayout() {
     resaleMarket:   "Resale Market",
     settings:       "Account Settings",
     privacy:        "Privacy Policy",
+    attendeeWallet: "My Wallet",
   };
 
   const renderContent = () => {
@@ -462,6 +466,7 @@ function DesktopAppLayout() {
         resaleMarket:   <ResaleMarketplace />,
         settings:       <Settings />,
         privacy:        <PrivacyPolicy />,
+        attendeeWallet: <AttendeeWallet />,
       };
       return map[screen];
     }

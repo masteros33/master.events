@@ -8,9 +8,9 @@ import {
 import { useTheme } from "../../hooks/useTheme";
 import {
   User, Mail, Shield, LogOut, ChevronRight,
-  Sun, Moon, Monitor, Bell, Wallet, Globe,
+  Sun, Moon, Monitor, Bell, Globe,
   CheckCircle, Edit3, Save, Link2, Cookie,
-  FileText, Lock, Eye, EyeOff
+  FileText, Lock, Eye, EyeOff, Trash2
 } from "lucide-react";
 import toast from "react-hot-toast";
 
@@ -146,46 +146,36 @@ function AvatarPickerModal({ currentSeed, onSelect, onClose }) {
 
 // ── Password Change Modal ─────────────────────────────────────
 function PasswordModal({ onClose }) {
-  const [current,    setCurrent]    = useState("");
-  const [newPass,    setNewPass]    = useState("");
-  const [confirm,    setConfirm]    = useState("");
-  const [showCur,    setShowCur]    = useState(false);
-  const [showNew,    setShowNew]    = useState(false);
-  const [saving,     setSaving]     = useState(false);
+  const [current, setCurrent] = useState("");
+  const [newPass, setNewPass] = useState("");
+  const [confirm, setConfirm] = useState("");
+  const [showCur, setShowCur] = useState(false);
+  const [showNew, setShowNew] = useState(false);
+  const [saving,  setSaving]  = useState(false);
 
   const handleSave = async () => {
     if (!current || !newPass || !confirm) { toast.error("Fill all fields"); return; }
     if (newPass.length < 8)               { toast.error("Min 8 characters"); return; }
     if (newPass !== confirm)              { toast.error("Passwords don't match"); return; }
-
     setSaving(true);
     const t = toast.loading("Changing password...");
     try {
-      const res = await fetch(`${BACKEND}/api/accounts/me/change-password/`, {
+      const res = await fetch(`${BACKEND}/api/auth/me/change-password/`, {
         method:  "POST",
-        headers: {
-          "Content-Type":  "application/json",
-          "Authorization": `Bearer ${localStorage.getItem("access_token") || ""}`,
-        },
+        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${localStorage.getItem("access_token") || ""}` },
         body: JSON.stringify({ current_password: current, new_password: newPass }),
       });
       const data = await res.json();
       toast.dismiss(t);
-      if (res.ok) {
-        toast.success("Password changed successfully!");
-        onClose();
-      } else {
-        toast.error(data.error || "Failed to change password");
-      }
+      if (res.ok) { toast.success("Password changed!"); onClose(); }
+      else        { toast.error(data.error || "Failed to change password"); }
     } catch {
       toast.dismiss(t);
       toast.error("Connection error. Try again.");
-    } finally {
-      setSaving(false);
-    }
+    } finally { setSaving(false); }
   };
 
-  const inputStyle = {
+  const inp = {
     width: "100%", padding: "11px 42px 11px 14px",
     background: "var(--bg-subtle)", border: "1.5px solid var(--border)",
     borderRadius: "10px", fontSize: "14px", color: "var(--text-primary)",
@@ -200,52 +190,38 @@ function PasswordModal({ onClose }) {
       <motion.div
         initial={{ opacity: 0, y: 40 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 40 }}
         transition={{ type: "spring", stiffness: 340, damping: 30 }}
-        style={{
-          position: "fixed", bottom: 0, left: 0, right: 0,
-          margin: "0 auto", maxWidth: "480px",
-          background: "var(--bg-card)", borderRadius: "24px 24px 0 0",
-          padding: "24px 24px calc(24px + env(safe-area-inset-bottom, 0px))",
-          zIndex: 301, border: "1px solid var(--border)", borderBottom: "none",
-        }}>
+        style={{ position: "fixed", bottom: 0, left: 0, right: 0, margin: "0 auto", maxWidth: "480px", background: "var(--bg-card)", borderRadius: "24px 24px 0 0", padding: "24px 24px calc(24px + env(safe-area-inset-bottom, 0px))", zIndex: 301, border: "1px solid var(--border)", borderBottom: "none" }}>
         <div style={{ width: "40px", height: "4px", borderRadius: "2px", background: "var(--border-strong)", margin: "0 auto 20px" }} />
-        <div style={{ fontWeight: 800, fontSize: "18px", color: "var(--text-primary)", marginBottom: "6px", letterSpacing: "-0.3px" }}>Change Password</div>
-        <div style={{ fontSize: "13px", color: "var(--text-muted)", marginBottom: "20px" }}>Your new password must be at least 8 characters.</div>
+        <div style={{ fontWeight: 800, fontSize: "18px", color: "var(--text-primary)", marginBottom: "6px" }}>Change Password</div>
+        <div style={{ fontSize: "13px", color: "var(--text-muted)", marginBottom: "20px" }}>At least 8 characters.</div>
 
-        {/* Current password */}
         <div style={{ marginBottom: "12px" }}>
           <div style={{ fontSize: "12px", fontWeight: 600, color: "var(--text-secondary)", marginBottom: "6px" }}>Current Password</div>
           <div style={{ position: "relative" }}>
-            <input type={showCur ? "text" : "password"} value={current} onChange={e => setCurrent(e.target.value)}
-              placeholder="Enter current password" style={inputStyle}
+            <input type={showCur ? "text" : "password"} value={current} onChange={e => setCurrent(e.target.value)} placeholder="Enter current password" style={inp}
               onFocus={e => { e.target.style.borderColor = BRAND; e.target.style.boxShadow = `0 0 0 3px ${BRAND}15`; }}
               onBlur={e => { e.target.style.borderColor = "var(--border)"; e.target.style.boxShadow = "none"; }} />
-            <div onClick={() => setShowCur(!showCur)}
-              style={{ position: "absolute", right: "12px", top: "50%", transform: "translateY(-50%)", cursor: "pointer" }}>
+            <div onClick={() => setShowCur(!showCur)} style={{ position: "absolute", right: "12px", top: "50%", transform: "translateY(-50%)", cursor: "pointer" }}>
               {showCur ? <EyeOff size={15} color="var(--text-muted)" /> : <Eye size={15} color="var(--text-muted)" />}
             </div>
           </div>
         </div>
 
-        {/* New password */}
         <div style={{ marginBottom: "12px" }}>
           <div style={{ fontSize: "12px", fontWeight: 600, color: "var(--text-secondary)", marginBottom: "6px" }}>New Password</div>
           <div style={{ position: "relative" }}>
-            <input type={showNew ? "text" : "password"} value={newPass} onChange={e => setNewPass(e.target.value)}
-              placeholder="Min 8 characters" style={inputStyle}
+            <input type={showNew ? "text" : "password"} value={newPass} onChange={e => setNewPass(e.target.value)} placeholder="Min 8 characters" style={inp}
               onFocus={e => { e.target.style.borderColor = BRAND; e.target.style.boxShadow = `0 0 0 3px ${BRAND}15`; }}
               onBlur={e => { e.target.style.borderColor = "var(--border)"; e.target.style.boxShadow = "none"; }} />
-            <div onClick={() => setShowNew(!showNew)}
-              style={{ position: "absolute", right: "12px", top: "50%", transform: "translateY(-50%)", cursor: "pointer" }}>
+            <div onClick={() => setShowNew(!showNew)} style={{ position: "absolute", right: "12px", top: "50%", transform: "translateY(-50%)", cursor: "pointer" }}>
               {showNew ? <EyeOff size={15} color="var(--text-muted)" /> : <Eye size={15} color="var(--text-muted)" />}
             </div>
           </div>
         </div>
 
-        {/* Confirm */}
         <div style={{ marginBottom: "20px" }}>
           <div style={{ fontSize: "12px", fontWeight: 600, color: "var(--text-secondary)", marginBottom: "6px" }}>Confirm New Password</div>
-          <input type="password" value={confirm} onChange={e => setConfirm(e.target.value)}
-            placeholder="Repeat new password" style={inputStyle}
+          <input type="password" value={confirm} onChange={e => setConfirm(e.target.value)} placeholder="Repeat new password" style={inp}
             onFocus={e => { e.target.style.borderColor = BRAND; e.target.style.boxShadow = `0 0 0 3px ${BRAND}15`; }}
             onBlur={e => { e.target.style.borderColor = "var(--border)"; e.target.style.boxShadow = "none"; }} />
           {confirm && newPass && confirm !== newPass && (
@@ -268,27 +244,116 @@ function PasswordModal({ onClose }) {
   );
 }
 
+// ── Delete Account Modal ──────────────────────────────────────
+function DeleteModal({ onClose, handleLogout }) {
+  const [password,  setPassword]  = useState("");
+  const [deleting,  setDeleting]  = useState(false);
+  const [showPass,  setShowPass]  = useState(false);
+
+  const handleDelete = async () => {
+    if (!password) { toast.error("Enter your password"); return; }
+    setDeleting(true);
+    const t = toast.loading("Deleting account...");
+    try {
+      const res = await fetch(`${BACKEND}/api/auth/delete-account/`, {
+        method:  "DELETE",
+        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${localStorage.getItem("access_token") || ""}` },
+        body: JSON.stringify({ password }),
+      });
+      const data = await res.json();
+      toast.dismiss(t);
+      if (res.ok) {
+        toast.success("Account deleted.");
+        handleLogout();
+      } else {
+        toast.error(data.error || "Failed to delete account");
+      }
+    } catch {
+      toast.dismiss(t);
+      toast.error("Connection error.");
+    } finally { setDeleting(false); }
+  };
+
+  return (
+    <>
+      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+        onClick={onClose}
+        style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.7)", zIndex: 300, backdropFilter: "blur(8px)" }} />
+      <motion.div
+        initial={{ opacity: 0, y: 40 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 40 }}
+        transition={{ type: "spring", stiffness: 340, damping: 30 }}
+        style={{ position: "fixed", bottom: 0, left: 0, right: 0, margin: "0 auto", maxWidth: "480px", background: "var(--bg-card)", borderRadius: "24px 24px 0 0", padding: "24px 24px calc(24px + env(safe-area-inset-bottom, 0px))", zIndex: 301, border: "1px solid var(--border)", borderBottom: "none" }}>
+        <div style={{ width: "40px", height: "4px", borderRadius: "2px", background: "var(--border-strong)", margin: "0 auto 20px" }} />
+
+        <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "12px" }}>
+          <div style={{ width: "44px", height: "44px", borderRadius: "14px", background: "rgba(220,38,38,0.1)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+            <Trash2 size={20} color="#dc2626" />
+          </div>
+          <div>
+            <div style={{ fontWeight: 800, fontSize: "18px", color: "#dc2626", letterSpacing: "-0.3px" }}>Delete Account</div>
+            <div style={{ fontSize: "12px", color: "var(--text-muted)", marginTop: "2px" }}>This cannot be undone</div>
+          </div>
+        </div>
+
+        <div style={{ background: "rgba(220,38,38,0.06)", border: "1px solid rgba(220,38,38,0.15)", borderRadius: "12px", padding: "12px 14px", marginBottom: "18px" }}>
+          <div style={{ fontSize: "13px", color: "var(--text-secondary)", lineHeight: 1.6 }}>
+            Deleting your account will permanently remove all your tickets, wallet balance, and personal data. This action cannot be reversed.
+          </div>
+        </div>
+
+        <div style={{ marginBottom: "20px" }}>
+          <div style={{ fontSize: "12px", fontWeight: 600, color: "var(--text-secondary)", marginBottom: "6px" }}>Confirm with your password</div>
+          <div style={{ position: "relative" }}>
+            <input
+              type={showPass ? "text" : "password"} value={password}
+              onChange={e => setPassword(e.target.value)}
+              placeholder="Enter your password"
+              style={{ width: "100%", padding: "12px 42px 12px 14px", background: "var(--bg-subtle)", border: "1.5px solid rgba(220,38,38,0.3)", borderRadius: "10px", fontSize: "14px", color: "var(--text-primary)", outline: "none", fontFamily: "var(--font-sans)", boxSizing: "border-box" }}
+              onFocus={e => { e.target.style.borderColor = "#dc2626"; e.target.style.boxShadow = "0 0 0 3px rgba(220,38,38,0.12)"; }}
+              onBlur={e => { e.target.style.borderColor = "rgba(220,38,38,0.3)"; e.target.style.boxShadow = "none"; }}
+            />
+            <div onClick={() => setShowPass(!showPass)} style={{ position: "absolute", right: "12px", top: "50%", transform: "translateY(-50%)", cursor: "pointer" }}>
+              {showPass ? <EyeOff size={15} color="var(--text-muted)" /> : <Eye size={15} color="var(--text-muted)" />}
+            </div>
+          </div>
+        </div>
+
+        <div style={{ display: "flex", gap: "10px" }}>
+          <motion.button whileTap={{ scale: 0.97 }} onClick={onClose}
+            style={{ flex: 1, padding: "14px", background: "var(--bg-subtle)", border: "1px solid var(--border)", borderRadius: "13px", fontWeight: 600, fontSize: "14px", cursor: "pointer", color: "var(--text-secondary)", fontFamily: "var(--font-sans)" }}>
+            Cancel
+          </motion.button>
+          <motion.button whileTap={{ scale: 0.97 }} onClick={handleDelete}
+            disabled={deleting || !password}
+            style={{ flex: 1, padding: "14px", background: deleting || !password ? "var(--bg-subtle)" : "rgba(220,38,38,0.12)", border: "1.5px solid rgba(220,38,38,0.3)", borderRadius: "13px", fontWeight: 700, fontSize: "14px", cursor: deleting || !password ? "not-allowed" : "pointer", color: "#dc2626", fontFamily: "var(--font-sans)" }}>
+            {deleting ? "Deleting..." : "Delete Forever"}
+          </motion.button>
+        </div>
+      </motion.div>
+    </>
+  );
+}
+
 // ── Main Settings ─────────────────────────────────────────────
 export default function Settings() {
-  const setScreen      = useStore(s => s.setScreen);
-  const setActiveTab   = useStore(s => s.setActiveTab);
-  const currentUser    = useStore(s => s.currentUser);
-  const handleLogout   = useStore(s => s.handleLogout);
+  const setScreen    = useStore(s => s.setScreen);
+  const setActiveTab = useStore(s => s.setActiveTab);
+  const currentUser  = useStore(s => s.currentUser);
+  const handleLogout = useStore(s => s.handleLogout);
   const { theme, setTheme } = useTheme();
   const desktop = isDesktop();
 
-  const [avatarSeed,    setAvatarSeed]    = useState(() => getSavedAvatarSeed(currentUser?.email));
-  const [showPicker,    setShowPicker]    = useState(false);
-  const [showPassword,  setShowPassword]  = useState(false);
-  const [editing,       setEditing]       = useState(false);
-  const [editFirst,     setEditFirst]     = useState(currentUser?.first_name || "");
-  const [editLast,      setEditLast]      = useState(currentUser?.last_name  || "");
-  const [editPhone,     setEditPhone]     = useState(currentUser?.phone      || "");
-  const [saving,        setSaving]        = useState(false);
-  const [notifs,        setNotifs]        = useState(true);
-  const [showLogout,    setShowLogout]    = useState(false);
-  const [walletAddress, setWalletAddress] = useState(currentUser?.wallet_address || "");
-  const [connectingWallet, setConnectingWallet] = useState(false);
+  const [avatarSeed,   setAvatarSeed]   = useState(() => getSavedAvatarSeed(currentUser?.email));
+  const [showPicker,   setShowPicker]   = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showDelete,   setShowDelete]   = useState(false);
+  const [editing,      setEditing]      = useState(false);
+  const [editFirst,    setEditFirst]    = useState(currentUser?.first_name || "");
+  const [editLast,     setEditLast]     = useState(currentUser?.last_name  || "");
+  const [editPhone,    setEditPhone]    = useState(currentUser?.phone      || "");
+  const [saving,       setSaving]       = useState(false);
+  const [notifs,       setNotifs]       = useState(true);
+  const [showLogout,   setShowLogout]   = useState(false);
 
   const [displayFirst, setDisplayFirst] = useState(currentUser?.first_name || "");
   const [displayLast,  setDisplayLast]  = useState(currentUser?.last_name  || "");
@@ -309,20 +374,17 @@ export default function Settings() {
     setSaving(true);
     const t = toast.loading("Saving...");
     try {
-      const res = await fetch(`${BACKEND}/api/accounts/me/update/`, {
+      const res = await fetch(`${BACKEND}/api/auth/me/update/`, {
         method:  "PATCH",
-        headers: {
-          "Content-Type":  "application/json",
-          "Authorization": `Bearer ${localStorage.getItem("access_token") || ""}`,
-        },
+        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${localStorage.getItem("access_token") || ""}` },
         body: JSON.stringify({ first_name: editFirst.trim(), last_name: editLast.trim(), phone: editPhone.trim() }),
       });
       const data = await res.json();
       if (res.ok) {
         setDisplayFirst(data.user.first_name);
         setDisplayLast(data.user.last_name);
-        const store  = useStore.getState();
-        const saved  = JSON.parse(localStorage.getItem("me_session") || "{}");
+        const store = useStore.getState();
+        const saved = JSON.parse(localStorage.getItem("me_session") || "{}");
         if (store.currentUser) {
           Object.assign(store.currentUser, data.user);
           if (saved.currentUser) {
@@ -340,54 +402,8 @@ export default function Settings() {
     } catch {
       toast.dismiss(t);
       toast.error("Connection error.");
-    } finally {
-      setSaving(false);
-    }
+    } finally { setSaving(false); }
   };
-
-  const handleConnectWallet = async () => {
-    if (!window.ethereum) {
-      toast.error("MetaMask not found. Please install MetaMask.");
-      return;
-    }
-    setConnectingWallet(true);
-    const t = toast.loading("Connecting wallet...");
-  
-    try {
-      const accounts = await window.ethereum.request({ method: "eth_requestAccounts" });
-      const address  = accounts[0];
-      if (!address) { toast.dismiss(t); toast.error("No account found"); setConnectingWallet(false); return; }
-
-      // Save to backend
-      const res = await fetch(`${BACKEND}/api/accounts/me/wallet/`, {
-        method:  "PATCH",
-        headers: {
-          "Content-Type":  "application/json",
-          "Authorization": `Bearer ${localStorage.getItem("access_token") || ""}`,
-        },
-        body: JSON.stringify({ wallet_address: address }),
-      });
-      const data = await res.json();
-      toast.dismiss(t);
-      if (res.ok) {
-        setWalletAddress(address);
-        const store = useStore.getState();
-        if (store.currentUser) store.currentUser.wallet_address = address;
-        toast.success("Wallet connected!");
-      } else {
-        toast.error(data.error || "Failed to save wallet");
-      }
-    } catch (e) {
-      toast.dismiss(t);
-      if (e.code === 4001) toast.error("Connection rejected by user");
-      else toast.error("Could not connect wallet");
-    } finally {
-      setConnectingWallet(false);
-    }
-  };
-
-  const truncateAddress = (addr) =>
-    addr ? `${addr.slice(0, 6)}...${addr.slice(-4)}` : null;
 
   return (
     <div style={{ background: "var(--bg)", minHeight: "100%", paddingBottom: "60px" }}>
@@ -401,7 +417,7 @@ export default function Settings() {
       }}>
         <motion.button whileTap={{ scale: 0.9 }}
           onClick={() => { setScreen("app"); setActiveTab(undefined); }}
-          style={{ display: "flex", alignItems: "center", gap: "6px", background: "none", border: "none", cursor: "pointer", color: "var(--text-muted)", fontSize: "13px", fontWeight: 500, fontFamily: "var(--font-sans)", padding: 0 }}>
+          style={{ background: "none", border: "none", cursor: "pointer", color: "var(--text-muted)", fontSize: "13px", fontWeight: 500, fontFamily: "var(--font-sans)", padding: 0 }}>
           ← Back
         </motion.button>
         <div style={{ fontWeight: 800, fontSize: "16px", color: "var(--text-primary)", letterSpacing: "-0.3px" }}>Settings</div>
@@ -428,7 +444,7 @@ export default function Settings() {
                 </div>
                 <div style={{ fontSize: "13px", color: "var(--text-muted)", marginTop: "2px" }}>{currentUser?.email}</div>
                 <div style={{ marginTop: "8px", display: "inline-flex", alignItems: "center", gap: "5px", padding: "3px 10px", borderRadius: "99px", background: `${BRAND}12`, border: `1px solid ${BRAND}25` }}>
-                  <span style={{ fontSize: "10px", fontWeight: 700, color: BRAND, letterSpacing: "0.5px" }}>🎟️ {currentUser?.role?.toUpperCase() || "ATTENDEE"}</span>
+                  <span style={{ fontSize: "10px", fontWeight: 700, color: BRAND }}>🎟️ {currentUser?.role?.toUpperCase() || "ATTENDEE"}</span>
                 </div>
               </div>
             </div>
@@ -493,7 +509,8 @@ export default function Settings() {
 
           <div style={{ padding: "12px 24px" }}>
             {!editing && (
-              <motion.button whileTap={{ scale: 0.97 }} onClick={() => { setEditing(true); setEditFirst(displayFirst); setEditLast(displayLast); setEditPhone(currentUser?.phone || ""); }}
+              <motion.button whileTap={{ scale: 0.97 }}
+                onClick={() => { setEditing(true); setEditFirst(displayFirst); setEditLast(displayLast); setEditPhone(currentUser?.phone || ""); }}
                 style={{ width: "100%", padding: "11px", background: "var(--bg-subtle)", border: "1px solid var(--border)", borderRadius: "11px", color: "var(--text-secondary)", fontWeight: 600, fontSize: "13px", cursor: "pointer", fontFamily: "var(--font-sans)", display: "flex", alignItems: "center", justifyContent: "center", gap: "7px" }}>
                 <Edit3 size={14} /> Edit Profile
               </motion.button>
@@ -503,9 +520,9 @@ export default function Settings() {
 
         {/* Account */}
         <SectionHeader title="Account" />
-        <SettingRow icon={Mail}  label="Email Address" value={currentUser?.email} color="#2563eb" />
-        <SettingRow icon={User}  label="Full Name" value={`${displayFirst} ${displayLast}`.trim() || "Not set"} color={BRAND} onClick={() => setEditing(true)} action="Edit" />
-        <SettingRow icon={Lock}  label="Password" value="Change your account password" color="#7c3aed" onClick={() => setShowPassword(true)} />
+        <SettingRow icon={Mail} label="Email Address" value={currentUser?.email} color="#2563eb" />
+        <SettingRow icon={User} label="Full Name" value={`${displayFirst} ${displayLast}`.trim() || "Not set"} color={BRAND} onClick={() => setEditing(true)} action="Edit" />
+        <SettingRow icon={Lock} label="Password" value="Change your account password" color="#7c3aed" onClick={() => setShowPassword(true)} />
 
         {/* Appearance */}
         <SectionHeader title="Appearance" />
@@ -530,7 +547,7 @@ export default function Settings() {
         <SettingRow icon={Bell} label="Email Notifications" value="Ticket activity, NFT confirmations, sales" color="#16a34a"
           toggle checked={notifs} onToggle={() => setNotifs(!notifs)} />
 
-        {/* Blockchain */}
+        {/* Blockchain info — no connect button */}
         <SectionHeader title="Blockchain" />
         <div style={{ background: "var(--bg-card)", borderRadius: "14px", border: "1px solid rgba(124,58,237,0.2)", padding: "16px", marginBottom: "6px" }}>
           <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "12px" }}>
@@ -539,7 +556,7 @@ export default function Settings() {
             </div>
             <div>
               <div style={{ fontSize: "13px", fontWeight: 700, color: "#a78bfa" }}>Polygon Amoy Testnet</div>
-              <div style={{ fontSize: "11px", color: "var(--text-muted)", marginTop: "1px", fontFamily: "var(--font-mono)" }}>Chain ID: 80002</div>
+              <div style={{ fontSize: "11px", color: "var(--text-muted)", marginTop: "1px", fontFamily: "var(--font-mono)" }}>Chain ID: 80002 · NFT tickets auto-minted</div>
             </div>
             <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: "4px" }}>
               <motion.div animate={{ scale: [1,1.4,1] }} transition={{ duration: 2, repeat: Infinity }}
@@ -547,51 +564,18 @@ export default function Settings() {
               <span style={{ fontSize: "9px", fontWeight: 700, color: "#4ade80", fontFamily: "var(--font-mono)" }}>LIVE</span>
             </div>
           </div>
-          <div style={{ background: "var(--bg-subtle)", borderRadius: "10px", padding: "10px 12px", border: "1px solid var(--border)" }}>
+          <div style={{ background: "var(--bg-subtle)", borderRadius: "10px", padding: "10px 12px", border: "1px solid var(--border)", marginBottom: "10px" }}>
             <div style={{ fontSize: "10px", color: "var(--text-muted)", fontFamily: "var(--font-mono)", marginBottom: "4px" }}>NFT CONTRACT</div>
             <div style={{ fontSize: "11px", fontWeight: 700, color: "#a78bfa", fontFamily: "var(--font-mono)", wordBreak: "break-all" }}>
               0x956F051d666fAc2B956b83BdDD6746127F270Daf
             </div>
           </div>
+          <div style={{ padding: "9px 12px", background: "rgba(124,58,237,0.04)", borderRadius: "9px", border: "1px solid rgba(124,58,237,0.1)" }}>
+            <div style={{ fontSize: "11px", color: "var(--text-muted)", lineHeight: 1.5 }}>
+              🎟️ NFT tickets are automatically minted on Polygon when you purchase. No wallet setup needed.
+            </div>
+          </div>
         </div>
-
-        {/* Connect Wallet */}
-        <motion.div
-          whileTap={{ scale: 0.99 }}
-          onClick={connectingWallet ? undefined : handleConnectWallet}
-          style={{
-            display: "flex", alignItems: "center", gap: "14px",
-            padding: "14px 16px", background: "var(--bg-card)",
-            borderRadius: "14px", marginBottom: "6px",
-            border: walletAddress ? "1px solid rgba(124,58,237,0.3)" : "1px solid var(--border)",
-            cursor: connectingWallet ? "not-allowed" : "pointer",
-            transition: "all 0.15s",
-          }}
-          onMouseEnter={e => { if (!connectingWallet) e.currentTarget.style.borderColor = "rgba(124,58,237,0.5)"; }}
-          onMouseLeave={e => { e.currentTarget.style.borderColor = walletAddress ? "rgba(124,58,237,0.3)" : "var(--border)"; }}>
-          <div style={{ width: "36px", height: "36px", borderRadius: "10px", flexShrink: 0, background: "rgba(124,58,237,0.1)", display: "flex", alignItems: "center", justifyContent: "center", border: "1px solid rgba(124,58,237,0.2)" }}>
-            <Wallet size={16} color="#a78bfa" />
-          </div>
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ fontSize: "14px", fontWeight: 600, color: "var(--text-primary)", lineHeight: 1.3 }}>
-              {walletAddress ? "Wallet Connected" : "Connect Wallet"}
-            </div>
-            <div style={{ fontSize: "12px", color: walletAddress ? "#a78bfa" : "var(--text-muted)", marginTop: "2px", fontFamily: walletAddress ? "var(--font-mono)" : "var(--font-sans)" }}>
-              {walletAddress ? truncateAddress(walletAddress) : "Link your MetaMask for NFT management"}
-            </div>
-          </div>
-          {walletAddress ? (
-            <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
-              <motion.div animate={{ scale: [1,1.4,1] }} transition={{ duration: 2, repeat: Infinity }}
-                style={{ width: "6px", height: "6px", borderRadius: "50%", background: "#4ade80" }} />
-              <span style={{ fontSize: "10px", fontWeight: 700, color: "#4ade80", fontFamily: "var(--font-mono)" }}>LINKED</span>
-            </div>
-          ) : connectingWallet ? (
-            <span style={{ fontSize: "12px", color: BRAND, fontWeight: 600 }}>Connecting...</span>
-          ) : (
-            <ChevronRight size={16} color="var(--text-muted)" />
-          )}
-        </motion.div>
 
         {/* Legal */}
         <SectionHeader title="Legal & Privacy" />
@@ -606,11 +590,12 @@ export default function Settings() {
         <SectionHeader title="About" />
         <SettingRow icon={Globe} label="Version" value="Master Events v1.0 · Built on Polygon" color="#0891b2" />
 
-        {/* Danger */}
+        {/* Account Actions */}
         <SectionHeader title="Account Actions" />
         <SettingRow icon={LogOut} label="Log Out" danger onClick={() => setShowLogout(true)} />
+        <SettingRow icon={Trash2} label="Delete Account" value="Permanently delete your account and all data" danger onClick={() => setShowDelete(true)} />
 
-        {/* Logout confirm */}
+        {/* Logout modal */}
         <AnimatePresence>
           {showLogout && (
             <>
@@ -620,7 +605,7 @@ export default function Settings() {
               <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 20 }}
                 style={{ position: "fixed", bottom: 0, left: 0, right: 0, margin: "0 auto", maxWidth: "480px", background: "var(--bg-card)", borderRadius: "24px 24px 0 0", padding: "24px 24px calc(24px + env(safe-area-inset-bottom, 0px))", zIndex: 201, border: "1px solid var(--border)", borderBottom: "none" }}>
                 <div style={{ width: "40px", height: "4px", borderRadius: "2px", background: "var(--border-strong)", margin: "0 auto 20px" }} />
-                <div style={{ fontWeight: 800, fontSize: "18px", color: "var(--text-primary)", marginBottom: "8px", letterSpacing: "-0.3px" }}>Log out?</div>
+                <div style={{ fontWeight: 800, fontSize: "18px", color: "var(--text-primary)", marginBottom: "8px" }}>Log out?</div>
                 <div style={{ fontSize: "14px", color: "var(--text-muted)", marginBottom: "24px", lineHeight: 1.6 }}>You'll need to sign in again to access your tickets and wallet.</div>
                 <div style={{ display: "flex", gap: "10px" }}>
                   <motion.button whileTap={{ scale: 0.97 }} onClick={() => setShowLogout(false)}
@@ -646,9 +631,12 @@ export default function Settings() {
 
         {/* Password modal */}
         <AnimatePresence>
-          {showPassword && (
-            <PasswordModal onClose={() => setShowPassword(false)} />
-          )}
+          {showPassword && <PasswordModal onClose={() => setShowPassword(false)} />}
+        </AnimatePresence>
+
+        {/* Delete account modal */}
+        <AnimatePresence>
+          {showDelete && <DeleteModal onClose={() => setShowDelete(false)} handleLogout={handleLogout} />}
         </AnimatePresence>
       </div>
     </div>

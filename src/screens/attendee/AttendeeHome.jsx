@@ -346,20 +346,10 @@ export default function AttendeeHome() {
       }}>
         <div style={{ padding: desktop ? "0 40px" : "0 16px" }}>
 
-          {/* Mobile greeting */}
-          {!desktop && (
-            <div style={{ padding: "12px 0 10px" }}>
-              <div style={{ fontSize: "15px", fontWeight: 700, color: "var(--text-primary)" }}>
-                Hi, {currentUser?.first_name} 👋
-              </div>
-              <div style={{ fontSize: "11px", color: "var(--text-muted)", marginTop: "2px", fontFamily: "var(--font-mono)" }}>
-                What are you looking for today?
-              </div>
-            </div>
-          )}
+         
 
           {/* Search bar */}
-          <div style={{ padding: desktop ? "12px 0 10px" : "0 0 10px" }}>
+          <div style={{ padding: desktop ? "12px 0 10px" : "10px 0" }}>
             <div style={{ position: "relative" }}>
               <div style={{ position: "absolute", left: "14px", top: "50%", transform: "translateY(-50%)", display: "flex", alignItems: "center", gap: "6px", pointerEvents: "none", zIndex: 1 }}>
                 <span style={{ fontSize: "13px", opacity: 0.5 }}>🔍</span>

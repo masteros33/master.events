@@ -258,33 +258,31 @@ export default function AttendeeHome() {
   const overlayEvent     = useStore(s => s.overlayEvent);
   const searchQ          = useStore(s => s.searchQ);
   const setSearchQ       = useStore(s => s.setSearchQ);
-  const currentUser      = useStore(s => s.currentUser);
   const [activeCategory, setActiveCategory] = useState("all");
   const [page,           setPage]           = useState(1);
   const [searchFocused,  setSearchFocused]  = useState(false);
   const desktop = isDesktop();
 
-  
   const { data: eventsData, isLoading: loading } = useQuery({
-      queryKey: ["events"],
-      queryFn: () =>
-        eventsAPI.list().then(data =>
-          Array.isArray(data)
-            ? data.map(e => ({
-              id:           e.id,
-              name:         e.name,
-              description:  e.description || "",
-              category:     e.category,
-              venue:        e.venue,
-              city:         e.city,
-              date:         e.date,
-              time:         e.time,
-              price:        parseFloat(e.price) || 0,
-              totalTickets: e.total_tickets || 0,
-              ticketsSold:  e.tickets_sold  || 0,
-              salesOpen:    e.sales_open,
-              image:        e.image || categoryImages[e.category] || categoryImages.other,
-            }))
+    queryKey: ["events"],
+    queryFn: () =>
+      eventsAPI.list().then(data =>
+        Array.isArray(data)
+          ? data.map(e => ({
+            id:           e.id,
+            name:         e.name,
+            description:  e.description || "",
+            category:     e.category,
+            venue:        e.venue,
+            city:         e.city,
+            date:         e.date,
+            time:         e.time,
+            price:        parseFloat(e.price) || 0,
+            totalTickets: e.total_tickets || 0,
+            ticketsSold:  e.tickets_sold  || 0,
+            salesOpen:    e.sales_open,
+            image:        e.image || categoryImages[e.category] || categoryImages.other,
+          }))
           : []
       ),
     staleTime: 2 * 60 * 1000,
@@ -337,81 +335,107 @@ export default function AttendeeHome() {
   return (
     <div style={{ background: "var(--bg)", minHeight: "100%", paddingBottom: desktop ? "60px" : "100px" }}>
 
-      {/* ── Sticky command bar ── */}
-      <div style={{
-        position: "sticky", top: 0, zIndex: 30,
-        background: "var(--bg-card)",
-        borderBottom: "1px solid var(--border)",
-        boxShadow: "0 1px 0 var(--border), 0 4px 16px rgba(0,0,0,0.04)",
-      }}>
-        <div style={{ padding: desktop ? "0 40px" : "0 16px" }}>
+      {/* ── Sticky command bar — MOBILE ONLY ── */}
+      {!desktop && (
+        <div style={{
+          position: "sticky", top: 0, zIndex: 30,
+          background: "var(--bg-card)",
+          borderBottom: "1px solid var(--border)",
+          boxShadow: "0 1px 0 var(--border), 0 4px 16px rgba(0,0,0,0.04)",
+        }}>
+          <div style={{ padding: "0 16px" }}>
 
-         
-
-          {/* Search bar */}
-          <div style={{ padding: desktop ? "12px 0 10px" : "10px 0" }}>
-            <div style={{ position: "relative" }}>
-              <div style={{ position: "absolute", left: "14px", top: "50%", transform: "translateY(-50%)", display: "flex", alignItems: "center", gap: "6px", pointerEvents: "none", zIndex: 1 }}>
-                <span style={{ fontSize: "13px", opacity: 0.5 }}>🔍</span>
-                {desktop && <span style={{ fontSize: "11px", color: "var(--text-muted)", fontFamily: "var(--font-mono)", opacity: 0.5 }}>SEARCH</span>}
-              </div>
-              <input
-                value={searchQ}
-                onChange={e => setSearchQ(e.target.value)}
-                onFocus={() => setSearchFocused(true)}
-                onBlur={() => setSearchFocused(false)}
-                placeholder={desktop ? "Search events, venues, categories... [⌘K]" : "Search events..."}
-                style={{
-                  width: "100%",
-                  padding: desktop ? "11px 120px 11px 80px" : "11px 40px 11px 40px",
-                  background: searchFocused ? "var(--bg)" : "var(--bg-subtle)",
-                  border: searchFocused ? "1.5px solid rgba(245,166,35,0.6)" : "1.5px solid var(--border)",
-                  borderRadius: "11px", fontSize: "13px", color: "var(--text-primary)",
-                  outline: "none", boxSizing: "border-box", fontFamily: "var(--font-sans)",
-                  transition: "all 0.2s var(--ease-smooth)",
-                  boxShadow: searchFocused ? "0 0 0 3px rgba(245,166,35,0.12)" : "none",
-                }}
-              />
-              <div style={{ position: "absolute", right: "12px", top: "50%", transform: "translateY(-50%)", display: "flex", alignItems: "center", gap: "8px" }}>
-                {searchQ ? (
+            {/* Search bar */}
+            <div style={{ padding: "10px 0" }}>
+              <div style={{ position: "relative" }}>
+                <div style={{ position: "absolute", left: "14px", top: "50%", transform: "translateY(-50%)", display: "flex", alignItems: "center", gap: "6px", pointerEvents: "none", zIndex: 1 }}>
+                  <span style={{ fontSize: "13px", opacity: 0.5 }}>🔍</span>
+                </div>
+                <input
+                  value={searchQ}
+                  onChange={e => setSearchQ(e.target.value)}
+                  onFocus={() => setSearchFocused(true)}
+                  onBlur={() => setSearchFocused(false)}
+                  placeholder="Search events..."
+                  style={{
+                    width: "100%",
+                    padding: "11px 40px 11px 40px",
+                    background: searchFocused ? "var(--bg)" : "var(--bg-subtle)",
+                    border: searchFocused ? "1.5px solid rgba(245,166,35,0.6)" : "1.5px solid var(--border)",
+                    borderRadius: "11px", fontSize: "13px", color: "var(--text-primary)",
+                    outline: "none", boxSizing: "border-box", fontFamily: "var(--font-sans)",
+                    transition: "all 0.2s var(--ease-smooth)",
+                    boxShadow: searchFocused ? "0 0 0 3px rgba(245,166,35,0.12)" : "none",
+                  }}
+                />
+                {searchQ && (
                   <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} onClick={() => setSearchQ("")}
-                    style={{ cursor: "pointer", width: "18px", height: "18px", borderRadius: "50%", background: "var(--bg-subtle)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "10px", color: "var(--text-muted)" }}>
+                    style={{ position: "absolute", right: "12px", top: "50%", transform: "translateY(-50%)", cursor: "pointer", width: "18px", height: "18px", borderRadius: "50%", background: "var(--bg-subtle)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "10px", color: "var(--text-muted)" }}>
                     ✕
                   </motion.div>
-                ) : desktop ? (
-                  <div style={{ display: "flex", alignItems: "center", gap: "3px" }}>
-                    <kbd style={{ fontSize: "9px", padding: "2px 5px", borderRadius: "4px", background: "var(--bg-subtle)", border: "1px solid var(--border)", color: "var(--text-muted)", fontFamily: "var(--font-mono)" }}>⌘</kbd>
-                    <kbd style={{ fontSize: "9px", padding: "2px 5px", borderRadius: "4px", background: "var(--bg-subtle)", border: "1px solid var(--border)", color: "var(--text-muted)", fontFamily: "var(--font-mono)" }}>K</kbd>
-                  </div>
-                ) : null}
+                )}
               </div>
             </div>
-          </div>
 
-          {/* Category chips */}
-          <div style={{ display: "flex", gap: "6px", overflowX: "auto", scrollbarWidth: "none", paddingBottom: "10px" }}>
-            {CATEGORIES.map(cat => {
-              const active = activeCategory === cat.key;
-              return (
-                <motion.div key={cat.key} whileTap={{ scale: 0.9 }}
-                  onClick={() => setActiveCategory(cat.key)}
-                  style={{
-                    flexShrink: 0, padding: "5px 14px", borderRadius: "99px",
-                    cursor: "pointer", fontSize: "11px", fontWeight: active ? 700 : 500,
-                    display: "flex", alignItems: "center", gap: "5px", transition: "all 0.15s",
-                    background: active ? "var(--brand)" : "transparent",
-                    color: active ? "#fff" : "var(--text-secondary)",
-                    border: active ? "1px solid var(--brand)" : "1px solid var(--border)",
-                    boxShadow: active ? "var(--shadow-brand)" : "none",
-                  }}>
-                  <span style={{ fontFamily: "var(--font-mono)", fontSize: "10px" }}>{cat.icon}</span>
-                  <span>{cat.label}</span>
-                </motion.div>
-              );
-            })}
+            {/* Category chips */}
+            <div style={{ display: "flex", gap: "6px", overflowX: "auto", scrollbarWidth: "none", paddingBottom: "10px" }}>
+              {CATEGORIES.map(cat => {
+                const active = activeCategory === cat.key;
+                return (
+                  <motion.div key={cat.key} whileTap={{ scale: 0.9 }}
+                    onClick={() => setActiveCategory(cat.key)}
+                    style={{
+                      flexShrink: 0, padding: "5px 14px", borderRadius: "99px",
+                      cursor: "pointer", fontSize: "11px", fontWeight: active ? 700 : 500,
+                      display: "flex", alignItems: "center", gap: "5px", transition: "all 0.15s",
+                      background: active ? "var(--brand)" : "transparent",
+                      color: active ? "#fff" : "var(--text-secondary)",
+                      border: active ? "1px solid var(--brand)" : "1px solid var(--border)",
+                      boxShadow: active ? "var(--shadow-brand)" : "none",
+                    }}>
+                    <span style={{ fontFamily: "var(--font-mono)", fontSize: "10px" }}>{cat.icon}</span>
+                    <span>{cat.label}</span>
+                  </motion.div>
+                );
+              })}
+            </div>
           </div>
         </div>
-      </div>
+      )}
+
+      {/* ── Category chips — DESKTOP ONLY (no search bar, that's in topbar) ── */}
+      {desktop && (
+        <div style={{
+          position: "sticky", top: 0, zIndex: 30,
+          background: "var(--bg-card)",
+          borderBottom: "1px solid var(--border)",
+          boxShadow: "0 1px 0 var(--border), 0 4px 16px rgba(0,0,0,0.04)",
+        }}>
+          <div style={{ padding: "0 40px" }}>
+            <div style={{ display: "flex", gap: "6px", overflowX: "auto", scrollbarWidth: "none", padding: "10px 0" }}>
+              {CATEGORIES.map(cat => {
+                const active = activeCategory === cat.key;
+                return (
+                  <motion.div key={cat.key} whileTap={{ scale: 0.9 }}
+                    onClick={() => setActiveCategory(cat.key)}
+                    style={{
+                      flexShrink: 0, padding: "5px 14px", borderRadius: "99px",
+                      cursor: "pointer", fontSize: "11px", fontWeight: active ? 700 : 500,
+                      display: "flex", alignItems: "center", gap: "5px", transition: "all 0.15s",
+                      background: active ? "var(--brand)" : "transparent",
+                      color: active ? "#fff" : "var(--text-secondary)",
+                      border: active ? "1px solid var(--brand)" : "1px solid var(--border)",
+                      boxShadow: active ? "var(--shadow-brand)" : "none",
+                    }}>
+                    <span style={{ fontFamily: "var(--font-mono)", fontSize: "10px" }}>{cat.icon}</span>
+                    <span>{cat.label}</span>
+                  </motion.div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Resale Market banner */}
       <div style={{ padding: desktop ? "16px 40px 0" : "12px 16px 0" }}>

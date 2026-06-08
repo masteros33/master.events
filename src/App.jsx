@@ -96,11 +96,12 @@ function MobileDrawer({ open, onClose }) {
   const currentUser  = useStore(s => s.currentUser);
 
   const attendeeNav = [
-    { id: "home",         icon: Home,        label: "Discover",      tab: true },
-    { id: "tickets",      icon: Ticket,      label: "My Tickets",    tab: true },
-    { id: "alerts",       icon: Bell,        label: "Alerts",        tab: true },
-    { id: "resaleMarket", icon: ShoppingBag, label: "Resale Market", tab: false, screen: "resaleMarket" },
-  ];
+  { id: "home",           icon: Home,        label: "Discover",      tab: true },
+  { id: "tickets",        icon: Ticket,       label: "My Tickets",    tab: true },
+  { id: "alerts",         icon: Bell,         label: "Alerts",        tab: true },
+  { id: "resaleMarket",   icon: ShoppingBag,  label: "Resale Market", tab: false, screen: "resaleMarket" },
+  { id: "attendeeWallet", icon: Wallet,        label: "My Wallet",     tab: false, screen: "attendeeWallet" },
+];
   const orgNav = [
     { id: "dashboard", icon: LayoutDashboard, label: "Dashboard", tab: true },
     { id: "events",    icon: CalendarDays,    label: "My Events", tab: true },
@@ -550,9 +551,14 @@ function DesktopAppLayout() {
               onClick={() => { setActiveTab(item.id); setScreen("app"); }} />
           ))}
           {role === "attendee" && (
-            <NavItem icon={ShoppingBag} label="Resale Market" active={screen === "resaleMarket"}
-              collapsed={collapsed} title={collapsed ? "Resale Market" : ""}
-              onClick={() => setScreen("resaleMarket")} />
+            <>
+              <NavItem icon={ShoppingBag} label="Resale Market" active={screen === "resaleMarket"}
+                collapsed={collapsed} title={collapsed ? "Resale Market" : ""}
+                onClick={() => setScreen("resaleMarket")} />
+              <NavItem icon={Wallet} label="My Wallet" active={screen === "attendeeWallet"}
+                collapsed={collapsed} title={collapsed ? "My Wallet" : ""}
+                onClick={() => setScreen("attendeeWallet")} />
+            </>
           )}
           {role === "organizer" && (
             <div style={{ marginTop: "8px" }}>

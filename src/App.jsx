@@ -96,12 +96,12 @@ function MobileDrawer({ open, onClose }) {
   const currentUser  = useStore(s => s.currentUser);
 
   const attendeeNav = [
-  { id: "home",           icon: Home,        label: "Discover",      tab: true },
-  { id: "tickets",        icon: Ticket,       label: "My Tickets",    tab: true },
-  { id: "alerts",         icon: Bell,         label: "Alerts",        tab: true },
-  { id: "resaleMarket",   icon: ShoppingBag,  label: "Resale Market", tab: false, screen: "resaleMarket" },
-  { id: "attendeeWallet", icon: Wallet,        label: "My Wallet",     tab: false, screen: "attendeeWallet" },
-];
+    { id: "home",           icon: Home,       label: "Discover",      tab: true },
+    { id: "tickets",        icon: Ticket,     label: "My Tickets",    tab: true },
+    { id: "alerts",         icon: Bell,       label: "Alerts",        tab: true },
+    { id: "resaleMarket",   icon: ShoppingBag,label: "Resale Market", tab: false, screen: "resaleMarket" },
+    { id: "attendeeWallet", icon: Wallet,     label: "My Wallet",     tab: false, screen: "attendeeWallet" },
+  ];
   const orgNav = [
     { id: "dashboard", icon: LayoutDashboard, label: "Dashboard", tab: true },
     { id: "events",    icon: CalendarDays,    label: "My Events", tab: true },
@@ -141,7 +141,7 @@ function MobileDrawer({ open, onClose }) {
               borderLeft: "1px solid var(--border)",
             }}>
 
-            {/* Header */}
+            {/* Drawer header */}
             <div style={{ padding: "16px 20px", borderBottom: "1px solid var(--border)", display: "flex", alignItems: "center", justifyContent: "space-between", flexShrink: 0 }}>
               <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
                 <Avatar seed={currentUser?.email} name={currentUser?.first_name} size={38}
@@ -271,7 +271,7 @@ function MobileTabContent() {
 
 // ── Mobile App Shell ──────────────────────────────────────────
 function MobileAppShell() {
-  const screen  = useStore(s => s.screen);
+  const screen = useStore(s => s.screen);
   const [drawerOpen, setDrawerOpen] = React.useState(false);
 
   const screenTitles = {
@@ -312,9 +312,9 @@ function MobileAppShell() {
   };
 
   const navScreenMap = {
-    resaleMarket: <ResaleMarketplace />,
-    settings:     <Settings />,
-    privacy:      <PrivacyPolicy />,
+    resaleMarket:   <ResaleMarketplace />,
+    settings:       <Settings />,
+    privacy:        <PrivacyPolicy />,
     attendeeWallet: <AttendeeWallet />,
   };
 
@@ -359,7 +359,7 @@ function NavItem({ icon: Icon, label, active, collapsed, onClick, title }) {
 }
 
 // ── Desktop Topbar ────────────────────────────────────────────
-function DesktopTopbar({ navItems, activeTab, isFullScreen, screen, screenTitles, role, setScreen, setActiveTab, theme, setTheme }) {
+function DesktopTopbar({ navItems, activeTab, isFullScreen, screen, screenTitles, role, setScreen, setActiveTab, theme, setTheme, currentUser }) {
   const searchQ    = useStore(s => s.searchQ);
   const setSearchQ = useStore(s => s.setSearchQ);
   const themeOpts  = { light: Sun, dark: Moon, system: Monitor };
@@ -370,12 +370,16 @@ function DesktopTopbar({ navItems, activeTab, isFullScreen, screen, screenTitles
 
   return (
     <div style={{ background: "var(--bg-card)", borderBottom: "1px solid var(--border)", padding: "0 28px", height: "60px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: "20px", position: "sticky", top: 0, zIndex: 40, boxShadow: "var(--shadow-sm)", flexShrink: 0 }}>
-      <div style={{ flexShrink: 0, minWidth: "140px" }}>
+
+      {/* Page title */}
+      <div style={{ flexShrink: 0, minWidth: "120px" }}>
         <h1 style={{ fontWeight: 800, fontSize: "16px", color: "var(--text-primary)", letterSpacing: "-0.4px", lineHeight: 1.2 }}>{pageTitle}</h1>
         <p style={{ fontSize: "10px", color: "var(--text-muted)", marginTop: "1px", fontFamily: "var(--font-mono)" }}>
           {new Date().toLocaleDateString("en-GH", { weekday: "short", month: "short", day: "numeric" })}
         </p>
       </div>
+
+      {/* Search */}
       <div style={{ flex: 1, maxWidth: "420px", position: "relative" }}>
         <div style={{ position: "absolute", left: "12px", top: "50%", transform: "translateY(-50%)", pointerEvents: "none" }}>
           <Search size={14} color="var(--text-muted)" />
@@ -389,11 +393,18 @@ function DesktopTopbar({ navItems, activeTab, isFullScreen, screen, screenTitles
         />
         {searchQ && <div onClick={() => setSearchQ("")} style={{ position: "absolute", right: "11px", top: "50%", transform: "translateY(-50%)", cursor: "pointer", color: "var(--text-muted)", fontSize: "13px" }}>✕</div>}
       </div>
+
+      {/* Right — AMOY + theme + user chip */}
       <div style={{ display: "flex", alignItems: "center", gap: "10px", flexShrink: 0 }}>
+
+        {/* Blockchain badge */}
         <div style={{ display: "flex", alignItems: "center", gap: "5px", padding: "5px 10px", borderRadius: "99px", border: "1px solid rgba(22,163,74,0.2)", background: "rgba(22,163,74,0.06)" }}>
-          <motion.div animate={{ scale: [1,1.5,1] }} transition={{ repeat: Infinity, duration: 2 }} style={{ width: "6px", height: "6px", borderRadius: "50%", background: "#16a34a" }} />
+          <motion.div animate={{ scale: [1,1.5,1] }} transition={{ repeat: Infinity, duration: 2 }}
+            style={{ width: "6px", height: "6px", borderRadius: "50%", background: "#16a34a" }} />
           <span style={{ fontSize: "10px", fontWeight: 700, color: "#16a34a", fontFamily: "var(--font-mono)" }}>AMOY</span>
         </div>
+
+        {/* Theme toggle */}
         <motion.div whileTap={{ scale: 0.88 }}
           onClick={() => setTheme(["light","dark","system"][(["light","dark","system"].indexOf(theme) + 1) % 3])}
           style={{ width: "32px", height: "32px", borderRadius: "9px", background: "var(--bg-subtle)", border: "1px solid var(--border)", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", transition: "all 0.2s" }}
@@ -401,6 +412,17 @@ function DesktopTopbar({ navItems, activeTab, isFullScreen, screen, screenTitles
           onMouseLeave={e => { e.currentTarget.style.borderColor = "var(--border)"; e.currentTarget.style.background = "var(--bg-subtle)"; }}>
           <ThemeIcon size={14} color="var(--text-secondary)" />
         </motion.div>
+
+        {/* User chip — avatar + name + role */}
+        <div style={{ display: "flex", alignItems: "center", gap: "8px", padding: "5px 10px 5px 6px", borderRadius: "99px", background: "var(--bg-subtle)", border: "1px solid var(--border)" }}>
+          <Avatar seed={currentUser?.email} name={currentUser?.first_name} size={28} style={{ borderRadius: "50%", flexShrink: 0 }} />
+          <span style={{ fontSize: "12px", fontWeight: 600, color: "var(--text-primary)", whiteSpace: "nowrap", maxWidth: "100px", overflow: "hidden", textOverflow: "ellipsis" }}>
+            {currentUser?.first_name} {currentUser?.last_name}
+          </span>
+          <span style={{ display: "inline-flex", alignItems: "center", gap: "3px", padding: "2px 7px", borderRadius: "99px", background: `${BRAND}10`, border: `1px solid ${BRAND}20`, fontSize: "8px", fontWeight: 700, color: BRAND, whiteSpace: "nowrap" }}>
+            {role === "organizer" ? "ORGANIZER" : "ATTENDEE"}
+          </span>
+        </div>
       </div>
     </div>
   );
@@ -485,14 +507,16 @@ function DesktopAppLayout() {
     return null;
   };
 
-  const sidebarW = collapsed ? "64px" : "240px";
+  const sidebarW = collapsed ? "64px" : "220px";
 
   return (
     <div style={{ display: "flex", height: "100vh", background: "var(--bg)", fontFamily: "var(--font-sans)", overflow: "hidden" }}>
+
+      {/* ── Sidebar ── */}
       <motion.aside animate={{ width: sidebarW }} transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
         style={{ flexShrink: 0, background: "var(--bg-card)", borderRight: "1px solid var(--border)", display: "flex", flexDirection: "column", height: "100vh", overflow: "hidden", position: "relative", zIndex: 10 }}>
 
-        {/* Sidebar header */}
+        {/* Sidebar header — logo + collapse */}
         <div style={{ padding: "0 12px", borderBottom: "1px solid var(--border)", display: "flex", alignItems: "center", justifyContent: collapsed ? "center" : "space-between", gap: "8px", height: "60px", flexShrink: 0 }}>
           <AnimatePresence>
             {!collapsed && (
@@ -504,7 +528,8 @@ function DesktopAppLayout() {
                 <div>
                   <div style={{ fontWeight: 800, fontSize: "13px", color: "var(--text-primary)", letterSpacing: "-0.3px", whiteSpace: "nowrap" }}>Master Events</div>
                   <div style={{ display: "flex", alignItems: "center", gap: "4px", marginTop: "1px" }}>
-                    <motion.div animate={{ scale: [1,1.5,1] }} transition={{ repeat: Infinity, duration: 2 }} style={{ width: "4px", height: "4px", borderRadius: "50%", background: "#16a34a" }} />
+                    <motion.div animate={{ scale: [1,1.5,1] }} transition={{ repeat: Infinity, duration: 2 }}
+                      style={{ width: "4px", height: "4px", borderRadius: "50%", background: "#16a34a" }} />
                     <span style={{ fontSize: "8px", color: "#16a34a", fontWeight: 700, letterSpacing: "0.8px", fontFamily: "var(--font-mono)", whiteSpace: "nowrap" }}>POLYGON AMOY</span>
                   </div>
                 </div>
@@ -517,39 +542,19 @@ function DesktopAppLayout() {
           </motion.button>
         </div>
 
-        {/* User profile */}
-        <div style={{ borderBottom: "1px solid var(--border)", flexShrink: 0 }}>
-          {collapsed ? (
-            <div style={{ padding: "10px 0", display: "flex", justifyContent: "center" }}>
-              <Avatar seed={currentUser?.email} name={currentUser?.first_name} size={32} />
-            </div>
-          ) : (
-            <div style={{ padding: "12px 14px" }}>
-              <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                <Avatar seed={currentUser?.email} name={currentUser?.first_name} size={36} style={{ flexShrink: 0 }} />
-                <div style={{ minWidth: 0, flex: 1 }}>
-                  <div style={{ fontWeight: 700, fontSize: "13px", color: "var(--text-primary)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{currentUser?.first_name} {currentUser?.last_name}</div>
-                  <div style={{ fontSize: "10px", color: "var(--text-muted)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{currentUser?.email}</div>
-                </div>
-              </div>
-              <div style={{ marginTop: "8px" }}>
-                <span style={{ display: "inline-flex", alignItems: "center", gap: "4px", padding: "3px 9px", borderRadius: "99px", background: `${BRAND}10`, border: `1px solid ${BRAND}20`, fontSize: "9px", fontWeight: 700, color: BRAND }}>
-                  {role === "organizer" ? <><Zap size={9} color={BRAND} /> ORGANIZER</> : <><Ticket size={9} color={BRAND} /> ATTENDEE</>}
-                </span>
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* Nav */}
+        {/* ── Nav links only — no user profile here ── */}
         <nav style={{ flex: 1, padding: "8px", overflowY: "auto" }}>
-          {!collapsed && <div style={{ fontSize: "9px", fontWeight: 700, color: "var(--text-muted)", letterSpacing: "1.5px", padding: "8px 10px 6px", fontFamily: "var(--font-mono)" }}>NAVIGATE</div>}
+          {!collapsed && (
+            <div style={{ fontSize: "9px", fontWeight: 700, color: "var(--text-muted)", letterSpacing: "1.5px", padding: "8px 10px 6px", fontFamily: "var(--font-mono)" }}>NAVIGATE</div>
+          )}
           {navItems.map(item => (
             <NavItem key={item.id} icon={item.Icon} label={item.label}
               active={!isFullScreen && activeTab === item.id}
               collapsed={collapsed} title={collapsed ? item.label : ""}
               onClick={() => { setActiveTab(item.id); setScreen("app"); }} />
           ))}
+
+          {/* Attendee extra nav */}
           {role === "attendee" && (
             <>
               <NavItem icon={ShoppingBag} label="Resale Market" active={screen === "resaleMarket"}
@@ -560,9 +565,13 @@ function DesktopAppLayout() {
                 onClick={() => setScreen("attendeeWallet")} />
             </>
           )}
+
+          {/* Organizer extra actions */}
           {role === "organizer" && (
             <div style={{ marginTop: "8px" }}>
-              {!collapsed && <div style={{ fontSize: "9px", fontWeight: 700, color: "var(--text-muted)", letterSpacing: "1.5px", padding: "8px 10px 6px", fontFamily: "var(--font-mono)" }}>ACTIONS</div>}
+              {!collapsed && (
+                <div style={{ fontSize: "9px", fontWeight: 700, color: "var(--text-muted)", letterSpacing: "1.5px", padding: "8px 10px 6px", fontFamily: "var(--font-mono)" }}>ACTIONS</div>
+              )}
               <motion.div whileTap={{ scale: 0.94 }} onClick={() => setScreen("addEvent")}
                 style={{ display: "flex", alignItems: "center", gap: "10px", padding: collapsed ? "10px 0" : "9px 12px", justifyContent: collapsed ? "center" : "flex-start", borderRadius: "10px", cursor: "pointer", border: collapsed ? "none" : "1.5px dashed rgba(249,115,22,0.3)", color: BRAND, transition: "all 0.18s ease", marginBottom: "3px" }}
                 onMouseEnter={e => { e.currentTarget.style.background = `${BRAND}07`; }}
@@ -579,6 +588,8 @@ function DesktopAppLayout() {
               </motion.div>
             </div>
           )}
+
+          {/* Settings */}
           <div style={{ marginTop: "8px" }}>
             <NavItem icon={SettingsIcon} label="Settings" active={screen === "settings"}
               collapsed={collapsed} title={collapsed ? "Settings" : ""}
@@ -598,10 +609,15 @@ function DesktopAppLayout() {
         </div>
       </motion.aside>
 
+      {/* ── Main content ── */}
       <main style={{ flex: 1, display: "flex", flexDirection: "column", minWidth: 0, overflow: "hidden" }}>
-        <DesktopTopbar navItems={navItems} activeTab={activeTab} isFullScreen={isFullScreen}
+        <DesktopTopbar
+          navItems={navItems} activeTab={activeTab} isFullScreen={isFullScreen}
           screen={screen} screenTitles={screenTitles} role={role}
-          setScreen={setScreen} setActiveTab={setActiveTab} theme={theme} setTheme={setTheme} />
+          setScreen={setScreen} setActiveTab={setActiveTab}
+          theme={theme} setTheme={setTheme}
+          currentUser={currentUser}
+        />
         <div style={{ flex: 1, overflowY: "auto", overflowX: "hidden", WebkitOverflowScrolling: "touch" }}>
           <div key={screen + activeTab} className="screen-enter" style={{ minHeight: "100%" }}>
             {renderContent()}
@@ -619,8 +635,10 @@ function MobileAppContent() {
   const screen = useStore(s => s.screen);
 
   const authRoutes = {
-    login: <Login />, signup: <Signup />,
-    role: <RoleSelect />, resetPassword: <ResetPassword />
+    login:         <Login />,
+    signup:        <Signup />,
+    role:          <RoleSelect />,
+    resetPassword: <ResetPassword />,
   };
 
   if (authRoutes[screen]) return (
@@ -643,17 +661,12 @@ export default function App() {
   const [desktop, setDesktop] = React.useState(window.innerWidth > 768);
   useTheme();
 
-  // ── app-mode body class ───────────────────────────────────
   React.useEffect(() => {
     const isAppMode = isLoggedIn || APP_MODE_SCREENS.includes(screen);
-    if (isAppMode) {
-      document.body.classList.add("app-mode");
-    } else {
-      document.body.classList.remove("app-mode");
-    }
+    if (isAppMode) document.body.classList.add("app-mode");
+    else           document.body.classList.remove("app-mode");
   }, [isLoggedIn, screen]);
 
-  // ── URL param handler ─────────────────────────────────────
   React.useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const uid    = params.get("uid");
@@ -665,19 +678,14 @@ export default function App() {
       useStore.getState().setScreen("resetPassword");
       return;
     }
-    if (params.get("admin") === "1") {
-      useStore.getState().setScreen("adminGateway");
-      return;
-    }
-    if (params.get("door") === "1") {
-      useStore.getState().setScreen("doorStaffLogin");
-      return;
-    }
+    if (params.get("admin") === "1") { useStore.getState().setScreen("adminGateway"); return; }
+    if (params.get("door")  === "1") { useStore.getState().setScreen("doorStaffLogin"); return; }
+
     if (verify) {
       fetch("https://master-events-backend.onrender.com/api/accounts/verify-email/", {
-        method:  "POST",
+        method: "POST",
         headers: { "Content-Type": "application/json" },
-        body:    JSON.stringify({ token: verify }),
+        body:   JSON.stringify({ token: verify }),
       })
         .then(r => r.json())
         .then(data => {
@@ -687,7 +695,7 @@ export default function App() {
             setTimeout(() => toast.success("✅ Email verified! You can now log in."), 400);
           } else {
             useStore.getState().setScreen("login");
-            setTimeout(() => toast.error(data.error || "Verification failed. Please try again."), 400);
+            setTimeout(() => toast.error(data.error || "Verification failed."), 400);
           }
         })
         .catch(() => {
@@ -697,14 +705,12 @@ export default function App() {
     }
   }, []);
 
-  // ── Resize handler ────────────────────────────────────────
   React.useEffect(() => {
     const handler = () => setDesktop(window.innerWidth > 768);
     window.addEventListener("resize", handler);
     return () => window.removeEventListener("resize", handler);
   }, []);
 
-  // ── Top-level screens ─────────────────────────────────────
   if (screen === "adminGateway")   return <AdminLogin />;
   if (screen === "adminDashboard") return <AdminDashboard />;
   if (screen === "resetPassword")  return <ResetPassword />;

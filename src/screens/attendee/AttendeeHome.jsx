@@ -127,122 +127,198 @@ function Pagination({ current, total, onChange }) {
 function EventDetailOverlay({ ev, onBack, onCheckout }) {
   const desktop   = isDesktop();
   const remaining = ev.totalTickets - ev.ticketsSold;
+  const soldPct   = Math.max(5, Math.min(100, ((ev.ticketsSold || 0) / (ev.totalTickets || 1)) * 100));
 
+  // Mobile: keep original stacked layout
+  if (!desktop) {
+    return (
+      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+        style={{ background: "var(--bg)", height: "100%", display: "flex", flexDirection: "column", overflow: "hidden" }}>
+        <div style={{ flex: 1, overflowY: "auto", WebkitOverflowScrolling: "touch" }}>
+          <div style={{ height: "55vw", minHeight: "220px", maxHeight: "340px", position: "relative" }}>
+            <img src={ev.image} alt={ev.name}
+              style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
+              onError={e => { e.target.src = categoryImages.other; }} />
+            <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to bottom, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0.82) 100%)" }} />
+            <motion.button whileTap={{ scale: 0.9 }} onClick={onBack}
+              style={{ position: "absolute", top: "14px", left: "14px", width: "36px", height: "36px", borderRadius: "10px", background: "rgba(255,255,255,0.12)", backdropFilter: "blur(12px)", border: "1px solid rgba(255,255,255,0.18)", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", fontSize: "16px", color: "#fff", zIndex: 10 }}>
+              ←
+            </motion.button>
+            <div style={{ position: "absolute", top: "14px", right: "14px", display: "flex", alignItems: "center", gap: "4px", background: "rgba(124,58,237,0.85)", backdropFilter: "blur(8px)", padding: "4px 10px", borderRadius: "99px" }}>
+              <span style={{ fontSize: "9px" }}>⛓️</span>
+              <span style={{ fontSize: "8px", fontWeight: 700, color: "#fff" }}>NFT · POLYGON</span>
+            </div>
+            <div style={{ position: "absolute", bottom: "14px", left: "16px", right: "16px" }}>
+              <div style={{ display: "inline-block", background: "var(--brand)", color: "#fff", fontSize: "8px", fontWeight: 700, padding: "2px 8px", borderRadius: "99px", marginBottom: "6px", letterSpacing: "0.5px" }}>
+                {ev.category.toUpperCase()}
+              </div>
+              <div style={{ color: "#fff", fontWeight: 800, fontSize: "20px", lineHeight: 1.15, letterSpacing: "-0.4px" }}>{ev.name}</div>
+              <div style={{ color: "rgba(255,255,255,0.6)", fontSize: "12px", marginTop: "3px" }}>📍 {ev.venue}{ev.city ? " · " + ev.city : ""}</div>
+            </div>
+          </div>
+          <div style={{ padding: "16px 16px 80px" }}>
+            <div style={{ display: "flex", gap: "8px", marginBottom: "20px", flexWrap: "wrap" }}>
+              {[["📅","DATE",ev.date||"TBA"],["🕐","TIME",ev.time?ev.time.substring(0,5):"TBA"],["🎟","LEFT",remaining+" left"]].map(([icon,label,val]) => (
+                <div key={label} style={{ flex:"1 1 70px", background:"var(--bg-subtle)", borderRadius:"10px", padding:"10px 8px", textAlign:"center", border:"1px solid var(--border)", minWidth:"70px" }}>
+                  <div style={{ fontSize:"16px", marginBottom:"3px" }}>{icon}</div>
+                  <div style={{ fontSize:"8px", color:"var(--text-muted)", letterSpacing:"1px", marginBottom:"2px", fontFamily:"var(--font-mono)" }}>{label}</div>
+                  <div style={{ fontSize:"11px", fontWeight:700, color:"var(--text-primary)", fontFamily:"var(--font-mono)" }}>{val}</div>
+                </div>
+              ))}
+            </div>
+            {ev.description?.trim() && (
+              <div style={{ marginBottom: "20px" }}>
+                <div style={{ fontSize: "9px", fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "1.5px", marginBottom: "10px", fontFamily: "var(--font-mono)" }}>ABOUT</div>
+                <div style={{ fontSize: "14px", color: "var(--text-secondary)", lineHeight: 1.8 }}>{ev.description.trim()}</div>
+              </div>
+            )}
+            <div style={{ background: "rgba(124,58,237,0.05)", border: "1px solid rgba(124,58,237,0.15)", borderRadius: "12px", padding: "12px 14px", display: "flex", alignItems: "center", gap: "10px", marginBottom: "20px" }}>
+              <span style={{ fontSize: "16px" }}>⛓️</span>
+              <div>
+                <div style={{ fontSize: "11px", fontWeight: 700, color: "#7c3aed" }}>Secured by Polygon Blockchain</div>
+                <div style={{ fontSize: "10px", color: "var(--text-muted)", marginTop: "1px" }}>NFT minted · Screenshot-proof · Cannot be duplicated</div>
+              </div>
+            </div>
+            <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }} onClick={onCheckout}
+              style={{ width: "100%", padding: "16px", background: "linear-gradient(135deg, #f5a623, #e8920f)", color: "#fff", border: "none", borderRadius: "14px", fontSize: "15px", fontWeight: 700, cursor: "pointer", boxShadow: "var(--shadow-brand)", fontFamily: "var(--font-sans)" }}>
+              {ev.price === 0 ? "Get Free Ticket" : `Buy Ticket — GHS ${ev.price}`}
+            </motion.button>
+          </div>
+        </div>
+      </motion.div>
+    );
+  }
+
+  // ── DESKTOP: Ayatickets-inspired split layout ─────────────
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-      style={{ background: "var(--bg)", height: "100%", display: "flex", flexDirection: "column", overflow: "hidden" }}>
-      <div style={{ flex: 1, overflowY: "auto", WebkitOverflowScrolling: "touch" }}>
-        <div style={{ height: "65vh", minHeight: "360px", maxHeight: "560px", position: "relative" }}>
-          <img src={ev.image} alt={ev.name}
-            style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
-            onError={e => { e.target.src = categoryImages.other; }} />
-          <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to bottom, rgba(0,0,0,0.12) 0%, rgba(0,0,0,0.82) 100%)" }} />
-          <motion.button whileTap={{ scale: 0.9 }} onClick={onBack}
-            style={{ position: "absolute", top: "18px", left: "18px", width: "38px", height: "38px", borderRadius: "11px", background: "rgba(255,255,255,0.12)", backdropFilter: "blur(12px)", border: "1px solid rgba(255,255,255,0.18)", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", fontSize: "17px", color: "#fff", zIndex: 10 }}>
-            ←
-          </motion.button>
-          <div style={{ position: "absolute", top: "18px", right: "18px", display: "flex", alignItems: "center", gap: "5px", background: "rgba(124,58,237,0.85)", backdropFilter: "blur(8px)", padding: "5px 11px", borderRadius: "99px" }}>
-            <span style={{ fontSize: "10px" }}>⛓️</span>
-            <span style={{ fontSize: "9px", fontWeight: 700, color: "#fff", fontFamily: "var(--font-mono)" }}>NFT · POLYGON AMOY</span>
-          </div>
-          <div style={{ position: "absolute", bottom: "24px", left: "20px", right: "20px" }}>
-            <div style={{ display: "inline-block", background: "var(--brand)", color: "#fff", fontSize: "9px", fontWeight: 700, padding: "3px 10px", borderRadius: "99px", marginBottom: "10px", letterSpacing: "0.5px", fontFamily: "var(--font-mono)" }}>
+      style={{ background: "var(--bg)", height: "100%", overflowY: "auto", WebkitOverflowScrolling: "touch" }}>
+
+      {/* Back button */}
+      <div style={{ padding: "20px 40px 0", maxWidth: "1200px", margin: "0 auto" }}>
+        <motion.button whileTap={{ scale: 0.95 }} onClick={onBack}
+          style={{ display: "flex", alignItems: "center", gap: "6px", background: "none", border: "none", cursor: "pointer", color: "var(--text-muted)", fontSize: "13px", fontWeight: 500, padding: 0, fontFamily: "var(--font-sans)" }}>
+          ← Back to Events
+        </motion.button>
+      </div>
+
+      {/* Split layout */}
+      <div style={{ maxWidth: "1200px", margin: "0 auto", padding: "24px 40px 60px", display: "flex", gap: "40px", alignItems: "flex-start" }}>
+
+        {/* LEFT — Event poster ~45% */}
+        <div style={{ width: "45%", flexShrink: 0, position: "sticky", top: "24px" }}>
+          <div style={{ borderRadius: "18px", overflow: "hidden", boxShadow: "0 20px 60px rgba(0,0,0,0.18)", border: "1px solid var(--border)", position: "relative" }}>
+            <img src={ev.image} alt={ev.name}
+              style={{ width: "100%", aspectRatio: "4/3", objectFit: "cover", display: "block" }}
+              onError={e => { e.target.src = categoryImages.other; }} />
+
+            {/* NFT badge */}
+            <div style={{ position: "absolute", top: "14px", left: "14px", display: "flex", alignItems: "center", gap: "5px", background: "rgba(124,58,237,0.85)", backdropFilter: "blur(8px)", padding: "5px 11px", borderRadius: "99px", border: "1px solid rgba(124,58,237,0.3)" }}>
+              <span style={{ fontSize: "10px" }}>⛓️</span>
+              <span style={{ fontSize: "9px", fontWeight: 700, color: "#fff", letterSpacing: "0.5px" }}>NFT · POLYGON AMOY</span>
+            </div>
+
+            {/* Category */}
+            <div style={{ position: "absolute", top: "14px", right: "14px", background: "var(--brand)", color: "#fff", fontSize: "9px", fontWeight: 700, padding: "4px 10px", borderRadius: "99px", letterSpacing: "0.5px" }}>
               {ev.category.toUpperCase()}
             </div>
-            <div style={{ color: "#fff", fontWeight: 900, fontSize: desktop ? "32px" : "22px", marginBottom: "6px", lineHeight: 1.1, letterSpacing: "-0.5px" }}>
-              {ev.name}
-            </div>
-            <div style={{ color: "rgba(255,255,255,0.65)", fontSize: "13px", fontFamily: "var(--font-mono)" }}>
-              📍 {ev.venue}{ev.city ? " · " + ev.city : ""}
+          </div>
+
+          {/* Blockchain strip below image */}
+          <div style={{ marginTop: "14px", background: "rgba(124,58,237,0.05)", border: "1px solid rgba(124,58,237,0.15)", borderRadius: "12px", padding: "12px 16px", display: "flex", alignItems: "center", gap: "10px" }}>
+            <span style={{ fontSize: "18px" }}>⛓️</span>
+            <div>
+              <div style={{ fontSize: "11px", fontWeight: 700, color: "#7c3aed" }}>Secured by Polygon Blockchain</div>
+              <div style={{ fontSize: "10px", color: "var(--text-muted)", marginTop: "1px" }}>NFT minted · Screenshot-proof · Cannot be duplicated</div>
             </div>
           </div>
         </div>
 
-        <div style={{ maxWidth: desktop ? "1000px" : "100%", margin: "0 auto", padding: desktop ? "32px 40px 60px" : "20px 16px 80px", display: desktop ? "grid" : "block", gridTemplateColumns: desktop ? "1fr 320px" : undefined, gap: desktop ? "40px" : undefined, alignItems: "start" }}>
-          <div>
-            <div style={{ display: "flex", gap: "10px", marginBottom: "24px", flexWrap: "wrap" }}>
-              {[
-                ["📅", "DATE",  ev.date || "TBA"],
-                ["🕐", "TIME",  ev.time ? ev.time.substring(0, 5) : "TBA"],
-                ["🎟", "LEFT",  remaining + " left"],
-              ].map(([icon, label, val]) => (
-                <div key={label} style={{ flex: "1 1 80px", background: "var(--bg-subtle)", borderRadius: "12px", padding: "12px 10px", textAlign: "center", border: "1px solid var(--border)", minWidth: "80px" }}>
-                  <div style={{ fontSize: "18px", marginBottom: "4px" }}>{icon}</div>
-                  <div style={{ fontSize: "8px", color: "var(--text-muted)", letterSpacing: "1px", marginBottom: "3px", fontFamily: "var(--font-mono)" }}>{label}</div>
-                  <div style={{ fontSize: "12px", fontWeight: 700, color: "var(--text-primary)", fontFamily: "var(--font-mono)" }}>{val}</div>
-                </div>
-              ))}
-            </div>
-            <div style={{ marginBottom: "24px" }}>
-              <div style={{ fontSize: "9px", fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "1.5px", marginBottom: "12px", fontFamily: "var(--font-mono)" }}>ABOUT_EVENT</div>
-              <div style={{ fontSize: "15px", color: "var(--text-secondary)", lineHeight: 1.85 }}>
-                {ev.description?.trim() || "No description provided."}
-              </div>
-            </div>
-            <div style={{ background: "rgba(124,58,237,0.05)", border: "1px solid rgba(124,58,237,0.15)", borderRadius: "12px", padding: "14px 16px", display: "flex", alignItems: "center", gap: "12px" }}>
-              <span style={{ fontSize: "20px" }}>⛓️</span>
-              <div>
-                <div style={{ fontSize: "12px", fontWeight: 700, color: "#7c3aed" }}>Secured by Polygon Blockchain</div>
-                <div style={{ fontSize: "11px", color: "var(--text-muted)", marginTop: "2px" }}>NFT minted · Screenshot-proof · Cannot be duplicated</div>
-              </div>
-            </div>
-            {!desktop && (
-              <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }} onClick={onCheckout}
-                style={{ width: "100%", padding: "17px", background: "linear-gradient(135deg, #f5a623, #e8920f)", color: "#fff", border: "none", borderRadius: "14px", fontSize: "16px", fontWeight: 700, cursor: "pointer", boxShadow: "var(--shadow-brand)", fontFamily: "var(--font-sans)", marginTop: "24px" }}>
-                {ev.price === 0 ? "Get Free Ticket" : `Buy Ticket — GHS ${ev.price}`}
-              </motion.button>
-            )}
+        {/* RIGHT — All info + CTA */}
+        <div style={{ flex: 1, minWidth: 0 }}>
+
+          {/* Event title */}
+          <h1 style={{ fontSize: "32px", fontWeight: 900, color: "var(--text-primary)", letterSpacing: "-1px", lineHeight: 1.1, marginBottom: "8px" }}>
+            {ev.name}
+          </h1>
+
+          {/* Venue */}
+          <div style={{ fontSize: "14px", color: "var(--text-muted)", marginBottom: "24px", display: "flex", alignItems: "center", gap: "6px" }}>
+            <span>📍</span>
+            <span>{ev.venue}{ev.city ? ", " + ev.city : ""}</span>
           </div>
 
-          {desktop && (
-            <div style={{ position: "sticky", top: "20px" }}>
-              <div style={{ background: "var(--bg-card)", border: "1px solid var(--border)", borderRadius: "18px", padding: "24px", boxShadow: "var(--shadow-md)" }}>
-                <div style={{ marginBottom: "20px", paddingBottom: "20px", borderBottom: "1px solid var(--border)" }}>
-                  <div style={{ fontSize: "9px", color: "var(--text-muted)", fontWeight: 700, letterSpacing: "1.5px", marginBottom: "6px", fontFamily: "var(--font-mono)" }}>TICKET_PRICE</div>
-                  <div style={{ fontSize: "34px", fontWeight: 900, color: "var(--brand)", letterSpacing: "-1px", lineHeight: 1 }}>
-                    {ev.price === 0 ? "FREE" : `GHS ${ev.price}`}
-                  </div>
+          {/* Metadata rows — Ayatickets style */}
+          <div style={{ background: "var(--bg-card)", border: "1px solid var(--border)", borderRadius: "14px", overflow: "hidden", marginBottom: "24px" }}>
+            {[
+              { icon: "📅", label: "WHEN",  value: ev.date || "TBA" },
+              { icon: "🕐", label: "TIME",  value: ev.time ? ev.time.substring(0, 5) : "TBA" },
+              { icon: "📍", label: "WHERE", value: ev.venue || "TBA" },
+              { icon: "🎟", label: "AVAILABLE", value: `${remaining} of ${ev.totalTickets} tickets left` },
+            ].map((row, i, arr) => (
+              <div key={row.label} style={{ display: "flex", alignItems: "center", gap: "14px", padding: "14px 18px", borderBottom: i < arr.length - 1 ? "1px solid var(--border)" : "none" }}>
+                <div style={{ width: "36px", height: "36px", borderRadius: "10px", background: "var(--bg-subtle)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "16px", flexShrink: 0, border: "1px solid var(--border)" }}>
+                  {row.icon}
                 </div>
-                {[
-                  ["📅", "DATE",  ev.date || "TBA"],
-                  ["🕐", "TIME",  ev.time ? ev.time.substring(0, 5) : "TBA"],
-                  ["🎟", "LEFT",  remaining.toString()],
-                  ["📍", "VENUE", ev.venue || "TBA"],
-                ].map(([icon, label, val]) => (
-                  <div key={label} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "9px 0", borderBottom: "1px solid var(--border)" }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                      <span style={{ fontSize: "13px" }}>{icon}</span>
-                      <span style={{ fontSize: "10px", color: "var(--text-muted)", fontWeight: 600, fontFamily: "var(--font-mono)" }}>{label}</span>
-                    </div>
-                    <span style={{ fontSize: "12px", fontWeight: 700, color: "var(--text-primary)", fontFamily: "var(--font-mono)" }}>{val}</span>
-                  </div>
-                ))}
-                <div style={{ margin: "16px 0 18px" }}>
-                  <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "6px" }}>
-                    <span style={{ fontSize: "9px", color: "var(--text-muted)", fontFamily: "var(--font-mono)" }}>AVAILABILITY</span>
-                    <span style={{ fontSize: "9px", fontWeight: 700, color: remaining < 20 ? "#dc2626" : "#16a34a", fontFamily: "var(--font-mono)" }}>
-                      {remaining < 20 ? "ALMOST_SOLD" : "AVAILABLE"}
-                    </span>
-                  </div>
-                  <div style={{ height: "4px", background: "var(--bg-subtle)", borderRadius: "99px", overflow: "hidden" }}>
-                    <motion.div
-                      initial={{ width: 0 }}
-                      animate={{ width: Math.max(5, Math.min(100, (remaining / (ev.totalTickets || 1)) * 100)) + "%" }}
-                      transition={{ duration: 0.8 }}
-                      style={{ height: "100%", borderRadius: "99px", background: remaining < 20 ? "#dc2626" : "var(--brand)" }} />
-                  </div>
+                <div>
+                  <div style={{ fontSize: "9px", fontWeight: 700, color: "var(--text-muted)", letterSpacing: "1.2px", marginBottom: "2px", fontFamily: "var(--font-mono)" }}>{row.label}</div>
+                  <div style={{ fontSize: "13px", fontWeight: 600, color: "var(--text-primary)" }}>{row.value}</div>
                 </div>
-                <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }} onClick={onCheckout}
-                  style={{ width: "100%", padding: "15px", background: "linear-gradient(135deg, #f5a623, #e8920f)", color: "#fff", border: "none", borderRadius: "13px", fontSize: "14px", fontWeight: 700, cursor: "pointer", boxShadow: "var(--shadow-brand)", fontFamily: "var(--font-sans)", marginBottom: "10px" }}>
-                  {ev.price === 0 ? "Get Free Ticket" : `Buy Ticket — GHS ${ev.price}`}
-                </motion.button>
-                <div style={{ background: "rgba(124,58,237,0.05)", border: "1px solid rgba(124,58,237,0.15)", borderRadius: "9px", padding: "9px 12px", display: "flex", alignItems: "center", gap: "7px" }}>
-                  <span style={{ fontSize: "12px" }}>⛓️</span>
-                  <span style={{ fontSize: "10px", color: "#7c3aed", fontWeight: 600 }}>NFT minted on Polygon · Screenshot-proof</span>
-                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Availability bar */}
+          <div style={{ marginBottom: "24px" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "6px" }}>
+              <span style={{ fontSize: "10px", fontWeight: 700, color: "var(--text-muted)", fontFamily: "var(--font-mono)" }}>AVAILABILITY</span>
+              <span style={{ fontSize: "10px", fontWeight: 700, color: remaining < 20 ? "#dc2626" : "#16a34a", fontFamily: "var(--font-mono)" }}>
+                {remaining < 20 ? "ALMOST SOLD OUT" : "AVAILABLE"}
+              </span>
+            </div>
+            <div style={{ height: "6px", background: "var(--bg-subtle)", borderRadius: "99px", overflow: "hidden", border: "1px solid var(--border)" }}>
+              <motion.div
+                initial={{ width: 0 }}
+                animate={{ width: soldPct + "%" }}
+                transition={{ duration: 0.8, ease: "easeOut" }}
+                style={{ height: "100%", borderRadius: "99px", background: remaining < 20 ? "linear-gradient(90deg, #dc2626, #ef4444)" : "linear-gradient(90deg, #16a34a, #22c55e)" }}
+              />
+            </div>
+            <div style={{ fontSize: "10px", color: "var(--text-muted)", marginTop: "4px" }}>
+              {ev.ticketsSold || 0} sold · {remaining} remaining
+            </div>
+          </div>
+
+          {/* About */}
+          {ev.description?.trim() && (
+            <div style={{ marginBottom: "28px" }}>
+              <div style={{ fontSize: "10px", fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "1.5px", marginBottom: "10px", fontFamily: "var(--font-mono)" }}>ABOUT THIS EVENT</div>
+              <div style={{ fontSize: "15px", color: "var(--text-secondary)", lineHeight: 1.85, maxHeight: "160px", overflow: "hidden", position: "relative" }}>
+                {ev.description.trim()}
               </div>
             </div>
           )}
+
+          {/* Price + CTA */}
+          <div style={{ background: "var(--bg-card)", border: "1px solid var(--border)", borderRadius: "16px", padding: "20px 22px" }}>
+            <div style={{ display: "flex", alignItems: "baseline", gap: "8px", marginBottom: "16px" }}>
+              <div style={{ fontSize: "38px", fontWeight: 900, color: "var(--brand)", letterSpacing: "-1.5px", lineHeight: 1 }}>
+                {ev.price === 0 ? "FREE" : `GHS ${ev.price}`}
+              </div>
+              {ev.price > 0 && <span style={{ fontSize: "12px", color: "var(--text-muted)" }}>per ticket</span>}
+            </div>
+
+            <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }} onClick={onCheckout}
+              style={{ width: "100%", padding: "16px", background: "linear-gradient(135deg, #f5a623, #e8920f)", color: "#fff", border: "none", borderRadius: "13px", fontSize: "16px", fontWeight: 700, cursor: "pointer", boxShadow: "var(--shadow-brand)", fontFamily: "var(--font-sans)", marginBottom: "12px", letterSpacing: "-0.2px" }}>
+              {ev.price === 0 ? "Get Free Ticket →" : `Buy Ticket — GHS ${ev.price} →`}
+            </motion.button>
+
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "16px" }}>
+              {["🔒 Secure checkout", "📱 MoMo accepted", "⛓️ NFT issued instantly"].map(label => (
+                <div key={label} style={{ fontSize: "10px", color: "var(--text-muted)", display: "flex", alignItems: "center", gap: "3px" }}>{label}</div>
+              ))}
+            </div>
+          </div>
         </div>
       </div>
     </motion.div>
@@ -437,23 +513,38 @@ export default function AttendeeHome() {
         </div>
       )}
 
-      {/* Resale Market banner */}
+     {/* Resale Market banner */}
       <div style={{ padding: desktop ? "16px 40px 0" : "12px 16px 0" }}>
         <motion.div whileTap={{ scale: 0.98 }} onClick={() => setScreen("resaleMarket")}
-          style={{ background: "linear-gradient(135deg, rgba(124,58,237,0.06), rgba(37,99,235,0.04))", border: "1px solid rgba(124,58,237,0.18)", borderRadius: "12px", padding: "11px 16px", display: "flex", alignItems: "center", justifyContent: "space-between", cursor: "pointer", transition: "all 0.2s" }}
-          onMouseEnter={e => { e.currentTarget.style.borderColor = "rgba(124,58,237,0.4)"; }}
-          onMouseLeave={e => { e.currentTarget.style.borderColor = "rgba(124,58,237,0.18)"; }}>
-          <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-            <div style={{ width: "32px", height: "32px", borderRadius: "9px", background: "linear-gradient(135deg, #7c3aed, #2563eb)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "14px", flexShrink: 0 }}>🏷️</div>
+          style={{
+            background: desktop
+              ? "linear-gradient(135deg, rgba(186,117,23,0.07), rgba(245,166,35,0.04))"
+              : "linear-gradient(135deg, rgba(124,58,237,0.06), rgba(37,99,235,0.04))",
+            border: desktop ? "1px solid rgba(186,117,23,0.25)" : "1px solid rgba(124,58,237,0.18)",
+            borderLeft: desktop ? "3px solid #BA7517" : undefined,
+            borderRadius: "12px", padding: "12px 16px",
+            display: "flex", alignItems: "center", justifyContent: "space-between",
+            cursor: "pointer", transition: "all 0.2s",
+          }}
+          onMouseEnter={e => { e.currentTarget.style.borderColor = desktop ? "rgba(186,117,23,0.5)" : "rgba(124,58,237,0.4)"; }}
+          onMouseLeave={e => { e.currentTarget.style.borderColor = desktop ? "rgba(186,117,23,0.25)" : "rgba(124,58,237,0.18)"; }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+            <div style={{ width: "36px", height: "36px", borderRadius: "10px", background: desktop ? "linear-gradient(135deg, #BA7517, #f5a623)" : "linear-gradient(135deg, #7c3aed, #2563eb)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "16px", flexShrink: 0, boxShadow: desktop ? "0 4px 12px rgba(186,117,23,0.3)" : "none" }}>🏷️</div>
             <div>
-              <div style={{ fontSize: "12px", fontWeight: 700, color: "var(--text-primary)" }}>Resale Market</div>
-              <div style={{ fontSize: "10px", color: "var(--text-muted)", fontFamily: "var(--font-mono)" }}>FAN_TO_FAN · NFT_TRANSFER · 2%_FEE</div>
+              <div style={{ fontSize: desktop ? "14px" : "12px", fontWeight: 800, color: desktop ? "#BA7517" : "var(--text-primary)", letterSpacing: desktop ? "0.02em" : "normal", textTransform: desktop ? "uppercase" : "none" }}>
+                {desktop ? "FAN TO FAN RESALE MARKET" : "Resale Market"}
+              </div>
+              <div style={{ display: "flex", alignItems: "center", gap: "6px", marginTop: "4px", flexWrap: "wrap" }}>
+                <span style={{ fontSize: "10px", fontWeight: 700, color: "#fff", background: "#7c3aed", padding: "2px 8px", borderRadius: "99px", letterSpacing: "0.3px" }}>NFT TRANSFER</span>
+                <span style={{ fontSize: "10px", fontWeight: 700, color: "#fff", background: "#16a34a", padding: "2px 8px", borderRadius: "99px", letterSpacing: "0.3px" }}>2% FEE</span>
+                {desktop && <span style={{ fontSize: "10px", color: "var(--text-muted)" }}>Peer-to-peer · Instant on-chain ownership transfer</span>}
+              </div>
             </div>
           </div>
-          <span style={{ color: "#7c3aed", fontSize: "14px", fontWeight: 700 }}>→</span>
+          <span style={{ color: desktop ? "#BA7517" : "#7c3aed", fontSize: "16px", fontWeight: 700, flexShrink: 0 }}>→</span>
         </motion.div>
-      </div>
-
+      </div> 
+      
       {/* Events Grid */}
       <div style={{ padding: desktop ? "16px 40px 0" : "12px 16px 0" }}>
         {loading && (

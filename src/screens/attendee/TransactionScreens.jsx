@@ -321,12 +321,32 @@ function PremiumTicket({ ev, ownerName, qrSrc, qrLoaded, qrError, refreshing, se
           </div>
         )}
 
-        {/* Ticket ID */}
-        <div style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.07)", padding: "4px 12px", borderRadius: "99px" }}>
-          <span style={{ fontFamily: "monospace", fontSize: "9px", color: "rgba(255,255,255,0.25)", letterSpacing: "0.5px" }}>
-            {(ticketId || "").toString().toUpperCase()}
-          </span>
-        </div>
+      {/* Ticket ID — masked, tap to reveal for offline fallback */}
+        {(() => {
+          const [showId, setShowId] = React.useState(false);
+          const id = (ticketId || "").toString().toUpperCase();
+          const masked = id.length > 8 ? id.slice(0, 8) + "••••••••" : "••••••••";
+          return (
+            <div style={{ textAlign: "center" }}>
+              <motion.div
+                whileTap={{ scale: 0.95 }}
+                onClick={() => setShowId(s => !s)}
+                style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.07)", padding: "6px 14px", borderRadius: "99px", cursor: "pointer", display: "inline-flex", alignItems: "center", gap: "6px" }}>
+                <span style={{ fontFamily: "monospace", fontSize: "9px", color: "rgba(255,255,255,0.3)", letterSpacing: "0.5px" }}>
+                  {showId ? id : masked}
+                </span>
+                <span style={{ fontSize: "8px", color: "rgba(255,255,255,0.2)" }}>
+                  {showId ? "🙈" : "👁"}
+                </span>
+              </motion.div>
+              {showId && (
+                <div style={{ fontSize: "9px", color: "rgba(245,166,35,0.6)", marginTop: "4px" }}>
+                  Only share with door staff if QR unavailable
+                </div>
+              )}
+            </div>
+          );
+        })()}
 
         {/* Blockchain strip */}
         <div style={{ width: "100%", background: "rgba(124,58,237,0.07)", border: "1px solid rgba(124,58,237,0.2)", borderRadius: "10px", padding: "10px 12px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>

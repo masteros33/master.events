@@ -7,6 +7,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { useTheme } from './hooks/useTheme'
 import ErrorBoundary from './components/ErrorBoundary'
 import TicketSuccessToast from './components/TicketSuccessToast'
+import { GoogleOAuthProvider } from '@react-oauth/google'
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -28,8 +29,7 @@ if ("serviceWorker" in navigator) {
 
 function Root() {
   useTheme();
-  return (
-    <>
+  return (<GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID}>
       <App />
       <TicketSuccessToast />
       <Toaster
@@ -51,7 +51,7 @@ function Root() {
           error:   { iconTheme: { primary: '#dc2626', secondary: '#fff' } },
         }}
       />
-    </>
+    </GoogleOAuthProvider>
   );
 }
 

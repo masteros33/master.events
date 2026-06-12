@@ -102,18 +102,15 @@ function EventImageHeader({ image, category }) {
           }}
         />
       ) : (
-        // Fallback gradient when no image
         <div style={{
           position: "absolute", inset: 0,
           background: "linear-gradient(135deg, #1a0533 0%, #0d1b4b 50%, #0a0f1e 100%)",
         }} />
       )}
-      {/* Dark overlay for text readability */}
       <div style={{
         position: "absolute", inset: 0,
         background: "linear-gradient(to bottom, rgba(0,0,0,0.25) 0%, rgba(0,0,0,0.7) 100%)",
       }} />
-      {/* Subtle purple orb on top — keeps the premium feel */}
       <motion.div
         animate={{ opacity: [0.2, 0.4, 0.2] }}
         transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
@@ -146,9 +143,11 @@ function PerforatedLine() {
 
 // ── Premium Layered Ticket Component ──────────────────────────
 function PremiumTicket({ ev, ownerName, qrSrc, qrLoaded, qrError, refreshing, setQrLoaded, setQrError, timeLeft, isExpiringSoon, progressColor, ticketId, txHash, tokenId, status, quantity }) {
+  const cardRef = useRef(null);
   const rotateX = useMotionValue(0);
   const rotateY = useMotionValue(0);
   const desktop = isDesktop();
+  const [showId, setShowId] = useState(false);
 
   const glare = useTransform(rotateY, [-7, 7], [
     "radial-gradient(ellipse at 15% 50%, rgba(255,255,255,0.06) 0%, transparent 55%)",
@@ -164,6 +163,9 @@ function PremiumTicket({ ev, ownerName, qrSrc, qrLoaded, qrError, refreshing, se
   const handleMouseLeave = () => { rotateX.set(0); rotateY.set(0); };
 
   const DARK = "linear-gradient(160deg, #0d0b1e 0%, #140f2a 50%, #0f0c1e 100%)";
+
+  const idStr  = (ticketId || "").toString().toUpperCase();
+  const idMask = idStr.length > 8 ? idStr.slice(0, 8) + "••••••••" : "••••••••";
 
   return (
     <motion.div
@@ -183,14 +185,11 @@ function PremiumTicket({ ev, ownerName, qrSrc, qrLoaded, qrError, refreshing, se
       {/* ── TOP HALF ── */}
       <div style={{ borderRadius: "20px 20px 0 0", overflow: "hidden", border: "1px solid rgba(255,255,255,0.1)", borderBottom: "none" }}>
 
-        {/* Event image hero — 200px tall, clear image */}
         <div style={{ height: "200px", position: "relative" }}>
           <EventImageHeader image={ev?.image} category={ev?.category} />
 
-          {/* Glare overlay on tilt */}
           <motion.div style={{ position: "absolute", inset: 0, background: glare, pointerEvents: "none", zIndex: 3 }} />
 
-          {/* Top badges */}
           <div style={{ position: "absolute", top: "14px", left: "14px", right: "14px", display: "flex", justifyContent: "space-between", zIndex: 4 }}>
             <div style={{ display: "flex", alignItems: "center", gap: "5px", background: "rgba(124,58,237,0.72)", backdropFilter: "blur(12px)", border: "1px solid rgba(124,58,237,0.35)", padding: "4px 10px", borderRadius: "99px" }}>
               <span style={{ fontSize: "9px" }}>⛓️</span>
@@ -203,7 +202,6 @@ function PremiumTicket({ ev, ownerName, qrSrc, qrLoaded, qrError, refreshing, se
             )}
           </div>
 
-          {/* Frosted glass event info at bottom */}
           <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, zIndex: 4, background: "rgba(0,0,0,0.45)", backdropFilter: "blur(18px)", WebkitBackdropFilter: "blur(18px)", borderTop: "1px solid rgba(255,255,255,0.08)", padding: "13px 16px 15px" }}>
             <div style={{ fontSize: "8px", fontWeight: 700, color: "rgba(255,255,255,0.38)", letterSpacing: "2px", marginBottom: "5px", textTransform: "uppercase" }}>YOUR TICKET</div>
             <div style={{ color: "#fff", fontWeight: 700, fontSize: "17px", lineHeight: 1.2, marginBottom: "4px", textShadow: "0 1px 12px rgba(0,0,0,0.8)" }}>
@@ -216,7 +214,7 @@ function PremiumTicket({ ev, ownerName, qrSrc, qrLoaded, qrError, refreshing, se
         </div>
 
         {/* Date / Time / Qty strip */}
-         <div style={{ background: DARK, display: "flex", justifyContent: "space-around", padding: "14px 16px", borderTop: "1px solid rgba(255,255,255,0.05)" }}>
+        <div style={{ background: DARK, display: "flex", justifyContent: "space-around", padding: "14px 16px", borderTop: "1px solid rgba(255,255,255,0.05)" }}>
           {[
             ["DATE", ev?.date || "TBA"],
             ["TIME", ev?.time ? ev.time.substring(0, 5) : "TBA"],
@@ -241,7 +239,6 @@ function PremiumTicket({ ev, ownerName, qrSrc, qrLoaded, qrError, refreshing, se
       {/* ── BOTTOM HALF ── */}
       <div style={{ background: DARK, borderRadius: "0 0 20px 20px", border: "1px solid rgba(255,255,255,0.1)", borderTop: "none", padding: "18px 16px 20px", display: "flex", flexDirection: "column", alignItems: "center", gap: "14px" }}>
 
-        {/* Verified owner */}
         {/* Verified owner */}
         <div style={{ width: "100%", background: "rgba(22,163,74,0.08)", border: "1px solid rgba(22,163,74,0.2)", borderRadius: "10px", padding: "10px 14px", display: "flex", alignItems: "center", gap: "10px" }}>
           <Avatar
@@ -320,32 +317,25 @@ function PremiumTicket({ ev, ownerName, qrSrc, qrLoaded, qrError, refreshing, se
           </div>
         )}
 
-      {/* Ticket ID — masked, tap to reveal for offline fallback */}
-        {(() => {
-          const [showId, setShowId] = React.useState(false);
-          const id = (ticketId || "").toString().toUpperCase();
-          const masked = id.length > 8 ? id.slice(0, 8) + "••••••••" : "••••••••";
-          return (
-            <div style={{ textAlign: "center" }}>
-              <motion.div
-                whileTap={{ scale: 0.95 }}
-                onClick={() => setShowId(s => !s)}
-                style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.07)", padding: "6px 14px", borderRadius: "99px", cursor: "pointer", display: "inline-flex", alignItems: "center", gap: "6px" }}>
-                <span style={{ fontFamily: "monospace", fontSize: "9px", color: "rgba(255,255,255,0.3)", letterSpacing: "0.5px" }}>
-                  {showId ? id : masked}
-                </span>
-                <span style={{ fontSize: "8px", color: "rgba(255,255,255,0.2)" }}>
-                  {showId ? "🙈" : "👁"}
-                </span>
-              </motion.div>
-              {showId && (
-                <div style={{ fontSize: "9px", color: "rgba(245,166,35,0.6)", marginTop: "4px" }}>
-                  Only share with door staff if QR unavailable
-                </div>
-              )}
+        {/* Ticket ID — masked, tap to reveal for offline fallback */}
+        <div style={{ textAlign: "center" }}>
+          <motion.div
+            whileTap={{ scale: 0.95 }}
+            onClick={() => setShowId(s => !s)}
+            style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.07)", padding: "6px 14px", borderRadius: "99px", cursor: "pointer", display: "inline-flex", alignItems: "center", gap: "6px" }}>
+            <span style={{ fontFamily: "monospace", fontSize: "9px", color: "rgba(255,255,255,0.3)", letterSpacing: "0.5px" }}>
+              {showId ? idStr : idMask}
+            </span>
+            <span style={{ fontSize: "8px", color: "rgba(255,255,255,0.2)" }}>
+              {showId ? "🙈" : "👁"}
+            </span>
+          </motion.div>
+          {showId && (
+            <div style={{ fontSize: "9px", color: "rgba(245,166,35,0.6)", marginTop: "4px" }}>
+              Only share with door staff if QR unavailable
             </div>
-          );
-        })()}
+          )}
+        </div>
 
         {/* Blockchain strip */}
         <div style={{ width: "100%", background: "rgba(124,58,237,0.07)", border: "1px solid rgba(124,58,237,0.2)", borderRadius: "10px", padding: "10px 12px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
@@ -373,7 +363,7 @@ function PremiumTicket({ ev, ownerName, qrSrc, qrLoaded, qrError, refreshing, se
           )}
         </div>
 
-        {/* Show at Gate info — replaces the redeem button */}
+        {/* Show at Gate info */}
         {status === "active" && (
           <div style={{ width: "100%", padding: "12px 14px", background: "rgba(245,166,35,0.06)", border: "1px solid rgba(245,166,35,0.2)", borderRadius: "12px", display: "flex", alignItems: "center", gap: "10px" }}>
             <span style={{ fontSize: "18px" }}>🎪</span>
@@ -437,105 +427,24 @@ export function PaymentSuccess() {
   );
 }
 
-// ── MoMo network detection ────────────────────────────────────
+// ── MoMo network detection (kept for display badge only, no input field) ──
 const MOMO_NETWORKS = {
   MTN: {
     prefixes: ["024","054","055","059","025","053","023","020"],
     color: "#FFC107", bg: "rgba(255,193,7,0.1)", border: "rgba(255,193,7,0.3)",
-    logo: (
-      <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
-        <rect width="32" height="32" rx="8" fill="#FFC107"/>
-        <text x="50%" y="55%" dominantBaseline="middle" textAnchor="middle"
-          style={{ fontSize: "10px", fontWeight: 900, fill: "#000", fontFamily: "sans-serif" }}>MTN</text>
-      </svg>
-    ),
     label: "MTN MoMo",
   },
   TELECEL: {
     prefixes: ["050","020"],
     color: "#E53935", bg: "rgba(229,57,53,0.1)", border: "rgba(229,57,53,0.3)",
-    logo: (
-      <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
-        <rect width="32" height="32" rx="8" fill="#E53935"/>
-        <text x="50%" y="55%" dominantBaseline="middle" textAnchor="middle"
-          style={{ fontSize: "7px", fontWeight: 900, fill: "#fff", fontFamily: "sans-serif" }}>TELECEL</text>
-      </svg>
-    ),
     label: "Telecel Cash",
   },
   AIRTELTIGO: {
     prefixes: ["026","056","027","057"],
     color: "#1565C0", bg: "rgba(21,101,192,0.1)", border: "rgba(21,101,192,0.3)",
-    logo: (
-      <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
-        <rect width="32" height="32" rx="8" fill="#1565C0"/>
-        <text x="50%" y="55%" dominantBaseline="middle" textAnchor="middle"
-          style={{ fontSize: "6px", fontWeight: 900, fill: "#fff", fontFamily: "sans-serif" }}>AirtelTigo</text>
-      </svg>
-    ),
     label: "AirtelTigo Money",
   },
 };
-
-function detectNetwork(phone) {
-  const cleaned = phone.replace(/\s/g, "").replace(/^(\+233|0{0})/, "0");
-  if (cleaned.length < 3) return null;
-  const prefix = cleaned.substring(0, 3);
-  if (MOMO_NETWORKS.MTN.prefixes.includes(prefix))        return "MTN";
-  if (MOMO_NETWORKS.TELECEL.prefixes.includes(prefix))    return "TELECEL";
-  if (MOMO_NETWORKS.AIRTELTIGO.prefixes.includes(prefix)) return "AIRTELTIGO";
-  return null;
-}
-
-function formatGhanaPhone(val) {
-  const digits = val.replace(/\D/g, "").substring(0, 10);
-  if (digits.length <= 4) return digits;
-  if (digits.length <= 7) return digits.slice(0, 4) + " " + digits.slice(4);
-  return digits.slice(0, 4) + " " + digits.slice(4, 7) + " " + digits.slice(7);
-}
-
-function MoMoInput({ value, onChange }) {
-  const network = detectNetwork(value);
-  const net     = network ? MOMO_NETWORKS[network] : null;
-  return (
-    <div>
-      <label style={{ fontSize: "13px", fontWeight: 600, color: "var(--text-secondary)", marginBottom: "8px", display: "block" }}>
-        Mobile Money Number
-      </label>
-      <div style={{ position: "relative" }}>
-        <input type="tel" value={value}
-          onChange={e => onChange(formatGhanaPhone(e.target.value))}
-          placeholder="e.g. 0244 000 000" maxLength={12}
-          style={{ width: "100%", padding: net ? "14px 56px 14px 18px" : "14px 18px", background: net ? net.bg : "var(--bg)", border: "1.5px solid " + (net ? net.border : "var(--border)"), borderRadius: "14px", fontSize: "16px", fontWeight: 600, color: "var(--text-primary)", outline: "none", boxSizing: "border-box", fontFamily: "var(--font-sans)", letterSpacing: "0.5px", transition: "border-color 0.2s, background 0.2s" }}
-        />
-        <AnimatePresence>
-          {net && (
-            <motion.div initial={{ opacity: 0, scale: 0.7 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.7 }}
-              transition={{ type: "spring", stiffness: 400, damping: 22 }}
-              style={{ position: "absolute", right: "12px", top: "50%", transform: "translateY(-50%)" }}>
-              {net.logo}
-            </motion.div>
-          )}
-          {!net && (
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 0.35 }} exit={{ opacity: 0 }}
-              style={{ position: "absolute", right: "14px", top: "50%", transform: "translateY(-50%)", fontSize: "20px", pointerEvents: "none" }}>
-              📱
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </div>
-      <AnimatePresence>
-        {net && (
-          <motion.div initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
-            style={{ display: "flex", alignItems: "center", gap: "6px", marginTop: "8px" }}>
-            <div style={{ width: "6px", height: "6px", borderRadius: "50%", background: net.color }} />
-            <span style={{ fontSize: "12px", fontWeight: 600, color: net.color }}>{net.label} detected</span>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </div>
-  );
-}
 
 // ── Checkout ──────────────────────────────────────────────────
 export function Checkout() {
@@ -550,7 +459,6 @@ export function Checkout() {
 
   const [paying,    setPaying]    = useState(false);
   const [payError,  setPayError]  = useState("");
-  const [momoPhone, setMomoPhone] = useState("");
   const desktop = isDesktop();
 
   if (!checkoutEvent) return null;
@@ -599,51 +507,49 @@ export function Checkout() {
       payRef     = initData.reference;
     } catch { setPayError("Connection error initializing payment."); setPaying(false); return; }
 
-   // ── In Checkout, replace the doHandle + PaystackPop block ──
-// REPLACE WITH:
-const doHandle = (() => {
-  let called = false;
-  return (ref) => {
-    if (called) return;
-    called = true;
-    const tid = setTimeout(() => {
-      setPaying(false);
-      setPayError("Payment received — your ticket will appear in My Tickets shortly. Ref: " + ref);
-    }, 90000);
-    handleBuyTicket(ref)
-      .then(() => { clearTimeout(tid); setPaying(false); })
-      .catch(() => { clearTimeout(tid); setPaying(false); });
-  };
-})();
+    const doHandle = (() => {
+      let called = false;
+      return (ref) => {
+        if (called) return;
+        called = true;
+        const tid = setTimeout(() => {
+          setPaying(false);
+          setPayError("Payment received — your ticket will appear in My Tickets shortly. Ref: " + ref);
+        }, 90000);
+        handleBuyTicket(ref)
+          .then(() => { clearTimeout(tid); setPaying(false); })
+          .catch(() => { clearTimeout(tid); setPaying(false); });
+      };
+    })();
 
-const openPaystack = () => {
-  try {
-    const handler = window.PaystackPop.setup({
-      key:         import.meta.env.VITE_PAYSTACK_PUBLIC_KEY || "",
-      email:       currentUser?.email || "",
-      amount:      total * 100,
-      currency:    "GHS",
-      channels:    ["mobile_money", "card"],
-      ref:         payRef,
-      access_code: accessCode,
-      onClose:     () => { setPaying(false); },
-      callback:    (r) => { doHandle(r.reference || payRef); },
-    });
-    handler.openIframe();
-  } catch {
-    window.open(`https://checkout.paystack.com/${accessCode}`, "_blank");
-    setTimeout(() => { setPaying(false); setPayError("Complete payment in the new tab, then check My Tickets."); }, 3000);
-  }
-};
+    const openPaystack = () => {
+      try {
+        const handler = window.PaystackPop.setup({
+          key:         import.meta.env.VITE_PAYSTACK_PUBLIC_KEY || "",
+          email:       currentUser?.email || "",
+          amount:      total * 100,
+          currency:    "GHS",
+          channels:    ["mobile_money", "card"],
+          ref:         payRef,
+          access_code: accessCode,
+          onClose:     () => { setPaying(false); },
+          callback:    (r) => { doHandle(r.reference || payRef); },
+        });
+        handler.openIframe();
+      } catch {
+        window.open(`https://checkout.paystack.com/${accessCode}`, "_blank");
+        setTimeout(() => { setPaying(false); setPayError("Complete payment in the new tab, then check My Tickets."); }, 3000);
+      }
+    };
 
-try {
-  window.PaystackPop.resumeTransaction(accessCode, {
-    onClose:  () => { setPaying(false); },
-    callback: (r) => { doHandle(r.reference || payRef); },
-  });
-} catch {
-  openPaystack();
-}
+    try {
+      window.PaystackPop.resumeTransaction(accessCode, {
+        onClose:  () => { setPaying(false); },
+        callback: (r) => { doHandle(r.reference || payRef); },
+      });
+    } catch {
+      openPaystack();
+    }
   };
 
   return (
@@ -699,16 +605,12 @@ try {
                 </motion.button>
               ))}
             </div>
+            <div style={{ fontSize: "11px", color: "var(--text-muted)", marginTop: "10px", lineHeight: 1.5 }}>
+              {payMethod === "momo"
+                ? "You'll select your MoMo network (MTN, Telecel, AirtelTigo) and enter your number on the secure Paystack screen."
+                : "You'll enter your card details on the secure Paystack screen."}
+            </div>
           </div>
-
-          <AnimatePresence>
-            {payMethod === "momo" && (
-              <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }}
-                style={{ overflow: "hidden", marginBottom: "20px" }}>
-                <MoMoInput value={momoPhone} onChange={setMomoPhone} />
-              </motion.div>
-            )}
-          </AnimatePresence>
 
           <div style={{ background: "var(--bg-subtle)", borderRadius: "16px", padding: "20px", marginBottom: "20px", border: "1.5px solid var(--border)" }}>
             <div style={{ fontSize: "12px", fontWeight: 700, color: "var(--text-muted)", marginBottom: "14px", textTransform: "uppercase", letterSpacing: "0.5px" }}>Order Summary</div>
@@ -825,7 +727,7 @@ export function TicketView() {
       </div>
 
       <div style={{ padding: "16px", perspective: "1200px" }}>
-       <PremiumTicket
+        <PremiumTicket
           ev={ev}
           ownerName={ownerName}
           qrSrc={qrSrc}

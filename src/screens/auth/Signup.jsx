@@ -103,17 +103,16 @@ export function Signup() {
 
   const inp = (extra = {}) => ({
     width: "100%", padding: "13px 16px", outline: "none",
-    background: "rgba(255,255,255,0.08)", backdropFilter: "blur(4px)",
-    border: "1.5px solid rgba(255,255,255,0.15)",
+    background: "rgba(0,0,0,0.03)",
+    border: "1.5px solid rgba(0,0,0,0.1)",
     borderRadius: "12px", fontSize: "14px",
-    color: "#fff", fontFamily: "var(--font-sans)",
+    color: "#1a1a1a", fontFamily: "var(--font-sans)",
     boxSizing: "border-box", transition: "all 0.2s",
-    "::placeholder": { color: "rgba(255,255,255,0.35)" },
     ...extra,
   });
 
-  const focusInp = e => { e.target.style.borderColor = "rgba(245,166,35,0.7)"; e.target.style.background = "rgba(255,255,255,0.12)"; e.target.style.boxShadow = "0 0 0 3px rgba(245,166,35,0.12)"; };
-  const blurInp  = e => { e.target.style.borderColor = "rgba(255,255,255,0.15)"; e.target.style.background = "rgba(255,255,255,0.08)"; e.target.style.boxShadow = "none"; };
+  const focusInp = e => { e.target.style.borderColor = "rgba(245,166,35,0.7)"; e.target.style.background = "rgba(245,166,35,0.05)"; e.target.style.boxShadow = "0 0 0 3px rgba(245,166,35,0.12)"; };
+  const blurInp  = e => { e.target.style.borderColor = "rgba(0,0,0,0.1)"; e.target.style.background = "rgba(0,0,0,0.03)"; e.target.style.boxShadow = "none"; };
 
   return (
     <div style={{ position: "fixed", inset: 0, fontFamily: "var(--font-sans)", overflowY: "auto" }}>
@@ -126,11 +125,11 @@ export function Signup() {
           style={{ position: "fixed", inset: 0, width: "100%", height: "100%", objectFit: "cover", objectPosition: "center" }} />
       </AnimatePresence>
 
-      {/* ── Overlay ── */}
-      <div style={{ position: "fixed", inset: 0, background: "linear-gradient(135deg, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.6) 50%, rgba(0,0,0,0.85) 100%)" }} />
+      {/* ── Overlay — lighter for white form contrast ── */}
+      <div style={{ position: "fixed", inset: 0, background: "linear-gradient(135deg, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0.4) 50%, rgba(0,0,0,0.65) 100%)" }} />
 
       {/* ── Accent glow ── */}
-      <div style={{ position: "fixed", bottom: "10%", right: "20%", width: "350px", height: "350px", borderRadius: "50%", background: isOrg ? "radial-gradient(circle, rgba(124,58,237,0.15) 0%, transparent 70%)" : "radial-gradient(circle, rgba(245,166,35,0.12) 0%, transparent 70%)", filter: "blur(40px)", pointerEvents: "none", transition: "background 0.6s" }} />
+      <div style={{ position: "fixed", bottom: "10%", right: "20%", width: "350px", height: "350px", borderRadius: "50%", background: isOrg ? "radial-gradient(circle, rgba(124,58,237,0.2) 0%, transparent 70%)" : "radial-gradient(circle, rgba(245,166,35,0.18) 0%, transparent 70%)", filter: "blur(40px)", pointerEvents: "none", transition: "background 0.6s" }} />
 
       {/* ── Logo ── */}
       <div style={{ position: "fixed", top: "28px", left: "32px", zIndex: 20, display: "flex", alignItems: "center", gap: "10px" }}>
@@ -147,14 +146,14 @@ export function Signup() {
               transition={{ duration: 0.4 }}>
               {isOrg ? (
                 <>
-                  <div style={{ fontSize: "10px", fontWeight: 700, color: "#a78bfa", letterSpacing: "2px", marginBottom: "16px", fontFamily: "var(--font-mono)" }}>FOR ORGANIZERS & BRANDS</div>
+                  <div style={{ fontSize: "10px", fontWeight: 700, color: "#c4b5fd", letterSpacing: "2px", marginBottom: "16px", fontFamily: "var(--font-mono)" }}>FOR ORGANIZERS & BRANDS</div>
                   <h2 style={{ fontSize: "clamp(28px, 3vw, 40px)", fontWeight: 900, color: "#fff", lineHeight: 1.1, letterSpacing: "-1.2px", marginBottom: "16px" }}>
                     Create your<br />
-                    <span style={{ background: "linear-gradient(135deg, #a78bfa, #7c3aed)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
+                    <span style={{ background: "linear-gradient(135deg, #c4b5fd, #a78bfa)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
                       organizer account
                     </span>
                   </h2>
-                  <p style={{ fontSize: "14px", color: "rgba(255,255,255,0.55)", marginBottom: "24px", lineHeight: 1.65 }}>
+                  <p style={{ fontSize: "14px", color: "rgba(255,255,255,0.8)", marginBottom: "24px", lineHeight: 1.65 }}>
                     Join over 5,000 creators using Master Events to sell with MoMo, Cards, and more.
                   </p>
                   <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
@@ -164,20 +163,20 @@ export function Signup() {
                       "⛓️  Every ticket is an NFT — zero counterfeits",
                       "📊  Real-time dashboard with ticket holder data",
                     ].map(line => (
-                      <div key={line} style={{ fontSize: "13px", color: "rgba(255,255,255,0.65)", lineHeight: 1.5 }}>{line}</div>
+                      <div key={line} style={{ fontSize: "13px", color: "rgba(255,255,255,0.9)", lineHeight: 1.5 }}>{line}</div>
                     ))}
                   </div>
                 </>
               ) : (
                 <>
-                  <div style={{ fontSize: "10px", fontWeight: 700, color: "#f5a623", letterSpacing: "2px", marginBottom: "16px", fontFamily: "var(--font-mono)" }}>FOR EVENT LOVERS</div>
+                  <div style={{ fontSize: "10px", fontWeight: 700, color: "#fcd34d", letterSpacing: "2px", marginBottom: "16px", fontFamily: "var(--font-mono)" }}>FOR EVENT LOVERS</div>
                   <h2 style={{ fontSize: "clamp(28px, 3vw, 40px)", fontWeight: 900, color: "#fff", lineHeight: 1.1, letterSpacing: "-1.2px", marginBottom: "16px" }}>
                     Create your<br />
-                    <span style={{ background: "linear-gradient(135deg, #f5a623, #fbbf24)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
+                    <span style={{ background: "linear-gradient(135deg, #fcd34d, #f5a623)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
                       attendee account
                     </span>
                   </h2>
-                  <p style={{ fontSize: "14px", color: "rgba(255,255,255,0.55)", marginBottom: "24px", lineHeight: 1.65 }}>
+                  <p style={{ fontSize: "14px", color: "rgba(255,255,255,0.8)", marginBottom: "24px", lineHeight: 1.65 }}>
                     Discover events, buy tickets with MoMo, Cards, or USSD. Your tickets live safely in the app.
                   </p>
                   <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
@@ -187,7 +186,7 @@ export function Signup() {
                       "🔄  Resell or transfer tickets peer-to-peer",
                       "⛓️  NFT tickets — impossible to fake or duplicate",
                     ].map(line => (
-                      <div key={line} style={{ fontSize: "13px", color: "rgba(255,255,255,0.65)", lineHeight: 1.5 }}>{line}</div>
+                      <div key={line} style={{ fontSize: "13px", color: "rgba(255,255,255,0.9)", lineHeight: 1.5 }}>{line}</div>
                     ))}
                   </div>
                 </>
@@ -197,7 +196,7 @@ export function Signup() {
         </div>
       )}
 
-      {/* ── Glassmorphism form ── */}
+      {/* ── White glass form ── */}
       <div style={{
         position: "absolute",
         right: isWide ? "6%" : "50%",
@@ -213,17 +212,17 @@ export function Signup() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
           style={{
-            background: "rgba(10,10,20,0.7)",
-            backdropFilter: "blur(32px)",
-            WebkitBackdropFilter: "blur(32px)",
+            background: "rgba(255,255,255,0.95)",
+            backdropFilter: "blur(28px)",
+            WebkitBackdropFilter: "blur(28px)",
             borderRadius: "24px",
             padding: "32px 28px",
-            border: "1px solid rgba(255,255,255,0.1)",
-            boxShadow: "0 32px 80px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.08)",
+            border: "1px solid rgba(255,255,255,0.6)",
+            boxShadow: "0 32px 80px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.9)",
           }}>
 
           {/* Role toggle — top of form */}
-          <div style={{ display: "flex", gap: "8px", marginBottom: "22px", background: "rgba(255,255,255,0.05)", borderRadius: "14px", padding: "4px" }}>
+          <div style={{ display: "flex", gap: "8px", marginBottom: "22px", background: "rgba(0,0,0,0.04)", borderRadius: "14px", padding: "4px" }}>
             {[
               { r: "attendee",  icon: "🎟️", label: "Attendee"  },
               { r: "organizer", icon: "🎪", label: "Organizer" },
@@ -233,11 +232,11 @@ export function Signup() {
                 style={{
                   flex: 1, padding: "10px 8px", borderRadius: "10px", border: "none",
                   background: role === item.r ? (item.r === "organizer" ? "linear-gradient(135deg, #7c3aed, #6d28d9)" : "linear-gradient(135deg, #f5a623, #e8920f)") : "transparent",
-                  color: role === item.r ? "#fff" : "rgba(255,255,255,0.4)",
+                  color: role === item.r ? "#fff" : "rgba(0,0,0,0.4)",
                   fontWeight: 700, fontSize: "13px", cursor: "pointer",
                   display: "flex", alignItems: "center", justifyContent: "center", gap: "6px",
                   fontFamily: "var(--font-sans)", transition: "all 0.2s",
-                  boxShadow: role === item.r ? "0 4px 12px rgba(0,0,0,0.3)" : "none",
+                  boxShadow: role === item.r ? "0 4px 12px rgba(0,0,0,0.18)" : "none",
                 }}>
                 <span>{item.icon}</span> {item.label}
               </motion.button>
@@ -250,10 +249,10 @@ export function Signup() {
               initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
               transition={{ duration: 0.25 }}
               style={{ marginBottom: "20px" }}>
-              <h1 style={{ fontSize: "22px", fontWeight: 900, color: "#fff", letterSpacing: "-0.6px", marginBottom: "4px" }}>
+              <h1 style={{ fontSize: "22px", fontWeight: 900, color: "#1a1a1a", letterSpacing: "-0.6px", marginBottom: "4px" }}>
                 {isOrg ? "Sign Up as an Organizer" : "Sign Up as an Attendee"}
               </h1>
-              <p style={{ fontSize: "12px", color: "rgba(255,255,255,0.45)" }}>
+              <p style={{ fontSize: "12px", color: "rgba(0,0,0,0.45)" }}>
                 {isOrg ? "It's free — only takes a minute." : "It's free — join thousands of event lovers."}
               </p>
             </motion.div>
@@ -263,7 +262,7 @@ export function Signup() {
           <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}
             onClick={() => googleLogin()}
             disabled={googleLoading}
-            style={{ width: "100%", padding: "12px", borderRadius: "12px", background: "rgba(255,255,255,0.95)", border: "none", color: "#1a1a1a", fontWeight: 600, fontSize: "13px", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: "9px", marginBottom: "14px", fontFamily: "var(--font-sans)", boxShadow: "0 4px 16px rgba(0,0,0,0.3)", transition: "all 0.2s" }}>
+            style={{ width: "100%", padding: "12px", borderRadius: "12px", background: "#fff", border: "1.5px solid rgba(0,0,0,0.1)", color: "#1a1a1a", fontWeight: 600, fontSize: "13px", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: "9px", marginBottom: "14px", fontFamily: "var(--font-sans)", boxShadow: "0 2px 8px rgba(0,0,0,0.06)", transition: "all 0.2s" }}>
             {googleLoading ? (
               <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 0.8, ease: "linear" }}
                 style={{ width: "15px", height: "15px", borderRadius: "50%", border: "2px solid #ccc", borderTopColor: "#333" }} />
@@ -280,9 +279,9 @@ export function Signup() {
 
           {/* Divider */}
           <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "14px" }}>
-            <div style={{ flex: 1, height: "1px", background: "rgba(255,255,255,0.1)" }} />
-            <span style={{ fontSize: "10px", color: "rgba(255,255,255,0.3)" }}>or with email</span>
-            <div style={{ flex: 1, height: "1px", background: "rgba(255,255,255,0.1)" }} />
+            <div style={{ flex: 1, height: "1px", background: "rgba(0,0,0,0.08)" }} />
+            <span style={{ fontSize: "10px", color: "rgba(0,0,0,0.35)" }}>or with email</span>
+            <div style={{ flex: 1, height: "1px", background: "rgba(0,0,0,0.08)" }} />
           </div>
 
           {/* Honeypot */}
@@ -300,19 +299,19 @@ export function Signup() {
                 /* ORGANIZER fields */
                 <>
                   <div style={{ marginBottom: "10px" }}>
-                    <label style={{ fontSize: "11px", fontWeight: 600, color: "rgba(255,255,255,0.5)", marginBottom: "5px", display: "block", letterSpacing: "0.5px" }}>ORGANIZER / BRAND NAME</label>
+                    <label style={{ fontSize: "11px", fontWeight: 600, color: "rgba(0,0,0,0.5)", marginBottom: "5px", display: "block", letterSpacing: "0.5px" }}>ORGANIZER / BRAND NAME</label>
                     <input placeholder="e.g. Accra Live Events" value={orgName}
                       onChange={e => setOrgName(e.target.value)} type="text"
                       style={inp()} onFocus={focusInp} onBlur={blurInp} />
                   </div>
                   <div style={{ marginBottom: "10px" }}>
-                    <label style={{ fontSize: "11px", fontWeight: 600, color: "rgba(255,255,255,0.5)", marginBottom: "5px", display: "block", letterSpacing: "0.5px" }}>PHONE NUMBER</label>
+                    <label style={{ fontSize: "11px", fontWeight: 600, color: "rgba(0,0,0,0.5)", marginBottom: "5px", display: "block", letterSpacing: "0.5px" }}>PHONE NUMBER</label>
                     <input placeholder="e.g. 0241234567" value={phone}
                       onChange={e => setPhone(e.target.value)} type="tel"
                       style={inp()} onFocus={focusInp} onBlur={blurInp} />
                   </div>
                   <div style={{ marginBottom: "10px" }}>
-                    <label style={{ fontSize: "11px", fontWeight: 600, color: "rgba(255,255,255,0.5)", marginBottom: "5px", display: "block", letterSpacing: "0.5px" }}>EMAIL</label>
+                    <label style={{ fontSize: "11px", fontWeight: 600, color: "rgba(0,0,0,0.5)", marginBottom: "5px", display: "block", letterSpacing: "0.5px" }}>EMAIL</label>
                     <input placeholder="you@email.com" value={signupEmail}
                       onChange={e => setSignupEmail(e.target.value)} type="email" autoComplete="email"
                       style={inp()} onFocus={focusInp} onBlur={blurInp} />
@@ -323,26 +322,26 @@ export function Signup() {
                 <>
                   <div style={{ display: "flex", gap: "8px", marginBottom: "10px" }}>
                     <div style={{ flex: 1 }}>
-                      <label style={{ fontSize: "11px", fontWeight: 600, color: "rgba(255,255,255,0.5)", marginBottom: "5px", display: "block", letterSpacing: "0.5px" }}>FIRST NAME</label>
+                      <label style={{ fontSize: "11px", fontWeight: 600, color: "rgba(0,0,0,0.5)", marginBottom: "5px", display: "block", letterSpacing: "0.5px" }}>FIRST NAME</label>
                       <input placeholder="Kwame" value={fullName.split(" ")[0] || ""}
                         onChange={e => setFullName(e.target.value + " " + (fullName.split(" ")[1] || ""))}
                         type="text" style={inp()} onFocus={focusInp} onBlur={blurInp} />
                     </div>
                     <div style={{ flex: 1 }}>
-                      <label style={{ fontSize: "11px", fontWeight: 600, color: "rgba(255,255,255,0.5)", marginBottom: "5px", display: "block", letterSpacing: "0.5px" }}>LAST NAME</label>
+                      <label style={{ fontSize: "11px", fontWeight: 600, color: "rgba(0,0,0,0.5)", marginBottom: "5px", display: "block", letterSpacing: "0.5px" }}>LAST NAME</label>
                       <input placeholder="Mensah" value={fullName.split(" ")[1] || ""}
                         onChange={e => setFullName((fullName.split(" ")[0] || "") + " " + e.target.value)}
                         type="text" style={inp()} onFocus={focusInp} onBlur={blurInp} />
                     </div>
                   </div>
                   <div style={{ marginBottom: "10px" }}>
-                    <label style={{ fontSize: "11px", fontWeight: 600, color: "rgba(255,255,255,0.5)", marginBottom: "5px", display: "block", letterSpacing: "0.5px" }}>PHONE NUMBER</label>
+                    <label style={{ fontSize: "11px", fontWeight: 600, color: "rgba(0,0,0,0.5)", marginBottom: "5px", display: "block", letterSpacing: "0.5px" }}>PHONE NUMBER</label>
                     <input placeholder="e.g. 0241234567" value={phone}
                       onChange={e => setPhone(e.target.value)} type="tel"
                       style={inp()} onFocus={focusInp} onBlur={blurInp} />
                   </div>
                   <div style={{ marginBottom: "10px" }}>
-                    <label style={{ fontSize: "11px", fontWeight: 600, color: "rgba(255,255,255,0.5)", marginBottom: "5px", display: "block", letterSpacing: "0.5px" }}>EMAIL</label>
+                    <label style={{ fontSize: "11px", fontWeight: 600, color: "rgba(0,0,0,0.5)", marginBottom: "5px", display: "block", letterSpacing: "0.5px" }}>EMAIL</label>
                     <input placeholder="you@email.com" value={signupEmail}
                       onChange={e => setSignupEmail(e.target.value)} type="email" autoComplete="email"
                       style={inp()} onFocus={focusInp} onBlur={blurInp} />
@@ -354,18 +353,18 @@ export function Signup() {
 
           {/* Password */}
           <div style={{ marginBottom: "10px" }}>
-            <label style={{ fontSize: "11px", fontWeight: 600, color: "rgba(255,255,255,0.5)", marginBottom: "5px", display: "block", letterSpacing: "0.5px" }}>PASSWORD</label>
+            <label style={{ fontSize: "11px", fontWeight: 600, color: "rgba(0,0,0,0.5)", marginBottom: "5px", display: "block", letterSpacing: "0.5px" }}>PASSWORD</label>
             <div style={{ position: "relative" }}>
               <input placeholder="Min 8 chars, uppercase, number, special"
                 type={showPw ? "text" : "password"}
                 value={signupPassword}
                 onChange={e => setSignupPassword(e.target.value)}
                 onKeyDown={e => e.key === "Enter" && handleCreate()}
-                style={inp({ paddingRight: "44px", borderColor: signupPassword && !allPwMet ? "rgba(220,38,38,0.5)" : "rgba(255,255,255,0.15)" })}
+                style={inp({ paddingRight: "44px", borderColor: signupPassword && !allPwMet ? "rgba(220,38,38,0.4)" : "rgba(0,0,0,0.1)" })}
                 onFocus={focusInp} onBlur={blurInp}
               />
               <button onClick={() => setShowPw(!showPw)}
-                style={{ position: "absolute", right: "12px", top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", color: "rgba(255,255,255,0.4)", fontSize: "14px", padding: 0 }}>
+                style={{ position: "absolute", right: "12px", top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", color: "rgba(0,0,0,0.35)", fontSize: "14px", padding: 0 }}>
                 {showPw ? "🙈" : "👁️"}
               </button>
             </div>
@@ -377,7 +376,7 @@ export function Signup() {
                 {pwChecks.map(c => {
                   const met = c.test(signupPassword);
                   return (
-                    <div key={c.label} style={{ padding: "2px 8px", borderRadius: "99px", fontSize: "9px", fontWeight: 600, background: met ? "rgba(22,163,74,0.15)" : "rgba(255,255,255,0.06)", color: met ? "#4ade80" : "rgba(255,255,255,0.3)", border: "1px solid " + (met ? "rgba(22,163,74,0.3)" : "rgba(255,255,255,0.08)"), transition: "all 0.2s" }}>
+                    <div key={c.label} style={{ padding: "2px 8px", borderRadius: "99px", fontSize: "9px", fontWeight: 600, background: met ? "rgba(22,163,74,0.1)" : "rgba(0,0,0,0.04)", color: met ? "#16a34a" : "rgba(0,0,0,0.35)", border: "1px solid " + (met ? "rgba(22,163,74,0.25)" : "rgba(0,0,0,0.08)"), transition: "all 0.2s" }}>
                       {met ? "✓" : "·"} {c.label}
                     </div>
                   );
@@ -389,14 +388,14 @@ export function Signup() {
           {/* Terms checkbox */}
           <div style={{ display: "flex", alignItems: "flex-start", gap: "10px", marginBottom: "14px", marginTop: "4px" }}>
             <div onClick={() => setAgreed(!agreed)}
-              style={{ width: "18px", height: "18px", borderRadius: "5px", border: "1.5px solid " + (agreed ? "#f5a623" : "rgba(255,255,255,0.2)"), background: agreed ? "#f5a623" : "transparent", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", flexShrink: 0, marginTop: "1px", transition: "all 0.2s" }}>
+              style={{ width: "18px", height: "18px", borderRadius: "5px", border: "1.5px solid " + (agreed ? "#f5a623" : "rgba(0,0,0,0.18)"), background: agreed ? "#f5a623" : "transparent", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", flexShrink: 0, marginTop: "1px", transition: "all 0.2s" }}>
               {agreed && <span style={{ color: "#fff", fontSize: "11px", fontWeight: 900 }}>✓</span>}
             </div>
-            <p style={{ fontSize: "11px", color: "rgba(255,255,255,0.4)", lineHeight: 1.5, margin: 0 }}>
+            <p style={{ fontSize: "11px", color: "rgba(0,0,0,0.45)", lineHeight: 1.5, margin: 0 }}>
               By creating an account, I agree to the{" "}
-              <span style={{ color: "#f5a623", cursor: "pointer" }} onClick={() => setScreen("privacy")}>Terms of Service</span>
+              <span style={{ color: "#e8920f", cursor: "pointer" }} onClick={() => setScreen("privacy")}>Terms of Service</span>
               {" "}and{" "}
-              <span style={{ color: "#f5a623", cursor: "pointer" }} onClick={() => setScreen("privacy")}>Privacy Policy</span>
+              <span style={{ color: "#e8920f", cursor: "pointer" }} onClick={() => setScreen("privacy")}>Privacy Policy</span>
             </p>
           </div>
 
@@ -404,7 +403,7 @@ export function Signup() {
           <AnimatePresence>
             {signupError && (
               <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-                style={{ background: "rgba(220,38,38,0.15)", border: "1px solid rgba(220,38,38,0.3)", borderRadius: "10px", padding: "10px 14px", marginBottom: "12px", color: "#fca5a5", fontSize: "12px" }}>
+                style={{ background: "rgba(220,38,38,0.08)", border: "1px solid rgba(220,38,38,0.2)", borderRadius: "10px", padding: "10px 14px", marginBottom: "12px", color: "#dc2626", fontSize: "12px" }}>
                 ⚠️ {signupError}
               </motion.div>
             )}
@@ -422,11 +421,11 @@ export function Signup() {
                 ? isOrg
                   ? "linear-gradient(135deg, #7c3aed, #6d28d9)"
                   : "linear-gradient(135deg, #f5a623, #e8920f)"
-                : "rgba(255,255,255,0.08)",
-              color: allPwMet && agreed ? "#fff" : "rgba(255,255,255,0.25)",
+                : "rgba(0,0,0,0.05)",
+              color: allPwMet && agreed ? "#fff" : "rgba(0,0,0,0.3)",
               fontWeight: 700, fontSize: "14px", border: "none",
               cursor: loading || !allPwMet || !agreed ? "not-allowed" : "pointer",
-              boxShadow: allPwMet && agreed ? (isOrg ? "0 8px 24px rgba(124,58,237,0.4)" : "0 8px 24px rgba(245,166,35,0.4)") : "none",
+              boxShadow: allPwMet && agreed ? (isOrg ? "0 8px 24px rgba(124,58,237,0.35)" : "0 8px 24px rgba(245,166,35,0.35)") : "none",
               marginBottom: "14px", fontFamily: "var(--font-sans)",
               display: "flex", alignItems: "center", justifyContent: "center", gap: "10px",
               transition: "all 0.2s",
@@ -434,16 +433,16 @@ export function Signup() {
             {loading ? (
               <>
                 <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 0.7, ease: "linear" }}
-                  style={{ width: "16px", height: "16px", borderRadius: "50%", border: "2.5px solid rgba(255,255,255,0.3)", borderTopColor: "#fff" }} />
+                  style={{ width: "16px", height: "16px", borderRadius: "50%", border: "2.5px solid rgba(255,255,255,0.4)", borderTopColor: "#fff" }} />
                 Creating account...
               </>
             ) : `Create ${isOrg ? "Organizer" : "Attendee"} Account →`}
           </motion.button>
 
-          <p style={{ fontSize: "13px", color: "rgba(255,255,255,0.35)", textAlign: "center" }}>
+          <p style={{ fontSize: "13px", color: "rgba(0,0,0,0.4)", textAlign: "center" }}>
             Already have an account?{" "}
             <span onClick={() => setScreen("login")}
-              style={{ color: "#f5a623", fontWeight: 700, cursor: "pointer" }}>
+              style={{ color: "#e8920f", fontWeight: 700, cursor: "pointer" }}>
               Log in
             </span>
           </p>

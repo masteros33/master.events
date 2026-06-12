@@ -47,15 +47,15 @@ function ForgotPassword({ onBack }) {
   };
 
   return (
-    <div style={{ position: "fixed", inset: 0, zIndex: 100, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(0,0,0,0.7)", backdropFilter: "blur(8px)" }}>
+    <div style={{ position: "fixed", inset: 0, zIndex: 100, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(0,0,0,0.5)", backdropFilter: "blur(8px)" }}>
       <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}
-        style={{ maxWidth: "420px", width: "90%", background: "var(--bg-card)", borderRadius: "24px", padding: "40px 36px", boxShadow: "0 32px 80px rgba(0,0,0,0.4)", border: "1px solid var(--border)" }}>
+        style={{ maxWidth: "420px", width: "90%", background: "#fff", borderRadius: "24px", padding: "40px 36px", boxShadow: "0 32px 80px rgba(0,0,0,0.25)", border: "1px solid rgba(0,0,0,0.06)" }}>
         {sent ? (
           <div style={{ textAlign: "center" }}>
             <div style={{ fontSize: "48px", marginBottom: "16px" }}>📧</div>
-            <h2 style={{ fontSize: "22px", fontWeight: 800, color: "var(--text-primary)", marginBottom: "10px" }}>Check your email</h2>
-            <p style={{ color: "var(--text-secondary)", fontSize: "14px", lineHeight: 1.6, marginBottom: "24px" }}>
-              Reset link sent to <strong style={{ color: "var(--text-primary)" }}>{email}</strong>
+            <h2 style={{ fontSize: "22px", fontWeight: 800, color: "#1a1a1a", marginBottom: "10px" }}>Check your email</h2>
+            <p style={{ color: "rgba(0,0,0,0.55)", fontSize: "14px", lineHeight: 1.6, marginBottom: "24px" }}>
+              Reset link sent to <strong style={{ color: "#1a1a1a" }}>{email}</strong>
             </p>
             <motion.button whileTap={{ scale: 0.97 }} onClick={onBack}
               style={{ padding: "13px 28px", borderRadius: "12px", background: "linear-gradient(135deg, #f5a623, #e8920f)", color: "#fff", fontWeight: 700, fontSize: "14px", border: "none", cursor: "pointer", fontFamily: "var(--font-sans)" }}>
@@ -65,20 +65,20 @@ function ForgotPassword({ onBack }) {
         ) : (
           <>
             <motion.button onClick={onBack}
-              style={{ background: "none", border: "none", color: "#f5a623", fontSize: "13px", fontWeight: 600, cursor: "pointer", padding: "0 0 20px 0", fontFamily: "var(--font-sans)" }}>
+              style={{ background: "none", border: "none", color: "#e8920f", fontSize: "13px", fontWeight: 600, cursor: "pointer", padding: "0 0 20px 0", fontFamily: "var(--font-sans)" }}>
               ← Back
             </motion.button>
             <div style={{ fontSize: "36px", marginBottom: "14px" }}>🔐</div>
-            <h2 style={{ fontSize: "22px", fontWeight: 800, color: "var(--text-primary)", marginBottom: "6px" }}>Forgot Password?</h2>
-            <p style={{ color: "var(--text-secondary)", fontSize: "13px", marginBottom: "22px" }}>Enter your email and we'll send a reset link</p>
+            <h2 style={{ fontSize: "22px", fontWeight: 800, color: "#1a1a1a", marginBottom: "6px" }}>Forgot Password?</h2>
+            <p style={{ color: "rgba(0,0,0,0.55)", fontSize: "13px", marginBottom: "22px" }}>Enter your email and we'll send a reset link</p>
             <input placeholder="you@email.com" value={email}
               onChange={e => setEmail(e.target.value)}
               onKeyDown={e => e.key === "Enter" && handleSend()}
-              style={{ width: "100%", padding: "13px 16px", marginBottom: "12px", background: "var(--bg-subtle)", border: "1.5px solid var(--border)", borderRadius: "12px", fontSize: "14px", color: "var(--text-primary)", outline: "none", boxSizing: "border-box", fontFamily: "var(--font-sans)" }}
-              onFocus={e => { e.target.style.borderColor = "#f5a623"; e.target.style.boxShadow = "0 0 0 3px rgba(245,166,35,0.1)"; }}
-              onBlur={e => { e.target.style.borderColor = "var(--border)"; e.target.style.boxShadow = "none"; }}
+              style={{ width: "100%", padding: "13px 16px", marginBottom: "12px", background: "rgba(0,0,0,0.03)", border: "1.5px solid rgba(0,0,0,0.1)", borderRadius: "12px", fontSize: "14px", color: "#1a1a1a", outline: "none", boxSizing: "border-box", fontFamily: "var(--font-sans)" }}
+              onFocus={e => { e.target.style.borderColor = "#f5a623"; e.target.style.boxShadow = "0 0 0 3px rgba(245,166,35,0.12)"; }}
+              onBlur={e => { e.target.style.borderColor = "rgba(0,0,0,0.1)"; e.target.style.boxShadow = "none"; }}
             />
-            {error && <div style={{ color: "var(--error)", fontSize: "12px", marginBottom: "12px" }}>⚠️ {error}</div>}
+            {error && <div style={{ color: "#dc2626", fontSize: "12px", marginBottom: "12px" }}>⚠️ {error}</div>}
             <motion.button whileTap={{ scale: 0.97 }} onClick={handleSend} disabled={loading}
               style={{ width: "100%", padding: "14px", borderRadius: "12px", background: "linear-gradient(135deg, #f5a623, #e8920f)", color: "#fff", fontWeight: 700, fontSize: "14px", border: "none", cursor: "pointer", fontFamily: "var(--font-sans)", opacity: loading ? 0.7 : 1 }}>
               {loading ? "Sending..." : "Send Reset Link"}
@@ -131,12 +131,10 @@ export default function Login() {
     onSuccess: async (tokenResponse) => {
       setGoogleLoading(true);
       try {
-        // Get user info from Google
         const userInfo = await fetch("https://www.googleapis.com/oauth2/v3/userinfo", {
           headers: { Authorization: `Bearer ${tokenResponse.access_token}` },
         }).then(r => r.json());
 
-        // Send to our backend
         const res  = await fetch(`${API}/api/auth/google/`, {
           method:  "POST",
           headers: { "Content-Type": "application/json" },
@@ -167,13 +165,16 @@ export default function Login() {
 
   const inp = (extra = {}) => ({
     width: "100%", padding: "13px 16px", outline: "none",
-    background: "rgba(255,255,255,0.08)", backdropFilter: "blur(4px)",
-    border: "1.5px solid rgba(255,255,255,0.15)",
+    background: "rgba(0,0,0,0.03)",
+    border: "1.5px solid rgba(0,0,0,0.1)",
     borderRadius: "12px", fontSize: "14px",
-    color: "#fff", fontFamily: "var(--font-sans)",
+    color: "#1a1a1a", fontFamily: "var(--font-sans)",
     boxSizing: "border-box", transition: "all 0.2s",
     ...extra,
   });
+
+  const focusInp = e => { e.target.style.borderColor = "rgba(245,166,35,0.7)"; e.target.style.background = "rgba(245,166,35,0.05)"; e.target.style.boxShadow = "0 0 0 3px rgba(245,166,35,0.12)"; };
+  const blurInp  = e => { e.target.style.borderColor = "rgba(0,0,0,0.1)"; e.target.style.background = "rgba(0,0,0,0.03)"; e.target.style.boxShadow = "none"; };
 
   return (
     <div style={{ position: "fixed", inset: 0, fontFamily: "var(--font-sans)" }}>
@@ -181,11 +182,11 @@ export default function Login() {
       {/* ── Full background image ── */}
       <img src={LOGIN_BG} alt="" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", objectPosition: "center" }} />
 
-      {/* ── Dark overlay ── */}
-      <div style={{ position: "absolute", inset: 0, background: "linear-gradient(135deg, rgba(0,0,0,0.75) 0%, rgba(0,0,0,0.55) 50%, rgba(0,0,0,0.8) 100%)" }} />
+      {/* ── Overlay (lighter, to keep form contrast nice on white) ── */}
+      <div style={{ position: "absolute", inset: 0, background: "linear-gradient(135deg, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.35) 50%, rgba(0,0,0,0.6) 100%)" }} />
 
       {/* ── Accent glow ── */}
-      <div style={{ position: "absolute", top: "30%", left: "20%", width: "400px", height: "400px", borderRadius: "50%", background: "radial-gradient(circle, rgba(245,166,35,0.12) 0%, transparent 70%)", filter: "blur(40px)", pointerEvents: "none" }} />
+      <div style={{ position: "absolute", top: "30%", left: "20%", width: "400px", height: "400px", borderRadius: "50%", background: "radial-gradient(circle, rgba(245,166,35,0.18) 0%, transparent 70%)", filter: "blur(40px)", pointerEvents: "none" }} />
 
       {/* ── Top logo ── */}
       <div style={{ position: "absolute", top: "28px", left: "32px", zIndex: 10, display: "flex", alignItems: "center", gap: "10px" }}>
@@ -211,7 +212,7 @@ export default function Login() {
             "🔐  Screenshot-proof QR — rotates every 10 seconds",
             "💸  Resell tickets peer-to-peer — you keep 98%",
           ].map(line => (
-            <div key={line} style={{ fontSize: "14px", color: "rgba(255,255,255,0.7)", lineHeight: 1.5, display: "flex", alignItems: "flex-start", gap: "8px" }}>
+            <div key={line} style={{ fontSize: "14px", color: "rgba(255,255,255,0.85)", lineHeight: 1.5, display: "flex", alignItems: "flex-start", gap: "8px" }}>
               {line}
             </div>
           ))}
@@ -222,13 +223,13 @@ export default function Login() {
           {[["10K+","Tickets Sold"],["50+","Events"],["0%","Fake Tickets"],["NFT","Powered"]].map(([v,l]) => (
             <div key={l}>
               <div style={{ fontSize: "20px", fontWeight: 900, color: "#f5a623", letterSpacing: "-0.5px" }}>{v}</div>
-              <div style={{ fontSize: "9px", color: "rgba(255,255,255,0.35)", marginTop: "2px", fontFamily: "var(--font-mono)" }}>{l}</div>
+              <div style={{ fontSize: "9px", color: "rgba(255,255,255,0.6)", marginTop: "2px", fontFamily: "var(--font-mono)" }}>{l}</div>
             </div>
           ))}
         </div>
       </div>
 
-      {/* ── Centered glassmorphism form ── */}
+      {/* ── Centered white glass form ── */}
       <div style={{
         position: "absolute",
         right: window.innerWidth >= 900 ? "6%" : "50%",
@@ -242,19 +243,19 @@ export default function Login() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
           style={{
-            background: "rgba(10,10,20,0.65)",
-            backdropFilter: "blur(32px)",
-            WebkitBackdropFilter: "blur(32px)",
+            background: "rgba(255,255,255,0.94)",
+            backdropFilter: "blur(28px)",
+            WebkitBackdropFilter: "blur(28px)",
             borderRadius: "24px",
             padding: "36px 32px",
-            border: "1px solid rgba(255,255,255,0.1)",
-            boxShadow: "0 32px 80px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.08)",
+            border: "1px solid rgba(255,255,255,0.6)",
+            boxShadow: "0 32px 80px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.9)",
           }}>
 
           {/* Header */}
           <div style={{ marginBottom: "24px" }}>
-            <h1 style={{ fontSize: "26px", fontWeight: 900, color: "#fff", letterSpacing: "-0.8px", marginBottom: "6px" }}>Welcome back</h1>
-            <p style={{ fontSize: "13px", color: "rgba(255,255,255,0.5)" }}>
+            <h1 style={{ fontSize: "26px", fontWeight: 900, color: "#1a1a1a", letterSpacing: "-0.8px", marginBottom: "6px" }}>Welcome back</h1>
+            <p style={{ fontSize: "13px", color: "rgba(0,0,0,0.5)" }}>
               Log in to access your NFT tickets and wallet
             </p>
           </div>
@@ -263,7 +264,7 @@ export default function Login() {
           <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}
             onClick={() => googleLogin()}
             disabled={googleLoading}
-            style={{ width: "100%", padding: "13px", borderRadius: "13px", background: "rgba(255,255,255,0.95)", border: "none", color: "#1a1a1a", fontWeight: 600, fontSize: "14px", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: "10px", marginBottom: "18px", fontFamily: "var(--font-sans)", transition: "all 0.2s", boxShadow: "0 4px 16px rgba(0,0,0,0.3)" }}>
+            style={{ width: "100%", padding: "13px", borderRadius: "13px", background: "#fff", border: "1.5px solid rgba(0,0,0,0.1)", color: "#1a1a1a", fontWeight: 600, fontSize: "14px", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: "10px", marginBottom: "18px", fontFamily: "var(--font-sans)", transition: "all 0.2s", boxShadow: "0 2px 8px rgba(0,0,0,0.06)" }}>
             {googleLoading ? (
               <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 0.8, ease: "linear" }}
                 style={{ width: "16px", height: "16px", borderRadius: "50%", border: "2px solid #ccc", borderTopColor: "#333" }} />
@@ -280,9 +281,9 @@ export default function Login() {
 
           {/* Divider */}
           <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "18px" }}>
-            <div style={{ flex: 1, height: "1px", background: "rgba(255,255,255,0.1)" }} />
-            <span style={{ fontSize: "11px", color: "rgba(255,255,255,0.3)", fontWeight: 500 }}>or with email</span>
-            <div style={{ flex: 1, height: "1px", background: "rgba(255,255,255,0.1)" }} />
+            <div style={{ flex: 1, height: "1px", background: "rgba(0,0,0,0.08)" }} />
+            <span style={{ fontSize: "11px", color: "rgba(0,0,0,0.35)", fontWeight: 500 }}>or with email</span>
+            <div style={{ flex: 1, height: "1px", background: "rgba(0,0,0,0.08)" }} />
           </div>
 
           {/* Honeypot */}
@@ -292,21 +293,20 @@ export default function Login() {
 
           {/* Email */}
           <div style={{ marginBottom: "12px" }}>
-            <label style={{ fontSize: "12px", fontWeight: 600, color: "rgba(255,255,255,0.6)", marginBottom: "6px", display: "block", letterSpacing: "0.3px" }}>EMAIL</label>
+            <label style={{ fontSize: "12px", fontWeight: 600, color: "rgba(0,0,0,0.55)", marginBottom: "6px", display: "block", letterSpacing: "0.3px" }}>EMAIL</label>
             <input placeholder="you@email.com" value={email}
               onChange={e => setEmail(e.target.value)} type="email" autoComplete="email"
               style={inp()}
-              onFocus={e => { e.target.style.borderColor = "rgba(245,166,35,0.7)"; e.target.style.background = "rgba(255,255,255,0.12)"; e.target.style.boxShadow = "0 0 0 3px rgba(245,166,35,0.12)"; }}
-              onBlur={e => { e.target.style.borderColor = "rgba(255,255,255,0.15)"; e.target.style.background = "rgba(255,255,255,0.08)"; e.target.style.boxShadow = "none"; }}
+              onFocus={focusInp} onBlur={blurInp}
             />
           </div>
 
           {/* Password */}
           <div style={{ marginBottom: "20px" }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "6px" }}>
-              <label style={{ fontSize: "12px", fontWeight: 600, color: "rgba(255,255,255,0.6)", letterSpacing: "0.3px" }}>PASSWORD</label>
+              <label style={{ fontSize: "12px", fontWeight: 600, color: "rgba(0,0,0,0.55)", letterSpacing: "0.3px" }}>PASSWORD</label>
               <span onClick={() => setShowForgot(true)}
-                style={{ fontSize: "11px", color: "#f5a623", fontWeight: 600, cursor: "pointer" }}>
+                style={{ fontSize: "11px", color: "#e8920f", fontWeight: 600, cursor: "pointer" }}>
                 Forgot?
               </span>
             </div>
@@ -318,11 +318,10 @@ export default function Login() {
                 onKeyDown={e => e.key === "Enter" && !loading && !rateLock && onLogin()}
                 autoComplete="current-password"
                 style={inp({ paddingRight: "44px" })}
-                onFocus={e => { e.target.style.borderColor = "rgba(245,166,35,0.7)"; e.target.style.background = "rgba(255,255,255,0.12)"; e.target.style.boxShadow = "0 0 0 3px rgba(245,166,35,0.12)"; }}
-                onBlur={e => { e.target.style.borderColor = "rgba(255,255,255,0.15)"; e.target.style.background = "rgba(255,255,255,0.08)"; e.target.style.boxShadow = "none"; }}
+                onFocus={focusInp} onBlur={blurInp}
               />
               <button onClick={() => setShowPw(!showPw)}
-                style={{ position: "absolute", right: "12px", top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", color: "rgba(255,255,255,0.4)", fontSize: "14px", padding: 0 }}>
+                style={{ position: "absolute", right: "12px", top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", color: "rgba(0,0,0,0.35)", fontSize: "14px", padding: 0 }}>
                 {showPw ? "🙈" : "👁️"}
               </button>
             </div>
@@ -332,7 +331,7 @@ export default function Login() {
           <AnimatePresence>
             {rateLock && (
               <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-                style={{ background: "rgba(217,119,6,0.15)", border: "1px solid rgba(217,119,6,0.3)", borderRadius: "10px", padding: "10px 14px", marginBottom: "12px", color: "#fbbf24", fontSize: "12px", fontWeight: 600 }}>
+                style={{ background: "rgba(217,119,6,0.08)", border: "1px solid rgba(217,119,6,0.25)", borderRadius: "10px", padding: "10px 14px", marginBottom: "12px", color: "#b45309", fontSize: "12px", fontWeight: 600 }}>
                 🛡️ Too many attempts. Try again in {rateLock}s
               </motion.div>
             )}
@@ -342,7 +341,7 @@ export default function Login() {
           <AnimatePresence>
             {loginError && !rateLock && (
               <motion.div initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
-                style={{ background: "rgba(220,38,38,0.15)", border: "1px solid rgba(220,38,38,0.3)", borderRadius: "10px", padding: "10px 14px", marginBottom: "12px", color: "#fca5a5", fontSize: "12px" }}>
+                style={{ background: "rgba(220,38,38,0.08)", border: "1px solid rgba(220,38,38,0.2)", borderRadius: "10px", padding: "10px 14px", marginBottom: "12px", color: "#dc2626", fontSize: "12px" }}>
                 ⚠️ {loginError}
               </motion.div>
             )}
@@ -356,11 +355,11 @@ export default function Login() {
             disabled={loading || !!rateLock}
             style={{
               width: "100%", padding: "14px", borderRadius: "13px",
-              background: rateLock ? "rgba(255,255,255,0.08)" : "linear-gradient(135deg, #f5a623, #e8920f)",
-              color: rateLock ? "rgba(255,255,255,0.3)" : "#fff",
+              background: rateLock ? "rgba(0,0,0,0.05)" : "linear-gradient(135deg, #f5a623, #e8920f)",
+              color: rateLock ? "rgba(0,0,0,0.3)" : "#fff",
               fontWeight: 700, fontSize: "15px", border: "none",
               cursor: loading || rateLock ? "not-allowed" : "pointer",
-              boxShadow: rateLock ? "none" : "0 8px 24px rgba(245,166,35,0.4)",
+              boxShadow: rateLock ? "none" : "0 8px 24px rgba(245,166,35,0.35)",
               marginBottom: "18px", fontFamily: "var(--font-sans)",
               display: "flex", alignItems: "center", justifyContent: "center", gap: "10px",
               transition: "all 0.2s",
@@ -368,24 +367,24 @@ export default function Login() {
             {loading ? (
               <>
                 <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 0.7, ease: "linear" }}
-                  style={{ width: "16px", height: "16px", borderRadius: "50%", border: "2.5px solid rgba(255,255,255,0.3)", borderTopColor: "#fff" }} />
+                  style={{ width: "16px", height: "16px", borderRadius: "50%", border: "2.5px solid rgba(255,255,255,0.4)", borderTopColor: "#fff" }} />
                 Logging in...
               </>
             ) : rateLock ? `🛡️ Wait ${rateLock}s` : "Log In →"}
           </motion.button>
 
           {/* Footer links */}
-          <p style={{ fontSize: "13px", color: "rgba(255,255,255,0.4)", textAlign: "center", marginBottom: "8px" }}>
+          <p style={{ fontSize: "13px", color: "rgba(0,0,0,0.45)", textAlign: "center", marginBottom: "8px" }}>
             No account?{" "}
             <span onClick={() => setScreen("signup")}
-              style={{ color: "#f5a623", fontWeight: 700, cursor: "pointer" }}>
+              style={{ color: "#e8920f", fontWeight: 700, cursor: "pointer" }}>
               Sign up free
             </span>
           </p>
-          <p style={{ fontSize: "12px", color: "rgba(255,255,255,0.3)", textAlign: "center" }}>
+          <p style={{ fontSize: "12px", color: "rgba(0,0,0,0.35)", textAlign: "center" }}>
             Door staff?{" "}
             <span onClick={() => setScreen("doorStaffLogin")}
-              style={{ color: "rgba(245,166,35,0.7)", fontWeight: 600, cursor: "pointer" }}>
+              style={{ color: "#e8920f", fontWeight: 600, cursor: "pointer" }}>
               Enter with invite code
             </span>
           </p>

@@ -32,10 +32,11 @@ export default function CookieBanner() {
           style={{
             position: "fixed",
             bottom: "16px",
-            left: "50%",
-            transform: "translateX(-50%)",
-            width: "calc(100% - 32px)",
+            left: "16px",
+            right: "16px",
+            margin: "0 auto",
             maxWidth: "480px",
+            width: "auto",
             background: "#111",
             border: "1px solid #333",
             borderRadius: "14px",
@@ -45,6 +46,7 @@ export default function CookieBanner() {
             alignItems: "center",
             gap: "14px",
             boxShadow: "0 8px 32px rgba(0,0,0,0.4)",
+            boxSizing: "border-box",
           }}>
 
           {/* Icon */}
@@ -61,16 +63,7 @@ export default function CookieBanner() {
           </div>
 
           {/* Buttons */}
-          <div style={{ display: "flex", gap: "8px", flexShrink: 0 }}>
-            <motion.button whileTap={{ scale: 0.94 }} onClick={decline}
-              style={{
-                padding: "7px 12px", borderRadius: "8px",
-                background: "transparent", border: "1px solid #444",
-                color: "#aaa", fontSize: "12px", fontWeight: 600,
-                cursor: "pointer", fontFamily: "inherit", whiteSpace: "nowrap",
-              }}>
-              Essential
-            </motion.button>
+          <div style={{ display: "flex", flexDirection: "column", gap: "6px", flexShrink: 0 }}>
             <motion.button whileTap={{ scale: 0.94 }} onClick={accept}
               style={{
                 padding: "7px 14px", borderRadius: "8px",
@@ -79,6 +72,15 @@ export default function CookieBanner() {
                 cursor: "pointer", fontFamily: "inherit", whiteSpace: "nowrap",
               }}>
               Accept All
+            </motion.button>
+            <motion.button whileTap={{ scale: 0.94 }} onClick={decline}
+              style={{
+                padding: "7px 12px", borderRadius: "8px",
+                background: "transparent", border: "1px solid #444",
+                color: "#aaa", fontSize: "12px", fontWeight: 600,
+                cursor: "pointer", fontFamily: "inherit", whiteSpace: "nowrap",
+              }}>
+              Essential
             </motion.button>
           </div>
         </motion.div>

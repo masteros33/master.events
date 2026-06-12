@@ -145,8 +145,7 @@ function PerforatedLine() {
 }
 
 // ── Premium Layered Ticket Component ──────────────────────────
-function PremiumTicket({ ev, ownerName, qrSrc, qrLoaded, qrError, refreshing, setQrLoaded, setQrError, timeLeft, isExpiringSoon, progressColor, ticketId, txHash, tokenId, status }) {
-  const cardRef = useRef(null);
+function PremiumTicket({ ev, ownerName, qrSrc, qrLoaded, qrError, refreshing, setQrLoaded, setQrError, timeLeft, isExpiringSoon, progressColor, ticketId, txHash, tokenId, status, quantity }) {
   const rotateX = useMotionValue(0);
   const rotateY = useMotionValue(0);
   const desktop = isDesktop();
@@ -217,11 +216,11 @@ function PremiumTicket({ ev, ownerName, qrSrc, qrLoaded, qrError, refreshing, se
         </div>
 
         {/* Date / Time / Qty strip */}
-        <div style={{ background: DARK, display: "flex", justifyContent: "space-around", padding: "14px 16px", borderTop: "1px solid rgba(255,255,255,0.05)" }}>
+         <div style={{ background: DARK, display: "flex", justifyContent: "space-around", padding: "14px 16px", borderTop: "1px solid rgba(255,255,255,0.05)" }}>
           {[
             ["DATE", ev?.date || "TBA"],
             ["TIME", ev?.time ? ev.time.substring(0, 5) : "TBA"],
-            ["QTY",  "1"],
+            ["QTY",  String(quantity || 1)],
           ].map(([label, val], i) => (
             <React.Fragment key={label}>
               <div style={{ textAlign: "center" }}>
@@ -826,7 +825,7 @@ export function TicketView() {
       </div>
 
       <div style={{ padding: "16px", perspective: "1200px" }}>
-        <PremiumTicket
+       <PremiumTicket
           ev={ev}
           ownerName={ownerName}
           qrSrc={qrSrc}
@@ -842,6 +841,7 @@ export function TicketView() {
           txHash={viewingTicket.nft_tx_hash}
           tokenId={viewingTicket.nft_token_id}
           status={viewingTicket.status}
+          quantity={viewingTicket.quantity || viewingTicket.qty}
         />
       </div>
 

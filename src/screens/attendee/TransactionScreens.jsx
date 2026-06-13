@@ -427,23 +427,11 @@ export function PaymentSuccess() {
   );
 }
 
-// ── MoMo network detection (kept for display badge only, no input field) ──
+// ── MoMo network display map (kept for badge only, no input) ──
 const MOMO_NETWORKS = {
-  MTN: {
-    prefixes: ["024","054","055","059","025","053","023","020"],
-    color: "#FFC107", bg: "rgba(255,193,7,0.1)", border: "rgba(255,193,7,0.3)",
-    label: "MTN MoMo",
-  },
-  TELECEL: {
-    prefixes: ["050","020"],
-    color: "#E53935", bg: "rgba(229,57,53,0.1)", border: "rgba(229,57,53,0.3)",
-    label: "Telecel Cash",
-  },
-  AIRTELTIGO: {
-    prefixes: ["026","056","027","057"],
-    color: "#1565C0", bg: "rgba(21,101,192,0.1)", border: "rgba(21,101,192,0.3)",
-    label: "AirtelTigo Money",
-  },
+  MTN: { prefixes: ["024","054","055","059","025","053","023","020"], color: "#FFC107", label: "MTN MoMo" },
+  TELECEL: { prefixes: ["050","020"], color: "#E53935", label: "Telecel Cash" },
+  AIRTELTIGO: { prefixes: ["026","056","027","057"], color: "#1565C0", label: "AirtelTigo Money" },
 };
 
 // ── Checkout ──────────────────────────────────────────────────

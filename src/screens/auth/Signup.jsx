@@ -78,7 +78,7 @@ export function Signup() {
         phone: phone || undefined,
         org_name: isOrg ? orgName : undefined,
       };
-      const res  = await fetch(`${API}/api/accounts/register/`, {
+      const res = await fetch(`${API}/api/auth/register/`, {
         method: "POST", headers: { "Content-Type":"application/json" },
         body: JSON.stringify(payload),
       });

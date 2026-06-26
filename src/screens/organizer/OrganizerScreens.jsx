@@ -73,7 +73,7 @@ const mapEvent = e => ({
   image:        e.image || catImg[e.category] || catImg.other,
 });
 
-// ─── shared input style (defined OUTSIDE components to prevent focus loss) ───
+// ─── shared input style ───────────────────────────────────────
 const INP = (err) => ({
   width: "100%", padding: "10px 14px",
   background: C.card, border: `1.5px solid ${err ? C.red : C.border}`,
@@ -85,31 +85,29 @@ const INP = (err) => ({
 const focusI = e => { e.target.style.borderColor = C.accent; e.target.style.boxShadow = `0 0 0 3px ${C.accentBg}`; };
 const blurI  = e => { e.target.style.borderColor = C.border; e.target.style.boxShadow = "none"; };
 
-// ─── AddEvent input styles defined OUTSIDE component to prevent focus loss ───
+// ─── AddEvent inputs — OUTSIDE component to prevent focus loss ───
 const AE_INPUT = (err) => ({
-  width: "100%", padding: "13px 16px", outline: "none",
-  background: "rgba(0,0,0,0.03)",
-  border: `1.5px solid ${err ? "#dc2626" : "rgba(0,0,0,0.1)"}`,
-  borderRadius: "12px", fontSize: "14px", color: "#1a1a1a",
+  width: "100%", padding: "11px 14px", outline: "none",
+  background: C.bg,
+  border: `1.5px solid ${err ? C.red : C.border}`,
+  borderRadius: "10px", fontSize: "14px", color: C.text,
   fontFamily: FONT, boxSizing: "border-box", transition: "all 0.2s",
 });
 const AE_FOCUS = e => {
-  e.target.style.borderColor = "#f5a623";
-  e.target.style.background  = "rgba(245,166,35,0.05)";
-  e.target.style.boxShadow   = "0 0 0 3px rgba(245,166,35,0.12)";
+  e.target.style.borderColor = C.accent;
+  e.target.style.background  = C.accentBg;
+  e.target.style.boxShadow   = `0 0 0 3px rgba(249,115,22,0.1)`;
 };
 const AE_BLUR = e => {
-  e.target.style.borderColor = "rgba(0,0,0,0.1)";
-  e.target.style.background  = "rgba(0,0,0,0.03)";
+  e.target.style.borderColor = C.border;
+  e.target.style.background  = C.bg;
   e.target.style.boxShadow   = "none";
 };
 const AE_LABEL = (err) => ({
   display: "block", fontSize: "11px", fontWeight: 600,
-  color: err ? "#dc2626" : "rgba(0,0,0,0.5)",
-  marginBottom: "6px", letterSpacing: "0.5px",
+  color: err ? C.red : C.muted,
+  marginBottom: "6px", letterSpacing: "0.5px", textTransform: "uppercase",
 });
-
-const BG_IMAGE = "https://images.unsplash.com/photo-1492684223066-81342ee5ff30?w=1600&q=80";
 
 // ─── CSV ──────────────────────────────────────────────────────
 function dlCSV(events) {
@@ -130,7 +128,6 @@ function dlCSV(events) {
   a.click();
 }
 
-// ─── micro line sparkline ─────────────────────────────────────
 function Sparkline({ data = [], color = C.accent, height = 36, width = 120 }) {
   if (data.length < 2) return null;
   const max  = Math.max(...data, 1);
@@ -155,7 +152,6 @@ function Sparkline({ data = [], color = C.accent, height = 36, width = 120 }) {
   );
 }
 
-// ─── per-event bar chart ──────────────────────────────────────
 function BarChart({ events }) {
   if (!events.length) return null;
   const H = 120, barW = Math.min(40, Math.floor(480 / events.length) - 10);
@@ -200,7 +196,6 @@ function BarChart({ events }) {
   );
 }
 
-// ─── fill-rate chart ──────────────────────────────────────────
 function FillChart({ events }) {
   if (!events.length) return null;
   return (
@@ -221,7 +216,7 @@ function FillChart({ events }) {
               </div>
             </div>
             <div style={{ height:"5px", background:C.border, borderRadius:"99px", overflow:"hidden" }}>
-              <motion.div initial={{ width:0 }} animate={{ width:`${Math.max(1,pct)}%`}} transition={{ duration:0.7, ease:"easeOut" }}
+              <motion.div initial={{ width:0 }} animate={{ width:`${Math.max(1,pct)}%` }} transition={{ duration:0.7, ease:"easeOut" }}
                 style={{ height:"100%", background:`linear-gradient(90deg,${col},${col}cc)`, borderRadius:"99px" }} />
             </div>
           </div>
@@ -231,7 +226,6 @@ function FillChart({ events }) {
   );
 }
 
-// ─── real-time activity feed ──────────────────────────────────
 function ActivityFeed({ events }) {
   const [feed, setFeed] = useState([]);
   const [pulse, setPulse] = useState(false);
@@ -285,7 +279,6 @@ function ActivityFeed({ events }) {
   );
 }
 
-// ─── KPI card ─────────────────────────────────────────────────
 function KPI({ icon, label, value, sub, color, trend, spark, onClick }) {
   return (
     <motion.div whileHover={{ y:-2, borderColor:color+"50" }} whileTap={onClick?{scale:0.98}:{}} onClick={onClick}
@@ -311,7 +304,6 @@ function KPI({ icon, label, value, sub, color, trend, spark, onClick }) {
   );
 }
 
-// ─── event row card ───────────────────────────────────────────
 function EventRow({ ev, onClick }) {
   const pct = ev.totalTickets > 0 ? Math.round((ev.ticketsSold/ev.totalTickets)*100) : 0;
   const isFree = ev.event_type === "free";
@@ -344,7 +336,7 @@ function EventRow({ ev, onClick }) {
             <span style={{ fontSize:"11px", color:C.muted, fontFamily:MONO }}>{ev.ticketsSold}/{ev.totalTickets} · {pct}%</span>
           </div>
           <div style={{ height:"4px", background:C.border, borderRadius:"2px", overflow:"hidden" }}>
-            <motion.div initial={{ width:0 }} animate={{ width:`${pct}%`}} transition={{ duration:0.7, ease:"easeOut" }}
+            <motion.div initial={{ width:0 }} animate={{ width:`${pct}%` }} transition={{ duration:0.7, ease:"easeOut" }}
               style={{ height:"100%", background:pct>80?C.red:`linear-gradient(90deg,${C.accent},${C.accentD})`, borderRadius:"2px" }} />
           </div>
         </div>
@@ -504,7 +496,7 @@ export function OrganizerHome() {
                       <div style={{ fontSize:"14px", fontWeight:650, color:C.text, marginBottom:"3px", fontFamily:FONT }}>{top.name}</div>
                       <div style={{ fontSize:"11px", color:C.muted, fontFamily:MONO, marginBottom:"10px" }}>{top.ticketsSold} sold · {top.currency} {Math.round(top.ticketsSold*top.price*0.95).toLocaleString()}</div>
                       <div style={{ height:"3px", background:C.border, borderRadius:"2px", overflow:"hidden" }}>
-                        <motion.div initial={{ width:0 }} animate={{ width:`${Math.round((top.ticketsSold/top.totalTickets)*100)}%`}} transition={{ duration:0.8 }}
+                        <motion.div initial={{ width:0 }} animate={{ width:`${Math.round((top.ticketsSold/top.totalTickets)*100)}%` }} transition={{ duration:0.8 }}
                           style={{ height:"100%", background:`linear-gradient(90deg,${C.accent},${C.accentD})`, borderRadius:"2px" }} />
                       </div>
                     </div>
@@ -655,12 +647,7 @@ export function OrganizerAlerts() {
 }
 
 // ═══════════════════════════════════════════════════════════════
-//  ADD EVENT
-//  FIXES:
-//  1. position: relative not fixed — no more layout break
-//  2. AE_INPUT/AE_FOCUS/AE_BLUR/AE_LABEL defined outside — no focus loss
-//  3. Validation: price only required for paid events
-//  4. URL: path-based masterevents.events/events/{slug}
+//  ADD EVENT — clean white, wide form, all bugs fixed
 // ═══════════════════════════════════════════════════════════════
 export function AddEvent() {
   const addEventForm    = useStore(s => s.addEventForm);
@@ -684,7 +671,6 @@ export function AddEvent() {
     return () => window.removeEventListener("resize", r);
   }, []);
 
-  // FIX 4: path-based URL
   const slug     = (addEventForm.name || "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 40);
   const eventUrl = slug ? `https://masterevents.events/events/${slug}` : "https://masterevents.events/events/your-event";
 
@@ -697,12 +683,11 @@ export function AddEvent() {
   const removeDate = (date) => setEventDates(prev => prev.filter(d => d.date !== date));
   const updateDate = (date, field, value) => setEventDates(prev => prev.map(d => d.date===date?{...d,[field]:value}:d));
 
-  // FIX 3: price only required for paid events
   const validate = () => {
     const e = {};
     if (!addEventForm.name?.trim())                              e.name  = "Required";
     if (!isMultiDay && !addEventForm.date)                       e.date  = "Required";
-    if (isMultiDay && eventDates.length < 2)                     e.dates = "Add at least 2 dates for a multi-day event";
+    if (isMultiDay && eventDates.length < 2)                     e.dates = "Add at least 2 dates";
     if (!addEventForm.venue?.trim())                             e.venue = "Required";
     if (!addEventForm.totalTickets)                              e.total = "Required";
     if (!addEventForm.category)                                  e.cat   = "Select a category";
@@ -719,281 +704,275 @@ export function AddEvent() {
     handleAddEvent();
   };
 
-  // FIX 1: position relative not fixed
   return (
-    <div style={{ position:"relative", minHeight:"100vh", fontFamily:FONT, overflowY:"auto" }}>
+    <div style={{ minHeight:"100vh", background:C.bg, fontFamily:FONT }}>
 
-      {/* Background — absolute not fixed */}
-      <img src={BG_IMAGE} alt="" style={{ position:"absolute", inset:0, width:"100%", height:"100%", objectFit:"cover", objectPosition:"center", zIndex:0 }} />
-      <div style={{ position:"absolute", inset:0, background:"linear-gradient(135deg,rgba(0,0,0,0.65) 0%,rgba(0,0,0,0.45) 50%,rgba(0,0,0,0.7) 100%)", zIndex:1 }} />
-      <div style={{ position:"absolute", bottom:"10%", right:"15%", width:"400px", height:"400px", borderRadius:"50%", background:"radial-gradient(circle,rgba(249,115,22,0.15) 0%,transparent 70%)", filter:"blur(40px)", pointerEvents:"none", zIndex:1 }} />
-
-      {/* Logo + back — absolute not fixed */}
-      <div style={{ position:"absolute", top:"28px", left:"32px", zIndex:20, display:"flex", alignItems:"center", gap:"10px" }}>
-        <div style={{ width:"36px", height:"36px", borderRadius:"10px", background:"linear-gradient(135deg,#f5a623,#e8920f)", display:"flex", alignItems:"center", justifyContent:"center", fontSize:"17px", boxShadow:"0 4px 16px rgba(245,166,35,0.45)" }}>🎟️</div>
-        <span style={{ fontWeight:800, fontSize:"16px", color:"#fff", letterSpacing:"-0.3px" }}>Master Events</span>
-      </div>
-      <motion.button whileTap={{ scale:0.95 }} onClick={() => setScreen("app")}
-        style={{ position:"absolute", top:"28px", right:"32px", zIndex:20, background:"rgba(255,255,255,0.12)", backdropFilter:"blur(10px)", border:"1px solid rgba(255,255,255,0.2)", borderRadius:"10px", padding:"8px 16px", color:"#fff", fontSize:"13px", fontWeight:600, cursor:"pointer", fontFamily:FONT }}>
-        ← Back
-      </motion.button>
-
-      {/* Left copy — desktop — absolute not fixed */}
-      {isDesk && (
-        <div style={{ position:"absolute", left:"6%", top:"50%", transform:"translateY(-50%)", zIndex:5, maxWidth:"340px" }}>
-          <div style={{ fontSize:"10px", fontWeight:700, color:"#fcd34d", letterSpacing:"2px", marginBottom:"16px", fontFamily:MONO }}>FOR ORGANIZERS</div>
-          <h2 style={{ fontSize:"clamp(26px,2.8vw,38px)", fontWeight:900, color:"#fff", lineHeight:1.1, letterSpacing:"-1.2px", marginBottom:"16px" }}>
-            Launch your<br />
-            <span style={{ background:"linear-gradient(135deg,#fcd34d,#f5a623)", WebkitBackgroundClip:"text", WebkitTextFillColor:"transparent" }}>event in minutes</span>
-          </h2>
-          <p style={{ fontSize:"14px", color:"rgba(255,255,255,0.75)", marginBottom:"24px", lineHeight:1.65 }}>Every ticket minted as an NFT on Polygon. Instant MoMo & card payments. 95% payout to you.</p>
-          {["⛓️  NFT tickets — zero counterfeits","📱  MTN MoMo, Telecel Cash, Cards","💰  95% of every sale to your wallet","🔗  Shareable event link generated instantly"].map(line => (
-            <div key={line} style={{ fontSize:"13px", color:"rgba(255,255,255,0.85)", lineHeight:1.5, marginBottom:"10px" }}>{line}</div>
-          ))}
+      {/* Top bar */}
+      <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", padding:"14px 24px", background:C.card, borderBottom:`1px solid ${C.border}`, position:"sticky", top:0, zIndex:20 }}>
+        <div style={{ display:"flex", alignItems:"center", gap:"10px" }}>
+          <div style={{ width:"32px", height:"32px", borderRadius:"8px", background:`linear-gradient(135deg,${C.accent},${C.accentD})`, display:"flex", alignItems:"center", justifyContent:"center", fontSize:"15px" }}>🎟️</div>
+          <span style={{ fontWeight:700, fontSize:"15px", color:C.text, letterSpacing:"-0.3px" }}>Create Event</span>
         </div>
-      )}
+        <motion.button whileTap={{ scale:0.95 }} onClick={() => setScreen("app")}
+          style={{ background:"transparent", border:`1px solid ${C.border}`, borderRadius:"8px", padding:"7px 14px", color:C.muted, fontSize:"13px", fontWeight:500, cursor:"pointer", fontFamily:FONT }}>
+          ← Back
+        </motion.button>
+      </div>
 
-      {/* Form — uses padding-based layout so it scrolls correctly */}
-      <div style={{ position:"relative", zIndex:10, display:"flex", justifyContent:isDesk?"flex-end":"center", padding:isDesk?"100px 6% 60px":"100px 4% 60px" }}>
-        <motion.div initial={{ opacity:0, y:24 }} animate={{ opacity:1, y:0 }} transition={{ duration:0.5, ease:[0.16,1,0.3,1] }}
-          style={{ width:"min(480px,100%)", background:"rgba(255,255,255,0.95)", backdropFilter:"blur(28px)", WebkitBackdropFilter:"blur(28px)", borderRadius:"24px", padding:"32px 28px", border:"1px solid rgba(255,255,255,0.6)", boxShadow:"0 32px 80px rgba(0,0,0,0.3),inset 0 1px 0 rgba(255,255,255,0.9)" }}>
+      {/* Wide centered form */}
+      <div style={{ maxWidth:"800px", margin:"0 auto", padding:isDesk?"36px 40px 80px":"20px 16px 80px" }}>
+        <motion.div initial={{ opacity:0, y:16 }} animate={{ opacity:1, y:0 }} transition={{ duration:0.4 }}
+          style={{ background:C.card, borderRadius:"16px", padding:isDesk?"40px 44px":"24px 20px", border:`1px solid ${C.border}`, boxShadow:C.shadowMd }}>
 
-          <h1 style={{ fontSize:"22px", fontWeight:900, color:"#1a1a1a", letterSpacing:"-0.6px", marginBottom:"4px" }}>Create Event</h1>
-          <p style={{ fontSize:"12px", color:"rgba(0,0,0,0.45)", marginBottom:"24px" }}>NFT-verified tickets · masterevents.events</p>
+          <div style={{ marginBottom:"28px", paddingBottom:"20px", borderBottom:`1px solid ${C.border}` }}>
+            <h1 style={{ fontSize:"22px", fontWeight:700, color:C.text, letterSpacing:"-0.5px", margin:"0 0 4px" }}>Event Details</h1>
+            <p style={{ fontSize:"13px", color:C.muted, margin:0 }}>Fill in the details — NFT-verified tickets will be minted automatically on Polygon</p>
+          </div>
 
           {/* Event type toggle */}
-          <div style={{ display:"flex", gap:"8px", marginBottom:"20px", background:"rgba(0,0,0,0.04)", borderRadius:"14px", padding:"4px" }}>
-            {[{v:"paid",icon:"💳",label:"Paid"},{v:"free",icon:"🎉",label:"Free"}].map(item => (
-              <motion.button key={item.v} whileTap={{ scale:0.97 }} onClick={() => setEvType(item.v)}
-                style={{ flex:1, padding:"10px 8px", borderRadius:"10px", border:"none", background:evType===item.v?"linear-gradient(135deg,#f5a623,#e8920f)":"transparent", color:evType===item.v?"#fff":"rgba(0,0,0,0.4)", fontWeight:700, fontSize:"13px", cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", gap:"6px", fontFamily:FONT, transition:"all 0.2s", boxShadow:evType===item.v?"0 4px 12px rgba(0,0,0,0.18)":"none" }}>
-                <span>{item.icon}</span> {item.label}
-              </motion.button>
-            ))}
-          </div>
-
-          {/* Event name */}
-          <div style={{ marginBottom:"14px" }}>
-            <label style={AE_LABEL(errors.name)}>EVENT NAME {errors.name && <span style={{ color:"#dc2626", fontWeight:400 }}>— {errors.name}</span>}</label>
-            <input placeholder="e.g. Afrobeats Night 2026" value={addEventForm.name||""}
-              onChange={e => { setAddEventForm({...addEventForm, name:e.target.value}); setErrors(p=>({...p,name:null})); }}
-              style={AE_INPUT(errors.name)} onFocus={AE_FOCUS} onBlur={AE_BLUR} />
-          </div>
-
-          {/* Category */}
-          <div style={{ marginBottom:"14px" }}>
-            <label style={AE_LABEL(errors.cat)}>CATEGORY {errors.cat && <span style={{ color:"#dc2626", fontWeight:400 }}>— {errors.cat}</span>}</label>
-            <div style={{ display:"flex", flexWrap:"wrap", gap:"6px" }}>
-              {CATEGORIES.map(cat => (
-                <motion.div key={cat} whileTap={{ scale:0.93 }}
-                  onClick={() => { setAddEventForm({...addEventForm, category:cat}); setErrors(p=>({...p,cat:null})); }}
-                  style={{ padding:"5px 13px", borderRadius:"99px", cursor:"pointer", fontSize:"12px", fontWeight:500, border:`1.5px solid ${addEventForm.category===cat?"#f5a623":"rgba(0,0,0,0.1)"}`, background:addEventForm.category===cat?"rgba(245,166,35,0.08)":"transparent", color:addEventForm.category===cat?"#e8920f":"rgba(0,0,0,0.5)", transition:"all 0.15s" }}>
-                  {cat.charAt(0).toUpperCase()+cat.slice(1)}
-                </motion.div>
+          <div style={{ marginBottom:"24px" }}>
+            <label style={AE_LABEL(false)}>Event Type</label>
+            <div style={{ display:"flex", gap:"8px", background:C.bg, borderRadius:"10px", padding:"4px", border:`1px solid ${C.border}`, width:"fit-content" }}>
+              {[{v:"paid",icon:"💳",label:"Paid Event"},{v:"free",icon:"🎉",label:"Free Event"}].map(item => (
+                <motion.button key={item.v} whileTap={{ scale:0.97 }} onClick={() => setEvType(item.v)}
+                  style={{ padding:"9px 20px", borderRadius:"8px", border:"none", background:evType===item.v?`linear-gradient(135deg,${C.accent},${C.accentD})`:"transparent", color:evType===item.v?"#fff":C.muted, fontWeight:600, fontSize:"13px", cursor:"pointer", display:"flex", alignItems:"center", gap:"6px", fontFamily:FONT, transition:"all 0.2s", boxShadow:evType===item.v?`0 2px 8px ${C.accent}30`:"none" }}>
+                  <span>{item.icon}</span> {item.label}
+                </motion.button>
               ))}
             </div>
           </div>
 
-          {/* Multi-day toggle */}
-          <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", padding:"12px 14px", background:"rgba(0,0,0,0.03)", borderRadius:"12px", border:"1.5px solid rgba(0,0,0,0.08)", marginBottom:"14px" }}>
-            <div>
-              <div style={{ fontSize:"13px", fontWeight:600, color:"#1a1a1a" }}>Multi-day event</div>
-              <div style={{ fontSize:"11px", color:"rgba(0,0,0,0.45)", marginTop:"1px" }}>Add multiple specific dates with per-day tickets</div>
-            </div>
-            <motion.div whileTap={{ scale:0.95 }} onClick={() => { setIsMultiDay(!isMultiDay); setErrors(p=>({...p,date:null,dates:null})); }}
-              style={{ width:"44px", height:"24px", borderRadius:"99px", background:isMultiDay?"#f5a623":"rgba(0,0,0,0.12)", position:"relative", cursor:"pointer", transition:"background 0.2s", flexShrink:0 }}>
-              <motion.div animate={{ x:isMultiDay?20:2 }} transition={{ duration:0.2 }}
-                style={{ position:"absolute", top:"2px", width:"20px", height:"20px", borderRadius:"50%", background:"#fff", boxShadow:"0 1px 4px rgba(0,0,0,0.2)" }} />
-            </motion.div>
-          </div>
+          {/* 2-col grid on desktop */}
+          <div style={{ display:"grid", gridTemplateColumns:isDesk?"1fr 1fr":"1fr", gap:"16px 24px" }}>
 
-          {/* Single date */}
-          {!isMultiDay && (
-            <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:"10px", marginBottom:"14px" }}>
-              <div>
-                <label style={AE_LABEL(errors.date)}>DATE {errors.date && <span style={{ color:"#dc2626", fontWeight:400 }}>— {errors.date}</span>}</label>
-                <input type="date" value={addEventForm.date||""}
-                  onChange={e => { setAddEventForm({...addEventForm, date:e.target.value}); setErrors(p=>({...p,date:null})); }}
-                  style={AE_INPUT(errors.date)} onFocus={AE_FOCUS} onBlur={AE_BLUR} />
-              </div>
-              <div>
-                <label style={AE_LABEL(false)}>TIME</label>
-                <input type="time" value={addEventForm.time||""} onChange={e => setAddEventForm({...addEventForm, time:e.target.value})}
-                  style={AE_INPUT(false)} onFocus={AE_FOCUS} onBlur={AE_BLUR} />
-              </div>
+            {/* Event name */}
+            <div style={{ gridColumn:isDesk?"1 / -1":"auto" }}>
+              <label style={AE_LABEL(errors.name)}>Event Name {errors.name && <span style={{ color:C.red, fontWeight:400, textTransform:"none" }}>— {errors.name}</span>}</label>
+              <input placeholder="e.g. Afrobeats Night 2026" value={addEventForm.name||""}
+                onChange={e => { setAddEventForm({...addEventForm, name:e.target.value}); setErrors(p=>({...p,name:null})); }}
+                style={AE_INPUT(errors.name)} onFocus={AE_FOCUS} onBlur={AE_BLUR} />
             </div>
-          )}
 
-          {/* Multi-day date picker */}
-          {isMultiDay && (
-            <div style={{ marginBottom:"14px" }}>
-              <label style={AE_LABEL(errors.dates)}>EVENT DATES {errors.dates && <span style={{ color:"#dc2626", fontWeight:400 }}> — {errors.dates}</span>}</label>
-              <div style={{ display:"flex", gap:"8px", marginBottom:"10px" }}>
-                <input type="date" value={newDate} onChange={e => setNewDate(e.target.value)}
-                  style={{ ...AE_INPUT(false), flex:1 }} onFocus={AE_FOCUS} onBlur={AE_BLUR} />
-                <motion.button whileTap={{ scale:0.95 }} onClick={addDate}
-                  style={{ padding:"0 16px", background:"linear-gradient(135deg,#f5a623,#e8920f)", color:"#fff", border:"none", borderRadius:"12px", fontSize:"18px", cursor:"pointer", flexShrink:0 }}>+</motion.button>
-              </div>
-              <AnimatePresence>
-                {eventDates.map((d,i) => (
-                  <motion.div key={d.date} initial={{ opacity:0, y:-8 }} animate={{ opacity:1, y:0 }} exit={{ opacity:0, height:0 }}
-                    style={{ background:"rgba(245,166,35,0.06)", border:"1.5px solid rgba(245,166,35,0.2)", borderRadius:"12px", padding:"12px 14px", marginBottom:"8px" }}>
-                    <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:"10px" }}>
-                      <div style={{ fontSize:"13px", fontWeight:700, color:"#1a1a1a" }}>📅 Day {i+1} — {new Date(d.date+"T00:00:00").toLocaleDateString("en-GH",{weekday:"short",month:"short",day:"numeric"})}</div>
-                      <motion.button whileTap={{ scale:0.9 }} onClick={() => removeDate(d.date)}
-                        style={{ background:"rgba(220,38,38,0.08)", border:"none", borderRadius:"6px", padding:"4px 8px", cursor:"pointer", color:"#dc2626", fontSize:"11px", fontWeight:600 }}>Remove</motion.button>
-                    </div>
-                    <div style={{ display:"grid", gridTemplateColumns:evType==="paid"?"1fr 1fr":"1fr", gap:"8px" }}>
-                      <div>
-                        <label style={{ fontSize:"10px", fontWeight:600, color:"rgba(0,0,0,0.4)", display:"block", marginBottom:"4px" }}>TICKETS / SPOTS</label>
-                        <input type="number" placeholder="e.g. 200" value={d.capacity} onChange={e => updateDate(d.date,"capacity",e.target.value)}
-                          style={{ ...AE_INPUT(false), padding:"9px 12px", fontSize:"13px" }} onFocus={AE_FOCUS} onBlur={AE_BLUR} />
-                      </div>
-                      {evType==="paid" && (
-                        <div>
-                          <label style={{ fontSize:"10px", fontWeight:600, color:"rgba(0,0,0,0.4)", display:"block", marginBottom:"4px" }}>PRICE ({currency})</label>
-                          <input type="number" placeholder="e.g. 150" value={d.price} onChange={e => updateDate(d.date,"price",e.target.value)}
-                            style={{ ...AE_INPUT(false), padding:"9px 12px", fontSize:"13px" }} onFocus={AE_FOCUS} onBlur={AE_BLUR} />
-                        </div>
-                      )}
-                    </div>
+            {/* Category */}
+            <div style={{ gridColumn:isDesk?"1 / -1":"auto" }}>
+              <label style={AE_LABEL(errors.cat)}>Category {errors.cat && <span style={{ color:C.red, fontWeight:400, textTransform:"none" }}>— {errors.cat}</span>}</label>
+              <div style={{ display:"flex", flexWrap:"wrap", gap:"8px" }}>
+                {CATEGORIES.map(cat => (
+                  <motion.div key={cat} whileTap={{ scale:0.93 }}
+                    onClick={() => { setAddEventForm({...addEventForm, category:cat}); setErrors(p=>({...p,cat:null})); }}
+                    style={{ padding:"7px 16px", borderRadius:"99px", cursor:"pointer", fontSize:"13px", fontWeight:500, border:`1.5px solid ${addEventForm.category===cat?C.accent:C.border}`, background:addEventForm.category===cat?C.accentBg:"transparent", color:addEventForm.category===cat?C.accent:C.muted, transition:"all 0.15s" }}>
+                    {cat.charAt(0).toUpperCase()+cat.slice(1)}
                   </motion.div>
                 ))}
-              </AnimatePresence>
-              {eventDates.length===0 && (
-                <div style={{ textAlign:"center", padding:"20px", color:"rgba(0,0,0,0.35)", fontSize:"13px", border:"1.5px dashed rgba(0,0,0,0.1)", borderRadius:"12px" }}>Pick a date above and tap + to add it</div>
-              )}
-              {eventDates.length>=2 && (
-                <div style={{ fontSize:"11px", color:"#16a34a", background:"rgba(22,163,74,0.08)", padding:"8px 12px", borderRadius:"8px", marginTop:"4px" }}>
-                  ✅ {eventDates.length} days added — attendees will choose which day(s) to attend
-                </div>
-              )}
+              </div>
             </div>
-          )}
 
-          {/* Venue */}
-          <div style={{ marginBottom:"14px" }}>
-            <label style={AE_LABEL(errors.venue)}>VENUE {errors.venue && <span style={{ color:"#dc2626", fontWeight:400 }}>— {errors.venue}</span>}</label>
-            <input placeholder="e.g. Accra Sports Stadium" value={addEventForm.venue||""}
-              onChange={e => { setAddEventForm({...addEventForm, venue:e.target.value}); setErrors(p=>({...p,venue:null})); }}
-              style={AE_INPUT(errors.venue)} onFocus={AE_FOCUS} onBlur={AE_BLUR} />
-          </div>
+            {/* Multi-day toggle */}
+            <div style={{ gridColumn:isDesk?"1 / -1":"auto" }}>
+              <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", padding:"14px 16px", background:C.bg, borderRadius:"10px", border:`1px solid ${C.border}` }}>
+                <div>
+                  <div style={{ fontSize:"14px", fontWeight:600, color:C.text }}>Multi-day event</div>
+                  <div style={{ fontSize:"12px", color:C.muted, marginTop:"2px" }}>Add multiple dates with per-day capacity and price</div>
+                </div>
+                <motion.div whileTap={{ scale:0.95 }} onClick={() => { setIsMultiDay(!isMultiDay); setErrors(p=>({...p,date:null,dates:null})); }}
+                  style={{ width:"46px", height:"26px", borderRadius:"99px", background:isMultiDay?C.accent:C.border, position:"relative", cursor:"pointer", transition:"background 0.2s", flexShrink:0 }}>
+                  <motion.div animate={{ x:isMultiDay?21:2 }} transition={{ duration:0.2 }}
+                    style={{ position:"absolute", top:"3px", width:"20px", height:"20px", borderRadius:"50%", background:"#fff", boxShadow:"0 1px 4px rgba(0,0,0,0.2)" }} />
+                </motion.div>
+              </div>
+            </div>
 
-          {/* City + country */}
-          <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:"10px", marginBottom:"14px" }}>
+            {/* Single date */}
+            {!isMultiDay && (
+              <>
+                <div>
+                  <label style={AE_LABEL(errors.date)}>Date {errors.date && <span style={{ color:C.red, fontWeight:400, textTransform:"none" }}>— {errors.date}</span>}</label>
+                  <input type="date" value={addEventForm.date||""}
+                    onChange={e => { setAddEventForm({...addEventForm, date:e.target.value}); setErrors(p=>({...p,date:null})); }}
+                    style={AE_INPUT(errors.date)} onFocus={AE_FOCUS} onBlur={AE_BLUR} />
+                </div>
+                <div>
+                  <label style={AE_LABEL(false)}>Time (optional)</label>
+                  <input type="time" value={addEventForm.time||""} onChange={e => setAddEventForm({...addEventForm, time:e.target.value})}
+                    style={AE_INPUT(false)} onFocus={AE_FOCUS} onBlur={AE_BLUR} />
+                </div>
+              </>
+            )}
+
+            {/* Multi-day picker */}
+            {isMultiDay && (
+              <div style={{ gridColumn:isDesk?"1 / -1":"auto" }}>
+                <label style={AE_LABEL(errors.dates)}>Event Dates {errors.dates && <span style={{ color:C.red, fontWeight:400, textTransform:"none" }}>— {errors.dates}</span>}</label>
+                <div style={{ display:"flex", gap:"8px", marginBottom:"12px" }}>
+                  <input type="date" value={newDate} onChange={e => setNewDate(e.target.value)}
+                    style={{ ...AE_INPUT(false), flex:1 }} onFocus={AE_FOCUS} onBlur={AE_BLUR} />
+                  <motion.button whileTap={{ scale:0.95 }} onClick={addDate}
+                    style={{ padding:"0 20px", background:`linear-gradient(135deg,${C.accent},${C.accentD})`, color:"#fff", border:"none", borderRadius:"10px", fontSize:"20px", cursor:"pointer", flexShrink:0 }}>+</motion.button>
+                </div>
+                <AnimatePresence>
+                  {eventDates.map((d,i) => (
+                    <motion.div key={d.date} initial={{ opacity:0, y:-8 }} animate={{ opacity:1, y:0 }} exit={{ opacity:0, height:0 }}
+                      style={{ background:C.accentBg, border:`1.5px solid ${C.accent}25`, borderRadius:"10px", padding:"14px 16px", marginBottom:"8px" }}>
+                      <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:"12px" }}>
+                        <div style={{ fontSize:"13px", fontWeight:700, color:C.text }}>📅 Day {i+1} — {new Date(d.date+"T00:00:00").toLocaleDateString("en-GH",{weekday:"short",month:"short",day:"numeric"})}</div>
+                        <motion.button whileTap={{ scale:0.9 }} onClick={() => removeDate(d.date)}
+                          style={{ background:C.redBg, border:"none", borderRadius:"6px", padding:"4px 10px", cursor:"pointer", color:C.red, fontSize:"11px", fontWeight:600 }}>Remove</motion.button>
+                      </div>
+                      <div style={{ display:"grid", gridTemplateColumns:evType==="paid"?"1fr 1fr":"1fr", gap:"10px" }}>
+                        <div>
+                          <label style={{ fontSize:"10px", fontWeight:600, color:C.muted, display:"block", marginBottom:"4px", textTransform:"uppercase", letterSpacing:"0.5px" }}>Tickets / Spots</label>
+                          <input type="number" placeholder="e.g. 200" value={d.capacity} onChange={e => updateDate(d.date,"capacity",e.target.value)}
+                            style={AE_INPUT(false)} onFocus={AE_FOCUS} onBlur={AE_BLUR} />
+                        </div>
+                        {evType==="paid" && (
+                          <div>
+                            <label style={{ fontSize:"10px", fontWeight:600, color:C.muted, display:"block", marginBottom:"4px", textTransform:"uppercase", letterSpacing:"0.5px" }}>Price ({currency})</label>
+                            <input type="number" placeholder="e.g. 150" value={d.price} onChange={e => updateDate(d.date,"price",e.target.value)}
+                              style={AE_INPUT(false)} onFocus={AE_FOCUS} onBlur={AE_BLUR} />
+                          </div>
+                        )}
+                      </div>
+                    </motion.div>
+                  ))}
+                </AnimatePresence>
+                {eventDates.length===0 && (
+                  <div style={{ textAlign:"center", padding:"20px", color:C.muted, fontSize:"13px", border:`1.5px dashed ${C.border}`, borderRadius:"10px" }}>Pick a date above and tap + to add it</div>
+                )}
+                {eventDates.length>=2 && (
+                  <div style={{ fontSize:"12px", color:C.green, background:C.greenBg, padding:"10px 14px", borderRadius:"8px", marginTop:"6px" }}>
+                    ✅ {eventDates.length} days added — attendees will choose which day(s) to attend
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Venue */}
+            <div style={{ gridColumn:isDesk?"1 / -1":"auto" }}>
+              <label style={AE_LABEL(errors.venue)}>Venue {errors.venue && <span style={{ color:C.red, fontWeight:400, textTransform:"none" }}>— {errors.venue}</span>}</label>
+              <input placeholder="e.g. Accra Sports Stadium" value={addEventForm.venue||""}
+                onChange={e => { setAddEventForm({...addEventForm, venue:e.target.value}); setErrors(p=>({...p,venue:null})); }}
+                style={AE_INPUT(errors.venue)} onFocus={AE_FOCUS} onBlur={AE_BLUR} />
+            </div>
+
+            {/* City */}
             <div>
-              <label style={AE_LABEL(false)}>CITY</label>
+              <label style={AE_LABEL(false)}>City</label>
               <input placeholder="e.g. Accra" value={addEventForm.city||""} onChange={e => setAddEventForm({...addEventForm, city:e.target.value})}
                 style={AE_INPUT(false)} onFocus={AE_FOCUS} onBlur={AE_BLUR} />
             </div>
+
+            {/* Country */}
             <div>
-              <label style={AE_LABEL(false)}>COUNTRY</label>
-              <select value={country} onChange={e => setCountry(e.target.value)} style={{ ...AE_INPUT(false), background:"rgba(0,0,0,0.03)" }} onFocus={AE_FOCUS} onBlur={AE_BLUR}>
+              <label style={AE_LABEL(false)}>Country</label>
+              <select value={country} onChange={e => setCountry(e.target.value)} style={{ ...AE_INPUT(false) }} onFocus={AE_FOCUS} onBlur={AE_BLUR}>
                 {COUNTRIES.map(c => <option key={c} value={c}>{c}</option>)}
               </select>
             </div>
-          </div>
 
-          {/* Tickets + price (single day only) */}
-          {!isMultiDay && (
-            <div style={{ display:"grid", gridTemplateColumns:evType==="paid"?"1fr 1fr":"1fr", gap:"10px", marginBottom:"14px" }}>
-              <div>
-                <label style={AE_LABEL(errors.total)}>
-                  {evType==="free"?"TOTAL SPOTS":"TOTAL TICKETS"}
-                  {errors.total && <span style={{ color:"#dc2626", fontWeight:400 }}> — {errors.total}</span>}
-                </label>
-                <input type="number" placeholder="e.g. 500" value={addEventForm.totalTickets||""}
-                  onChange={e => { setAddEventForm({...addEventForm, totalTickets:e.target.value}); setErrors(p=>({...p,total:null})); }}
-                  style={AE_INPUT(errors.total)} onFocus={AE_FOCUS} onBlur={AE_BLUR} />
-              </div>
-              {evType==="paid" && (
+            {/* Tickets + price (single day) */}
+            {!isMultiDay && (
+              <>
                 <div>
-                  <label style={AE_LABEL(errors.price)}>PRICE ({currency}) {errors.price && <span style={{ color:"#dc2626", fontWeight:400 }}>— {errors.price}</span>}</label>
-                  <input type="number" placeholder="e.g. 150" value={addEventForm.price||""}
-                    onChange={e => { setAddEventForm({...addEventForm, price:e.target.value}); setErrors(p=>({...p,price:null})); }}
-                    style={AE_INPUT(errors.price)} onFocus={AE_FOCUS} onBlur={AE_BLUR} />
+                  <label style={AE_LABEL(errors.total)}>
+                    {evType==="free"?"Total Spots":"Total Tickets"}
+                    {errors.total && <span style={{ color:C.red, fontWeight:400, textTransform:"none" }}> — {errors.total}</span>}
+                  </label>
+                  <input type="number" placeholder="e.g. 500" value={addEventForm.totalTickets||""}
+                    onChange={e => { setAddEventForm({...addEventForm, totalTickets:e.target.value}); setErrors(p=>({...p,total:null})); }}
+                    style={AE_INPUT(errors.total)} onFocus={AE_FOCUS} onBlur={AE_BLUR} />
                 </div>
-              )}
-            </div>
-          )}
+                {evType==="paid" && (
+                  <div>
+                    <label style={AE_LABEL(errors.price)}>Price ({currency}) {errors.price && <span style={{ color:C.red, fontWeight:400, textTransform:"none" }}>— {errors.price}</span>}</label>
+                    <input type="number" placeholder="e.g. 150" value={addEventForm.price||""}
+                      onChange={e => { setAddEventForm({...addEventForm, price:e.target.value}); setErrors(p=>({...p,price:null})); }}
+                      style={AE_INPUT(errors.price)} onFocus={AE_FOCUS} onBlur={AE_BLUR} />
+                  </div>
+                )}
+              </>
+            )}
 
-          {/* Currency (paid only) */}
-          {evType==="paid" && (
-            <div style={{ marginBottom:"14px" }}>
-              <label style={AE_LABEL(false)}>CURRENCY</label>
-              <div style={{ display:"flex", gap:"6px", flexWrap:"wrap" }}>
-                {CURRENCIES.map(c => (
-                  <motion.button key={c.code} whileTap={{ scale:0.93 }} onClick={() => setCurrency(c.code)}
-                    style={{ padding:"6px 12px", borderRadius:"8px", border:`1.5px solid ${currency===c.code?"#f5a623":"rgba(0,0,0,0.1)"}`, background:currency===c.code?"rgba(245,166,35,0.08)":"transparent", color:currency===c.code?"#e8920f":"rgba(0,0,0,0.45)", fontWeight:600, fontSize:"11px", cursor:"pointer", fontFamily:MONO }}>
-                    {c.symbol} {c.code}
-                  </motion.button>
+            {/* Currency */}
+            {evType==="paid" && (
+              <div style={{ gridColumn:isDesk?"1 / -1":"auto" }}>
+                <label style={AE_LABEL(false)}>Currency</label>
+                <div style={{ display:"flex", gap:"8px", flexWrap:"wrap" }}>
+                  {CURRENCIES.map(c => (
+                    <motion.button key={c.code} whileTap={{ scale:0.93 }} onClick={() => setCurrency(c.code)}
+                      style={{ padding:"8px 14px", borderRadius:"8px", border:`1.5px solid ${currency===c.code?C.accent:C.border}`, background:currency===c.code?C.accentBg:"transparent", color:currency===c.code?C.accent:C.muted, fontWeight:600, fontSize:"12px", cursor:"pointer", fontFamily:MONO }}>
+                      {c.symbol} {c.code}
+                    </motion.button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Description */}
+            <div style={{ gridColumn:isDesk?"1 / -1":"auto" }}>
+              <label style={AE_LABEL(false)}>Description</label>
+              <textarea placeholder="Tell people about your event..." value={addEventForm.description||""} onChange={e => setAddEventForm({...addEventForm, description:e.target.value})}
+                rows={4} style={{ ...AE_INPUT(false), resize:"vertical", minHeight:"96px" }} onFocus={AE_FOCUS} onBlur={AE_BLUR} />
+            </div>
+
+            {/* Cover image */}
+            <div style={{ gridColumn:isDesk?"1 / -1":"auto" }}>
+              <label style={AE_LABEL(false)}>Cover Image</label>
+              <div style={{ display:"flex", gap:"8px", marginBottom:"10px" }}>
+                {[["upload","📷 Upload"],["url","🔗 URL"]].map(([v,l]) => (
+                  <motion.div key={v} whileTap={{ scale:0.95 }} onClick={() => setImgType(v)}
+                    style={{ padding:"8px 16px", borderRadius:"8px", textAlign:"center", cursor:"pointer", fontSize:"13px", fontWeight:600, border:`1.5px solid ${imgType===v?C.accent:C.border}`, background:imgType===v?C.accentBg:"transparent", color:imgType===v?C.accent:C.muted }}>
+                    {l}
+                  </motion.div>
                 ))}
               </div>
+              {imgType==="upload" ? (
+                <>
+                  <input type="file" accept="image/jpeg,image/png,image/webp" id="ev-img" style={{ display:"none" }}
+                    onChange={e => {
+                      const f=e.target.files[0]; if(!f) return;
+                      const cv=document.createElement("canvas"); const im=new Image();
+                      const u=URL.createObjectURL(f);
+                      im.onload=()=>{ const M=1200; let w=im.width,h=im.height; if(w>M){h=Math.round(h*M/w);w=M;} cv.width=w;cv.height=h; cv.getContext("2d").drawImage(im,0,0,w,h); setAddEventForm({...addEventForm,image:cv.toDataURL("image/jpeg",0.82)}); URL.revokeObjectURL(u); }; im.src=u;
+                    }} />
+                  <label htmlFor="ev-img" style={{ display:"block", padding:"28px", background:C.bg, border:`2px dashed ${C.border}`, borderRadius:"10px", textAlign:"center", cursor:"pointer" }}>
+                    {addEventForm.image?.startsWith("data:")||addEventForm.image?.startsWith("http") ? (
+                      <><img src={addEventForm.image} alt="preview" style={{ width:"100%", height:"160px", objectFit:"cover", borderRadius:"8px", marginBottom:"8px" }} /><div style={{ color:C.green, fontSize:"13px", fontWeight:600 }}>✓ Image ready — click to change</div></>
+                    ) : (
+                      <><div style={{ fontSize:"28px", marginBottom:"8px" }}>📷</div><div style={{ color:C.muted, fontSize:"14px", marginBottom:"4px" }}>Click to upload a cover image</div><div style={{ color:C.muted, fontSize:"12px", opacity:0.6 }}>JPG, PNG, WebP</div></>
+                    )}
+                  </label>
+                </>
+              ) : (
+                <input type="text" placeholder="https://..." value={addEventForm.image?.startsWith("data:")?"":addEventForm.image||""} onChange={e => setAddEventForm({...addEventForm, image:e.target.value})}
+                  style={AE_INPUT(false)} onFocus={AE_FOCUS} onBlur={AE_BLUR} />
+              )}
             </div>
-          )}
 
-          {/* Description */}
-          <div style={{ marginBottom:"14px" }}>
-            <label style={AE_LABEL(false)}>DESCRIPTION</label>
-            <textarea placeholder="Tell people about your event..." value={addEventForm.description||""} onChange={e => setAddEventForm({...addEventForm, description:e.target.value})}
-              rows={3} style={{ ...AE_INPUT(false), resize:"vertical", minHeight:"72px" }} onFocus={AE_FOCUS} onBlur={AE_BLUR} />
           </div>
 
-          {/* Cover image */}
-          <div style={{ marginBottom:"14px" }}>
-            <label style={AE_LABEL(false)}>COVER IMAGE</label>
-            <div style={{ display:"flex", gap:"6px", marginBottom:"8px" }}>
-              {[["upload","📷 Upload"],["url","🔗 URL"]].map(([v,l]) => (
-                <motion.div key={v} whileTap={{ scale:0.95 }} onClick={() => setImgType(v)}
-                  style={{ flex:1, padding:"8px", borderRadius:"10px", textAlign:"center", cursor:"pointer", fontSize:"12px", fontWeight:600, border:`1.5px solid ${imgType===v?"#f5a623":"rgba(0,0,0,0.1)"}`, background:imgType===v?"rgba(245,166,35,0.08)":"transparent", color:imgType===v?"#e8920f":"rgba(0,0,0,0.4)" }}>
-                  {l}
-                </motion.div>
-              ))}
-            </div>
-            {imgType==="upload" ? (
-              <>
-                <input type="file" accept="image/jpeg,image/png,image/webp" id="ev-img" style={{ display:"none" }}
-                  onChange={e => {
-                    const f=e.target.files[0]; if(!f) return;
-                    const cv=document.createElement("canvas"); const im=new Image();
-                    const u=URL.createObjectURL(f);
-                    im.onload=()=>{ const M=1200; let w=im.width,h=im.height; if(w>M){h=Math.round(h*M/w);w=M;} cv.width=w;cv.height=h; cv.getContext("2d").drawImage(im,0,0,w,h); setAddEventForm({...addEventForm,image:cv.toDataURL("image/jpeg",0.82)}); URL.revokeObjectURL(u); }; im.src=u;
-                  }} />
-                <label htmlFor="ev-img" style={{ display:"block", padding:"18px", background:"rgba(0,0,0,0.03)", border:"2px dashed rgba(245,166,35,0.3)", borderRadius:"12px", textAlign:"center", cursor:"pointer" }}>
-                  {addEventForm.image?.startsWith("data:")||addEventForm.image?.startsWith("http") ? (
-                    <><img src={addEventForm.image} alt="preview" style={{ width:"100%", height:"120px", objectFit:"cover", borderRadius:"8px", marginBottom:"8px" }} /><div style={{ color:"#16a34a", fontSize:"12px", fontWeight:600 }}>✓ Image ready — click to change</div></>
-                  ) : (
-                    <><div style={{ fontSize:"24px", marginBottom:"6px" }}>📷</div><div style={{ color:"rgba(0,0,0,0.5)", fontSize:"13px" }}>Click to upload</div><div style={{ color:"rgba(0,0,0,0.3)", fontSize:"11px", marginTop:"3px" }}>JPG, PNG, WebP</div></>
-                  )}
-                </label>
-              </>
-            ) : (
-              <input type="text" placeholder="https://..." value={addEventForm.image?.startsWith("data:")?"":addEventForm.image||""} onChange={e => setAddEventForm({...addEventForm, image:e.target.value})}
-                style={AE_INPUT(false)} onFocus={AE_FOCUS} onBlur={AE_BLUR} />
-            )}
-          </div>
-
-          {/* Event URL preview — path based */}
+          {/* Event URL preview */}
           {addEventForm.name && (
             <motion.div initial={{ opacity:0 }} animate={{ opacity:1 }}
-              style={{ background:"rgba(139,92,246,0.06)", border:"1px solid rgba(139,92,246,0.2)", borderRadius:"10px", padding:"10px 14px", marginBottom:"16px" }}>
-              <div style={{ fontSize:"9px", fontWeight:700, color:"#7c3aed", letterSpacing:"1.2px", fontFamily:MONO, marginBottom:"4px" }}>⛓ EVENT URL</div>
-              <div style={{ fontFamily:MONO, fontSize:"11px", color:"#1a1a1a", wordBreak:"break-all" }}>{eventUrl}</div>
+              style={{ background:C.purpleBg, border:`1px solid ${C.purple}25`, borderRadius:"10px", padding:"12px 16px", marginTop:"20px" }}>
+              <div style={{ fontSize:"10px", fontWeight:700, color:C.purple, letterSpacing:"1.2px", fontFamily:MONO, marginBottom:"4px" }}>⛓ EVENT URL</div>
+              <div style={{ fontFamily:MONO, fontSize:"12px", color:C.text, wordBreak:"break-all" }}>{eventUrl}</div>
             </motion.div>
           )}
 
           {/* Info strips */}
-          <div style={{ display:"flex", gap:"6px", flexWrap:"wrap", marginBottom:"20px" }}>
-            {evType==="paid" && <span style={{ fontSize:"11px", color:"#16a34a", background:"rgba(22,163,74,0.08)", padding:"4px 10px", borderRadius:"6px", fontWeight:500 }}>💰 95% revenue to you</span>}
-            {evType==="free" && <span style={{ fontSize:"11px", color:"#16a34a", background:"rgba(22,163,74,0.08)", padding:"4px 10px", borderRadius:"6px", fontWeight:500 }}>🎉 Free · QR pass via email</span>}
-            {isMultiDay && <span style={{ fontSize:"11px", color:"#7c3aed", background:"rgba(124,58,237,0.08)", padding:"4px 10px", borderRadius:"6px", fontWeight:500 }}>📅 Attendees pick their day(s)</span>}
-            <span style={{ fontSize:"11px", color:"#7c3aed", background:"rgba(124,58,237,0.08)", padding:"4px 10px", borderRadius:"6px", fontWeight:500 }}>⛓ NFT on Polygon</span>
+          <div style={{ display:"flex", gap:"8px", flexWrap:"wrap", marginTop:"20px", marginBottom:"24px" }}>
+            {evType==="paid" && <span style={{ fontSize:"12px", color:C.green, background:C.greenBg, padding:"5px 12px", borderRadius:"6px", fontWeight:500 }}>💰 95% revenue to you</span>}
+            {evType==="free" && <span style={{ fontSize:"12px", color:C.green, background:C.greenBg, padding:"5px 12px", borderRadius:"6px", fontWeight:500 }}>🎉 Free · QR pass via email</span>}
+            {isMultiDay && <span style={{ fontSize:"12px", color:C.purple, background:C.purpleBg, padding:"5px 12px", borderRadius:"6px", fontWeight:500 }}>📅 Attendees pick their day(s)</span>}
+            <span style={{ fontSize:"12px", color:C.purple, background:C.purpleBg, padding:"5px 12px", borderRadius:"6px", fontWeight:500 }}>⛓ NFT on Polygon</span>
           </div>
 
           {/* Submit */}
-          <motion.button whileHover={{ scale:1.02 }} whileTap={{ scale:0.97 }} onClick={submit}
-            style={{ width:"100%", padding:"15px", borderRadius:"13px", background:"linear-gradient(135deg,#f5a623,#e8920f)", color:"#fff", fontWeight:700, fontSize:"15px", border:"none", cursor:"pointer", boxShadow:"0 8px 24px rgba(245,166,35,0.35)", fontFamily:FONT, letterSpacing:"-0.2px" }}>
+          <motion.button whileHover={{ scale:1.01 }} whileTap={{ scale:0.97 }} onClick={submit}
+            style={{ width:"100%", padding:"16px", borderRadius:"12px", background:`linear-gradient(135deg,${C.accent},${C.accentD})`, color:"#fff", fontWeight:700, fontSize:"16px", border:"none", cursor:"pointer", boxShadow:`0 8px 24px ${C.accent}35`, fontFamily:FONT, letterSpacing:"-0.2px" }}>
             Create {isMultiDay?"Multi-Day ":""}{evType==="free"?"Free":"Paid"} Event →
           </motion.button>
+
         </motion.div>
       </div>
     </div>
@@ -1052,8 +1031,8 @@ export function OrganizerEventDetail() {
     const q = holderSearch.toLowerCase();
     return (t.owner?.first_name+" "+t.owner?.last_name).toLowerCase().includes(q) || (t.owner?.email||"").toLowerCase().includes(q) || (t.ticket_id||"").toLowerCase().includes(q);
   });
-  const copyCode = c => { navigator.clipboard?.writeText(c).catch(()=>{}); setCopiedCode(c); setTimeout(()=>setCopiedCode(null),2000); };
-  const copyLink = () => { navigator.clipboard?.writeText(evUrl).catch(()=>{}); setCopiedLink(true); setTimeout(()=>setCopiedLink(false),2000); };
+  const copyCode  = c => { navigator.clipboard?.writeText(c).catch(()=>{}); setCopiedCode(c); setTimeout(()=>setCopiedCode(null),2000); };
+  const copyLink  = () => { navigator.clipboard?.writeText(evUrl).catch(()=>{}); setCopiedLink(true); setTimeout(()=>setCopiedLink(false),2000); };
   const startEdit = () => { setEditForm({name:ev.name,venue:ev.venue,date:ev.date,time:ev.time||"",price:ev.price,description:ev.description||"",image:ev.image||"",category:ev.category||"other",city:ev.city||"",totalTickets:ev.totalTickets,subtitle:ev.subtitle||"",currency:ev.currency||"GHS",country:ev.country||"Ghana"}); setEditing(true); };
   const saveEdit  = () => { setViewingOrgEvent({...ev,...editForm,price:parseFloat(editForm.price),totalTickets:parseInt(editForm.totalTickets)||ev.totalTickets}); setEditing(false); };
 
@@ -1202,7 +1181,7 @@ export function OrganizerEventDetail() {
                 <span style={{ fontSize:"13px", fontWeight:700, color:pct>80?C.red:C.accent, fontFamily:MONO }}>{pct}%</span>
               </div>
               <div style={{ height:"6px", background:C.border, borderRadius:"99px", overflow:"hidden" }}>
-                <motion.div initial={{ width:0 }} animate={{ width:`${pct}%`}} transition={{ duration:0.9 }}
+                <motion.div initial={{ width:0 }} animate={{ width:`${pct}%` }} transition={{ duration:0.9 }}
                   style={{ height:"100%", background:pct>80?`linear-gradient(90deg,${C.red},#dc2626)`:`linear-gradient(90deg,${C.accent},${C.accentD})`, borderRadius:"99px" }} />
               </div>
               <div style={{ fontSize:"11px", color:C.muted, marginTop:"5px" }}>{ev.totalTickets-ev.ticketsSold} {isFree?"spots":"tickets"} remaining</div>
@@ -1308,10 +1287,10 @@ export function OrganizerEventDetail() {
                   </div>
                 )}
                 {filtered.map((t,i) => {
-                  const name = ((t.owner?.first_name||"")+" "+(t.owner?.last_name||"")).trim()||"Unknown";
+                  const name  = ((t.owner?.first_name||"")+" "+(t.owner?.last_name||"")).trim()||"Unknown";
                   const email = t.owner?.email||"—";
-                  const col = sColor[t.status]||"#6b7280";
-                  const lbl = sLabel[t.status]||t.status;
+                  const col   = sColor[t.status]||"#6b7280";
+                  const lbl   = sLabel[t.status]||t.status;
                   return (
                     <motion.div key={t.ticket_id||i} initial={{ opacity:0, y:5 }} animate={{ opacity:1, y:0 }} transition={{ delay:i*0.02 }}
                       style={{ background:C.card, borderRadius:"9px", padding:"10px 13px", border:`1px solid ${C.border}`, display:isDesk?"grid":"flex", gridTemplateColumns:isDesk?"1fr 1fr 80px 100px":undefined, flexDirection:isDesk?undefined:"row", alignItems:"center", gap:"10px", transition:"border-color 0.15s" }}

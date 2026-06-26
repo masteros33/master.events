@@ -969,21 +969,24 @@ export function OrganizerAlerts() {
     </div>
   );
 }
-
 // ═══════════════════════════════════════════════════════════════
-//  ADD EVENT
+//  ADD EVENT — white glass form, multi-day support
 // ═══════════════════════════════════════════════════════════════
 export function AddEvent() {
   const addEventForm    = useStore(s => s.addEventForm);
   const setAddEventForm = useStore(s => s.setAddEventForm);
   const handleAddEvent  = useStore(s => s.handleAddEvent);
   const setScreen       = useStore(s => s.setScreen);
-  const [imgType,   setImgType]   = useState("upload");
-  const [evType,    setEvType]    = useState("paid");
-  const [currency,  setCurrency]  = useState("GHS");
-  const [country,   setCountry]   = useState("Ghana");
-  const [errors,    setErrors]    = useState({});
-  const [isDesk,    setIsDesk]    = useState(desk());
+
+  const [imgType,    setImgType]    = useState("upload");
+  const [evType,     setEvType]     = useState("paid");
+  const [currency,   setCurrency]   = useState("GHS");
+  const [country,    setCountry]    = useState("Ghana");
+  const [errors,     setErrors]     = useState({});
+  const [isDesk,     setIsDesk]     = useState(desk());
+  const [isMultiDay, setIsMultiDay] = useState(false);
+  const [eventDates, setEventDates] = useState([]); // [{date, capacity, price}]
+  const [newDate,    setNewDate]    = useState("");
 
   useEffect(() => {
     const r = () => setIsDesk(desk());
@@ -991,315 +994,389 @@ export function AddEvent() {
     return () => window.removeEventListener("resize", r);
   }, []);
 
-  const slug     = (addEventForm.name||"").toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"").slice(0,40);
+  const slug     = (addEventForm.name || "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 40);
   const eventUrl = slug ? `https://${slug}.masterevents.events` : "https://your-event.masterevents.events";
+
+  const addDate = () => {
+    if (!newDate) return;
+    if (eventDates.find(d => d.date === newDate)) return;
+    setEventDates(prev => [...prev, {
+      date:     newDate,
+      capacity: addEventForm.totalTickets || 100,
+      price:    evType === "free" ? 0 : (addEventForm.price || 0),
+    }].sort((a, b) => a.date.localeCompare(b.date)));
+    setNewDate("");
+  };
+
+  const removeDate = (date) => setEventDates(prev => prev.filter(d => d.date !== date));
+
+  const updateDate = (date, field, value) => {
+    setEventDates(prev => prev.map(d => d.date === date ? { ...d, [field]: value } : d));
+  };
 
   const validate = () => {
     const e = {};
-    if (!addEventForm.name?.trim())           e.name  = "Required";
-    if (!addEventForm.date)                   e.date  = "Required";
-    if (!addEventForm.venue?.trim())          e.venue = "Required";
-    if (!addEventForm.totalTickets)           e.total = "Required";
-    if (!addEventForm.category)               e.cat   = "Select a category";
-    if (evType==="paid" && !addEventForm.price) e.price = "Required for paid events";
+    if (!addEventForm.name?.trim()) e.name  = "Required";
+    if (!isMultiDay && !addEventForm.date) e.date = "Required";
+    if (isMultiDay && eventDates.length < 2) e.dates = "Add at least 2 dates for a multi-day event";
+    if (!addEventForm.venue?.trim())  e.venue = "Required";
+    if (!addEventForm.totalTickets)   e.total = "Required";
+    if (!addEventForm.category)       e.cat   = "Select a category";
+    if (evType === "paid" && !isMultiDay && !addEventForm.price) e.price = "Required";
     setErrors(e);
     return !Object.keys(e).length;
   };
 
   const submit = () => {
     if (!validate()) return;
-    setAddEventForm({ ...addEventForm, event_type:evType,
-      currency: evType==="free"?"FREE":currency,
-      country, price: evType==="free"?0:addEventForm.price });
+    const form = {
+      ...addEventForm,
+      event_type: evType,
+      currency:   evType === "free" ? "FREE" : currency,
+      country,
+      price:      evType === "free" ? 0 : addEventForm.price,
+    };
+    if (isMultiDay) {
+      form.is_multi_day  = true;
+      form.event_dates   = eventDates;
+      form.date          = eventDates[0]?.date || "";
+    }
+    setAddEventForm(form);
     handleAddEvent();
   };
 
-  const Field = ({ k, label, type="text", ph="", req=false }) => (
-    <div style={{ marginBottom:"16px" }}>
-      <label style={{ display:"block", fontSize:"12px", fontWeight:500,
-        color: errors[k]?C.red:C.sub, marginBottom:"5px", fontFamily:FONT }}>
-        {label}{req && <span style={{ color:C.red }}> *</span>}
-        {errors[k] && <span style={{ color:C.red, fontWeight:400 }}> — {errors[k]}</span>}
-      </label>
-      <input type={type} placeholder={ph} value={addEventForm[k]||""}
-        onChange={e => { setAddEventForm({...addEventForm,[k]:e.target.value});
-          if (errors[k]) setErrors(p=>({...p,[k]:null})); }}
-        style={INP(errors[k])} onFocus={focusI} onBlur={blurI} />
-    </div>
-  );
+  // ── Shared styles ────────────────────────────────────────
+  const inputStyle = (err) => ({
+    width: "100%", padding: "13px 16px", outline: "none",
+    background: "rgba(0,0,0,0.03)",
+    border: `1.5px solid ${err ? "#dc2626" : "rgba(0,0,0,0.1)"}`,
+    borderRadius: "12px", fontSize: "14px", color: "#1a1a1a",
+    fontFamily: FONT, boxSizing: "border-box", transition: "all 0.2s",
+  });
+  const focusGold = e => {
+    e.target.style.borderColor = "#f5a623";
+    e.target.style.background  = "rgba(245,166,35,0.05)";
+    e.target.style.boxShadow   = "0 0 0 3px rgba(245,166,35,0.12)";
+  };
+  const blurGold = e => {
+    e.target.style.borderColor = "rgba(0,0,0,0.1)";
+    e.target.style.background  = "rgba(0,0,0,0.03)";
+    e.target.style.boxShadow   = "none";
+  };
+  const labelStyle = (err) => ({
+    display: "block", fontSize: "11px", fontWeight: 600,
+    color: err ? "#dc2626" : "rgba(0,0,0,0.5)",
+    marginBottom: "6px", letterSpacing: "0.5px",
+  });
+
+  const BG_IMAGE = "https://images.unsplash.com/photo-1492684223066-81342ee5ff30?w=1600&q=80";
 
   return (
-    <div style={{ background:C.bg, height:"100%", display:"flex",
-      flexDirection:"column", overflow:"hidden", fontFamily:FONT }}>
+    <div style={{ position: "fixed", inset: 0, fontFamily: FONT, overflowY: "auto" }}>
 
-      {/* Header bar */}
-      <div style={{ flexShrink:0, display:"flex", alignItems:"center",
-        padding:"13px 18px", gap:"12px", background:C.card,
-        borderBottom:`1px solid ${C.border}`, zIndex:10 }}>
-        <motion.button whileTap={{ scale:0.9 }} onClick={() => setScreen("app")}
-          style={{ width:"32px", height:"32px", borderRadius:"7px",
-            background:"transparent", border:`1px solid ${C.border}`,
-            display:"flex", alignItems:"center", justifyContent:"center",
-            cursor:"pointer", color:C.text, fontSize:"15px", flexShrink:0 }}>
-          ←
-        </motion.button>
-        <div style={{ flex:1 }}>
-          <div style={{ fontSize:"15px", fontWeight:650, color:C.text,
-            letterSpacing:"-0.2px" }}>
-            Create Event
-          </div>
-          <div style={{ fontSize:"10px", color:C.purple, marginTop:"1px", fontFamily:MONO }}>
-            ⛓ NFT tickets · masterevents.events
-          </div>
-        </div>
+      {/* Background */}
+      <img src={BG_IMAGE} alt="" style={{ position: "fixed", inset: 0, width: "100%", height: "100%", objectFit: "cover", objectPosition: "center", zIndex: 0 }} />
+      <div style={{ position: "fixed", inset: 0, background: "linear-gradient(135deg, rgba(0,0,0,0.65) 0%, rgba(0,0,0,0.45) 50%, rgba(0,0,0,0.7) 100%)", zIndex: 1 }} />
+      <div style={{ position: "fixed", bottom: "10%", right: "15%", width: "400px", height: "400px", borderRadius: "50%", background: "radial-gradient(circle, rgba(249,115,22,0.15) 0%, transparent 70%)", filter: "blur(40px)", pointerEvents: "none", zIndex: 1 }} />
+
+      {/* Logo + back */}
+      <div style={{ position: "fixed", top: "28px", left: "32px", zIndex: 20, display: "flex", alignItems: "center", gap: "10px" }}>
+        <div style={{ width: "36px", height: "36px", borderRadius: "10px", background: "linear-gradient(135deg, #f5a623, #e8920f)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "17px", boxShadow: "0 4px 16px rgba(245,166,35,0.45)" }}>🎟️</div>
+        <span style={{ fontWeight: 800, fontSize: "16px", color: "#fff", letterSpacing: "-0.3px" }}>Master Events</span>
       </div>
+      <motion.button whileTap={{ scale: 0.95 }} onClick={() => setScreen("app")}
+        style={{ position: "fixed", top: "28px", right: "32px", zIndex: 20, background: "rgba(255,255,255,0.12)", backdropFilter: "blur(10px)", border: "1px solid rgba(255,255,255,0.2)", borderRadius: "10px", padding: "8px 16px", color: "#fff", fontSize: "13px", fontWeight: 600, cursor: "pointer", fontFamily: FONT }}>
+        ← Back
+      </motion.button>
 
-      <div style={{ flex:1, minHeight:0, overflowY:"auto",
-        WebkitOverflowScrolling:"touch" }}>
-        <div style={{ padding: isDesk?"24px 40px 100px":"14px 14px 100px",
-          maxWidth: isDesk?"680px":"100%", margin:"0 auto" }}>
+      {/* Left copy — desktop */}
+      {isDesk && (
+        <div style={{ position: "fixed", left: "6%", top: "50%", transform: "translateY(-50%)", zIndex: 5, maxWidth: "340px" }}>
+          <div style={{ fontSize: "10px", fontWeight: 700, color: "#fcd34d", letterSpacing: "2px", marginBottom: "16px", fontFamily: "'JetBrains Mono', monospace" }}>FOR ORGANIZERS</div>
+          <h2 style={{ fontSize: "clamp(26px, 2.8vw, 38px)", fontWeight: 900, color: "#fff", lineHeight: 1.1, letterSpacing: "-1.2px", marginBottom: "16px" }}>
+            Launch your<br />
+            <span style={{ background: "linear-gradient(135deg, #fcd34d, #f5a623)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>event in minutes</span>
+          </h2>
+          <p style={{ fontSize: "14px", color: "rgba(255,255,255,0.75)", marginBottom: "24px", lineHeight: 1.65 }}>Every ticket minted as an NFT on Polygon. Instant MoMo & card payments. 95% payout to you.</p>
+          {["⛓️  NFT tickets — zero counterfeits", "📱  MTN MoMo, Telecel Cash, Cards", "💰  95% of every sale to your wallet", "🔗  Shareable event link generated instantly"].map(line => (
+            <div key={line} style={{ fontSize: "13px", color: "rgba(255,255,255,0.85)", lineHeight: 1.5, marginBottom: "10px" }}>{line}</div>
+          ))}
+        </div>
+      )}
 
-          {/* Event type */}
-          <div style={{ marginBottom:"20px" }}>
-            <label style={{ display:"block", fontSize:"12px", fontWeight:500,
-              color:C.sub, marginBottom:"8px" }}>Event Type</label>
-            <div style={{ display:"flex", gap:"8px" }}>
-              {[["paid","💳 Paid","Charge attendees"],
-                ["free","🎉 Free","No payment required"]].map(([v,l,s]) => (
-                <motion.button key={v} whileTap={{ scale:0.97 }}
-                  onClick={() => setEvType(v)}
-                  style={{ flex:1, padding:"12px 10px", borderRadius:"8px",
-                    border:`1.5px solid ${evType===v?C.accent:C.border}`,
-                    background: evType===v?C.accentBg:"transparent",
-                    cursor:"pointer", textAlign:"left" }}>
-                  <div style={{ fontSize:"13px", fontWeight:600,
-                    color:evType===v?C.accent:C.text, marginBottom:"2px" }}>{l}</div>
-                  <div style={{ fontSize:"11px", color:C.muted }}>{s}</div>
-                </motion.button>
-              ))}
-            </div>
+      {/* Form */}
+      <div style={{ position: "absolute", right: isDesk ? "6%" : "50%", top: "50%", transform: isDesk ? "translateY(-50%)" : "translate(50%, -50%)", width: "min(480px, 92vw)", zIndex: 10, marginTop: isDesk ? "0" : "80px", marginBottom: "40px" }}>
+        <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+          style={{ background: "rgba(255,255,255,0.95)", backdropFilter: "blur(28px)", WebkitBackdropFilter: "blur(28px)", borderRadius: "24px", padding: "32px 28px", border: "1px solid rgba(255,255,255,0.6)", boxShadow: "0 32px 80px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.9)" }}>
+
+          <h1 style={{ fontSize: "22px", fontWeight: 900, color: "#1a1a1a", letterSpacing: "-0.6px", marginBottom: "4px" }}>Create Event</h1>
+          <p style={{ fontSize: "12px", color: "rgba(0,0,0,0.45)", marginBottom: "24px" }}>NFT-verified tickets · masterevents.events</p>
+
+          {/* Event type toggle */}
+          <div style={{ display: "flex", gap: "8px", marginBottom: "20px", background: "rgba(0,0,0,0.04)", borderRadius: "14px", padding: "4px" }}>
+            {[{ v: "paid", icon: "💳", label: "Paid" }, { v: "free", icon: "🎉", label: "Free" }].map(item => (
+              <motion.button key={item.v} whileTap={{ scale: 0.97 }} onClick={() => setEvType(item.v)}
+                style={{ flex: 1, padding: "10px 8px", borderRadius: "10px", border: "none", background: evType === item.v ? "linear-gradient(135deg, #f5a623, #e8920f)" : "transparent", color: evType === item.v ? "#fff" : "rgba(0,0,0,0.4)", fontWeight: 700, fontSize: "13px", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: "6px", fontFamily: FONT, transition: "all 0.2s", boxShadow: evType === item.v ? "0 4px 12px rgba(0,0,0,0.18)" : "none" }}>
+                <span>{item.icon}</span> {item.label}
+              </motion.button>
+            ))}
           </div>
 
-          {/* Currency + country (paid only) */}
-          {evType==="paid" && (
-            <div style={{ marginBottom:"20px", padding:"16px",
-              background:C.card, borderRadius:"10px",
-              border:`1px solid ${C.border}` }}>
-              <div style={{ fontSize:"11px", fontWeight:600, color:C.accent,
-                letterSpacing:"1.2px", fontFamily:MONO, marginBottom:"12px" }}>
-                CURRENCY & LOCATION
-              </div>
-              <div style={{ marginBottom:"14px" }}>
-                <label style={{ display:"block", fontSize:"12px", fontWeight:500,
-                  color:C.sub, marginBottom:"7px" }}>Currency</label>
-                <div style={{ display:"flex", gap:"6px", flexWrap:"wrap" }}>
-                  {CURRENCIES.map(c => (
-                    <motion.button key={c.code} whileTap={{ scale:0.93 }}
-                      onClick={() => setCurrency(c.code)}
-                      style={{ padding:"6px 12px", borderRadius:"6px",
-                        border:`1.5px solid ${currency===c.code?C.accent:C.border}`,
-                        background: currency===c.code?C.accentBg:"transparent",
-                        color: currency===c.code?C.accent:C.muted,
-                        fontWeight:600, fontSize:"11px", cursor:"pointer",
-                        fontFamily:MONO }}>
-                      {c.symbol} {c.code}
-                    </motion.button>
-                  ))}
-                </div>
-              </div>
-              <div>
-                <label style={{ display:"block", fontSize:"12px", fontWeight:500,
-                  color:C.sub, marginBottom:"6px" }}>Country</label>
-                <select value={country} onChange={e => setCountry(e.target.value)}
-                  style={{ ...INP(false), marginBottom:0 }}
-                  onFocus={focusI} onBlur={blurI}>
-                  {COUNTRIES.map(c => <option key={c} value={c}>{c}</option>)}
-                </select>
-              </div>
-            </div>
-          )}
+          {/* Event name */}
+          <div style={{ marginBottom: "14px" }}>
+            <label style={labelStyle(errors.name)}>EVENT NAME {errors.name && <span style={{ color: "#dc2626", fontWeight: 400 }}>— {errors.name}</span>}</label>
+            <input placeholder="e.g. Afrobeats Night 2026" value={addEventForm.name || ""} onChange={e => { setAddEventForm({ ...addEventForm, name: e.target.value }); setErrors(p => ({ ...p, name: null })); }}
+              style={inputStyle(errors.name)} onFocus={focusGold} onBlur={blurGold} />
+          </div>
 
           {/* Category */}
-          <div style={{ marginBottom:"18px" }}>
-            <label style={{ display:"block", fontSize:"12px", fontWeight:500,
-              color:errors.cat?C.red:C.sub, marginBottom:"7px" }}>
-              Category <span style={{ color:C.red }}>*</span>
-              {errors.cat && <span style={{ color:C.red, fontWeight:400 }}> — {errors.cat}</span>}
-            </label>
-            <div style={{ display:"flex", flexWrap:"wrap", gap:"6px" }}>
+          <div style={{ marginBottom: "14px" }}>
+            <label style={labelStyle(errors.cat)}>CATEGORY {errors.cat && <span style={{ color: "#dc2626", fontWeight: 400 }}>— {errors.cat}</span>}</label>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: "6px" }}>
               {CATEGORIES.map(cat => (
-                <motion.div key={cat} whileTap={{ scale:0.93 }}
-                  onClick={() => { setAddEventForm({...addEventForm,category:cat});
-                    setErrors(p=>({...p,cat:null})); }}
-                  style={{ padding:"6px 14px", borderRadius:"99px", cursor:"pointer",
-                    fontSize:"12px", fontWeight:500,
-                    border:`1.5px solid ${addEventForm.category===cat?C.accent:errors.cat?C.red:C.border}`,
-                    background: addEventForm.category===cat?C.accentBg:"transparent",
-                    color: addEventForm.category===cat?C.accent:C.sub,
-                    transition:"all 0.15s" }}>
-                  {cat.charAt(0).toUpperCase()+cat.slice(1)}
+                <motion.div key={cat} whileTap={{ scale: 0.93 }}
+                  onClick={() => { setAddEventForm({ ...addEventForm, category: cat }); setErrors(p => ({ ...p, cat: null })); }}
+                  style={{ padding: "5px 13px", borderRadius: "99px", cursor: "pointer", fontSize: "12px", fontWeight: 500, border: `1.5px solid ${addEventForm.category === cat ? "#f5a623" : "rgba(0,0,0,0.1)"}`, background: addEventForm.category === cat ? "rgba(245,166,35,0.08)" : "transparent", color: addEventForm.category === cat ? "#e8920f" : "rgba(0,0,0,0.5)", transition: "all 0.15s" }}>
+                  {cat.charAt(0).toUpperCase() + cat.slice(1)}
                 </motion.div>
               ))}
             </div>
           </div>
 
-          {/* Image */}
-          <div style={{ marginBottom:"18px" }}>
-            <label style={{ display:"block", fontSize:"12px", fontWeight:500,
-              color:C.sub, marginBottom:"7px" }}>Cover Image</label>
-            <div style={{ display:"flex", gap:"6px", marginBottom:"8px" }}>
-              {[["upload","Upload"],["url","URL"]].map(([v,l]) => (
-                <motion.div key={v} whileTap={{ scale:0.95 }}
-                  onClick={() => setImgType(v)}
-                  style={{ flex:1, padding:"7px", borderRadius:"7px",
-                    textAlign:"center", cursor:"pointer", fontSize:"12px", fontWeight:500,
-                    border:`1.5px solid ${imgType===v?C.accent:C.border}`,
-                    background: imgType===v?C.accentBg:"transparent",
-                    color: imgType===v?C.accent:C.muted }}>
+          {/* Multi-day toggle */}
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "12px 14px", background: "rgba(0,0,0,0.03)", borderRadius: "12px", border: "1.5px solid rgba(0,0,0,0.08)", marginBottom: "14px" }}>
+            <div>
+              <div style={{ fontSize: "13px", fontWeight: 600, color: "#1a1a1a" }}>Multi-day event</div>
+              <div style={{ fontSize: "11px", color: "rgba(0,0,0,0.45)", marginTop: "1px" }}>Add multiple specific dates with per-day tickets</div>
+            </div>
+            <motion.div whileTap={{ scale: 0.95 }} onClick={() => { setIsMultiDay(!isMultiDay); setErrors(p => ({ ...p, date: null, dates: null })); }}
+              style={{ width: "44px", height: "24px", borderRadius: "99px", background: isMultiDay ? "#f5a623" : "rgba(0,0,0,0.12)", position: "relative", cursor: "pointer", transition: "background 0.2s", flexShrink: 0 }}>
+              <motion.div animate={{ x: isMultiDay ? 20 : 2 }} transition={{ duration: 0.2 }}
+                style={{ position: "absolute", top: "2px", width: "20px", height: "20px", borderRadius: "50%", background: "#fff", boxShadow: "0 1px 4px rgba(0,0,0,0.2)" }} />
+            </motion.div>
+          </div>
+
+          {/* Single date */}
+          {!isMultiDay && (
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px", marginBottom: "14px" }}>
+              <div>
+                <label style={labelStyle(errors.date)}>DATE {errors.date && <span style={{ color: "#dc2626", fontWeight: 400 }}>— {errors.date}</span>}</label>
+                <input type="date" value={addEventForm.date || ""} onChange={e => { setAddEventForm({ ...addEventForm, date: e.target.value }); setErrors(p => ({ ...p, date: null })); }}
+                  style={inputStyle(errors.date)} onFocus={focusGold} onBlur={blurGold} />
+              </div>
+              <div>
+                <label style={labelStyle(false)}>TIME</label>
+                <input type="time" value={addEventForm.time || ""} onChange={e => setAddEventForm({ ...addEventForm, time: e.target.value })}
+                  style={inputStyle(false)} onFocus={focusGold} onBlur={blurGold} />
+              </div>
+            </div>
+          )}
+
+          {/* Multi-day date picker */}
+          {isMultiDay && (
+            <div style={{ marginBottom: "14px" }}>
+              <label style={labelStyle(errors.dates)}>
+                EVENT DATES
+                {errors.dates && <span style={{ color: "#dc2626", fontWeight: 400 }}> — {errors.dates}</span>}
+              </label>
+
+              {/* Add date row */}
+              <div style={{ display: "flex", gap: "8px", marginBottom: "10px" }}>
+                <input type="date" value={newDate} onChange={e => setNewDate(e.target.value)}
+                  style={{ ...inputStyle(false), flex: 1 }} onFocus={focusGold} onBlur={blurGold} />
+                <motion.button whileTap={{ scale: 0.95 }} onClick={addDate}
+                  style={{ padding: "0 16px", background: "linear-gradient(135deg, #f5a623, #e8920f)", color: "#fff", border: "none", borderRadius: "12px", fontSize: "18px", cursor: "pointer", flexShrink: 0 }}>
+                  +
+                </motion.button>
+              </div>
+
+              {/* Date list */}
+              <AnimatePresence>
+                {eventDates.map((d, i) => (
+                  <motion.div key={d.date} initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, height: 0 }}
+                    style={{ background: "rgba(245,166,35,0.06)", border: "1.5px solid rgba(245,166,35,0.2)", borderRadius: "12px", padding: "12px 14px", marginBottom: "8px" }}>
+                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "10px" }}>
+                      <div style={{ fontSize: "13px", fontWeight: 700, color: "#1a1a1a" }}>
+                        📅 Day {i + 1} — {new Date(d.date + "T00:00:00").toLocaleDateString("en-GH", { weekday: "short", month: "short", day: "numeric" })}
+                      </div>
+                      <motion.button whileTap={{ scale: 0.9 }} onClick={() => removeDate(d.date)}
+                        style={{ background: "rgba(220,38,38,0.08)", border: "none", borderRadius: "6px", padding: "4px 8px", cursor: "pointer", color: "#dc2626", fontSize: "11px", fontWeight: 600 }}>
+                        Remove
+                      </motion.button>
+                    </div>
+                    <div style={{ display: "grid", gridTemplateColumns: evType === "paid" ? "1fr 1fr" : "1fr", gap: "8px" }}>
+                      <div>
+                        <label style={{ fontSize: "10px", fontWeight: 600, color: "rgba(0,0,0,0.4)", display: "block", marginBottom: "4px" }}>TICKETS / SPOTS</label>
+                        <input type="number" placeholder="e.g. 200" value={d.capacity}
+                          onChange={e => updateDate(d.date, "capacity", e.target.value)}
+                          style={{ ...inputStyle(false), padding: "9px 12px", fontSize: "13px" }} onFocus={focusGold} onBlur={blurGold} />
+                      </div>
+                      {evType === "paid" && (
+                        <div>
+                          <label style={{ fontSize: "10px", fontWeight: 600, color: "rgba(0,0,0,0.4)", display: "block", marginBottom: "4px" }}>PRICE ({currency})</label>
+                          <input type="number" placeholder="e.g. 150" value={d.price}
+                            onChange={e => updateDate(d.date, "price", e.target.value)}
+                            style={{ ...inputStyle(false), padding: "9px 12px", fontSize: "13px" }} onFocus={focusGold} onBlur={blurGold} />
+                        </div>
+                      )}
+                    </div>
+                  </motion.div>
+                ))}
+              </AnimatePresence>
+
+              {eventDates.length === 0 && (
+                <div style={{ textAlign: "center", padding: "20px", color: "rgba(0,0,0,0.35)", fontSize: "13px", border: "1.5px dashed rgba(0,0,0,0.1)", borderRadius: "12px" }}>
+                  Pick a date above and tap + to add it
+                </div>
+              )}
+
+              {eventDates.length >= 2 && (
+                <div style={{ fontSize: "11px", color: "#16a34a", background: "rgba(22,163,74,0.08)", padding: "8px 12px", borderRadius: "8px", marginTop: "4px" }}>
+                  ✅ {eventDates.length} days added — attendees will choose which day(s) to attend
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Venue + city */}
+          <div style={{ marginBottom: "14px" }}>
+            <label style={labelStyle(errors.venue)}>VENUE {errors.venue && <span style={{ color: "#dc2626", fontWeight: 400 }}>— {errors.venue}</span>}</label>
+            <input placeholder="e.g. Accra Sports Stadium" value={addEventForm.venue || ""} onChange={e => { setAddEventForm({ ...addEventForm, venue: e.target.value }); setErrors(p => ({ ...p, venue: null })); }}
+              style={inputStyle(errors.venue)} onFocus={focusGold} onBlur={blurGold} />
+          </div>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px", marginBottom: "14px" }}>
+            <div>
+              <label style={labelStyle(false)}>CITY</label>
+              <input placeholder="e.g. Accra" value={addEventForm.city || ""} onChange={e => setAddEventForm({ ...addEventForm, city: e.target.value })}
+                style={inputStyle(false)} onFocus={focusGold} onBlur={blurGold} />
+            </div>
+            <div>
+              <label style={labelStyle(false)}>COUNTRY</label>
+              <select value={country} onChange={e => setCountry(e.target.value)}
+                style={{ ...inputStyle(false), background: "rgba(0,0,0,0.03)" }} onFocus={focusGold} onBlur={blurGold}>
+                {COUNTRIES.map(c => <option key={c} value={c}>{c}</option>)}
+              </select>
+            </div>
+          </div>
+
+          {/* Tickets + price (single day only) */}
+          {!isMultiDay && (
+            <div style={{ display: "grid", gridTemplateColumns: evType === "paid" ? "1fr 1fr" : "1fr", gap: "10px", marginBottom: "14px" }}>
+              <div>
+                <label style={labelStyle(errors.total)}>
+                  {evType === "free" ? "TOTAL SPOTS" : "TOTAL TICKETS"}
+                  {errors.total && <span style={{ color: "#dc2626", fontWeight: 400 }}> — {errors.total}</span>}
+                </label>
+                <input type="number" placeholder="e.g. 500" value={addEventForm.totalTickets || ""}
+                  onChange={e => { setAddEventForm({ ...addEventForm, totalTickets: e.target.value }); setErrors(p => ({ ...p, total: null })); }}
+                  style={inputStyle(errors.total)} onFocus={focusGold} onBlur={blurGold} />
+              </div>
+              {evType === "paid" && (
+                <div>
+                  <label style={labelStyle(errors.price)}>
+                    PRICE ({currency})
+                    {errors.price && <span style={{ color: "#dc2626", fontWeight: 400 }}> — {errors.price}</span>}
+                  </label>
+                  <input type="number" placeholder="e.g. 150" value={addEventForm.price || ""}
+                    onChange={e => { setAddEventForm({ ...addEventForm, price: e.target.value }); setErrors(p => ({ ...p, price: null })); }}
+                    style={inputStyle(errors.price)} onFocus={focusGold} onBlur={blurGold} />
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Currency (paid only) */}
+          {evType === "paid" && (
+            <div style={{ marginBottom: "14px" }}>
+              <label style={labelStyle(false)}>CURRENCY</label>
+              <div style={{ display: "flex", gap: "6px", flexWrap: "wrap" }}>
+                {CURRENCIES.map(c => (
+                  <motion.button key={c.code} whileTap={{ scale: 0.93 }} onClick={() => setCurrency(c.code)}
+                    style={{ padding: "6px 12px", borderRadius: "8px", border: `1.5px solid ${currency === c.code ? "#f5a623" : "rgba(0,0,0,0.1)"}`, background: currency === c.code ? "rgba(245,166,35,0.08)" : "transparent", color: currency === c.code ? "#e8920f" : "rgba(0,0,0,0.45)", fontWeight: 600, fontSize: "11px", cursor: "pointer", fontFamily: "'JetBrains Mono', monospace" }}>
+                    {c.symbol} {c.code}
+                  </motion.button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Description */}
+          <div style={{ marginBottom: "14px" }}>
+            <label style={labelStyle(false)}>DESCRIPTION</label>
+            <textarea placeholder="Tell people about your event..." value={addEventForm.description || ""}
+              onChange={e => setAddEventForm({ ...addEventForm, description: e.target.value })}
+              rows={3} style={{ ...inputStyle(false), resize: "vertical", minHeight: "72px" }}
+              onFocus={focusGold} onBlur={blurGold} />
+          </div>
+
+          {/* Cover image */}
+          <div style={{ marginBottom: "14px" }}>
+            <label style={labelStyle(false)}>COVER IMAGE</label>
+            <div style={{ display: "flex", gap: "6px", marginBottom: "8px" }}>
+              {[["upload", "📷 Upload"], ["url", "🔗 URL"]].map(([v, l]) => (
+                <motion.div key={v} whileTap={{ scale: 0.95 }} onClick={() => setImgType(v)}
+                  style={{ flex: 1, padding: "8px", borderRadius: "10px", textAlign: "center", cursor: "pointer", fontSize: "12px", fontWeight: 600, border: `1.5px solid ${imgType === v ? "#f5a623" : "rgba(0,0,0,0.1)"}`, background: imgType === v ? "rgba(245,166,35,0.08)" : "transparent", color: imgType === v ? "#e8920f" : "rgba(0,0,0,0.4)" }}>
                   {l}
                 </motion.div>
               ))}
             </div>
-            {imgType==="upload" ? (
+            {imgType === "upload" ? (
               <>
-                <input type="file" accept="image/jpeg,image/png,image/webp"
-                  id="ev-img" style={{ display:"none" }}
+                <input type="file" accept="image/jpeg,image/png,image/webp" id="ev-img" style={{ display: "none" }}
                   onChange={e => {
-                    const f = e.target.files[0]; if(!f) return;
+                    const f = e.target.files[0]; if (!f) return;
                     const cv = document.createElement("canvas"); const im = new Image();
                     const u = URL.createObjectURL(f);
                     im.onload = () => {
-                      const M=1200; let w=im.width,h=im.height;
-                      if(w>M){h=Math.round(h*M/w);w=M;}
-                      cv.width=w;cv.height=h;
-                      cv.getContext("2d").drawImage(im,0,0,w,h);
-                      setAddEventForm({...addEventForm,image:cv.toDataURL("image/jpeg",0.82)});
+                      const M = 1200; let w = im.width, h = im.height;
+                      if (w > M) { h = Math.round(h * M / w); w = M; }
+                      cv.width = w; cv.height = h;
+                      cv.getContext("2d").drawImage(im, 0, 0, w, h);
+                      setAddEventForm({ ...addEventForm, image: cv.toDataURL("image/jpeg", 0.82) });
                       URL.revokeObjectURL(u);
-                    }; im.src=u;
+                    }; im.src = u;
                   }} />
-                <label htmlFor="ev-img" style={{ display:"block", padding:"20px",
-                  background:C.card, border:`2px dashed ${C.accent}30`,
-                  borderRadius:"10px", textAlign:"center", cursor:"pointer" }}>
-                  {addEventForm.image?.startsWith("data:")||addEventForm.image?.startsWith("http") ? (
-                    <><img src={addEventForm.image} alt="preview"
-                      style={{ width:"100%", height:"130px", objectFit:"cover",
-                        borderRadius:"8px", marginBottom:"8px" }} />
-                    <div style={{ color:C.green, fontSize:"12px" }}>✓ Image ready — click to change</div></>
+                <label htmlFor="ev-img" style={{ display: "block", padding: "18px", background: "rgba(0,0,0,0.03)", border: "2px dashed rgba(245,166,35,0.3)", borderRadius: "12px", textAlign: "center", cursor: "pointer" }}>
+                  {addEventForm.image?.startsWith("data:") || addEventForm.image?.startsWith("http") ? (
+                    <><img src={addEventForm.image} alt="preview" style={{ width: "100%", height: "120px", objectFit: "cover", borderRadius: "8px", marginBottom: "8px" }} />
+                      <div style={{ color: "#16a34a", fontSize: "12px", fontWeight: 600 }}>✓ Image ready — click to change</div></>
                   ) : (
-                    <><div style={{ fontSize:"24px", marginBottom:"6px" }}>📷</div>
-                    <div style={{ color:C.sub, fontSize:"13px" }}>Click to upload</div>
-                    <div style={{ color:C.muted, fontSize:"11px", marginTop:"3px" }}>
-                      JPG, PNG, WebP · Max 5MB
-                    </div></>
+                    <><div style={{ fontSize: "24px", marginBottom: "6px" }}>📷</div>
+                      <div style={{ color: "rgba(0,0,0,0.5)", fontSize: "13px" }}>Click to upload</div>
+                      <div style={{ color: "rgba(0,0,0,0.3)", fontSize: "11px", marginTop: "3px" }}>JPG, PNG, WebP</div></>
                   )}
                 </label>
               </>
             ) : (
-              <input type="text" placeholder="https://..."
-                value={addEventForm.image?.startsWith("data:")?"":addEventForm.image||""}
-                onChange={e => setAddEventForm({...addEventForm,image:e.target.value})}
-                style={INP(false)} onFocus={focusI} onBlur={blurI} />
+              <input type="text" placeholder="https://..." value={addEventForm.image?.startsWith("data:") ? "" : addEventForm.image || ""}
+                onChange={e => setAddEventForm({ ...addEventForm, image: e.target.value })}
+                style={inputStyle(false)} onFocus={focusGold} onBlur={blurGold} />
             )}
           </div>
 
-          {/* Fields */}
-          <div style={{ display:"grid",
-            gridTemplateColumns: isDesk?"1fr 1fr":"1fr",
-            gap: isDesk?"0 24px":"0" }}>
-            <Field k="name"   label="Event Name"  ph="e.g. Afrobeats Night 2026" req />
-            <Field k="subtitle" label="Subtitle (optional)" ph="e.g. The biggest night in Accra" />
-            <Field k="date"   label="Date"        type="date" req />
-            <Field k="time"   label="Time"        type="time" />
-            <Field k="venue"  label="Venue"       ph="e.g. Accra Sports Stadium" req />
-            <Field k="city"   label="City"        ph="e.g. Accra" />
-            <div style={{ marginBottom:"16px" }}>
-              <label style={{ display:"block", fontSize:"12px", fontWeight:500,
-                color:errors.total?C.red:C.sub, marginBottom:"5px" }}>
-                {evType==="free"?"Total Spots":"Total Tickets"}
-                <span style={{ color:C.red }}> *</span>
-                {errors.total && <span style={{ color:C.red, fontWeight:400 }}> — {errors.total}</span>}
-              </label>
-              <input type="number" placeholder="e.g. 500"
-                value={addEventForm.totalTickets||""}
-                onChange={e => { setAddEventForm({...addEventForm,totalTickets:e.target.value});
-                  setErrors(p=>({...p,total:null})); }}
-                style={INP(errors.total)} onFocus={focusI} onBlur={blurI} />
-            </div>
-            {evType==="paid" && (
-              <div style={{ marginBottom:"16px" }}>
-                <label style={{ display:"block", fontSize:"12px", fontWeight:500,
-                  color:errors.price?C.red:C.sub, marginBottom:"5px" }}>
-                  Price ({currency})
-                  <span style={{ color:C.red }}> *</span>
-                  {errors.price && <span style={{ color:C.red, fontWeight:400 }}> — {errors.price}</span>}
-                </label>
-                <input type="number" placeholder="e.g. 150"
-                  value={addEventForm.price||""}
-                  onChange={e => { setAddEventForm({...addEventForm,price:e.target.value});
-                    setErrors(p=>({...p,price:null})); }}
-                  style={INP(errors.price)} onFocus={focusI} onBlur={blurI} />
-              </div>
-            )}
-            <div style={{ marginBottom:"16px", gridColumn: isDesk?"span 2":"auto" }}>
-              <label style={{ display:"block", fontSize:"12px", fontWeight:500,
-                color:C.sub, marginBottom:"5px" }}>Description</label>
-              <textarea placeholder="Tell people about your event..."
-                value={addEventForm.description||""}
-                onChange={e => setAddEventForm({...addEventForm,description:e.target.value})}
-                rows={3}
-                style={{ ...INP(false), resize:"vertical", minHeight:"72px" }}
-                onFocus={focusI} onBlur={blurI} />
-            </div>
-          </div>
-
-          {/* Shareable link */}
+          {/* Event URL preview */}
           {addEventForm.name && (
-            <motion.div initial={{ opacity:0, y:4 }} animate={{ opacity:1, y:0 }}
-              style={{ background:C.purpleBg, border:`1px solid ${C.purple}22`,
-                borderRadius:"8px", padding:"12px 14px", marginBottom:"16px" }}>
-              <div style={{ fontSize:"10px", fontWeight:600, color:C.purple,
-                fontFamily:MONO, marginBottom:"5px" }}>
-                EVENT URL
-              </div>
-              <div style={{ fontFamily:MONO, fontSize:"11px", color:C.text,
-                background:C.card, padding:"6px 10px", borderRadius:"6px",
-                border:`1px solid ${C.border}`, wordBreak:"break-all" }}>
-                {eventUrl}
-              </div>
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+              style={{ background: "rgba(139,92,246,0.06)", border: "1px solid rgba(139,92,246,0.2)", borderRadius: "10px", padding: "10px 14px", marginBottom: "16px" }}>
+              <div style={{ fontSize: "9px", fontWeight: 700, color: "#7c3aed", letterSpacing: "1.2px", fontFamily: "'JetBrains Mono', monospace", marginBottom: "4px" }}>⛓ EVENT URL</div>
+              <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: "11px", color: "#1a1a1a", wordBreak: "break-all" }}>{eventUrl}</div>
             </motion.div>
           )}
 
-          {/* Info strip */}
-          <div style={{ display:"flex", gap:"8px", flexWrap:"wrap", marginBottom:"20px" }}>
-            {evType==="paid" && (
-              <span style={{ fontSize:"11px", color:C.green, background:C.greenBg,
-                padding:"4px 10px", borderRadius:"5px", fontWeight:500 }}>
-                95% revenue to you · 5% platform fee
-              </span>
-            )}
-            {evType==="free" && (
-              <span style={{ fontSize:"11px", color:C.green, background:C.greenBg,
-                padding:"4px 10px", borderRadius:"5px", fontWeight:500 }}>
-                Free registration · attendees get QR entry pass via email
-              </span>
-            )}
-            <span style={{ fontSize:"11px", color:C.purple, background:C.purpleBg,
-              padding:"4px 10px", borderRadius:"5px", fontWeight:500 }}>
-              ⛓ NFT minted on Polygon per ticket
-            </span>
+          {/* Info strips */}
+          <div style={{ display: "flex", gap: "6px", flexWrap: "wrap", marginBottom: "20px" }}>
+            {evType === "paid" && <span style={{ fontSize: "11px", color: "#16a34a", background: "rgba(22,163,74,0.08)", padding: "4px 10px", borderRadius: "6px", fontWeight: 500 }}>💰 95% revenue to you</span>}
+            {evType === "free" && <span style={{ fontSize: "11px", color: "#16a34a", background: "rgba(22,163,74,0.08)", padding: "4px 10px", borderRadius: "6px", fontWeight: 500 }}>🎉 Free · QR pass via email</span>}
+            {isMultiDay && <span style={{ fontSize: "11px", color: "#7c3aed", background: "rgba(124,58,237,0.08)", padding: "4px 10px", borderRadius: "6px", fontWeight: 500 }}>📅 Attendees pick their day(s)</span>}
+            <span style={{ fontSize: "11px", color: "#7c3aed", background: "rgba(124,58,237,0.08)", padding: "4px 10px", borderRadius: "6px", fontWeight: 500 }}>⛓ NFT on Polygon</span>
           </div>
 
-          <motion.button whileHover={{ scale:1.01 }} whileTap={{ scale:0.97 }}
-            onClick={submit}
-            style={{ padding:"12px 28px",
-              background:`linear-gradient(135deg,${C.accent},${C.accentD})`,
-              color:"#fff", border:"none", borderRadius:"8px", fontSize:"14px",
-              fontWeight:600, cursor:"pointer", fontFamily:FONT,
-              boxShadow:`0 4px 16px ${C.accent}35`,
-              width: isDesk?"auto":"100%" }}>
-            Create {evType==="free"?"Free":"Paid"} Event →
+          {/* Submit */}
+          <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }} onClick={submit}
+            style={{ width: "100%", padding: "15px", borderRadius: "13px", background: "linear-gradient(135deg, #f5a623, #e8920f)", color: "#fff", fontWeight: 700, fontSize: "15px", border: "none", cursor: "pointer", boxShadow: "0 8px 24px rgba(245,166,35,0.35)", fontFamily: FONT, letterSpacing: "-0.2px" }}>
+            Create {isMultiDay ? "Multi-Day " : ""}{evType === "free" ? "Free" : "Paid"} Event →
           </motion.button>
-        </div>
+        </motion.div>
       </div>
     </div>
   );

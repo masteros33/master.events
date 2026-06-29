@@ -463,7 +463,8 @@ export default function App() {
     if (params.get("door")  === "1") { useStore.getState().setScreen("doorStaffLogin"); return; }
 
     // ── Event share link: ?event=slug ───────────────────────
-    const eventSlug = params.get("event");
+    // handle both ?event=slug and /events/slug path format
+    const eventSlug = params.get("event") || (window.location.pathname.match(/^\/events\/(.+)/) || [])[1];
     if (eventSlug) {
       localStorage.setItem("pending_event_slug", eventSlug);
       window.history.replaceState({}, "", "/");
@@ -473,8 +474,7 @@ export default function App() {
         useStore.getState().setScreen("signup");
       }
       return;
-    }
-
+}
     if (verify) {
       fetch("https://master-events-backend.onrender.com/api/accounts/verify-email/", {
         method: "POST",

@@ -464,17 +464,14 @@ export default function App() {
 
     // ── Event share link: ?event=slug ───────────────────────
     // handle both ?event=slug and /events/slug path format
-    const eventSlug = params.get("event") || (window.location.pathname.match(/^\/events\/(.+)/) || [])[1];
+   const eventSlug = params.get("event") || (window.location.pathname.match(/^\/events\/(.+)/) || [])[1];
     if (eventSlug) {
       localStorage.setItem("pending_event_slug", eventSlug);
       window.history.replaceState({}, "", "/");
-      if (useStore.getState().isLoggedIn) {
-        useStore.getState().setScreen("pendingEvent");
-      } else {
-        useStore.getState().setScreen("signup");
-      }
+      useStore.getState().setScreen("pendingEvent");
       return;
-}
+    }
+
     if (verify) {
       fetch("https://master-events-backend.onrender.com/api/accounts/verify-email/", {
         method: "POST",

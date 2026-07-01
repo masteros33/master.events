@@ -442,6 +442,9 @@ export default function App() {
   const [desktop, setDesktop] = React.useState(window.innerWidth > 768);
   useTheme();
 
+
+  
+
   React.useEffect(() => {
     const isAppMode = isLoggedIn || APP_MODE_SCREENS.includes(screen);
     if (isAppMode) document.body.classList.add("app-mode");
@@ -498,7 +501,7 @@ export default function App() {
     window.addEventListener("resize", handler);
     return () => window.removeEventListener("resize", handler);
   }, []);
-  
+
   if (screen === "adminGateway")   return <AdminLogin />;
   if (screen === "adminDashboard") return <AdminDashboard />;
   if (screen === "resetPassword")  return <ResetPassword />;

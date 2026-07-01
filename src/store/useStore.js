@@ -75,19 +75,26 @@ function clearSession() {
   } catch {}
 }
 
+// ── Detect event slug at boot time before any redirect clears the URL ──
+const _bootSlug = (new URLSearchParams(window.location.search)).get("event") ||
+  (window.location.pathname.match(/^\/events\/(.+)/) || [])[1];
+if (_bootSlug) {
+  localStorage.setItem("pending_event_slug", _bootSlug);
+}
+
 const saved     = loadSession();
 const token     = getToken();
 const bootState = saved && token ? {
   currentUser: saved.currentUser,
   role:        saved.role,
   isLoggedIn:  true,
-  screen:      "app",
+  screen:      _bootSlug ? "pendingEvent" : "app",
   activeTab:   saved.role === "organizer" ? "dashboard" : "home",
 } : {
   currentUser: null,
   role:        null,
   isLoggedIn:  false,
-  screen:      "home",
+  screen:      _bootSlug ? "pendingEvent" : "home",
   activeTab:   "home",
 };
 
@@ -129,7 +136,6 @@ const useStore = create((set, get) => ({
         const user     = data.user;
         const firstTab = user.role === "organizer" ? "dashboard" : "home";
         saveSession({ currentUser: user, role: user.role });
-        // ── FIX: redirect back to event page after login if coming from event link
         const postAuthScreen = localStorage.getItem("post_auth_screen") || "app";
         localStorage.removeItem("post_auth_screen");
         set({
@@ -188,7 +194,6 @@ const useStore = create((set, get) => ({
         const user     = data.user;
         const firstTab = user.role === "organizer" ? "dashboard" : "home";
         saveSession({ currentUser: user, role: user.role });
-        // ── FIX: redirect back to event page after signup if coming from event link
         const postAuthScreen = localStorage.getItem("post_auth_screen") || "app";
         localStorage.removeItem("post_auth_screen");
         set({

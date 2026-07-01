@@ -21,8 +21,9 @@ const C = {
   purpleBg: "rgba(139,92,246,0.08)",
   red:      "#ef4444",
   redBg:    "rgba(239,68,68,0.08)",
-  shadow:   "var(--shadow-sm)",
-  shadowMd: "var(--shadow-md)",
+  shadow:   "0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04)",
+  shadowMd: "0 4px 16px rgba(0,0,0,0.08), 0 1px 4px rgba(0,0,0,0.04)",
+  shadowLg: "0 10px 40px rgba(0,0,0,0.1), 0 2px 8px rgba(0,0,0,0.06)",
 };
 
 const FONT = "'Inter', 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif";
@@ -49,6 +50,11 @@ const catImg = {
   other:    "https://images.unsplash.com/photo-1492684223066-81342ee5ff30?w=600",
 };
 
+const catColor = {
+  music:"#ec4899", tech:"#3b82f6", food:"#f59e0b",
+  arts:"#8b5cf6", sports:"#22c55e", business:"#06b6d4", other:"#F97316",
+};
+
 const desk = () => window.innerWidth >= 1024;
 const tab  = () => window.innerWidth >= 768;
 
@@ -73,43 +79,30 @@ const mapEvent = e => ({
   image:        e.image || catImg[e.category] || catImg.other,
 });
 
-// ─── shared input style ───────────────────────────────────────
 const INP = (err) => ({
   width: "100%", padding: "10px 14px",
   background: C.card, border: `1.5px solid ${err ? C.red : C.border}`,
   borderRadius: "8px", fontSize: "14px", color: C.text,
   outline: "none", fontFamily: FONT, boxSizing: "border-box",
   caretColor: C.accent, transition: "border-color 0.15s, box-shadow 0.15s",
-  marginBottom: 0,
 });
 const focusI = e => { e.target.style.borderColor = C.accent; e.target.style.boxShadow = `0 0 0 3px ${C.accentBg}`; };
 const blurI  = e => { e.target.style.borderColor = C.border; e.target.style.boxShadow = "none"; };
 
-// ─── AddEvent inputs — OUTSIDE component to prevent focus loss ───
 const AE_INPUT = (err) => ({
   width: "100%", padding: "11px 14px", outline: "none",
-  background: C.bg,
-  border: `1.5px solid ${err ? C.red : C.border}`,
+  background: C.bg, border: `1.5px solid ${err ? C.red : C.border}`,
   borderRadius: "10px", fontSize: "14px", color: C.text,
   fontFamily: FONT, boxSizing: "border-box", transition: "all 0.2s",
 });
-const AE_FOCUS = e => {
-  e.target.style.borderColor = C.accent;
-  e.target.style.background  = C.accentBg;
-  e.target.style.boxShadow   = `0 0 0 3px rgba(249,115,22,0.1)`;
-};
-const AE_BLUR = e => {
-  e.target.style.borderColor = C.border;
-  e.target.style.background  = C.bg;
-  e.target.style.boxShadow   = "none";
-};
+const AE_FOCUS = e => { e.target.style.borderColor = C.accent; e.target.style.background = C.accentBg; e.target.style.boxShadow = `0 0 0 3px rgba(249,115,22,0.1)`; };
+const AE_BLUR  = e => { e.target.style.borderColor = C.border; e.target.style.background = C.bg; e.target.style.boxShadow = "none"; };
 const AE_LABEL = (err) => ({
   display: "block", fontSize: "11px", fontWeight: 600,
   color: err ? C.red : C.muted,
   marginBottom: "6px", letterSpacing: "0.5px", textTransform: "uppercase",
 });
 
-// ─── CSV ──────────────────────────────────────────────────────
 function dlCSV(events) {
   if (!events.length) return;
   const rows = events.map(e => ({
@@ -128,92 +121,208 @@ function dlCSV(events) {
   a.click();
 }
 
-function Sparkline({ data = [], color = C.accent, height = 36, width = 120 }) {
+// ── Sparkline ─────────────────────────────────────────────────
+function Sparkline({ data = [], color = C.accent, height = 32, width = 80 }) {
   if (data.length < 2) return null;
-  const max  = Math.max(...data, 1);
-  const pts  = data.map((v, i) => [
+  const max = Math.max(...data, 1);
+  const pts = data.map((v, i) => [
     (i / (data.length - 1)) * width,
     height - (v / max) * (height - 4) - 2,
   ]);
-  const d = pts.map((p, i) => `${i === 0 ? "M" : "L"}${p[0].toFixed(1)},${p[1].toFixed(1)}`).join(" ");
+  const d    = pts.map((p, i) => `${i===0?"M":"L"}${p[0].toFixed(1)},${p[1].toFixed(1)}`).join(" ");
   const fill = [...pts, [width, height], [0, height]].map((p,i) =>
     `${i===0?"M":"L"}${p[0].toFixed(1)},${p[1].toFixed(1)}`).join(" ") + "Z";
+  const id = `sg${color.replace(/[^a-z0-9]/gi,"")}${Math.random().toString(36).slice(2,6)}`;
   return (
-    <svg width={width} height={height} style={{ overflow:"visible" }}>
+    <svg width={width} height={height} style={{ overflow:"visible", flexShrink:0 }}>
       <defs>
-        <linearGradient id={`sg${color.replace("#","")}`} x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor={color} stopOpacity="0.18" />
+        <linearGradient id={id} x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor={color} stopOpacity="0.2" />
           <stop offset="100%" stopColor={color} stopOpacity="0" />
         </linearGradient>
       </defs>
-      <path d={fill} fill={`url(#sg${color.replace("#","")})`} />
+      <path d={fill} fill={`url(#${id})`} />
       <path d={d} fill="none" stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   );
 }
 
-function BarChart({ events }) {
-  if (!events.length) return null;
-  const H = 120, barW = Math.min(40, Math.floor(480 / events.length) - 10);
-  const gap = Math.max(6, Math.floor(480 / events.length) - barW);
-  const vals = events.map(e => Math.round(e.ticketsSold * e.price * 0.95));
-  const max  = Math.max(...vals, 1);
+// ── Circular progress ─────────────────────────────────────────
+function Ring({ pct = 0, size = 44, color = C.accent, bg = C.border }) {
+  const r  = (size - 5) / 2;
+  const cx = size / 2;
+  const c  = 2 * Math.PI * r;
   return (
-    <svg width="100%" viewBox={`0 0 ${Math.max(events.length*(barW+gap)+20,300)} ${H+36}`}
-      style={{ overflow:"visible", minWidth:"260px" }}>
-      {[0,.5,1].map((p,i) => (
-        <g key={i}>
-          <line x1="0" y1={H*(1-p)} x2="100%" y2={H*(1-p)} stroke={C.border} strokeWidth="1" strokeDasharray="4 3" />
-          {p > 0 && <text x="2" y={H*(1-p)-3} fontSize="8" fill={C.muted} fontFamily={MONO}>{Math.round(max*p).toLocaleString()}</text>}
-        </g>
-      ))}
-      {events.map((e, i) => {
-        const v = vals[i];
-        const h = Math.max(3, Math.round((v/max)*H));
-        const x = i*(barW+gap) + gap/2;
-        const y = H - h;
-        const pct = e.totalTickets > 0 ? Math.round((e.ticketsSold/e.totalTickets)*100) : 0;
-        return (
-          <g key={i}>
-            <rect x={x} y={0} width={barW} height={H} rx="4" fill={C.border} opacity="0.35" />
-            <motion.rect x={x} y={y} width={barW} height={h} rx="4" fill={`url(#bc${i})`}
-              initial={{ height:0, y:H }} animate={{ height:h, y }} transition={{ duration:0.6, delay:i*0.06, ease:"easeOut" }} />
-            {v > 0 && <text x={x+barW/2} y={y-5} textAnchor="middle" fontSize="8" fill={C.accent} fontWeight="600" fontFamily={MONO}>{v > 999 ? (v/1000).toFixed(1)+"k" : v}</text>}
-            <text x={x+barW/2} y={H+14} textAnchor="middle" fontSize="8" fill={C.muted} fontFamily={MONO}>{e.name.slice(0,7)}{e.name.length>7?"…":""}</text>
-            <text x={x+barW/2} y={H+24} textAnchor="middle" fontSize="7" fill={pct>80?C.red:C.accent} fontFamily={MONO}>{pct}%</text>
-          </g>
-        );
-      })}
-      <defs>
-        {events.map((_,i) => (
-          <linearGradient key={i} id={`bc${i}`} x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor={C.accent} />
-            <stop offset="100%" stopColor={C.accentD} />
-          </linearGradient>
-        ))}
-      </defs>
+    <svg width={size} height={size} style={{ transform:"rotate(-90deg)", flexShrink:0 }}>
+      <circle cx={cx} cy={cx} r={r} fill="none" stroke={bg} strokeWidth="4" />
+      <motion.circle cx={cx} cy={cx} r={r} fill="none" stroke={color} strokeWidth="4"
+        strokeLinecap="round" strokeDasharray={c}
+        initial={{ strokeDashoffset: c }}
+        animate={{ strokeDashoffset: c - (c * Math.min(pct, 100)) / 100 }}
+        transition={{ duration: 0.8, ease: "easeOut" }} />
     </svg>
   );
 }
 
+// ── Event card (fintech-style, image-first) ───────────────────
+function EventCard({ ev, onClick }) {
+  const [hovered, setHovered] = useState(false);
+  const isFree = ev.event_type === "free";
+  const pct    = ev.totalTickets > 0 ? Math.round((ev.ticketsSold/ev.totalTickets)*100) : 0;
+  const rev    = Math.round(ev.ticketsSold * ev.price * 0.95);
+  const accent = catColor[ev.category] || C.accent;
+
+  return (
+    <motion.div
+      whileHover={{ y: -4, boxShadow: C.shadowLg }}
+      whileTap={{ scale: 0.98 }}
+      onClick={onClick}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      style={{
+        background: C.card, borderRadius: "18px", overflow: "hidden",
+        border: `1px solid ${hovered ? accent+"40" : C.border}`,
+        cursor: "pointer", transition: "all 0.22s ease",
+        boxShadow: C.shadowMd, minWidth: "220px", width: "100%",
+      }}>
+
+      {/* Cover image */}
+      <div style={{ height: "140px", position: "relative", overflow: "hidden" }}>
+        <motion.img src={ev.image} alt={ev.name}
+          animate={{ scale: hovered ? 1.06 : 1 }}
+          transition={{ duration: 0.4 }}
+          style={{ width:"100%", height:"100%", objectFit:"cover", display:"block" }}
+          onError={e => { e.target.src = catImg.other; }} />
+        <div style={{ position:"absolute", inset:0, background:"linear-gradient(to bottom, rgba(0,0,0,0.05) 0%, rgba(0,0,0,0.55) 100%)" }} />
+
+        {/* Badges */}
+        <div style={{ position:"absolute", top:"10px", left:"10px", display:"flex", gap:"5px" }}>
+          <span style={{ background:"rgba(0,0,0,0.6)", backdropFilter:"blur(8px)", color:"#fff", fontSize:"8px", fontWeight:700, padding:"3px 8px", borderRadius:"99px", fontFamily:MONO }}>
+            {ev.category.toUpperCase()}
+          </span>
+          {isFree && <span style={{ background:"rgba(34,197,94,0.9)", backdropFilter:"blur(8px)", color:"#fff", fontSize:"8px", fontWeight:700, padding:"3px 8px", borderRadius:"99px", fontFamily:MONO }}>FREE</span>}
+        </div>
+
+        {/* Live dot */}
+        <div style={{ position:"absolute", top:"10px", right:"10px", display:"flex", alignItems:"center", gap:"4px", background: ev.salesOpen ? "rgba(34,197,94,0.85)" : "rgba(107,114,128,0.8)", backdropFilter:"blur(8px)", padding:"3px 8px", borderRadius:"99px" }}>
+          {ev.salesOpen && <motion.div animate={{ opacity:[0.4,1,0.4] }} transition={{ duration:1.5, repeat:Infinity }} style={{ width:"4px", height:"4px", borderRadius:"50%", background:"#fff" }} />}
+          <span style={{ fontSize:"8px", fontWeight:700, color:"#fff", fontFamily:MONO }}>{ev.salesOpen?"LIVE":"CLOSED"}</span>
+        </div>
+
+        {/* NFT badge bottom */}
+        <div style={{ position:"absolute", bottom:"10px", left:"10px", display:"flex", alignItems:"center", gap:"3px", background:"rgba(139,92,246,0.85)", backdropFilter:"blur(8px)", padding:"2px 7px", borderRadius:"99px" }}>
+          <span style={{ fontSize:"7px" }}>⛓️</span>
+          <span style={{ fontSize:"7px", fontWeight:700, color:"#fff", fontFamily:MONO }}>NFT</span>
+        </div>
+      </div>
+
+      {/* Card body */}
+      <div style={{ padding:"14px 16px 16px" }}>
+        <div style={{ fontWeight:700, fontSize:"13px", color:C.text, marginBottom:"3px", letterSpacing:"-0.2px", overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>
+          {ev.name}
+        </div>
+        <div style={{ fontSize:"11px", color:C.muted, marginBottom:"12px", overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap", fontFamily:MONO }}>
+          📅 {ev.date} · 📍 {ev.city}
+        </div>
+
+        {/* Stats row with ring */}
+        <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between" }}>
+          <div>
+            <div style={{ fontSize:"16px", fontWeight:800, color: isFree ? C.green : C.accent, letterSpacing:"-0.5px", lineHeight:1 }}>
+              {isFree ? `${(ev.regs||ev.ticketsSold).toLocaleString()} reg` : `${ev.currency} ${rev.toLocaleString()}`}
+            </div>
+            <div style={{ fontSize:"10px", color:C.muted, marginTop:"3px", fontFamily:MONO }}>
+              {ev.ticketsSold}/{ev.totalTickets} · {pct}% full
+            </div>
+          </div>
+          <div style={{ position:"relative", display:"flex", alignItems:"center", justifyContent:"center" }}>
+            <Ring pct={pct} size={44} color={pct > 80 ? C.red : accent} />
+            <span style={{ position:"absolute", fontSize:"9px", fontWeight:700, color: pct > 80 ? C.red : accent, fontFamily:MONO }}>
+              {pct}%
+            </span>
+          </div>
+        </div>
+      </div>
+    </motion.div>
+  );
+}
+
+// ── Activity feed ─────────────────────────────────────────────
+function ActivityFeed({ events }) {
+  const [feed,  setFeed]  = useState([]);
+  const [pulse, setPulse] = useState(false);
+  const ref = useRef(false);
+
+  useEffect(() => {
+    if (!events.length || ref.current) return;
+    ref.current = true;
+    const types = [
+      ev => ({ icon:"🎟", color:C.green,  label:"Ticket purchased",       detail:`×${Math.ceil(Math.random()*3)} · ${ev.name}`,            ts:`${Math.floor(Math.random()*55)+1}m ago` }),
+      ev => ({ icon:"🔄", color:C.blue,   label:"Ticket transferred",      detail:ev.name,                                                   ts:`${Math.floor(Math.random()*3)+1}h ago`  }),
+      ev => ({ icon:"⛓",  color:C.purple, label:"NFT minted on Polygon",   detail:`Token #${Math.floor(Math.random()*9000)+1000}`,           ts:`${Math.floor(Math.random()*5)+1}h ago`  }),
+      ev => ({ icon:"💰", color:C.accent, label:"Payout queued",           detail:`${ev.currency||"GHS"} ${Math.round(ev.price*Math.ceil(Math.random()*4)*0.95).toLocaleString()}`, ts:`${Math.floor(Math.random()*8)+2}h ago` }),
+    ];
+    const initial = [];
+    for (let i = 0; i < Math.min(8, events.length * 3); i++) {
+      const ev = events[Math.floor(Math.random() * events.length)];
+      initial.push({ id: i, ...types[Math.floor(Math.random() * types.length)](ev) });
+    }
+    setFeed(initial);
+    const tick = () => {
+      const ev = events[Math.floor(Math.random() * events.length)];
+      setFeed(prev => [{ id:Date.now(), ...types[0](ev), ts:"just now" }, ...prev].slice(0, 12));
+      setPulse(true); setTimeout(() => setPulse(false), 1200);
+      setTimeout(tick, 8000 + Math.random() * 7000);
+    };
+    const t = setTimeout(tick, 5000 + Math.random() * 5000);
+    return () => clearTimeout(t);
+  }, [events.length]);
+
+  return (
+    <div style={{ display:"flex", flexDirection:"column", gap:"6px" }}>
+      <div style={{ display:"flex", alignItems:"center", gap:"8px", marginBottom:"4px" }}>
+        <motion.div animate={{ opacity: pulse ? [1,0.3,1] : 1 }}
+          style={{ width:"7px", height:"7px", borderRadius:"50%", background:C.green }} />
+        <span style={{ fontSize:"10px", fontWeight:700, color:C.green, fontFamily:MONO, letterSpacing:"1px" }}>LIVE ACTIVITY</span>
+      </div>
+      <AnimatePresence initial={false}>
+        {feed.map(item => (
+          <motion.div key={item.id}
+            initial={{ opacity:0, y:-8, scale:0.97 }} animate={{ opacity:1, y:0, scale:1 }}
+            exit={{ opacity:0, height:0 }} transition={{ duration:0.22 }}
+            style={{ display:"flex", alignItems:"center", gap:"10px", padding:"9px 12px", background:C.bg, borderRadius:"10px", border:`1px solid ${C.border}` }}>
+            <div style={{ width:"30px", height:"30px", borderRadius:"8px", background:item.color+"12", display:"flex", alignItems:"center", justifyContent:"center", fontSize:"13px", flexShrink:0 }}>{item.icon}</div>
+            <div style={{ flex:1, minWidth:0 }}>
+              <div style={{ fontSize:"12px", fontWeight:600, color:C.text, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{item.label}</div>
+              <div style={{ fontSize:"10px", color:C.muted, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{item.detail}</div>
+            </div>
+            <span style={{ fontSize:"9px", color:C.muted, fontFamily:MONO, flexShrink:0 }}>{item.ts}</span>
+          </motion.div>
+        ))}
+      </AnimatePresence>
+      {!feed.length && <div style={{ padding:"24px", textAlign:"center", color:C.muted, fontSize:"13px" }}>Activity will appear once events are live</div>}
+    </div>
+  );
+}
+
+// ── Fill chart ────────────────────────────────────────────────
 function FillChart({ events }) {
   if (!events.length) return null;
   return (
-    <div style={{ display:"flex", flexDirection:"column", gap:"10px" }}>
+    <div style={{ display:"flex", flexDirection:"column", gap:"12px" }}>
       {events.map(e => {
         const pct = e.totalTickets > 0 ? Math.round((e.ticketsSold/e.totalTickets)*100) : 0;
         const col = pct >= 85 ? C.red : pct >= 55 ? C.accent : C.green;
         return (
           <div key={e.id}>
-            <div style={{ display:"flex", justifyContent:"space-between", marginBottom:"4px" }}>
+            <div style={{ display:"flex", justifyContent:"space-between", marginBottom:"5px" }}>
               <div style={{ display:"flex", alignItems:"center", gap:"6px", minWidth:0 }}>
-                <span style={{ fontSize:"10px", fontWeight:600, color:e.event_type==="free"?C.green:C.accent, background:e.event_type==="free"?C.greenBg:C.accentBg, padding:"1px 6px", borderRadius:"4px", fontFamily:MONO, flexShrink:0 }}>{e.event_type==="free"?"FREE":e.currency}</span>
-                <span style={{ fontSize:"13px", fontWeight:500, color:C.text, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{e.name}</span>
+                <span style={{ fontSize:"9px", fontWeight:700, color:e.event_type==="free"?C.green:C.accent, background:e.event_type==="free"?C.greenBg:C.accentBg, padding:"2px 6px", borderRadius:"4px", fontFamily:MONO, flexShrink:0 }}>
+                  {e.event_type==="free"?"FREE":e.currency}
+                </span>
+                <span style={{ fontSize:"12px", fontWeight:500, color:C.text, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{e.name}</span>
               </div>
-              <div style={{ display:"flex", gap:"10px", flexShrink:0, alignItems:"center" }}>
-                <span style={{ fontSize:"11px", color:C.muted, fontFamily:MONO }}>{e.ticketsSold}/{e.totalTickets}</span>
-                <span style={{ fontSize:"12px", fontWeight:700, color:col, fontFamily:MONO, minWidth:"34px", textAlign:"right" }}>{pct}%</span>
-              </div>
+              <span style={{ fontSize:"12px", fontWeight:700, color:col, fontFamily:MONO, flexShrink:0, marginLeft:"8px" }}>{pct}%</span>
             </div>
             <div style={{ height:"5px", background:C.border, borderRadius:"99px", overflow:"hidden" }}>
               <motion.div initial={{ width:0 }} animate={{ width:`${Math.max(1,pct)}%` }} transition={{ duration:0.7, ease:"easeOut" }}
@@ -226,90 +335,35 @@ function FillChart({ events }) {
   );
 }
 
-function ActivityFeed({ events }) {
-  const [feed, setFeed] = useState([]);
-  const [pulse, setPulse] = useState(false);
-  const ref = useRef(false);
-  useEffect(() => {
-    if (!events.length || ref.current) return;
-    ref.current = true;
-    const types = [
-      (ev) => ({ icon:"🎟", color:C.green,  label:`Ticket purchased`, detail:`× ${Math.ceil(Math.random()*3)} · ${ev.name}`, ts:`${Math.floor(Math.random()*55)+1}m ago` }),
-      (ev) => ({ icon:"🔄", color:C.blue,   label:`Ticket transferred`, detail:ev.name, ts:`${Math.floor(Math.random()*3)+1}h ago` }),
-      (ev) => ({ icon:"⛓", color:C.purple, label:`NFT minted on Polygon`, detail:`Token #${Math.floor(Math.random()*9000)+1000}`, ts:`${Math.floor(Math.random()*5)+1}h ago` }),
-      (ev) => ({ icon:"💰", color:C.accent, label:`Payout queued`, detail:`${ev.currency||"GHS"} ${Math.round(ev.price*Math.ceil(Math.random()*4)*0.95).toLocaleString()}`, ts:`${Math.floor(Math.random()*8)+2}h ago` }),
-    ];
-    const initial = [];
-    for (let i = 0; i < Math.min(8, events.length * 3); i++) {
-      const ev = events[Math.floor(Math.random() * events.length)];
-      initial.push({ id: i, ...types[Math.floor(Math.random() * types.length)](ev) });
-    }
-    setFeed(initial);
-    const tick = () => {
-      const ev = events[Math.floor(Math.random() * events.length)];
-      setFeed(prev => [{ id: Date.now(), ...types[0](ev), ts:"just now" }, ...prev].slice(0, 12));
-      setPulse(true);
-      setTimeout(() => setPulse(false), 1200);
-      setTimeout(tick, 8000 + Math.random() * 7000);
-    };
-    const t = setTimeout(tick, 5000 + Math.random() * 5000);
-    return () => clearTimeout(t);
-  }, [events.length]);
+// ── Panel shell ───────────────────────────────────────────────
+function Panel({ children, style = {} }) {
   return (
-    <div style={{ display:"flex", flexDirection:"column", gap:"6px" }}>
-      <div style={{ display:"flex", alignItems:"center", gap:"8px", marginBottom:"4px" }}>
-        <motion.div animate={{ opacity: pulse ? [1,0.3,1] : 1 }} style={{ width:"7px", height:"7px", borderRadius:"50%", background:C.green, flexShrink:0 }} />
-        <span style={{ fontSize:"11px", fontWeight:600, color:C.green, fontFamily:MONO }}>LIVE ACTIVITY</span>
-      </div>
-      <AnimatePresence initial={false}>
-        {feed.map(item => (
-          <motion.div key={item.id} initial={{ opacity:0, y:-8, scale:0.97 }} animate={{ opacity:1, y:0, scale:1 }} exit={{ opacity:0, height:0 }} transition={{ duration:0.25 }}
-            style={{ display:"flex", alignItems:"center", gap:"10px", padding:"9px 12px", background:C.card, borderRadius:"8px", border:`1px solid ${C.border}` }}>
-            <div style={{ width:"30px", height:"30px", borderRadius:"8px", background:item.color+"12", display:"flex", alignItems:"center", justifyContent:"center", fontSize:"14px", flexShrink:0, border:`1px solid ${item.color}20` }}>{item.icon}</div>
-            <div style={{ flex:1, minWidth:0 }}>
-              <div style={{ fontSize:"12px", fontWeight:600, color:C.text, whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis" }}>{item.label}</div>
-              <div style={{ fontSize:"11px", color:C.muted, whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis" }}>{item.detail}</div>
-            </div>
-            <span style={{ fontSize:"10px", color:C.muted, fontFamily:MONO, flexShrink:0 }}>{item.ts}</span>
-          </motion.div>
-        ))}
-      </AnimatePresence>
-      {!feed.length && <div style={{ padding:"24px", textAlign:"center", color:C.muted, fontSize:"13px" }}>Activity will appear here once events are live</div>}
+    <div style={{ background:C.card, border:`1px solid ${C.border}`, borderRadius:"16px", padding:"20px 22px", boxShadow:C.shadow, ...style }}>
+      {children}
     </div>
   );
 }
 
-function KPI({ icon, label, value, sub, color, trend, spark, onClick }) {
+// ── Section head ──────────────────────────────────────────────
+function SectionHead({ label, title, action }) {
   return (
-    <motion.div whileHover={{ y:-2, borderColor:color+"50" }} whileTap={onClick?{scale:0.98}:{}} onClick={onClick}
-      style={{ background:C.card, border:`1px solid ${C.border}`, borderRadius:"12px", padding:"18px 20px", boxShadow:C.shadow, cursor:onClick?"pointer":"default", transition:"all 0.18s", position:"relative", overflow:"hidden" }}>
-      <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start" }}>
-        <div style={{ flex:1, minWidth:0 }}>
-          <div style={{ display:"flex", alignItems:"center", gap:"6px", marginBottom:"10px" }}>
-            <span style={{ fontSize:"16px" }}>{icon}</span>
-            <span style={{ fontSize:"11px", fontWeight:500, color:C.muted, letterSpacing:"0.3px" }}>{label}</span>
-          </div>
-          <div style={{ fontSize:"26px", fontWeight:700, color, letterSpacing:"-1px", lineHeight:1, marginBottom:"6px", fontFamily:FONT }}>{value}</div>
-          {sub && <div style={{ fontSize:"12px", color:C.muted }}>{sub}</div>}
-          {trend && (
-            <div style={{ display:"flex", alignItems:"center", gap:"4px", marginTop:"6px" }}>
-              <span style={{ fontSize:"11px", fontWeight:600, color:trend>0?C.green:C.red }}>{trend>0?"↑":"↓"} {Math.abs(trend)}%</span>
-              <span style={{ fontSize:"11px", color:C.muted }}>vs last week</span>
-            </div>
-          )}
-        </div>
-        {spark && <div style={{ opacity:0.7, flexShrink:0 }}><Sparkline data={spark} color={color} /></div>}
+    <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-end", marginBottom:"18px" }}>
+      <div>
+        {label && <div style={{ fontSize:"10px", fontWeight:600, color:C.accent, letterSpacing:"1.5px", marginBottom:"3px", fontFamily:MONO }}>{label}</div>}
+        <h2 style={{ fontSize:"18px", fontWeight:700, color:C.text, letterSpacing:"-0.4px", margin:0, fontFamily:FONT }}>{title}</h2>
       </div>
-    </motion.div>
+      {action}
+    </div>
   );
 }
 
+// ── EventRow (list view for Events tab) ──────────────────────
 function EventRow({ ev, onClick }) {
-  const pct = ev.totalTickets > 0 ? Math.round((ev.ticketsSold/ev.totalTickets)*100) : 0;
+  const pct    = ev.totalTickets > 0 ? Math.round((ev.ticketsSold/ev.totalTickets)*100) : 0;
   const isFree = ev.event_type === "free";
   return (
     <motion.div whileHover={{ borderColor:C.accent+"40", y:-1 }} whileTap={{ scale:0.99 }} onClick={onClick}
-      style={{ background:C.card, border:`1px solid ${C.border}`, borderRadius:"12px", overflow:"hidden", cursor:"pointer", boxShadow:C.shadow, transition:"all 0.18s", display:"flex", flexDirection:tab()?"row":"column" }}>
+      style={{ background:C.card, border:`1px solid ${C.border}`, borderRadius:"14px", overflow:"hidden", cursor:"pointer", boxShadow:C.shadow, transition:"all 0.18s", display:"flex", flexDirection:tab()?"row":"column" }}>
       <div style={{ width:tab()?"160px":"100%", height:tab()?"100%":"120px", minHeight:tab()?"80px":"120px", position:"relative", flexShrink:0 }}>
         <img src={ev.image} alt={ev.name} onError={e=>{e.target.src=catImg.other}} style={{ width:"100%", height:"100%", objectFit:"cover", display:"block" }} />
         <div style={{ position:"absolute", inset:0, background:"linear-gradient(135deg,rgba(0,0,0,0.4),rgba(0,0,0,0.1))" }} />
@@ -325,15 +379,15 @@ function EventRow({ ev, onClick }) {
       <div style={{ flex:1, padding:"16px 18px", display:"flex", flexDirection:"column", justifyContent:"space-between", minWidth:0 }}>
         <div>
           <div style={{ fontSize:"10px", fontWeight:500, color:C.muted, textTransform:"uppercase", letterSpacing:"0.5px", marginBottom:"4px", fontFamily:MONO }}>{ev.category} · {ev.country}</div>
-          <div style={{ fontSize:"16px", fontWeight:650, color:C.text, letterSpacing:"-0.3px", marginBottom:"4px", overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{ev.name}</div>
-          <div style={{ fontSize:"12px", color:C.muted, marginBottom:"12px" }}>📍 {ev.venue} &nbsp;·&nbsp; 📅 {ev.date}</div>
+          <div style={{ fontSize:"15px", fontWeight:700, color:C.text, letterSpacing:"-0.3px", marginBottom:"4px", overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{ev.name}</div>
+          <div style={{ fontSize:"12px", color:C.muted, marginBottom:"12px" }}>📍 {ev.venue} · 📅 {ev.date}</div>
         </div>
         <div>
           <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:"6px" }}>
-            <span style={{ fontSize:"14px", fontWeight:700, color:C.green, fontFamily:MONO }}>
+            <span style={{ fontSize:"13px", fontWeight:700, color:C.green, fontFamily:MONO }}>
               {isFree ? `${(ev.regs||ev.ticketsSold).toLocaleString()} registered` : `${ev.currency} ${Math.round(ev.ticketsSold*ev.price*0.95).toLocaleString()}`}
             </span>
-            <span style={{ fontSize:"11px", color:C.muted, fontFamily:MONO }}>{ev.ticketsSold}/{ev.totalTickets} · {pct}%</span>
+            <span style={{ fontSize:"10px", color:C.muted, fontFamily:MONO }}>{ev.ticketsSold}/{ev.totalTickets} · {pct}%</span>
           </div>
           <div style={{ height:"4px", background:C.border, borderRadius:"2px", overflow:"hidden" }}>
             <motion.div initial={{ width:0 }} animate={{ width:`${pct}%` }} transition={{ duration:0.7, ease:"easeOut" }}
@@ -345,28 +399,8 @@ function EventRow({ ev, onClick }) {
   );
 }
 
-function SectionHead({ label, title, action }) {
-  return (
-    <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-end", marginBottom:"18px" }}>
-      <div>
-        <div style={{ fontSize:"10px", fontWeight:600, color:C.accent, letterSpacing:"1.5px", marginBottom:"3px", fontFamily:MONO }}>{label}</div>
-        <h2 style={{ fontSize:"20px", fontWeight:700, color:C.text, letterSpacing:"-0.4px", margin:0, fontFamily:FONT }}>{title}</h2>
-      </div>
-      {action}
-    </div>
-  );
-}
-
-function Panel({ children, style = {} }) {
-  return (
-    <div style={{ background:C.card, border:`1px solid ${C.border}`, borderRadius:"12px", padding:"20px", boxShadow:C.shadow, ...style }}>
-      {children}
-    </div>
-  );
-}
-
 // ═══════════════════════════════════════════════════════════════
-//  ORGANIZER HOME
+//  ORGANIZER HOME — FINTECH REVAMP
 // ═══════════════════════════════════════════════════════════════
 export function OrganizerHome() {
   const orgEvents          = useStore(s => s.orgEvents);
@@ -375,52 +409,65 @@ export function OrganizerHome() {
   const setActiveTab       = useStore(s => s.setActiveTab);
   const setViewingOrgEvent = useStore(s => s.setViewingOrgEvent);
   const currentUser        = useStore(s => s.currentUser);
-  const [loading, setLoading] = useState(true);
-  const [isDesk,  setIsDesk]  = useState(desk());
-  const [isTab,   setIsTab]   = useState(tab());
+  const [loading,    setLoading]    = useState(true);
+  const [isDesk,     setIsDesk]     = useState(desk());
+  const [statsView,  setStatsView]  = useState("all"); // "all" | event id
+  const [dropOpen,   setDropOpen]   = useState(false);
 
   useEffect(() => {
     eventsAPI.myEvents()
       .then(d => { if (Array.isArray(d)) setOrgEvents(d.map(mapEvent)); setLoading(false); })
       .catch(() => setLoading(false));
-    const r = () => { setIsDesk(desk()); setIsTab(tab()); };
+    const r = () => setIsDesk(desk());
     window.addEventListener("resize", r);
     return () => window.removeEventListener("resize", r);
   }, []);
 
-  const paid    = orgEvents.filter(e => e.event_type !== "free");
-  const free    = orgEvents.filter(e => e.event_type === "free");
+  // Stats source — all events or single event
+  const src = statsView === "all"
+    ? orgEvents
+    : orgEvents.filter(e => String(e.id) === String(statsView));
+
+  const paid    = src.filter(e => e.event_type !== "free");
+  const free    = src.filter(e => e.event_type === "free");
   const revenue = paid.reduce((s,e) => s + e.ticketsSold * e.price * 0.95, 0);
   const sold    = paid.reduce((s,e) => s + e.ticketsSold, 0);
   const regs    = free.reduce((s,e) => s + (e.regs||e.ticketsSold), 0);
   const live    = orgEvents.filter(e => e.salesOpen).length;
-  const cap     = orgEvents.reduce((s,e) => s + e.totalTickets, 0);
-  const fill    = cap > 0 ? Math.round(((sold+regs)/cap)*100) : 0;
-  const top     = [...orgEvents].sort((a,b)=>b.ticketsSold*b.price-a.ticketsSold*a.price)[0];
-  const goWallet = () => { setActiveTab("wallet"); setScreen("app"); };
+  const avgPrice = paid.length ? Math.round(paid.reduce((s,e)=>s+e.price,0)/paid.length) : 0;
 
-  const revSpark  = orgEvents.length ? Array.from({length:7}, (_,i) => Math.max(0, revenue*(0.5+Math.random()*0.6)*(i+1)/8)) : [];
-  const soldSpark = orgEvents.length ? Array.from({length:7}, (_,i) => Math.max(0, sold*(0.4+Math.random()*0.7)*(i+1)/8)) : [];
-  const PAD = isDesk ? "28px 40px 80px" : isTab ? "20px 24px 80px" : "16px 16px 100px";
+  const revSpark  = Array.from({length:7}, (_,i) => Math.max(0, revenue*(0.4+Math.random()*0.7)*(i+1)/8));
+  const soldSpark = Array.from({length:7}, (_,i) => Math.max(0, sold*(0.3+Math.random()*0.8)*(i+1)/8));
+
+  const selectedEvent = statsView !== "all" ? orgEvents.find(e => String(e.id) === String(statsView)) : null;
+
+  const PAD = isDesk ? "28px 40px 80px" : "16px 16px 100px";
+
+  const hour = new Date().getHours();
+  const greeting = hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening";
 
   return (
-    <div style={{ background:C.bg, minHeight:"100%", padding:PAD, fontFamily:FONT }}>
-      <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", marginBottom:"28px", flexWrap:"wrap", gap:"12px" }}>
+    <div style={{ background:C.bg, minHeight:"100%", padding:PAD, fontFamily:FONT }} onClick={() => setDropOpen(false)}>
+
+      {/* ── Header ── */}
+      <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", marginBottom:"24px", flexWrap:"wrap", gap:"12px" }}>
         <div>
-          <div style={{ fontSize:"10px", fontWeight:600, color:C.accent, letterSpacing:"1.5px", marginBottom:"4px", fontFamily:MONO }}>ORGANIZER DASHBOARD</div>
-          <h1 style={{ fontSize:isDesk?"28px":"22px", fontWeight:700, color:C.text, letterSpacing:"-0.7px", margin:"0 0 4px", fontFamily:FONT }}>
-            {isDesk ? `Good ${new Date().getHours()<12?"morning":new Date().getHours()<17?"afternoon":"evening"}, ${currentUser?.first_name}` : "Dashboard"}
+          <p style={{ fontSize:"12px", color:C.muted, margin:"0 0 4px", fontFamily:MONO, letterSpacing:"0.5px" }}>ORGANIZER DASHBOARD</p>
+          <h1 style={{ fontSize:isDesk?"26px":"20px", fontWeight:800, color:C.text, letterSpacing:"-0.7px", margin:"0 0 2px", fontFamily:FONT }}>
+            {isDesk ? `${greeting}, ${currentUser?.first_name} 👋` : `Hi ${currentUser?.first_name} 👋`}
           </h1>
-          <p style={{ fontSize:"13px", color:C.muted, margin:0 }}>{isDesk ? "Your event performance at a glance" : `Hi ${currentUser?.first_name} 👋`}</p>
+          <p style={{ fontSize:"13px", color:C.muted, margin:0 }}>
+            {orgEvents.length} event{orgEvents.length!==1?"s":""} · {live} live · {orgEvents.reduce((s,e)=>s+e.ticketsSold,0).toLocaleString()} tickets sold
+          </p>
         </div>
         <div style={{ display:"flex", gap:"8px", alignItems:"center", flexShrink:0 }}>
-          <div style={{ display:"flex", alignItems:"center", gap:"5px", padding:"5px 10px", borderRadius:"6px", background:C.purpleBg, border:`1px solid ${C.purple}25` }}>
-            <motion.div animate={{ opacity:[0.5,1,0.5] }} transition={{ duration:2, repeat:Infinity }} style={{ width:"5px", height:"5px", borderRadius:"50%", background:C.purple }} />
+          <div style={{ display:"flex", alignItems:"center", gap:"5px", padding:"5px 10px", borderRadius:"8px", background:C.purpleBg, border:`1px solid ${C.purple}25` }}>
+            <motion.div animate={{ opacity:[0.4,1,0.4] }} transition={{ duration:2, repeat:Infinity }} style={{ width:"5px", height:"5px", borderRadius:"50%", background:C.purple }} />
             <span style={{ fontSize:"10px", fontWeight:600, color:C.purple, fontFamily:MONO }}>POLYGON</span>
           </div>
           {isDesk && (
             <motion.button whileHover={{ scale:1.02 }} whileTap={{ scale:0.97 }} onClick={() => setScreen("addEvent")}
-              style={{ padding:"9px 18px", background:`linear-gradient(135deg,${C.accent},${C.accentD})`, color:"#fff", border:"none", borderRadius:"8px", fontSize:"13px", fontWeight:600, cursor:"pointer", fontFamily:FONT, letterSpacing:"-0.1px", boxShadow:`0 2px 12px ${C.accent}35` }}>
+              style={{ padding:"9px 18px", background:`linear-gradient(135deg,${C.accent},${C.accentD})`, color:"#fff", border:"none", borderRadius:"10px", fontSize:"13px", fontWeight:600, cursor:"pointer", fontFamily:FONT, boxShadow:`0 2px 12px ${C.accent}35` }}>
               + Create Event
             </motion.button>
           )}
@@ -428,128 +475,188 @@ export function OrganizerHome() {
       </div>
 
       {loading ? (
-        <div style={{ display:"grid", gridTemplateColumns:isTab?"repeat(4,1fr)":"1fr 1fr", gap:"12px", marginBottom:"24px" }}>
-          {[1,2,3,4].map(i => <div key={i} className="skeleton" style={{ height:"110px", borderRadius:"12px" }} />)}
+        <div style={{ display:"grid", gridTemplateColumns:tab()?"repeat(4,1fr)":"1fr 1fr", gap:"12px", marginBottom:"24px" }}>
+          {[1,2,3,4].map(i => <div key={i} className="skeleton" style={{ height:"110px", borderRadius:"16px" }} />)}
         </div>
       ) : (
         <>
-          <div style={{ display:"grid", gridTemplateColumns:isDesk?"repeat(4,1fr)":isTab?"1fr 1fr 1fr 1fr":"1fr 1fr", gap:"12px", marginBottom:"24px" }}>
-            <KPI icon="💰" label="Total Revenue" color={C.green} value={`GHS ${Math.round(revenue).toLocaleString()}`} sub="95% payout rate" spark={revSpark} onClick={goWallet} />
-            <KPI icon="🎟" label="Tickets Sold" color={C.blue} value={sold.toLocaleString()} sub={`${fill}% avg fill`} spark={soldSpark} />
-            <KPI icon="🎉" label="Free Registrations" color={C.purple} value={regs.toLocaleString()} sub={`${free.length} free event${free.length!==1?"s":""}`} />
-            <KPI icon="📡" label="Live Events" color={C.accent} value={live} sub={`${orgEvents.length} total`} />
+          {/* ── Stats toggle dropdown ── */}
+          <div style={{ marginBottom:"20px", display:"flex", alignItems:"center", gap:"10px", flexWrap:"wrap" }}>
+            <div style={{ fontSize:"11px", fontWeight:600, color:C.muted, fontFamily:MONO }}>VIEWING STATS FOR:</div>
+            <div style={{ position:"relative" }} onClick={e => e.stopPropagation()}>
+              <motion.button whileTap={{ scale:0.97 }} onClick={() => setDropOpen(!dropOpen)}
+                style={{ display:"flex", alignItems:"center", gap:"8px", padding:"7px 14px", background:C.card, border:`1.5px solid ${dropOpen?C.accent:C.border}`, borderRadius:"10px", cursor:"pointer", fontFamily:FONT, fontSize:"13px", fontWeight:600, color:C.text, boxShadow:C.shadow }}>
+                <span style={{ width:"8px", height:"8px", borderRadius:"50%", background: statsView==="all" ? C.accent : C.green, flexShrink:0 }} />
+                {statsView === "all" ? "All Events" : selectedEvent?.name || "Select event"}
+                <span style={{ color:C.muted, fontSize:"10px", marginLeft:"2px" }}>{dropOpen?"▲":"▼"}</span>
+              </motion.button>
+              <AnimatePresence>
+                {dropOpen && (
+                  <motion.div initial={{ opacity:0, y:-8, scale:0.97 }} animate={{ opacity:1, y:0, scale:1 }} exit={{ opacity:0, y:-8, scale:0.97 }}
+                    style={{ position:"absolute", top:"calc(100% + 6px)", left:0, minWidth:"220px", background:C.card, border:`1px solid ${C.border}`, borderRadius:"12px", boxShadow:C.shadowLg, zIndex:100, overflow:"hidden" }}>
+                    {[{ id:"all", name:"All Events" }, ...orgEvents].map(e => (
+                      <motion.div key={e.id} whileHover={{ background:C.accentBg }} onClick={() => { setStatsView(String(e.id)); setDropOpen(false); }}
+                        style={{ display:"flex", alignItems:"center", gap:"8px", padding:"10px 14px", cursor:"pointer", background: String(statsView)===String(e.id)?C.accentBg:"transparent", transition:"background 0.12s" }}>
+                        <span style={{ width:"6px", height:"6px", borderRadius:"50%", background: String(statsView)===String(e.id)?C.accent:C.border, flexShrink:0 }} />
+                        <span style={{ fontSize:"13px", fontWeight: String(statsView)===String(e.id)?600:400, color:C.text, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{e.name}</span>
+                      </motion.div>
+                    ))}
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
           </div>
 
-          {isDesk && (
-            <div style={{ display:"grid", gridTemplateColumns:"2fr 1fr", gap:"16px", marginBottom:"24px" }}>
+          {/* ── Primary revenue hero card ── */}
+          <div style={{ marginBottom:"16px" }}>
+            <Panel style={{ background:`linear-gradient(135deg, ${C.card} 0%, ${C.accentBg} 100%)`, border:`1px solid ${C.accent}20`, padding:"24px 28px" }}>
+              <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", flexWrap:"wrap", gap:"16px" }}>
+                <div>
+                  <div style={{ fontSize:"11px", fontWeight:600, color:C.muted, fontFamily:MONO, letterSpacing:"1px", marginBottom:"8px" }}>TOTAL REVENUE (95% PAYOUT)</div>
+                  <div style={{ fontSize:isDesk?"40px":"32px", fontWeight:900, color:C.accent, letterSpacing:"-1.5px", lineHeight:1, fontFamily:FONT }}>
+                    GHS {Math.round(revenue).toLocaleString()}
+                  </div>
+                  <div style={{ fontSize:"12px", color:C.muted, marginTop:"6px" }}>
+                    {sold.toLocaleString()} paid tickets · {regs.toLocaleString()} free registrations
+                  </div>
+                </div>
+                <div style={{ display:"flex", flexDirection:"column", alignItems:"flex-end", gap:"8px" }}>
+                  <Sparkline data={revSpark} color={C.accent} height={40} width={100} />
+                  <div style={{ fontSize:"10px", color:C.muted, fontFamily:MONO }}>7-day trend</div>
+                </div>
+              </div>
+
+              {/* Secondary metrics strip */}
+              <div style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:"12px", marginTop:"20px", paddingTop:"18px", borderTop:`1px solid ${C.border}` }}>
+                {[
+                  { label:"TICKETS SOLD", value:sold.toLocaleString(), sub:"paid tickets", color:C.blue, spark:soldSpark },
+                  { label:"AVG TICKET PRICE", value:avgPrice ? `GHS ${avgPrice}` : "—", sub:"across paid events", color:C.purple },
+                  { label:"LIVE NOW", value:live, sub:`of ${orgEvents.length} total events`, color:C.green },
+                ].map(m => (
+                  <div key={m.label}>
+                    <div style={{ fontSize:"9px", fontWeight:600, color:C.muted, fontFamily:MONO, letterSpacing:"0.8px", marginBottom:"4px" }}>{m.label}</div>
+                    <div style={{ display:"flex", alignItems:"center", gap:"8px" }}>
+                      <div style={{ fontSize:"18px", fontWeight:800, color:m.color, letterSpacing:"-0.5px", fontFamily:FONT }}>{m.value}</div>
+                      {m.spark && <Sparkline data={m.spark} color={m.color} height={20} width={48} />}
+                    </div>
+                    <div style={{ fontSize:"10px", color:C.muted, marginTop:"2px" }}>{m.sub}</div>
+                  </div>
+                ))}
+              </div>
+            </Panel>
+          </div>
+
+          {/* ── Event cards carousel / grid ── */}
+          {orgEvents.length > 0 && (
+            <div style={{ marginBottom:"24px" }}>
+              <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:"14px" }}>
+                <div>
+                  <div style={{ fontSize:"10px", fontWeight:600, color:C.accent, letterSpacing:"1.5px", fontFamily:MONO, marginBottom:"2px" }}>YOUR EVENTS</div>
+                  <div style={{ fontSize:"16px", fontWeight:700, color:C.text, letterSpacing:"-0.3px" }}>Event Portfolio</div>
+                </div>
+                {!isDesk && (
+                  <motion.button whileTap={{ scale:0.96 }} onClick={() => setScreen("addEvent")}
+                    style={{ padding:"7px 14px", background:`linear-gradient(135deg,${C.accent},${C.accentD})`, color:"#fff", border:"none", borderRadius:"8px", fontSize:"12px", fontWeight:600, cursor:"pointer", fontFamily:FONT }}>
+                    + New
+                  </motion.button>
+                )}
+              </div>
+
+              {/* Horizontally scrollable card row on mobile, grid on desktop */}
+              {isDesk ? (
+                <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(220px,1fr))", gap:"16px" }}>
+                  {orgEvents.map((ev,i) => (
+                    <motion.div key={ev.id} initial={{ opacity:0, y:16 }} animate={{ opacity:1, y:0 }} transition={{ delay:i*0.05 }}>
+                      <EventCard ev={ev} onClick={() => { setViewingOrgEvent(ev); setScreen("orgEventDetail"); }} />
+                    </motion.div>
+                  ))}
+                </div>
+              ) : (
+                <div style={{ display:"flex", gap:"12px", overflowX:"auto", scrollbarWidth:"none", paddingBottom:"4px", margin:"0 -16px", padding:"0 16px 4px" }}>
+                  {orgEvents.map((ev,i) => (
+                    <motion.div key={ev.id} initial={{ opacity:0, x:16 }} animate={{ opacity:1, x:0 }} transition={{ delay:i*0.05 }}
+                      style={{ minWidth:"200px", width:"200px", flexShrink:0 }}>
+                      <EventCard ev={ev} onClick={() => { setViewingOrgEvent(ev); setScreen("orgEventDetail"); }} />
+                    </motion.div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* ── Analytics panels ── */}
+          {isDesk && orgEvents.length > 0 && (
+            <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:"16px", marginBottom:"20px" }}>
               <Panel>
                 <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:"16px" }}>
                   <div>
-                    <div style={{ fontSize:"10px", fontWeight:600, color:C.accent, letterSpacing:"1.5px", fontFamily:MONO, marginBottom:"2px" }}>REVENUE · PER EVENT</div>
-                    <div style={{ fontSize:"15px", fontWeight:650, color:C.text, letterSpacing:"-0.3px", fontFamily:FONT }}>Earnings Breakdown</div>
+                    <div style={{ fontSize:"9px", fontWeight:600, color:C.muted, letterSpacing:"1.5px", fontFamily:MONO, marginBottom:"2px" }}>CAPACITY FILL RATE</div>
+                    <div style={{ fontSize:"15px", fontWeight:700, color:C.text }}>Ticket Progress</div>
                   </div>
-                  <button onClick={() => dlCSV(orgEvents)} style={{ padding:"6px 12px", background:"transparent", border:`1px solid ${C.border}`, borderRadius:"6px", color:C.muted, fontSize:"11px", fontWeight:500, cursor:"pointer", fontFamily:FONT }}>Export CSV</button>
+                  <button onClick={() => dlCSV(orgEvents)} style={{ padding:"5px 11px", background:"transparent", border:`1px solid ${C.border}`, borderRadius:"6px", color:C.muted, fontSize:"11px", cursor:"pointer", fontFamily:FONT }}>Export CSV</button>
                 </div>
-                <div style={{ overflowX:"auto" }}><BarChart events={orgEvents} /></div>
+                <FillChart events={src} />
               </Panel>
               <Panel>
-                <div style={{ fontSize:"10px", fontWeight:600, color:C.accent, letterSpacing:"1.5px", fontFamily:MONO, marginBottom:"4px" }}>FILL RATE</div>
-                <div style={{ fontSize:"15px", fontWeight:650, color:C.text, letterSpacing:"-0.3px", fontFamily:FONT, marginBottom:"16px" }}>Capacity Usage</div>
-                <FillChart events={orgEvents} />
+                <div style={{ fontSize:"9px", fontWeight:600, color:C.muted, letterSpacing:"1.5px", fontFamily:MONO, marginBottom:"2px" }}>PAYOUT SPLIT</div>
+                <div style={{ fontSize:"15px", fontWeight:700, color:C.text, marginBottom:"16px" }}>Earnings Breakdown</div>
+                {[
+                  { label:"You (95%)",     val:Math.round(revenue),        col:C.green, w:"95%" },
+                  { label:"Platform (5%)", val:Math.round(revenue*0.053),  col:C.red,   w:"5%"  },
+                ].map(r => (
+                  <div key={r.label} style={{ marginBottom:"14px" }}>
+                    <div style={{ display:"flex", justifyContent:"space-between", marginBottom:"5px" }}>
+                      <span style={{ fontSize:"12px", fontWeight:500, color:r.col }}>{r.label}</span>
+                      <span style={{ fontSize:"12px", fontWeight:700, color:r.col, fontFamily:MONO }}>GHS {r.val.toLocaleString()}</span>
+                    </div>
+                    <div style={{ height:"5px", background:C.border, borderRadius:"99px", overflow:"hidden" }}>
+                      <motion.div initial={{ width:0 }} animate={{ width:r.w }} transition={{ duration:1 }}
+                        style={{ height:"100%", background:r.col, borderRadius:"99px" }} />
+                    </div>
+                  </div>
+                ))}
+                <motion.button whileHover={{ scale:1.01 }} whileTap={{ scale:0.97 }} onClick={() => { setActiveTab("wallet"); setScreen("app"); }}
+                  style={{ width:"100%", padding:"11px", marginTop:"8px", background:`linear-gradient(135deg,${C.accent},${C.accentD})`, color:"#fff", border:"none", borderRadius:"10px", fontSize:"13px", fontWeight:600, cursor:"pointer", fontFamily:FONT }}>
+                  Withdraw Earnings →
+                </motion.button>
               </Panel>
             </div>
           )}
 
-          {isDesk && (
-            <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:"16px", marginBottom:"24px" }}>
-              <Panel>
-                <div style={{ fontSize:"10px", fontWeight:600, color:C.accent, letterSpacing:"1.5px", fontFamily:MONO, marginBottom:"4px" }}>TRANSACTIONS</div>
-                <div style={{ fontSize:"15px", fontWeight:650, color:C.text, letterSpacing:"-0.3px", fontFamily:FONT, marginBottom:"14px" }}>Live Activity</div>
-                <ActivityFeed events={orgEvents} />
-              </Panel>
-              <div style={{ display:"flex", flexDirection:"column", gap:"14px" }}>
-                <Panel>
-                  <div style={{ fontSize:"10px", fontWeight:600, color:C.muted, letterSpacing:"1.5px", fontFamily:MONO, marginBottom:"14px" }}>PAYOUT SPLIT</div>
-                  {[{ label:"You (95%)", val:Math.round(revenue), col:C.green, w:"95%" }, { label:"Platform (5%)", val:Math.round(revenue*0.053), col:C.red, w:"5%" }].map(r => (
-                    <div key={r.label} style={{ marginBottom:"12px" }}>
-                      <div style={{ display:"flex", justifyContent:"space-between", marginBottom:"5px" }}>
-                        <span style={{ fontSize:"12px", fontWeight:500, color:r.col }}>{r.label}</span>
-                        <span style={{ fontSize:"12px", fontWeight:700, color:r.col, fontFamily:MONO }}>GHS {r.val.toLocaleString()}</span>
-                      </div>
-                      <div style={{ height:"5px", background:C.border, borderRadius:"99px", overflow:"hidden" }}>
-                        <motion.div initial={{ width:0 }} animate={{ width:r.w }} transition={{ duration:1 }} style={{ height:"100%", background:r.col, borderRadius:"99px" }} />
-                      </div>
-                    </div>
-                  ))}
-                  <motion.button whileHover={{ scale:1.01 }} whileTap={{ scale:0.97 }} onClick={goWallet}
-                    style={{ width:"100%", padding:"10px", marginTop:"6px", background:`linear-gradient(135deg,${C.accent},${C.accentD})`, color:"#fff", border:"none", borderRadius:"8px", fontSize:"13px", fontWeight:600, cursor:"pointer", fontFamily:FONT }}>
-                    Withdraw Earnings →
-                  </motion.button>
-                </Panel>
-                {top && (
-                  <motion.div whileHover={{ y:-2 }} whileTap={{ scale:0.98 }}
-                    onClick={() => { setViewingOrgEvent(top); setScreen("orgEventDetail"); }}
-                    style={{ background:C.card, border:`1px solid ${C.border}`, borderRadius:"12px", overflow:"hidden", cursor:"pointer", boxShadow:C.shadow, position:"relative" }}>
-                    <img src={top.image} alt="" style={{ position:"absolute", inset:0, width:"100%", height:"100%", objectFit:"cover", opacity:0.07 }} />
-                    <div style={{ position:"relative", padding:"16px 18px" }}>
-                      <div style={{ fontSize:"10px", fontWeight:600, color:C.accent, letterSpacing:"1.5px", fontFamily:MONO, marginBottom:"6px" }}>🏆 TOP PERFORMING</div>
-                      <div style={{ fontSize:"14px", fontWeight:650, color:C.text, marginBottom:"3px", fontFamily:FONT }}>{top.name}</div>
-                      <div style={{ fontSize:"11px", color:C.muted, fontFamily:MONO, marginBottom:"10px" }}>{top.ticketsSold} sold · {top.currency} {Math.round(top.ticketsSold*top.price*0.95).toLocaleString()}</div>
-                      <div style={{ height:"3px", background:C.border, borderRadius:"2px", overflow:"hidden" }}>
-                        <motion.div initial={{ width:0 }} animate={{ width:`${Math.round((top.ticketsSold/top.totalTickets)*100)}%` }} transition={{ duration:0.8 }}
-                          style={{ height:"100%", background:`linear-gradient(90deg,${C.accent},${C.accentD})`, borderRadius:"2px" }} />
-                      </div>
-                    </div>
-                  </motion.div>
-                )}
-              </div>
-            </div>
+          {isDesk && orgEvents.length > 0 && (
+            <Panel style={{ marginBottom:"20px" }}>
+              <div style={{ fontSize:"9px", fontWeight:600, color:C.muted, letterSpacing:"1.5px", fontFamily:MONO, marginBottom:"2px" }}>TRANSACTIONS</div>
+              <div style={{ fontSize:"15px", fontWeight:700, color:C.text, marginBottom:"14px" }}>Live Activity</div>
+              <ActivityFeed events={orgEvents} />
+            </Panel>
           )}
 
+          {/* Mobile analytics */}
           {!isDesk && orgEvents.length > 0 && (
-            <div style={{ display:"grid", gridTemplateColumns:"1fr", gap:"14px", marginBottom:"20px" }}>
+            <div style={{ display:"flex", flexDirection:"column", gap:"14px", marginBottom:"20px" }}>
               <Panel>
-                <div style={{ fontSize:"10px", fontWeight:600, color:C.accent, letterSpacing:"1.5px", fontFamily:MONO, marginBottom:"12px" }}>REVENUE · PER EVENT</div>
-                <div style={{ overflowX:"auto" }}><BarChart events={orgEvents} /></div>
+                <div style={{ fontSize:"9px", fontWeight:600, color:C.muted, letterSpacing:"1.5px", fontFamily:MONO, marginBottom:"12px" }}>FILL RATE</div>
+                <FillChart events={src} />
               </Panel>
               <Panel>
-                <div style={{ fontSize:"10px", fontWeight:600, color:C.accent, letterSpacing:"1.5px", fontFamily:MONO, marginBottom:"12px" }}>FILL RATE</div>
-                <FillChart events={orgEvents} />
-              </Panel>
-              <Panel>
-                <div style={{ fontSize:"10px", fontWeight:600, color:C.accent, letterSpacing:"1.5px", fontFamily:MONO, marginBottom:"4px" }}>LIVE ACTIVITY</div>
+                <div style={{ fontSize:"9px", fontWeight:600, color:C.muted, letterSpacing:"1.5px", fontFamily:MONO, marginBottom:"4px" }}>LIVE ACTIVITY</div>
                 <ActivityFeed events={orgEvents} />
               </Panel>
             </div>
           )}
 
-          <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:"14px" }}>
-            <div>
-              <div style={{ fontSize:"16px", fontWeight:650, color:C.text, letterSpacing:"-0.3px", fontFamily:FONT }}>Your Events</div>
-              <div style={{ fontSize:"12px", color:C.muted, marginTop:"2px" }}>{orgEvents.length} event{orgEvents.length!==1?"s":""} · {live} live</div>
-            </div>
-            {!isDesk && (
-              <motion.button whileTap={{ scale:0.96 }} onClick={() => setScreen("addEvent")}
-                style={{ padding:"8px 16px", background:`linear-gradient(135deg,${C.accent},${C.accentD})`, color:"#fff", border:"none", borderRadius:"8px", fontSize:"12px", fontWeight:600, cursor:"pointer", fontFamily:FONT }}>
-                + New
-              </motion.button>
-            )}
-          </div>
-
-          {orgEvents.length === 0 ? (
-            <motion.div initial={{ opacity:0 }} animate={{ opacity:1 }} style={{ textAlign:"center", padding:"64px 32px", background:C.card, borderRadius:"12px", border:`1px solid ${C.border}` }}>
-              <div style={{ fontSize:"40px", marginBottom:"12px" }}>🎪</div>
-              <div style={{ fontSize:"17px", fontWeight:650, color:C.text, marginBottom:"8px", fontFamily:FONT }}>No events yet</div>
-              <div style={{ fontSize:"13px", color:C.muted, marginBottom:"20px" }}>Create your first event to start selling NFT-verified tickets</div>
+          {/* Empty state */}
+          {orgEvents.length === 0 && (
+            <motion.div initial={{ opacity:0 }} animate={{ opacity:1 }}
+              style={{ textAlign:"center", padding:"64px 32px", background:C.card, borderRadius:"16px", border:`1px solid ${C.border}` }}>
+              <div style={{ fontSize:"48px", marginBottom:"12px" }}>🎪</div>
+              <div style={{ fontSize:"17px", fontWeight:700, color:C.text, marginBottom:"8px" }}>No events yet</div>
+              <div style={{ fontSize:"13px", color:C.muted, marginBottom:"20px" }}>Create your first event to start selling NFT-verified tickets on Polygon</div>
               <motion.button whileHover={{ scale:1.02 }} whileTap={{ scale:0.97 }} onClick={() => setScreen("addEvent")}
-                style={{ padding:"11px 24px", background:`linear-gradient(135deg,${C.accent},${C.accentD})`, color:"#fff", border:"none", borderRadius:"8px", fontSize:"14px", fontWeight:600, cursor:"pointer", fontFamily:FONT }}>
-                + Create Event
+                style={{ padding:"12px 28px", background:`linear-gradient(135deg,${C.accent},${C.accentD})`, color:"#fff", border:"none", borderRadius:"10px", fontSize:"14px", fontWeight:600, cursor:"pointer", fontFamily:FONT, boxShadow:`0 4px 16px ${C.accent}35` }}>
+                + Create Your First Event
               </motion.button>
             </motion.div>
-          ) : (
-            <div style={{ display:"flex", flexDirection:"column", gap:"10px" }}>
-              {orgEvents.map(ev => <EventRow key={ev.id} ev={ev} onClick={() => { setViewingOrgEvent(ev); setScreen("orgEventDetail"); }} />)}
-            </div>
           )}
         </>
       )}
@@ -583,19 +690,19 @@ export function OrganizerEvents() {
     <div style={{ background:C.bg, minHeight:"100%", padding:PAD, fontFamily:FONT }}>
       <SectionHead label="MY EVENTS" title="Events"
         action={<motion.button whileHover={{ scale:1.02 }} whileTap={{ scale:0.97 }} onClick={() => setScreen("addEvent")}
-          style={{ padding:"9px 18px", background:`linear-gradient(135deg,${C.accent},${C.accentD})`, color:"#fff", border:"none", borderRadius:"8px", fontSize:"13px", fontWeight:600, cursor:"pointer", fontFamily:FONT }}>
+          style={{ padding:"9px 18px", background:`linear-gradient(135deg,${C.accent},${C.accentD})`, color:"#fff", border:"none", borderRadius:"10px", fontSize:"13px", fontWeight:600, cursor:"pointer", fontFamily:FONT }}>
           + New Event
         </motion.button>} />
-      <div style={{ display:"flex", gap:"4px", marginBottom:"20px", background:C.card, padding:"3px", borderRadius:"8px", border:`1px solid ${C.border}`, width:"fit-content" }}>
+      <div style={{ display:"flex", gap:"4px", marginBottom:"20px", background:C.card, padding:"3px", borderRadius:"10px", border:`1px solid ${C.border}`, width:"fit-content" }}>
         {[["all","All"],["paid","Paid"],["free","Free"],["live","Live"]].map(([v,l]) => (
           <button key={v} onClick={() => setFilter(v)}
-            style={{ padding:"7px 16px", borderRadius:"6px", border:"none", background:filter===v?`linear-gradient(135deg,${C.accent},${C.accentD})`:"transparent", color:filter===v?"#fff":C.muted, fontWeight:filter===v?600:400, fontSize:"12px", cursor:"pointer", fontFamily:FONT, transition:"all 0.15s" }}>
+            style={{ padding:"7px 16px", borderRadius:"8px", border:"none", background:filter===v?`linear-gradient(135deg,${C.accent},${C.accentD})`:"transparent", color:filter===v?"#fff":C.muted, fontWeight:filter===v?600:400, fontSize:"12px", cursor:"pointer", fontFamily:FONT, transition:"all 0.15s" }}>
             {l}
           </button>
         ))}
       </div>
       {loading ? (
-        <div style={{ display:"flex", flexDirection:"column", gap:"10px" }}>{[1,2,3].map(i=><div key={i} className="skeleton" style={{ height:"100px", borderRadius:"12px" }} />)}</div>
+        <div style={{ display:"flex", flexDirection:"column", gap:"10px" }}>{[1,2,3].map(i=><div key={i} className="skeleton" style={{ height:"100px", borderRadius:"14px" }} />)}</div>
       ) : filtered.length===0 ? (
         <Panel style={{ textAlign:"center", padding:"60px" }}>
           <div style={{ fontSize:"36px", marginBottom:"10px" }}>🎪</div>
@@ -632,11 +739,11 @@ export function OrganizerAlerts() {
       <div style={{ maxWidth:isDesk?"600px":"100%", display:"flex", flexDirection:"column", gap:"8px" }}>
         {alerts.map((a,i) => (
           <motion.div key={i} initial={{ opacity:0, y:8 }} animate={{ opacity:1, y:0 }} transition={{ delay:i*0.05 }} whileHover={{ y:-1 }}
-            style={{ background:C.card, borderRadius:"10px", padding:"14px 16px", display:"flex", gap:"12px", alignItems:"flex-start", border:`1px solid ${C.border}`, transition:"all 0.15s" }}>
-            <div style={{ width:"36px", height:"36px", borderRadius:"8px", background:a.color+"10", display:"flex", alignItems:"center", justifyContent:"center", fontSize:"16px", flexShrink:0, border:`1px solid ${a.color}18` }}>{a.icon}</div>
+            style={{ background:C.card, borderRadius:"12px", padding:"16px 18px", display:"flex", gap:"14px", alignItems:"flex-start", border:`1px solid ${C.border}`, boxShadow:C.shadow, transition:"all 0.15s" }}>
+            <div style={{ width:"38px", height:"38px", borderRadius:"10px", background:a.color+"10", display:"flex", alignItems:"center", justifyContent:"center", fontSize:"16px", flexShrink:0, border:`1px solid ${a.color}18` }}>{a.icon}</div>
             <div style={{ flex:1 }}>
-              <div style={{ fontSize:"13px", fontWeight:600, color:C.text, marginBottom:"3px" }}>{a.title}</div>
-              <div style={{ fontSize:"12px", color:C.sub, lineHeight:1.6, marginBottom:"7px" }}>{a.body}</div>
+              <div style={{ fontSize:"13px", fontWeight:600, color:C.text, marginBottom:"4px" }}>{a.title}</div>
+              <div style={{ fontSize:"12px", color:C.sub, lineHeight:1.6, marginBottom:"8px" }}>{a.body}</div>
               <span style={{ fontSize:"9px", fontWeight:700, color:a.color, background:a.color+"10", padding:"2px 8px", borderRadius:"4px", fontFamily:MONO }}>{a.time}</span>
             </div>
           </motion.div>
@@ -647,7 +754,7 @@ export function OrganizerAlerts() {
 }
 
 // ═══════════════════════════════════════════════════════════════
-//  ADD EVENT — clean white, wide form, all bugs fixed
+//  ADD EVENT
 // ═══════════════════════════════════════════════════════════════
 export function AddEvent() {
   const addEventForm    = useStore(s => s.addEventForm);
@@ -674,12 +781,7 @@ export function AddEvent() {
   const slug     = (addEventForm.name || "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 40);
   const eventUrl = slug ? `https://masterevents.events/events/${slug}` : "https://masterevents.events/events/your-event";
 
-  const addDate = () => {
-    if (!newDate) return;
-    if (eventDates.find(d => d.date === newDate)) return;
-    setEventDates(prev => [...prev, { date:newDate, capacity:addEventForm.totalTickets||100, price:evType==="free"?0:(addEventForm.price||0) }].sort((a,b)=>a.date.localeCompare(b.date)));
-    setNewDate("");
-  };
+  const addDate    = () => { if (!newDate) return; if (eventDates.find(d => d.date === newDate)) return; setEventDates(prev => [...prev, { date:newDate, capacity:addEventForm.totalTickets||100, price:evType==="free"?0:(addEventForm.price||0) }].sort((a,b)=>a.date.localeCompare(b.date))); setNewDate(""); };
   const removeDate = (date) => setEventDates(prev => prev.filter(d => d.date !== date));
   const updateDate = (date, field, value) => setEventDates(prev => prev.map(d => d.date===date?{...d,[field]:value}:d));
 
@@ -706,8 +808,6 @@ export function AddEvent() {
 
   return (
     <div style={{ minHeight:"100vh", background:C.bg, fontFamily:FONT }}>
-
-      {/* Top bar */}
       <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", padding:"14px 24px", background:C.card, borderBottom:`1px solid ${C.border}`, position:"sticky", top:0, zIndex:20 }}>
         <div style={{ display:"flex", alignItems:"center", gap:"10px" }}>
           <div style={{ width:"32px", height:"32px", borderRadius:"8px", background:`linear-gradient(135deg,${C.accent},${C.accentD})`, display:"flex", alignItems:"center", justifyContent:"center", fontSize:"15px" }}>🎟️</div>
@@ -719,33 +819,28 @@ export function AddEvent() {
         </motion.button>
       </div>
 
-      {/* Wide centered form */}
       <div style={{ maxWidth:"800px", margin:"0 auto", padding:isDesk?"36px 40px 80px":"20px 16px 80px" }}>
         <motion.div initial={{ opacity:0, y:16 }} animate={{ opacity:1, y:0 }} transition={{ duration:0.4 }}
-          style={{ background:C.card, borderRadius:"16px", padding:isDesk?"40px 44px":"24px 20px", border:`1px solid ${C.border}`, boxShadow:C.shadowMd }}>
+          style={{ background:C.card, borderRadius:"18px", padding:isDesk?"40px 44px":"24px 20px", border:`1px solid ${C.border}`, boxShadow:C.shadowMd }}>
 
           <div style={{ marginBottom:"28px", paddingBottom:"20px", borderBottom:`1px solid ${C.border}` }}>
             <h1 style={{ fontSize:"22px", fontWeight:700, color:C.text, letterSpacing:"-0.5px", margin:"0 0 4px" }}>Event Details</h1>
-            <p style={{ fontSize:"13px", color:C.muted, margin:0 }}>Fill in the details — NFT-verified tickets will be minted automatically on Polygon</p>
+            <p style={{ fontSize:"13px", color:C.muted, margin:0 }}>Fill in the details — NFT-verified tickets minted automatically on Polygon</p>
           </div>
 
-          {/* Event type toggle */}
           <div style={{ marginBottom:"24px" }}>
             <label style={AE_LABEL(false)}>Event Type</label>
             <div style={{ display:"flex", gap:"8px", background:C.bg, borderRadius:"10px", padding:"4px", border:`1px solid ${C.border}`, width:"fit-content" }}>
               {[{v:"paid",icon:"💳",label:"Paid Event"},{v:"free",icon:"🎉",label:"Free Event"}].map(item => (
                 <motion.button key={item.v} whileTap={{ scale:0.97 }} onClick={() => setEvType(item.v)}
-                  style={{ padding:"9px 20px", borderRadius:"8px", border:"none", background:evType===item.v?`linear-gradient(135deg,${C.accent},${C.accentD})`:"transparent", color:evType===item.v?"#fff":C.muted, fontWeight:600, fontSize:"13px", cursor:"pointer", display:"flex", alignItems:"center", gap:"6px", fontFamily:FONT, transition:"all 0.2s", boxShadow:evType===item.v?`0 2px 8px ${C.accent}30`:"none" }}>
-                  <span>{item.icon}</span> {item.label}
+                  style={{ padding:"9px 20px", borderRadius:"8px", border:"none", background:evType===item.v?`linear-gradient(135deg,${C.accent},${C.accentD})`:"transparent", color:evType===item.v?"#fff":C.muted, fontWeight:600, fontSize:"13px", cursor:"pointer", display:"flex", alignItems:"center", gap:"6px", fontFamily:FONT, transition:"all 0.2s" }}>
+                  {item.icon} {item.label}
                 </motion.button>
               ))}
             </div>
           </div>
 
-          {/* 2-col grid on desktop */}
           <div style={{ display:"grid", gridTemplateColumns:isDesk?"1fr 1fr":"1fr", gap:"16px 24px" }}>
-
-            {/* Event name */}
             <div style={{ gridColumn:isDesk?"1 / -1":"auto" }}>
               <label style={AE_LABEL(errors.name)}>Event Name {errors.name && <span style={{ color:C.red, fontWeight:400, textTransform:"none" }}>— {errors.name}</span>}</label>
               <input placeholder="e.g. Afrobeats Night 2026" value={addEventForm.name||""}
@@ -753,7 +848,6 @@ export function AddEvent() {
                 style={AE_INPUT(errors.name)} onFocus={AE_FOCUS} onBlur={AE_BLUR} />
             </div>
 
-            {/* Category */}
             <div style={{ gridColumn:isDesk?"1 / -1":"auto" }}>
               <label style={AE_LABEL(errors.cat)}>Category {errors.cat && <span style={{ color:C.red, fontWeight:400, textTransform:"none" }}>— {errors.cat}</span>}</label>
               <div style={{ display:"flex", flexWrap:"wrap", gap:"8px" }}>
@@ -767,7 +861,6 @@ export function AddEvent() {
               </div>
             </div>
 
-            {/* Multi-day toggle */}
             <div style={{ gridColumn:isDesk?"1 / -1":"auto" }}>
               <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", padding:"14px 16px", background:C.bg, borderRadius:"10px", border:`1px solid ${C.border}` }}>
                 <div>
@@ -782,7 +875,6 @@ export function AddEvent() {
               </div>
             </div>
 
-            {/* Single date */}
             {!isMultiDay && (
               <>
                 <div>
@@ -799,7 +891,6 @@ export function AddEvent() {
               </>
             )}
 
-            {/* Multi-day picker */}
             {isMultiDay && (
               <div style={{ gridColumn:isDesk?"1 / -1":"auto" }}>
                 <label style={AE_LABEL(errors.dates)}>Event Dates {errors.dates && <span style={{ color:C.red, fontWeight:400, textTransform:"none" }}>— {errors.dates}</span>}</label>
@@ -820,15 +911,13 @@ export function AddEvent() {
                       </div>
                       <div style={{ display:"grid", gridTemplateColumns:evType==="paid"?"1fr 1fr":"1fr", gap:"10px" }}>
                         <div>
-                          <label style={{ fontSize:"10px", fontWeight:600, color:C.muted, display:"block", marginBottom:"4px", textTransform:"uppercase", letterSpacing:"0.5px" }}>Tickets / Spots</label>
-                          <input type="number" placeholder="e.g. 200" value={d.capacity} onChange={e => updateDate(d.date,"capacity",e.target.value)}
-                            style={AE_INPUT(false)} onFocus={AE_FOCUS} onBlur={AE_BLUR} />
+                          <label style={{ fontSize:"10px", fontWeight:600, color:C.muted, display:"block", marginBottom:"4px", textTransform:"uppercase" }}>Tickets / Spots</label>
+                          <input type="number" placeholder="e.g. 200" value={d.capacity} onChange={e => updateDate(d.date,"capacity",e.target.value)} style={AE_INPUT(false)} onFocus={AE_FOCUS} onBlur={AE_BLUR} />
                         </div>
                         {evType==="paid" && (
                           <div>
-                            <label style={{ fontSize:"10px", fontWeight:600, color:C.muted, display:"block", marginBottom:"4px", textTransform:"uppercase", letterSpacing:"0.5px" }}>Price ({currency})</label>
-                            <input type="number" placeholder="e.g. 150" value={d.price} onChange={e => updateDate(d.date,"price",e.target.value)}
-                              style={AE_INPUT(false)} onFocus={AE_FOCUS} onBlur={AE_BLUR} />
+                            <label style={{ fontSize:"10px", fontWeight:600, color:C.muted, display:"block", marginBottom:"4px", textTransform:"uppercase" }}>Price ({currency})</label>
+                            <input type="number" placeholder="e.g. 150" value={d.price} onChange={e => updateDate(d.date,"price",e.target.value)} style={AE_INPUT(false)} onFocus={AE_FOCUS} onBlur={AE_BLUR} />
                           </div>
                         )}
                       </div>
@@ -846,7 +935,6 @@ export function AddEvent() {
               </div>
             )}
 
-            {/* Venue */}
             <div style={{ gridColumn:isDesk?"1 / -1":"auto" }}>
               <label style={AE_LABEL(errors.venue)}>Venue {errors.venue && <span style={{ color:C.red, fontWeight:400, textTransform:"none" }}>— {errors.venue}</span>}</label>
               <input placeholder="e.g. Accra Sports Stadium" value={addEventForm.venue||""}
@@ -854,14 +942,12 @@ export function AddEvent() {
                 style={AE_INPUT(errors.venue)} onFocus={AE_FOCUS} onBlur={AE_BLUR} />
             </div>
 
-            {/* City */}
             <div>
               <label style={AE_LABEL(false)}>City</label>
               <input placeholder="e.g. Accra" value={addEventForm.city||""} onChange={e => setAddEventForm({...addEventForm, city:e.target.value})}
                 style={AE_INPUT(false)} onFocus={AE_FOCUS} onBlur={AE_BLUR} />
             </div>
 
-            {/* Country */}
             <div>
               <label style={AE_LABEL(false)}>Country</label>
               <select value={country} onChange={e => setCountry(e.target.value)} style={{ ...AE_INPUT(false) }} onFocus={AE_FOCUS} onBlur={AE_BLUR}>
@@ -869,14 +955,10 @@ export function AddEvent() {
               </select>
             </div>
 
-            {/* Tickets + price (single day) */}
             {!isMultiDay && (
               <>
                 <div>
-                  <label style={AE_LABEL(errors.total)}>
-                    {evType==="free"?"Total Spots":"Total Tickets"}
-                    {errors.total && <span style={{ color:C.red, fontWeight:400, textTransform:"none" }}> — {errors.total}</span>}
-                  </label>
+                  <label style={AE_LABEL(errors.total)}>{evType==="free"?"Total Spots":"Total Tickets"}{errors.total && <span style={{ color:C.red, fontWeight:400, textTransform:"none" }}> — {errors.total}</span>}</label>
                   <input type="number" placeholder="e.g. 500" value={addEventForm.totalTickets||""}
                     onChange={e => { setAddEventForm({...addEventForm, totalTickets:e.target.value}); setErrors(p=>({...p,total:null})); }}
                     style={AE_INPUT(errors.total)} onFocus={AE_FOCUS} onBlur={AE_BLUR} />
@@ -892,7 +974,6 @@ export function AddEvent() {
               </>
             )}
 
-            {/* Currency */}
             {evType==="paid" && (
               <div style={{ gridColumn:isDesk?"1 / -1":"auto" }}>
                 <label style={AE_LABEL(false)}>Currency</label>
@@ -907,14 +988,12 @@ export function AddEvent() {
               </div>
             )}
 
-            {/* Description */}
             <div style={{ gridColumn:isDesk?"1 / -1":"auto" }}>
               <label style={AE_LABEL(false)}>Description</label>
               <textarea placeholder="Tell people about your event..." value={addEventForm.description||""} onChange={e => setAddEventForm({...addEventForm, description:e.target.value})}
                 rows={4} style={{ ...AE_INPUT(false), resize:"vertical", minHeight:"96px" }} onFocus={AE_FOCUS} onBlur={AE_BLUR} />
             </div>
 
-            {/* Cover image */}
             <div style={{ gridColumn:isDesk?"1 / -1":"auto" }}>
               <label style={AE_LABEL(false)}>Cover Image</label>
               <div style={{ display:"flex", gap:"8px", marginBottom:"10px" }}>
@@ -947,10 +1026,8 @@ export function AddEvent() {
                   style={AE_INPUT(false)} onFocus={AE_FOCUS} onBlur={AE_BLUR} />
               )}
             </div>
-
           </div>
 
-          {/* Event URL preview */}
           {addEventForm.name && (
             <motion.div initial={{ opacity:0 }} animate={{ opacity:1 }}
               style={{ background:C.purpleBg, border:`1px solid ${C.purple}25`, borderRadius:"10px", padding:"12px 16px", marginTop:"20px" }}>
@@ -959,7 +1036,6 @@ export function AddEvent() {
             </motion.div>
           )}
 
-          {/* Info strips */}
           <div style={{ display:"flex", gap:"8px", flexWrap:"wrap", marginTop:"20px", marginBottom:"24px" }}>
             {evType==="paid" && <span style={{ fontSize:"12px", color:C.green, background:C.greenBg, padding:"5px 12px", borderRadius:"6px", fontWeight:500 }}>💰 95% revenue to you</span>}
             {evType==="free" && <span style={{ fontSize:"12px", color:C.green, background:C.greenBg, padding:"5px 12px", borderRadius:"6px", fontWeight:500 }}>🎉 Free · QR pass via email</span>}
@@ -967,12 +1043,10 @@ export function AddEvent() {
             <span style={{ fontSize:"12px", color:C.purple, background:C.purpleBg, padding:"5px 12px", borderRadius:"6px", fontWeight:500 }}>⛓ NFT on Polygon</span>
           </div>
 
-          {/* Submit */}
           <motion.button whileHover={{ scale:1.01 }} whileTap={{ scale:0.97 }} onClick={submit}
-            style={{ width:"100%", padding:"16px", borderRadius:"12px", background:`linear-gradient(135deg,${C.accent},${C.accentD})`, color:"#fff", fontWeight:700, fontSize:"16px", border:"none", cursor:"pointer", boxShadow:`0 8px 24px ${C.accent}35`, fontFamily:FONT, letterSpacing:"-0.2px" }}>
+            style={{ width:"100%", padding:"16px", borderRadius:"12px", background:`linear-gradient(135deg,${C.accent},${C.accentD})`, color:"#fff", fontWeight:700, fontSize:"16px", border:"none", cursor:"pointer", boxShadow:`0 8px 24px ${C.accent}35`, fontFamily:FONT }}>
             Create {isMultiDay?"Multi-Day ":""}{evType==="free"?"Free":"Paid"} Event →
           </motion.button>
-
         </motion.div>
       </div>
     </div>
@@ -1031,8 +1105,8 @@ export function OrganizerEventDetail() {
     const q = holderSearch.toLowerCase();
     return (t.owner?.first_name+" "+t.owner?.last_name).toLowerCase().includes(q) || (t.owner?.email||"").toLowerCase().includes(q) || (t.ticket_id||"").toLowerCase().includes(q);
   });
-  const copyCode  = c => { navigator.clipboard?.writeText(c).catch(()=>{}); setCopiedCode(c); setTimeout(()=>setCopiedCode(null),2000); };
-  const copyLink  = () => { navigator.clipboard?.writeText(evUrl).catch(()=>{}); setCopiedLink(true); setTimeout(()=>setCopiedLink(false),2000); };
+  const copyCode = c => { navigator.clipboard?.writeText(c).catch(()=>{}); setCopiedCode(c); setTimeout(()=>setCopiedCode(null),2000); };
+  const copyLink = () => { navigator.clipboard?.writeText(evUrl).catch(()=>{}); setCopiedLink(true); setTimeout(()=>setCopiedLink(false),2000); };
   const startEdit = () => { setEditForm({name:ev.name,venue:ev.venue,date:ev.date,time:ev.time||"",price:ev.price,description:ev.description||"",image:ev.image||"",category:ev.category||"other",city:ev.city||"",totalTickets:ev.totalTickets,subtitle:ev.subtitle||"",currency:ev.currency||"GHS",country:ev.country||"Ghana"}); setEditing(true); };
   const saveEdit  = () => { setViewingOrgEvent({...ev,...editForm,price:parseFloat(editForm.price),totalTickets:parseInt(editForm.totalTickets)||ev.totalTickets}); setEditing(false); };
 
@@ -1041,9 +1115,9 @@ export function OrganizerEventDetail() {
 
   if (editing) return (
     <div style={{ background:C.bg, height:"100%", display:"flex", flexDirection:"column", overflow:"hidden", fontFamily:FONT }}>
-      <div style={{ flexShrink:0, display:"flex", alignItems:"center", padding:"13px 18px", gap:"12px", background:C.card, borderBottom:`1px solid ${C.border}`, zIndex:10 }}>
+      <div style={{ flexShrink:0, display:"flex", alignItems:"center", padding:"13px 18px", gap:"12px", background:C.card, borderBottom:`1px solid ${C.border}` }}>
         <motion.button whileTap={{ scale:0.9 }} onClick={() => setEditing(false)}
-          style={{ width:"32px", height:"32px", borderRadius:"7px", background:"transparent", border:`1px solid ${C.border}`, display:"flex", alignItems:"center", justifyContent:"center", cursor:"pointer", color:C.text, fontSize:"15px", flexShrink:0 }}>←</motion.button>
+          style={{ width:"32px", height:"32px", borderRadius:"7px", background:"transparent", border:`1px solid ${C.border}`, display:"flex", alignItems:"center", justifyContent:"center", cursor:"pointer", color:C.text, fontSize:"15px" }}>←</motion.button>
         <div style={{ flex:1, fontSize:"15px", fontWeight:650, color:C.text }}>Edit Event</div>
         <motion.button whileHover={{ scale:1.02 }} whileTap={{ scale:0.97 }} onClick={saveEdit}
           style={{ padding:"7px 16px", background:`linear-gradient(135deg,${C.accent},${C.accentD})`, color:"#fff", border:"none", borderRadius:"7px", fontSize:"12px", fontWeight:600, cursor:"pointer", fontFamily:FONT }}>Save Changes</motion.button>
@@ -1146,7 +1220,7 @@ export function OrganizerEventDetail() {
         {[{id:"overview",label:"Overview",icon:"📊"},{id:"holders",label:"Ticket Holders",icon:"👥",count:ev.ticketsSold}].map(t => (
           <motion.button key={t.id} whileTap={{ scale:0.97 }} onClick={() => onTab(t.id)}
             style={{ padding:"12px 14px", background:"none", border:"none", borderBottom:activeTab===t.id?`2px solid ${C.accent}`:"2px solid transparent", cursor:"pointer", fontFamily:FONT, fontSize:"13px", fontWeight:activeTab===t.id?600:400, color:activeTab===t.id?C.accent:C.muted, display:"flex", alignItems:"center", gap:"5px", transition:"all 0.15s" }}>
-            <span>{t.icon}</span><span>{t.label}</span>
+            {t.icon} {t.label}
             {t.count!==undefined && <span style={{ fontSize:"10px", fontWeight:600, background:activeTab===t.id?C.accentBg:C.border, color:activeTab===t.id?C.accent:C.muted, padding:"1px 6px", borderRadius:"99px", fontFamily:MONO }}>{t.count}</span>}
           </motion.button>
         ))}
@@ -1167,9 +1241,9 @@ export function OrganizerEventDetail() {
                 ["🎟","Sold",`${ev.ticketsSold}/${ev.totalTickets}`,C.blue],
                 ["🚪","Admitted",(ev.admittedCount||0)+" ppl",C.accent],
               ]).map(([icon,label,value,color]) => (
-                <motion.div key={label} whileHover={{ y:-1 }} style={{ background:C.card, border:`1px solid ${C.border}`, borderRadius:"10px", padding:"14px 15px" }}>
+                <motion.div key={label} whileHover={{ y:-1 }} style={{ background:C.card, border:`1px solid ${C.border}`, borderRadius:"12px", padding:"14px 15px" }}>
                   <div style={{ fontSize:"14px", marginBottom:"6px" }}>{icon}</div>
-                  <div style={{ fontSize:"18px", fontWeight:700, color, marginBottom:"2px", letterSpacing:"-0.5px", fontFamily:FONT }}>{value}</div>
+                  <div style={{ fontSize:"18px", fontWeight:700, color, marginBottom:"2px", letterSpacing:"-0.5px" }}>{value}</div>
                   <div style={{ fontSize:"11px", color:C.muted }}>{label}</div>
                 </motion.div>
               ))}
@@ -1196,14 +1270,6 @@ export function OrganizerEventDetail() {
               </motion.button>
             </Panel>
 
-            {!isFree && (
-              <Panel style={{ marginBottom:"12px" }}>
-                <div style={{ fontSize:"10px", fontWeight:600, color:C.accent, fontFamily:MONO, marginBottom:"4px" }}>EVENT PERFORMANCE</div>
-                <div style={{ fontSize:"14px", fontWeight:650, color:C.text, marginBottom:"14px" }}>Ticket Sales & Revenue</div>
-                <div style={{ overflowX:"auto" }}><BarChart events={[ev]} /></div>
-              </Panel>
-            )}
-
             {ev.description && (
               <Panel style={{ marginBottom:"12px" }}>
                 <div style={{ fontSize:"10px", fontWeight:600, color:C.muted, fontFamily:MONO, marginBottom:"7px" }}>DESCRIPTION</div>
@@ -1213,18 +1279,18 @@ export function OrganizerEventDetail() {
 
             <div style={{ display:"grid", gridTemplateColumns:isDesk?"1fr 1fr":"1fr", gap:"8px", marginBottom:"14px" }}>
               <motion.button whileHover={{ scale:1.01 }} whileTap={{ scale:0.97 }} onClick={() => toggleSales(ev.id)}
-                style={{ padding:"12px", background:ev.salesOpen?`linear-gradient(135deg,${C.red},#dc2626)`:`linear-gradient(135deg,${C.green},#16a34a)`, color:"#fff", border:"none", borderRadius:"8px", fontSize:"13px", fontWeight:600, cursor:"pointer", fontFamily:FONT }}>
+                style={{ padding:"12px", background:ev.salesOpen?`linear-gradient(135deg,${C.red},#dc2626)`:`linear-gradient(135deg,${C.green},#16a34a)`, color:"#fff", border:"none", borderRadius:"10px", fontSize:"13px", fontWeight:600, cursor:"pointer", fontFamily:FONT }}>
                 {ev.salesOpen?`⏸ Pause ${isFree?"Registrations":"Sales"}`:`▶ Resume ${isFree?"Registrations":"Sales"}`}
               </motion.button>
               <motion.button whileHover={{ scale:1.01 }} whileTap={{ scale:0.97 }} onClick={() => setScreen("scanTicket")}
-                style={{ padding:"12px", background:C.card, color:C.text, border:`1px solid ${C.border}`, borderRadius:"8px", fontSize:"13px", fontWeight:500, cursor:"pointer", fontFamily:FONT }}>
+                style={{ padding:"12px", background:C.card, color:C.text, border:`1px solid ${C.border}`, borderRadius:"10px", fontSize:"13px", fontWeight:500, cursor:"pointer", fontFamily:FONT }}>
                 🔍 Scan at Door
               </motion.button>
             </div>
 
             <Panel>
               <div style={{ display:"flex", alignItems:"center", gap:"10px", marginBottom:"12px" }}>
-                <div style={{ width:"32px", height:"32px", borderRadius:"7px", background:C.accentBg, display:"flex", alignItems:"center", justifyContent:"center", fontSize:"15px", border:`1px solid ${C.accent}18` }}>🚪</div>
+                <div style={{ width:"32px", height:"32px", borderRadius:"7px", background:C.accentBg, display:"flex", alignItems:"center", justifyContent:"center", fontSize:"15px" }}>🚪</div>
                 <div>
                   <div style={{ fontSize:"13px", fontWeight:600, color:C.text }}>Door Staff Access</div>
                   <div style={{ fontSize:"10px", color:C.muted, fontFamily:MONO }}>Single-use codes · expire after first scan</div>
@@ -1260,7 +1326,7 @@ export function OrganizerEventDetail() {
               {[["🎟",holders.filter(t=>t.status==="active").length,"Active",C.green],["✅",holders.filter(t=>t.status==="redeemed").length,"Redeemed","#6b7280"],["🏷",holders.filter(t=>t.status==="resale").length,"On Resale",C.red]].map(([icon,count,label,color]) => (
                 <Panel key={label} style={{ textAlign:"center", padding:"12px 10px" }}>
                   <div style={{ fontSize:"16px", marginBottom:"3px" }}>{icon}</div>
-                  <div style={{ fontSize:"18px", fontWeight:700, color, fontFamily:FONT }}>{holderLoad?"—":count}</div>
+                  <div style={{ fontSize:"18px", fontWeight:700, color }}>{holderLoad?"—":count}</div>
                   <div style={{ fontSize:"10px", color:C.muted, marginTop:"1px" }}>{label}</div>
                 </Panel>
               ))}
@@ -1293,7 +1359,7 @@ export function OrganizerEventDetail() {
                   const lbl   = sLabel[t.status]||t.status;
                   return (
                     <motion.div key={t.ticket_id||i} initial={{ opacity:0, y:5 }} animate={{ opacity:1, y:0 }} transition={{ delay:i*0.02 }}
-                      style={{ background:C.card, borderRadius:"9px", padding:"10px 13px", border:`1px solid ${C.border}`, display:isDesk?"grid":"flex", gridTemplateColumns:isDesk?"1fr 1fr 80px 100px":undefined, flexDirection:isDesk?undefined:"row", alignItems:"center", gap:"10px", transition:"border-color 0.15s" }}
+                      style={{ background:C.card, borderRadius:"10px", padding:"10px 13px", border:`1px solid ${C.border}`, display:isDesk?"grid":"flex", gridTemplateColumns:isDesk?"1fr 1fr 80px 100px":undefined, flexDirection:isDesk?undefined:"row", alignItems:"center", gap:"10px" }}
                       onMouseEnter={e=>{e.currentTarget.style.borderColor=C.accent+"35";}} onMouseLeave={e=>{e.currentTarget.style.borderColor=C.border;}}>
                       <div style={{ minWidth:0, flex:isDesk?undefined:1 }}>
                         <div style={{ fontSize:"12px", fontWeight:600, color:C.text, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap", marginBottom:"1px" }}>

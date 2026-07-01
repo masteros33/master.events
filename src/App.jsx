@@ -498,12 +498,13 @@ export default function App() {
     window.addEventListener("resize", handler);
     return () => window.removeEventListener("resize", handler);
   }, []);
-
+  
   if (screen === "adminGateway")   return <AdminLogin />;
   if (screen === "adminDashboard") return <AdminDashboard />;
   if (screen === "resetPassword")  return <ResetPassword />;
   if (screen === "doorStaffLogin") return <DoorStaffLogin />;
   if (screen === "doorStaffScan")  return <DoorStaffScan />;
+  if (screen === "pendingEvent")   return <PhoneFrame><PublicEventPage /></PhoneFrame>;
   if (desktop && isLoggedIn)       return <DesktopAppLayout />;
 
   return (

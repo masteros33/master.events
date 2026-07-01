@@ -129,9 +129,12 @@ const useStore = create((set, get) => ({
         const user     = data.user;
         const firstTab = user.role === "organizer" ? "dashboard" : "home";
         saveSession({ currentUser: user, role: user.role });
+        // ── FIX: redirect back to event page after login if coming from event link
+        const postAuthScreen = localStorage.getItem("post_auth_screen") || "app";
+        localStorage.removeItem("post_auth_screen");
         set({
           currentUser: user, role: user.role,
-          screen: "app", activeTab: firstTab,
+          screen: postAuthScreen, activeTab: firstTab,
           isLoggedIn: true, loginError: "",
         });
         toast.success("Welcome back, " + user.first_name + "!");
@@ -185,9 +188,12 @@ const useStore = create((set, get) => ({
         const user     = data.user;
         const firstTab = user.role === "organizer" ? "dashboard" : "home";
         saveSession({ currentUser: user, role: user.role });
+        // ── FIX: redirect back to event page after signup if coming from event link
+        const postAuthScreen = localStorage.getItem("post_auth_screen") || "app";
+        localStorage.removeItem("post_auth_screen");
         set({
           currentUser: user, role: user.role,
-          screen: "app", activeTab: firstTab,
+          screen: postAuthScreen, activeTab: firstTab,
           isLoggedIn: true, signupError: "",
         });
         toast.success("Welcome to Master Events, " + user.first_name + "!");
@@ -597,8 +603,8 @@ const useStore = create((set, get) => ({
   handleAddEvent: async () => {
     const { eventsAPI } = await import("../api");
     const { addEventForm, orgEvents } = get();
-    if (!addEventForm.name || !addEventForm.date || !addEventForm.price) {
-      toast.error("Please fill Event Name, Date and Price"); return;
+    if (!addEventForm.name || !addEventForm.date) {
+      toast.error("Please fill Event Name and Date"); return;
     }
     const loadingToast = toast.loading("Creating event...");
     try {
@@ -608,15 +614,16 @@ const useStore = create((set, get) => ({
         category:      addEventForm.category || "other",
         venue:         addEventForm.venue?.trim()  || "TBA",
         city:          addEventForm.city?.trim()   || "Accra",
+        country:       addEventForm.country        || "Ghana",
         date:          addEventForm.date,
         time:          addEventForm.time || "20:00:00",
+        event_type:    addEventForm.event_type     || "paid",
+        currency:      addEventForm.currency       || "GHS",
         price:         parseFloat(addEventForm.price) || 0,
         total_tickets: parseInt(addEventForm.totalTickets) || 100,
         sales_open:    true,
       };
-      if (addEventForm.image) {
-        payload.image = addEventForm.image;
-      }
+      if (addEventForm.image) payload.image = addEventForm.image;
       const data = await eventsAPI.create(payload);
       if (data.id) {
         const cat = data.category || addEventForm.category || "other";
@@ -626,11 +633,16 @@ const useStore = create((set, get) => ({
             category: cat, price: parseFloat(data.price),
             totalTickets: data.total_tickets, ticketsSold: data.tickets_sold || 0,
             salesOpen: data.sales_open, description: data.description,
+            event_type: data.event_type || "paid",
+            currency: data.currency || "GHS",
+            slug: data.slug || "",
+            event_url: data.event_url || "",
             image: data.image || categoryImages[cat] || categoryImages.other,
           }],
           addEventForm: {
             name: "", subtitle: "", date: "", time: "", venue: "",
-            city: "", price: "", description: "", category: "", totalTickets: "", image: "",
+            city: "", price: "", description: "", category: "",
+            totalTickets: "", image: "", event_type: "paid", currency: "GHS",
           },
           screen: "app", activeTab: "events",
         });

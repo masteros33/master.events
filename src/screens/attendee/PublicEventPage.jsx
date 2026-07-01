@@ -7,13 +7,13 @@ const BRAND   = "#F97316";
 const FONT    = "'Inter','SF Pro Display',-apple-system,sans-serif";
 
 export default function PublicEventPage() {
-  const setScreen       = useStore(s => s.setScreen);
+  const setScreen        = useStore(s => s.setScreen);
   const setCheckoutEvent = useStore(s => s.setCheckoutEvent);
-  const isLoggedIn      = useStore(s => s.isLoggedIn);
-  const [event,   setEvent]   = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error,   setError]   = useState("");
-  const [regDone, setRegDone] = useState(false);
+  const isLoggedIn       = useStore(s => s.isLoggedIn);
+  const [event,      setEvent]      = useState(null);
+  const [loading,    setLoading]    = useState(true);
+  const [error,      setError]      = useState("");
+  const [regDone,    setRegDone]    = useState(false);
   const [regLoading, setRegLoading] = useState(false);
 
   const slug = localStorage.getItem("pending_event_slug");
@@ -31,7 +31,11 @@ export default function PublicEventPage() {
   }, []);
 
   const handleRegister = async () => {
-    if (!isLoggedIn) { setScreen("signup"); return; }
+    if (!isLoggedIn) {
+      localStorage.setItem("post_auth_screen", "pendingEvent");
+      setScreen("signup");
+      return;
+    }
     setRegLoading(true);
     try {
       const token = localStorage.getItem("access_token") || "";
@@ -54,7 +58,11 @@ export default function PublicEventPage() {
   };
 
   const handleBuy = () => {
-    if (!isLoggedIn) { setScreen("signup"); return; }
+    if (!isLoggedIn) {
+      localStorage.setItem("post_auth_screen", "pendingEvent");
+      setScreen("signup");
+      return;
+    }
     setCheckoutEvent({
       id: event.id, name: event.name, date: event.date,
       venue: event.venue, price: parseFloat(event.price),
@@ -89,12 +97,8 @@ export default function PublicEventPage() {
     <div style={{ height:"100vh", display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", background:"var(--bg)", padding:"24px", textAlign:"center" }}>
       <div style={{ fontSize:"48px", marginBottom:"16px" }}>🎉</div>
       <h2 style={{ fontSize:"22px", fontWeight:700, color:"var(--text-primary)", marginBottom:"8px", fontFamily:FONT }}>You're registered!</h2>
-      <p style={{ fontSize:"14px", color:"var(--text-muted)", marginBottom:"8px" }}>
-        Check your email — your PDF ticket with QR code has been sent.
-      </p>
-      <p style={{ fontSize:"13px", color:"var(--text-muted)", marginBottom:"24px" }}>
-        You can also view it in the app under My Tickets.
-      </p>
+      <p style={{ fontSize:"14px", color:"var(--text-muted)", marginBottom:"8px" }}>Check your email — your PDF ticket with QR code has been sent.</p>
+      <p style={{ fontSize:"13px", color:"var(--text-muted)", marginBottom:"24px" }}>You can also view it in the app under My Tickets.</p>
       <motion.button whileTap={{ scale:0.97 }} onClick={() => setScreen("app")}
         style={{ padding:"12px 28px", background:BRAND, color:"#fff", border:"none", borderRadius:"8px", fontSize:"14px", fontWeight:600, cursor:"pointer", fontFamily:FONT }}>
         Go to My Tickets →
@@ -157,9 +161,9 @@ export default function PublicEventPage() {
         {/* Details */}
         <div style={{ background:"var(--bg-card)", borderRadius:"10px", overflow:"hidden", marginBottom:"20px", border:"1px solid var(--border)" }}>
           {[
-            ["📅 Date", event.date],
-            ["📍 Venue", event.venue],
-            ["🏙 City", event.city || "—"],
+            ["📅 Date",     event.date],
+            ["📍 Venue",    event.venue],
+            ["🏙 City",     event.city || "—"],
             ["🎫 Capacity", `${event.total_tickets} spots`],
           ].map(([label, val]) => (
             <div key={label} style={{ padding:"12px 16px", borderBottom:"1px solid var(--border)", display:"flex", justifyContent:"space-between", alignItems:"center" }}>
@@ -168,6 +172,13 @@ export default function PublicEventPage() {
             </div>
           ))}
         </div>
+
+        {/* Not logged in nudge */}
+        {!isLoggedIn && (
+          <div style={{ background:"rgba(249,115,22,0.06)", border:"1px solid rgba(249,115,22,0.2)", borderRadius:"10px", padding:"12px 16px", marginBottom:"16px", fontSize:"13px", color:"var(--text-secondary)", textAlign:"center" }}>
+            You'll need a free account to get your ticket — takes 30 seconds 👇
+          </div>
+        )}
 
         {error && (
           <div style={{ background:"rgba(239,68,68,0.08)", border:"1px solid rgba(239,68,68,0.2)", borderRadius:"8px", padding:"10px 14px", marginBottom:"14px", fontSize:"13px", color:"#ef4444" }}>
@@ -179,22 +190,25 @@ export default function PublicEventPage() {
         <motion.button whileHover={{ scale:1.01 }} whileTap={{ scale:0.97 }}
           onClick={isFree ? handleRegister : handleBuy}
           disabled={regLoading}
-          style={{ width:"100%", padding:"14px",
-            background: regLoading ? "var(--border)" : `linear-gradient(135deg,${isFree?"#16a34a,#15803d":BRAND+",#EA6C0A"})`,
+          style={{ width:"100%", padding:"16px",
+            background: regLoading ? "var(--border)" : `linear-gradient(135deg,${isFree ? "#16a34a,#15803d" : BRAND+",#EA6C0A"})`,
             color: regLoading ? "var(--text-muted)" : "#fff",
-            border:"none", borderRadius:"10px", fontSize:"15px", fontWeight:600,
-            cursor: regLoading ? "not-allowed" : "pointer", fontFamily:FONT }}>
+            border:"none", borderRadius:"10px", fontSize:"16px", fontWeight:700,
+            cursor: regLoading ? "not-allowed" : "pointer", fontFamily:FONT,
+            boxShadow: regLoading ? "none" : "0 4px 16px rgba(0,0,0,0.15)" }}>
           {regLoading
             ? "Registering…"
             : isFree
-              ? "Register for Free — Get PDF Ticket"
-              : `Buy Ticket — ${curr} ${parseFloat(event.price).toLocaleString()}`}
+              ? "Register Free — Get Your Ticket"
+              : isLoggedIn
+                ? `Buy Ticket — ${curr} ${parseFloat(event.price).toLocaleString()}`
+                : `Sign Up & Buy Ticket — ${curr} ${parseFloat(event.price).toLocaleString()}`}
         </motion.button>
 
         <p style={{ fontSize:"11px", color:"var(--text-muted)", textAlign:"center", marginTop:"10px" }}>
           {isFree
             ? "PDF ticket with QR code will be emailed to you instantly"
-            : "QR code available in app only — live rotating for security"}
+            : "Secured by Polygon blockchain · NFT ticket minted on purchase"}
         </p>
       </div>
     </div>

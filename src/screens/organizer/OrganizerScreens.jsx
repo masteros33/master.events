@@ -1194,10 +1194,10 @@ export function OrganizerEventDetail() {
       </div>
     </div>
   );
-
-  const PAD = isDesk ? "0 40px 80px" : "0 14px 100px";
-  return (
-    <div style={{ background:C.bg, height:"100%", overflowY:"auto", WebkitOverflowScrolling:"touch", fontFamily:FONT }}>
+const PAD = isDesk ? "0 40px 80px" : "0 14px 100px";
+return (
+  <div style={{ background:C.bg, height:"100%", overflowY:"auto", WebkitOverflowScrolling:"touch", fontFamily:FONT }}>
+    <div style={{ maxWidth: isDesk ? "900px" : "100%", margin: "0 auto" }}></div>
       <div style={{ height:isDesk?"260px":"200px", position:"relative" }}>
         <img src={cover} alt={ev.name} style={{ width:"100%", height:"100%", objectFit:"cover" }} onError={e=>{e.target.src=catImg.other}} />
         <div style={{ position:"absolute", inset:0, background:"linear-gradient(to bottom,rgba(0,0,0,0.15),rgba(0,0,0,0.8))" }} />

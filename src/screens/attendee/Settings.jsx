@@ -11,7 +11,8 @@ const BRAND    = "#F97316";
 const BRAND_D  = "#EA6C0A";
 const GREEN    = "#22c55e";
 const RED      = "#ef4444";
-const PURPLE   = "#8b5cf6";
+const PURPLE  = "#8b5cf6";
+const BLUE    = "#3b82f6";
 const FONT     = "'Inter','SF Pro Display',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif";
 const MONO     = "'JetBrains Mono','SF Mono','Fira Code',ui-monospace,monospace";
 

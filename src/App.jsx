@@ -213,16 +213,26 @@ function MobileAppShell() {
     privacy:<PrivacyPolicy />, attendeeWallet:<AttendeeWallet />,
   };
 
-  if (fullScreenMap[screen]) return (
-    <div className="app-shell"><div className="tab-content">{fullScreenMap[screen]}</div></div>
-  );
-  return (
-    <div className="app-shell">
-      <MobileTopHeader onMenuOpen={() => setDrawerOpen(true)} title={currentTitle} />
-      <MobileDrawer open={drawerOpen} onClose={() => setDrawerOpen(false)} />
-      <div className="tab-content">{navScreenMap[screen] || <MobileTabContent />}</div>
-    </div>
-  );
+  const isLoggedIn = useStore(s => s.isLoggedIn);
+const activeTab  = useStore(s => s.activeTab);
+
+// Unauthenticated home — AttendeeHome handles its own navbar
+if (!isLoggedIn && activeTab === "home" && screen === "app") return (
+  <div className="app-shell">
+    <div className="tab-content"><AttendeeHome /></div>
+  </div>
+);
+
+if (fullScreenMap[screen]) return (
+  <div className="app-shell"><div className="tab-content">{fullScreenMap[screen]}</div></div>
+);
+return (
+  <div className="app-shell">
+    <MobileTopHeader onMenuOpen={() => setDrawerOpen(true)} title={currentTitle} />
+    <MobileDrawer open={drawerOpen} onClose={() => setDrawerOpen(false)} />
+    <div className="tab-content">{navScreenMap[screen] || <MobileTabContent />}</div>
+  </div>
+);
 }
 
 function NavItem({ icon: Icon, label, active, collapsed, onClick, title }) {

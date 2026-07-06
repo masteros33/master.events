@@ -214,25 +214,24 @@ function MobileAppShell() {
   };
 
   const isLoggedIn = useStore(s => s.isLoggedIn);
-const activeTab  = useStore(s => s.activeTab);
+  const activeTab  = useStore(s => s.activeTab);
 
-// Unauthenticated home — AttendeeHome handles its own navbar
-if (!isLoggedIn && activeTab === "home" && screen === "app") return (
-  <div className="app-shell">
-    <div className="tab-content"><AttendeeHome /></div>
-  </div>
-);
+  if (!isLoggedIn && activeTab === "home" && screen === "app") return (
+    <div className="app-shell">
+      <div className="tab-content"><AttendeeHome /></div>
+    </div>
+  );
 
-if (fullScreenMap[screen]) return (
-  <div className="app-shell"><div className="tab-content">{fullScreenMap[screen]}</div></div>
-);
-return (
-  <div className="app-shell">
-    <MobileTopHeader onMenuOpen={() => setDrawerOpen(true)} title={currentTitle} />
-    <MobileDrawer open={drawerOpen} onClose={() => setDrawerOpen(false)} />
-    <div className="tab-content">{navScreenMap[screen] || <MobileTabContent />}</div>
-  </div>
-);
+  if (fullScreenMap[screen]) return (
+    <div className="app-shell"><div className="tab-content">{fullScreenMap[screen]}</div></div>
+  );
+  return (
+    <div className="app-shell">
+      <MobileTopHeader onMenuOpen={() => setDrawerOpen(true)} title={currentTitle} />
+      <MobileDrawer open={drawerOpen} onClose={() => setDrawerOpen(false)} />
+      <div className="tab-content">{navScreenMap[screen] || <MobileTabContent />}</div>
+    </div>
+  );
 }
 
 function NavItem({ icon: Icon, label, active, collapsed, onClick, title }) {
@@ -452,9 +451,6 @@ export default function App() {
   const [desktop, setDesktop] = React.useState(window.innerWidth > 768);
   useTheme();
 
-
-  
-
   React.useEffect(() => {
     const isAppMode = isLoggedIn || APP_MODE_SCREENS.includes(screen);
     if (isAppMode) document.body.classList.add("app-mode");
@@ -475,9 +471,7 @@ export default function App() {
     if (params.get("admin") === "1") { useStore.getState().setScreen("adminGateway"); return; }
     if (params.get("door")  === "1") { useStore.getState().setScreen("doorStaffLogin"); return; }
 
-    // ── Event share link: ?event=slug ───────────────────────
-    // handle both ?event=slug and /events/slug path format
-   const eventSlug = params.get("event") || (window.location.pathname.match(/^\/events\/(.+)/) || [])[1];
+    const eventSlug = params.get("event") || (window.location.pathname.match(/^\/events\/(.+)/) || [])[1];
     if (eventSlug) {
       localStorage.setItem("pending_event_slug", eventSlug);
       window.history.replaceState({}, "", "/");

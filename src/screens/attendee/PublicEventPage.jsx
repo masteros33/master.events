@@ -20,6 +20,15 @@ const catImg = {
   other:    "https://images.unsplash.com/photo-1492684223066-81342ee5ff30?w=1600",
 };
 
+function daysUntil(dateStr) {
+  if (!dateStr) return null;
+  const target = new Date(dateStr + "T00:00:00");
+  const now    = new Date();
+  now.setHours(0,0,0,0);
+  const diff   = Math.round((target - now) / 86400000);
+  return diff;
+}
+
 function TrustBadge({ icon, label }) {
   return (
     <div style={{ display:"flex", alignItems:"center", gap:"6px" }}>
@@ -39,6 +48,17 @@ function DetailRow({ icon, label, value }) {
         <div style={{ fontSize:"9px", fontWeight:700, color:"var(--text-muted)", letterSpacing:"1.2px", marginBottom:"2px", fontFamily:MONO }}>{label}</div>
         <div style={{ fontSize:"14px", fontWeight:600, color:"var(--text-primary)", overflow:"hidden", textOverflow:"ellipsis" }}>{value}</div>
       </div>
+    </div>
+  );
+}
+
+function ShareRow({ onCopy, copied }) {
+  return (
+    <div style={{ display:"flex", alignItems:"center", gap:"8px" }}>
+      <motion.button whileTap={{ scale:0.94 }} onClick={onCopy}
+        style={{ display:"flex", alignItems:"center", gap:"6px", padding:"8px 14px", borderRadius:"9px", border:"1px solid var(--border)", background:copied ? "rgba(22,163,74,0.08)" : "var(--bg-card)", color: copied ? "#16a34a" : "var(--text-secondary)", fontSize:"12px", fontWeight:600, cursor:"pointer", fontFamily:FONT, transition:"all 0.15s" }}>
+        {copied ? "✓ Link copied" : "🔗 Share event"}
+      </motion.button>
     </div>
   );
 }
@@ -137,6 +157,7 @@ export default function PublicEventPage() {
   const [regDone,    setRegDone]    = useState(false);
   const [regLoading, setRegLoading] = useState(false);
   const [isDesk,     setIsDesk]     = useState(isDesktop());
+  const [copied,     setCopied]     = useState(false);
 
   const slug = localStorage.getItem("pending_event_slug");
 
@@ -157,6 +178,13 @@ export default function PublicEventPage() {
       })
       .catch(() => { setError("Could not load event."); setLoading(false); });
   }, []);
+
+  const handleShare = () => {
+    const url = `https://masterevents.events/events/${slug}`;
+    navigator.clipboard?.writeText(url).catch(() => {});
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
 
   const handleRegister = async () => {
     if (!isLoggedIn) {
@@ -227,6 +255,7 @@ export default function PublicEventPage() {
   const orgName = event.organizer?.first_name
     ? `${event.organizer.first_name} ${event.organizer.last_name || ""}`.trim()
     : event.organizer_name || null;
+  const daysLeft = daysUntil(event.date);
 
   if (regDone) return (
     <div style={{ height:"100vh", display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", background:"var(--bg)", padding:"24px", textAlign:"center" }}>
@@ -243,8 +272,9 @@ export default function PublicEventPage() {
   );
 
   return (
-    <div style={{ minHeight:"100vh", background:"var(--bg)", fontFamily:FONT }}>
+    <div style={{ minHeight:"100vh", background:"var(--bg)", fontFamily:FONT, paddingBottom: !isDesk ? "84px" : "0" }}>
 
+      {/* Top nav strip */}
       <div style={{ position:"sticky", top:0, zIndex:30, background:"var(--bg-card)", borderBottom:"1px solid var(--border)", padding: isDesk ? "0 40px" : "0 16px", height:"60px", display:"flex", alignItems:"center", justifyContent:"space-between" }}>
         <motion.div whileTap={{ scale:0.97 }}
           onClick={() => { localStorage.removeItem("pending_event_slug"); setScreen("home"); }}
@@ -252,22 +282,25 @@ export default function PublicEventPage() {
           <div style={{ width:"30px", height:"30px", borderRadius:"9px", background:`linear-gradient(135deg,${BRAND},${BRAND_D})`, display:"flex", alignItems:"center", justifyContent:"center", fontSize:"14px" }}>🎟️</div>
           <span style={{ fontWeight:800, fontSize:"14px", color:"var(--text-primary)", letterSpacing:"-0.3px" }}>Master Events</span>
         </motion.div>
-        {!isLoggedIn && isDesk && (
-          <div style={{ display:"flex", gap:"10px" }}>
+        <div style={{ display:"flex", alignItems:"center", gap:"10px" }}>
+          {isDesk && <ShareRow onCopy={handleShare} copied={copied} />}
+          {!isLoggedIn && isDesk && (
             <motion.button whileTap={{ scale:0.96 }} onClick={() => setScreen("login")}
               style={{ padding:"8px 16px", borderRadius:"9px", border:"1px solid var(--border)", background:"transparent", color:"var(--text-primary)", fontSize:"13px", fontWeight:600, cursor:"pointer", fontFamily:FONT }}>
               Log in
             </motion.button>
-          </div>
-        )}
+          )}
+        </div>
       </div>
 
-      <div style={{ height: isDesk ? "380px" : "220px", position:"relative", overflow:"hidden" }}>
-        <img src={cover} alt={event.name} style={{ width:"100%", height:"100%", objectFit:"cover", display:"block" }}
+      {/* Hero image */}
+      <div style={{ height: isDesk ? "420px" : "240px", position:"relative", overflow:"hidden" }}>
+        <motion.img initial={{ scale:1.08 }} animate={{ scale:1 }} transition={{ duration:1.2, ease:"easeOut" }}
+          src={cover} alt={event.name} style={{ width:"100%", height:"100%", objectFit:"cover", display:"block" }}
           onError={e => { e.target.src = catImg.other; }} />
-        <div style={{ position:"absolute", inset:0, background:"linear-gradient(to bottom,rgba(0,0,0,0.08) 0%,rgba(0,0,0,0.55) 75%,rgba(0,0,0,0.75) 100%)" }} />
+        <div style={{ position:"absolute", inset:0, background:"linear-gradient(to bottom,rgba(0,0,0,0.1) 0%,rgba(0,0,0,0.5) 65%,rgba(0,0,0,0.8) 100%)" }} />
 
-        <div style={{ position:"absolute", top:"16px", left: isDesk ? "40px" : "16px", display:"flex", gap:"6px" }}>
+        <div style={{ position:"absolute", top:"16px", left: isDesk ? "40px" : "16px", display:"flex", gap:"6px", flexWrap:"wrap" }}>
           <span style={{ background:BRAND, color:"#fff", fontSize:"10px", fontWeight:700, padding:"5px 12px", borderRadius:"99px", letterSpacing:"0.5px", fontFamily:MONO }}>
             {(event.category || "").toUpperCase()}
           </span>
@@ -277,32 +310,51 @@ export default function PublicEventPage() {
           <span style={{ display:"flex", alignItems:"center", gap:"4px", background:"rgba(124,58,237,0.85)", backdropFilter:"blur(8px)", color:"#fff", fontSize:"10px", fontWeight:700, padding:"5px 12px", borderRadius:"99px" }}>
             ⛓️ NFT · POLYGON
           </span>
+          {daysLeft !== null && daysLeft >= 0 && (
+            <span style={{ background:"rgba(255,255,255,0.15)", backdropFilter:"blur(8px)", color:"#fff", fontSize:"10px", fontWeight:700, padding:"5px 12px", borderRadius:"99px", border:"1px solid rgba(255,255,255,0.25)" }}>
+              {daysLeft === 0 ? "🔥 TODAY" : daysLeft === 1 ? "⏰ TOMORROW" : `⏰ IN ${daysLeft} DAYS`}
+            </span>
+          )}
         </div>
 
+        {!isDesk && (
+          <div style={{ position:"absolute", top:"16px", right:"16px" }}>
+            <motion.button whileTap={{ scale:0.9 }} onClick={handleShare}
+              style={{ width:"36px", height:"36px", borderRadius:"10px", background:"rgba(255,255,255,0.15)", backdropFilter:"blur(10px)", border:"1px solid rgba(255,255,255,0.25)", display:"flex", alignItems:"center", justifyContent:"center", cursor:"pointer", fontSize:"15px" }}>
+              {copied ? "✓" : "🔗"}
+            </motion.button>
+          </div>
+        )}
+
         <div style={{ position:"absolute", bottom: isDesk ? "36px" : "18px", left: isDesk ? "40px" : "16px", right: isDesk ? "40px" : "16px", maxWidth: isDesk ? "760px" : "none" }}>
-          <h1 style={{ fontSize: isDesk ? "38px" : "24px", fontWeight:900, color:"#fff", letterSpacing:"-1px", lineHeight:1.1, marginBottom:"10px", textShadow:"0 2px 20px rgba(0,0,0,0.3)" }}>
+          <h1 style={{ fontSize: isDesk ? "42px" : "26px", fontWeight:900, color:"#fff", letterSpacing:"-1.2px", lineHeight:1.08, marginBottom:"10px", textShadow:"0 2px 20px rgba(0,0,0,0.35)" }}>
             {event.name}
           </h1>
-          <div style={{ fontSize: isDesk ? "14px" : "12px", color:"rgba(255,255,255,0.85)", display:"flex", flexWrap:"wrap", gap:"14px" }}>
+          <div style={{ fontSize: isDesk ? "14px" : "12px", color:"rgba(255,255,255,0.88)", display:"flex", flexWrap:"wrap", gap:"14px", fontWeight:500 }}>
             <span>📅 {event.date}{event.time ? ` · ${event.time.substring(0,5)}` : ""}</span>
             <span>📍 {event.venue}{event.city ? `, ${event.city}` : ""}</span>
           </div>
         </div>
       </div>
 
-      <div style={{ maxWidth:"1200px", margin:"0 auto", padding: isDesk ? "36px 40px 80px" : "20px 16px 100px", display:"flex", gap:"40px", alignItems:"flex-start", flexDirection: isDesk ? "row" : "column" }}>
+      {/* Content */}
+      <div style={{ maxWidth:"1200px", margin:"0 auto", padding: isDesk ? "36px 40px 80px" : "20px 16px 40px", display:"flex", gap:"40px", alignItems:"flex-start", flexDirection: isDesk ? "row" : "column" }}>
 
+        {/* Left column */}
         <div style={{ flex:1, minWidth:0, width:"100%" }}>
 
           {orgName && (
-            <div style={{ display:"flex", alignItems:"center", gap:"12px", background:"var(--bg-card)", border:"1px solid var(--border)", borderRadius:"14px", padding:"14px 18px", marginBottom:"20px" }}>
-              <div style={{ width:"42px", height:"42px", borderRadius:"50%", background:`linear-gradient(135deg,${BRAND},${BRAND_D})`, display:"flex", alignItems:"center", justifyContent:"center", fontSize:"17px", color:"#fff", fontWeight:700, flexShrink:0 }}>
-                {orgName.charAt(0).toUpperCase()}
+            <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", gap:"12px", background:"var(--bg-card)", border:"1px solid var(--border)", borderRadius:"14px", padding:"14px 18px", marginBottom:"20px" }}>
+              <div style={{ display:"flex", alignItems:"center", gap:"12px" }}>
+                <div style={{ width:"42px", height:"42px", borderRadius:"50%", background:`linear-gradient(135deg,${BRAND},${BRAND_D})`, display:"flex", alignItems:"center", justifyContent:"center", fontSize:"17px", color:"#fff", fontWeight:700, flexShrink:0 }}>
+                  {orgName.charAt(0).toUpperCase()}
+                </div>
+                <div>
+                  <div style={{ fontSize:"10px", color:"var(--text-muted)", fontFamily:MONO, letterSpacing:"1px" }}>HOSTED BY</div>
+                  <div style={{ fontSize:"14px", fontWeight:700, color:"var(--text-primary)" }}>{orgName}</div>
+                </div>
               </div>
-              <div>
-                <div style={{ fontSize:"10px", color:"var(--text-muted)", fontFamily:MONO, letterSpacing:"1px" }}>HOSTED BY</div>
-                <div style={{ fontSize:"14px", fontWeight:700, color:"var(--text-primary)" }}>{orgName}</div>
-              </div>
+              {!isDesk && <ShareRow onCopy={handleShare} copied={copied} />}
             </div>
           )}
 
@@ -340,6 +392,7 @@ export default function PublicEventPage() {
           </div>
         </div>
 
+        {/* Right column — sticky ticket card (desktop only) */}
         {isDesk && (
           <div style={{ width:"380px", flexShrink:0 }}>
             <TicketCard event={event} isFree={isFree} curr={curr} isLoggedIn={isLoggedIn}
@@ -348,9 +401,28 @@ export default function PublicEventPage() {
         )}
       </div>
 
-      {!isLoggedIn && !isDesk && (
-        <div style={{ position:"fixed", bottom:0, left:0, right:0, background:"var(--bg-card)", borderTop:"1px solid var(--border)", padding:"10px 16px", textAlign:"center", fontSize:"11px", color:"var(--text-muted)", zIndex:20 }}>
-          You'll need a free account to get your ticket — takes 30 seconds
+      {/* Mobile sticky bottom CTA bar */}
+      {!isDesk && (
+        <div style={{ position:"fixed", bottom:0, left:0, right:0, background:"var(--bg-card)", borderTop:"1px solid var(--border)", padding:"12px 16px", display:"flex", alignItems:"center", justifyContent:"space-between", gap:"14px", zIndex:30, boxShadow:"0 -4px 20px rgba(0,0,0,0.08)" }}>
+          <div>
+            <div style={{ fontSize:"9px", fontWeight:700, color:"var(--text-muted)", fontFamily:MONO, letterSpacing:"0.5px" }}>PRICE</div>
+            <div style={{ fontSize:"18px", fontWeight:900, color: isFree ? "#16a34a" : BRAND, letterSpacing:"-0.5px" }}>
+              {isFree ? "FREE" : `${curr} ${parseFloat(event.price).toLocaleString()}`}
+            </div>
+          </div>
+          <motion.button whileTap={{ scale:0.96 }}
+            onClick={isFree ? handleRegister : handleBuy}
+            disabled={regLoading || (event.total_tickets - event.tickets_sold) <= 0}
+            style={{ flex:1, maxWidth:"220px", padding:"14px", borderRadius:"12px", border:"none",
+              background: (event.total_tickets - event.tickets_sold) <= 0 ? "var(--bg-subtle)" : `linear-gradient(135deg,${isFree ? "#16a34a,#15803d" : `${BRAND},${BRAND_D}`})`,
+              color: (event.total_tickets - event.tickets_sold) <= 0 ? "var(--text-muted)" : "#fff",
+              fontSize:"14px", fontWeight:700, cursor:"pointer", fontFamily:FONT }}>
+            {(event.total_tickets - event.tickets_sold) <= 0
+              ? "Sold Out"
+              : regLoading
+                ? "Processing…"
+                : isFree ? "Register Free" : isLoggedIn ? "Buy Ticket" : "Sign Up & Buy"}
+          </motion.button>
         </div>
       )}
     </div>

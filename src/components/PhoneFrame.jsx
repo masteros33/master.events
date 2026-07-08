@@ -113,10 +113,7 @@ function NavBar({ onNavigate }) {
 
       {isMobile ? (
         <div style={{ padding: "0 20px", height: "60px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-          {/* Left spacer */}
           <div style={{ width: "36px" }} />
-
-          {/* Brand mark — center */}
           <motion.div whileTap={{ scale: 0.97 }} onClick={() => onNavigate("home")}
             style={{ display: "flex", alignItems: "center", gap: "8px", cursor: "pointer" }}>
             <div style={{ width: "32px", height: "32px", borderRadius: "10px", background: `linear-gradient(135deg, ${BRAND}, ${BRAND_DARK})`, display: "flex", alignItems: "center", justifyContent: "center", boxShadow: `0 3px 10px ${BRAND}35` }}>
@@ -124,13 +121,10 @@ function NavBar({ onNavigate }) {
             </div>
             <span style={{ fontWeight: 800, fontSize: "16px", color: "var(--text-primary)", letterSpacing: "-0.3px" }}>Master Events</span>
           </motion.div>
-
-          {/* Theme toggle — right */}
           <ThemeBtn compact={true} />
         </div>
       ) : (
         <div style={{ maxWidth: "1200px", margin: "0 auto", padding: "0 32px", height: "68px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-          {/* Brand */}
           <motion.div whileHover={{ scale: 1.02 }} onClick={() => onNavigate("home")}
             style={{ display: "flex", alignItems: "center", gap: "10px", cursor: "pointer" }}>
             <div style={{ width: "38px", height: "38px", borderRadius: "12px", background: `linear-gradient(135deg, ${BRAND}, ${BRAND_DARK})`, display: "flex", alignItems: "center", justifyContent: "center", boxShadow: `0 4px 14px ${BRAND}40` }}>
@@ -139,7 +133,6 @@ function NavBar({ onNavigate }) {
             <span style={{ fontWeight: 800, fontSize: "17px", color: "var(--text-primary)", letterSpacing: "-0.3px" }}>Master Events</span>
           </motion.div>
 
-          {/* Nav links */}
           <div style={{ display: "flex", alignItems: "center", gap: "28px" }}>
             {[["Events", "#events"], ["About", "about"]].map(([label, href]) => (
               <motion.span key={label} whileHover={{ color: BRAND }}
@@ -150,7 +143,6 @@ function NavBar({ onNavigate }) {
             ))}
           </div>
 
-          {/* Auth + theme */}
           <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
             <ThemeBtn compact={true} />
             <motion.span whileHover={{ color: BRAND }} onClick={() => onNavigate("login")}
@@ -220,7 +212,6 @@ function LandingPage({ onNavigate }) {
     other:    "https://images.unsplash.com/photo-1492684223066-81342ee5ff30?w=600",
   };
 
-  // Feature icons — Lucide for UI, keep ⛓️ as blockchain brand
   const features = [
     { Icon: Link2,     title: "NFT Tickets on Polygon",   body: "Every ticket is minted on the blockchain — impossible to fake, permanently yours.", color: "#2563eb" },
     { Icon: null,      title: "95% Payout to Organizers", body: "We charge only 5%. The rest goes straight to your MoMo wallet — withdraw anytime.", color: "#16a34a", emoji: "💰" },
@@ -235,7 +226,6 @@ function LandingPage({ onNavigate }) {
       <NavBar onNavigate={onNavigate} />
       <StatsTicker />
 
-      {/* ── Hero ── */}
       <section ref={heroRef} style={{ position: "relative", overflow: "hidden", minHeight: "100svh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
 
         {HERO_IMAGES.map((img, i) => (
@@ -254,12 +244,10 @@ function LandingPage({ onNavigate }) {
         <div style={{ position: "absolute", inset: 0, background: "radial-gradient(ellipse at center, transparent 30%, rgba(0,0,0,0.3) 100%)", zIndex: 1 }} />
         <div style={{ position: "absolute", inset: 0, zIndex: 2 }}><FloatingCards /></div>
 
-        {/* Hero content */}
         <div style={{ position: "relative", zIndex: 3, textAlign: "center", maxWidth: isMobile ? "100%" : "800px", padding: isMobile ? "80px 24px 60px" : "100px 32px 80px", display: "flex", flexDirection: "column", alignItems: "center" }}>
           <motion.div variants={stagger} initial="hidden" animate="show"
             style={{ display: "flex", flexDirection: "column", alignItems: "center", width: "100%" }}>
 
-            {/* Badge */}
             <motion.div variants={fadeUp} style={{ marginBottom: "24px" }}>
               <motion.div animate={{ opacity: [0.75, 1, 0.75] }} transition={{ duration: 2.5, repeat: Infinity }}
                 style={{ display: "inline-flex", alignItems: "center", gap: "8px", padding: isMobile ? "6px 14px" : "7px 18px", borderRadius: "99px", background: `rgba(245,166,35,0.15)`, border: `1px solid rgba(245,166,35,0.4)`, color: BRAND, fontSize: isMobile ? "9px" : "11px", fontWeight: 700, letterSpacing: "1.5px", backdropFilter: "blur(8px)" }}>
@@ -269,7 +257,6 @@ function LandingPage({ onNavigate }) {
               </motion.div>
             </motion.div>
 
-            {/* Headline */}
             <motion.h1 variants={fadeUp}
               style={{ fontSize: isMobile ? "clamp(38px, 10vw, 56px)" : "clamp(44px, 7vw, 88px)", fontWeight: 900, lineHeight: 1.0, letterSpacing: isMobile ? "-2px" : "-3px", color: "#ffffff", marginBottom: "20px", textShadow: "0 2px 20px rgba(0,0,0,0.3)" }}>
               Find events that<br />
@@ -278,7 +265,6 @@ function LandingPage({ onNavigate }) {
               </span>
             </motion.h1>
 
-            {/* Subtext */}
             <motion.p variants={fadeUp}
               style={{ fontSize: isMobile ? "14px" : "clamp(15px, 2vw, 18px)", color: "rgba(255,255,255,0.78)", lineHeight: 1.7, marginBottom: "32px", maxWidth: isMobile ? "340px" : "520px", textShadow: "0 1px 8px rgba(0,0,0,0.3)" }}>
               {isMobile
@@ -286,7 +272,6 @@ function LandingPage({ onNavigate }) {
                 : "From Afrobeats concerts in Accra to tech summits in Kumasi — discover, buy and own your tickets as NFTs on the blockchain."}
             </motion.p>
 
-            {/* CTAs */}
             <motion.div variants={fadeUp}
               style={{ display: "flex", gap: "12px", justifyContent: "center", flexWrap: "wrap", marginBottom: "32px", width: "100%", maxWidth: isMobile ? "360px" : "100%" }}>
               <motion.button
@@ -303,7 +288,6 @@ function LandingPage({ onNavigate }) {
               </motion.button>
             </motion.div>
 
-            {/* Stats block */}
             <motion.div variants={fadeUp}
               style={{ display: "flex", gap: isMobile ? "16px" : "clamp(20px, 4vw, 48px)", flexWrap: "wrap", justifyContent: "center", padding: isMobile ? "16px 20px" : "24px 32px", background: "rgba(0,0,0,0.3)", backdropFilter: "blur(12px)", borderRadius: "18px", border: "1px solid rgba(255,255,255,0.1)", width: "100%", maxWidth: isMobile ? "360px" : "100%" }}>
               {[["10K+","Tickets",BRAND],["50+","Events","#4ade80"],["100%","Verified","#60a5fa"],["0%","Fakes","#f87171"]].map(([val, label, color]) => (
@@ -317,7 +301,6 @@ function LandingPage({ onNavigate }) {
           </motion.div>
         </div>
 
-        {/* Hero dots */}
         <div style={{ position: "absolute", bottom: "24px", left: "50%", transform: "translateX(-50%)", display: "flex", gap: "8px", zIndex: 4 }}>
           {HERO_IMAGES.map((_, i) => (
             <motion.div key={i}
@@ -329,7 +312,6 @@ function LandingPage({ onNavigate }) {
         </div>
       </section>
 
-      {/* ── Events Grid ── */}
       <section id="events" style={{ maxWidth: "1200px", margin: "0 auto", padding: "80px 32px" }}>
         <motion.div initial="hidden" whileInView="show" viewport={{ once: true, amount: 0.15 }} variants={stagger}>
           <motion.div variants={fadeUp} style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginBottom: "40px" }}>
@@ -387,7 +369,6 @@ function LandingPage({ onNavigate }) {
         </motion.div>
       </section>
 
-      {/* ── Features ── */}
       <section style={{ background: "var(--bg-subtle)", padding: "80px 32px", borderTop: "1px solid var(--border)", borderBottom: "1px solid var(--border)" }}>
         <div style={{ maxWidth: "1200px", margin: "0 auto" }}>
           <motion.div initial="hidden" whileInView="show" viewport={{ once: true, amount: 0.15 }} variants={stagger}>
@@ -415,7 +396,6 @@ function LandingPage({ onNavigate }) {
         </div>
       </section>
 
-      {/* ── Organizer CTA ── */}
       <section style={{ padding: "80px 32px" }}>
         <div style={{ maxWidth: "1200px", margin: "0 auto" }}>
           <motion.div initial="hidden" whileInView="show" viewport={{ once: true, amount: 0.2 }} variants={fadeUp}>
@@ -451,7 +431,6 @@ function LandingPage({ onNavigate }) {
         </div>
       </section>
 
-      {/* ── Testimonials ── */}
       <section style={{ background: "var(--bg-subtle)", padding: "80px 32px", borderTop: "1px solid var(--border)" }}>
         <div style={{ maxWidth: "1200px", margin: "0 auto" }}>
           <motion.div initial="hidden" whileInView="show" viewport={{ once: true, amount: 0.15 }} variants={stagger}>
@@ -483,7 +462,6 @@ function LandingPage({ onNavigate }) {
         </div>
       </section>
 
-      {/* ── Footer ── */}
       <footer style={{ background: "var(--bg-card)", borderTop: "1px solid var(--border)", padding: "52px 32px 36px" }}>
         <div style={{ maxWidth: "1200px", margin: "0 auto" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: "40px", marginBottom: "40px" }}>
@@ -619,6 +597,7 @@ export default function PhoneFrame({ children }) {
   useTheme();
 
   const getPage = () => {
+    if (screen === "pendingEvent") return "app";
     if (isLoggedIn) return "app";
     if (screen === "home")  return "home";
     if (screen === "about") return "about";

@@ -130,6 +130,7 @@ function TicketCard({ event, isFree, curr, isLoggedIn, onAction, actionLoading, 
 export default function PublicEventPage() {
   const setScreen        = useStore(s => s.setScreen);
   const setCheckoutEvent = useStore(s => s.setCheckoutEvent);
+  const setSearchQ       = useStore(s => s.setSearchQ);
   const isLoggedIn       = useStore(s => s.isLoggedIn);
   const [event,      setEvent]      = useState(null);
   const [loading,    setLoading]    = useState(true);
@@ -137,6 +138,7 @@ export default function PublicEventPage() {
   const [regDone,    setRegDone]    = useState(false);
   const [regLoading, setRegLoading] = useState(false);
   const [isDesk,     setIsDesk]     = useState(isDesktop());
+  const [searchVal,  setSearchVal]  = useState("");
 
   const slug = localStorage.getItem("pending_event_slug");
 
@@ -157,6 +159,12 @@ export default function PublicEventPage() {
       })
       .catch(() => { setError("Could not load event."); setLoading(false); });
   }, []);
+
+  const handleSearch = () => {
+    setSearchQ(searchVal);
+    localStorage.removeItem("pending_event_slug");
+    setScreen("home");
+  };
 
   const handleRegister = async () => {
     if (!isLoggedIn) {
@@ -203,7 +211,7 @@ export default function PublicEventPage() {
   };
 
   if (loading) return (
-    <div style={{ height:"100vh", display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", background:"var(--bg)", gap:"14px" }}>
+    <div style={{ height:"100%", display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", background:"var(--bg)", gap:"14px" }}>
       <motion.div animate={{ rotate:360 }} transition={{ repeat:Infinity, duration:0.9, ease:"linear" }}
         style={{ width:"26px", height:"26px", borderRadius:"50%", border:"3px solid var(--border)", borderTopColor:BRAND }} />
       <div style={{ fontSize:"13px", color:"var(--text-muted)", fontFamily:FONT }}>Loading event…</div>
@@ -211,7 +219,7 @@ export default function PublicEventPage() {
   );
 
   if (error && !event) return (
-    <div style={{ height:"100vh", display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", background:"var(--bg)", gap:"14px", padding:"24px", textAlign:"center" }}>
+    <div style={{ height:"100%", display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", background:"var(--bg)", gap:"14px", padding:"24px", textAlign:"center" }}>
       <div style={{ fontSize:"36px" }}>😕</div>
       <div style={{ fontSize:"15px", fontWeight:600, color:"var(--text-primary)", fontFamily:FONT }}>{error || "Event not found"}</div>
       <motion.button whileTap={{ scale:0.97 }} onClick={() => { localStorage.removeItem("pending_event_slug"); setScreen("home"); }}
@@ -229,7 +237,7 @@ export default function PublicEventPage() {
     : event.organizer_name || null;
 
   if (regDone) return (
-    <div style={{ height:"100vh", display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", background:"var(--bg)", padding:"24px", textAlign:"center" }}>
+    <div style={{ height:"100%", display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", background:"var(--bg)", padding:"24px", textAlign:"center" }}>
       <motion.div initial={{ scale:0 }} animate={{ scale:1 }} transition={{ type:"spring", stiffness:300, damping:20 }}
         style={{ fontSize:"52px", marginBottom:"16px" }}>🎉</motion.div>
       <h2 style={{ fontSize:"22px", fontWeight:800, color:"var(--text-primary)", marginBottom:"8px", fontFamily:FONT, letterSpacing:"-0.5px" }}>You're registered!</h2>
@@ -243,29 +251,65 @@ export default function PublicEventPage() {
   );
 
   return (
-    <div style={{ minHeight:"100vh", background:"var(--bg)", fontFamily:FONT }}>
+    <div style={{ height:"100%", overflowY:"auto", WebkitOverflowScrolling:"touch", background:"var(--bg)", fontFamily:FONT }}>
 
-      <div style={{ position:"sticky", top:0, zIndex:30, background:"var(--bg-card)", borderBottom:"1px solid var(--border)", padding: isDesk ? "0 40px" : "0 16px", height:"58px", display:"flex", alignItems:"center", justifyContent:"space-between" }}>
+      {/* Real nav bar with working search */}
+      <div style={{ position:"sticky", top:0, zIndex:30, background:"var(--bg-card)", borderBottom:"1px solid var(--border)", padding: isDesk ? "0 40px" : "0 16px", height:"58px", display:"flex", alignItems:"center", justifyContent:"space-between", gap:"20px" }}>
         <motion.div whileTap={{ scale:0.97 }}
           onClick={() => { localStorage.removeItem("pending_event_slug"); setScreen("home"); }}
-          style={{ display:"flex", alignItems:"center", gap:"9px", cursor:"pointer" }}>
+          style={{ display:"flex", alignItems:"center", gap:"9px", cursor:"pointer", flexShrink:0 }}>
           <div style={{ width:"28px", height:"28px", borderRadius:"8px", background:`linear-gradient(135deg,${BRAND},${BRAND_D})`, display:"flex", alignItems:"center", justifyContent:"center", fontSize:"13px" }}>🎟️</div>
-          <span style={{ fontWeight:800, fontSize:"14px", color:"var(--text-primary)", letterSpacing:"-0.3px" }}>Master Events</span>
+          {isDesk && <span style={{ fontWeight:800, fontSize:"14px", color:"var(--text-primary)", letterSpacing:"-0.3px" }}>Master Events</span>}
         </motion.div>
+
+        {isDesk && (
+          <div style={{ flex:1, maxWidth:"420px", position:"relative" }}>
+            <div style={{ position:"absolute", left:"12px", top:"50%", transform:"translateY(-50%)", pointerEvents:"none", fontSize:"13px", opacity:0.5 }}>🔍</div>
+            <input
+              value={searchVal}
+              onChange={e => setSearchVal(e.target.value)}
+              onKeyDown={e => e.key === "Enter" && handleSearch()}
+              placeholder="Search events, venues..."
+              style={{ width:"100%", padding:"8px 14px 8px 34px", background:"var(--bg-subtle)", border:"1.5px solid var(--border)", borderRadius:"10px", fontSize:"13px", color:"var(--text-primary)", outline:"none", boxSizing:"border-box", fontFamily:FONT }}
+            />
+          </div>
+        )}
+
         {!isLoggedIn && (
           <motion.button whileTap={{ scale:0.96 }} onClick={() => setScreen("login")}
-            style={{ padding:"7px 15px", borderRadius:"8px", border:"1px solid var(--border)", background:"transparent", color:"var(--text-primary)", fontSize:"12px", fontWeight:600, cursor:"pointer", fontFamily:FONT }}>
+            style={{ padding:"7px 15px", borderRadius:"8px", border:"1px solid var(--border)", background:"transparent", color:"var(--text-primary)", fontSize:"12px", fontWeight:600, cursor:"pointer", fontFamily:FONT, flexShrink:0 }}>
             Log in
           </motion.button>
         )}
       </div>
 
+      {/* Mobile search row */}
+      {!isDesk && (
+        <div style={{ padding:"10px 16px", borderBottom:"1px solid var(--border)", background:"var(--bg-card)" }}>
+          <div style={{ position:"relative" }}>
+            <div style={{ position:"absolute", left:"12px", top:"50%", transform:"translateY(-50%)", pointerEvents:"none", fontSize:"13px", opacity:0.5 }}>🔍</div>
+            <input
+              value={searchVal}
+              onChange={e => setSearchVal(e.target.value)}
+              onKeyDown={e => e.key === "Enter" && handleSearch()}
+              placeholder="Search events, venues..."
+              style={{ width:"100%", padding:"9px 14px 9px 34px", background:"var(--bg-subtle)", border:"1.5px solid var(--border)", borderRadius:"10px", fontSize:"13px", color:"var(--text-primary)", outline:"none", boxSizing:"border-box", fontFamily:FONT }}
+            />
+          </div>
+        </div>
+      )}
+
+      {/* Contained content */}
       <div style={{ maxWidth:"1100px", margin:"0 auto", padding: isDesk ? "28px 40px 60px" : "16px 16px 40px" }}>
 
-        <div style={{ borderRadius:"16px", overflow:"hidden", border:"1px solid var(--border)", marginBottom:"24px", position:"relative" }}>
+        {/* Image banner — full image visible, no cropping */}
+        <div style={{ borderRadius:"16px", overflow:"hidden", border:"1px solid var(--border)", marginBottom:"24px", position:"relative", height: isDesk ? "360px" : "200px", background:"#000" }}>
+          <img src={cover} alt=""
+            style={{ position:"absolute", inset:0, width:"100%", height:"100%", objectFit:"cover", filter:"blur(24px) brightness(0.6)", transform:"scale(1.15)" }}
+            onError={e => { e.target.style.display = "none"; }} />
           <img src={cover} alt={event.name}
-            style={{ width:"100%", height: isDesk ? "360px" : "200px", objectFit:"cover", display:"block" }}
-            onError={e => { e.target.src = catImg.other; }} />
+            style={{ position:"relative", width:"100%", height:"100%", objectFit:"contain", display:"block" }}
+            onError={e => { e.target.src = catImg.other; e.target.style.objectFit = "cover"; }} />
           <div style={{ position:"absolute", top:"14px", left:"14px", display:"flex", gap:"6px" }}>
             <span style={{ background:BRAND, color:"#fff", fontSize:"9px", fontWeight:700, padding:"4px 10px", borderRadius:"99px", letterSpacing:"0.5px", fontFamily:MONO }}>
               {(event.category || "").toUpperCase()}
@@ -279,6 +323,7 @@ export default function PublicEventPage() {
           </div>
         </div>
 
+        {/* Body — title, organizer, then two columns */}
         <div style={{ display:"flex", gap:"40px", alignItems:"flex-start", flexDirection: isDesk ? "row" : "column" }}>
 
           <div style={{ flex:1, minWidth:0, width:"100%" }}>

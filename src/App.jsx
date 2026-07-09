@@ -462,6 +462,45 @@ export default function App() {
     const uid    = params.get("uid");
     const token  = params.get("token");
     const verify = params.get("verify");
+    const code   = params.get("code");
+
+    // ── Google OAuth redirect callback ─────────────────────
+    if (code && window.location.pathname === "/auth/callback") {
+      const pendingRole = localStorage.getItem("google_auth_role") || "attendee";
+      localStorage.removeItem("google_auth_role");
+      fetch("https://master-events-backend.onrender.com/api/auth/google/callback/", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ code, role: pendingRole }),
+      })
+        .then(r => r.json())
+        .then(data => {
+          window.history.replaceState({}, "", "/");
+          if (data.tokens) {
+            localStorage.setItem("access_token", data.tokens.access);
+            localStorage.setItem("refresh_token", data.tokens.refresh);
+            const user = data.user;
+            const firstTab = user.role === "organizer" ? "dashboard" : "home";
+            const pendingSlug = localStorage.getItem("pending_event_slug");
+            const postAuthScreen = pendingSlug ? "pendingEvent" : (localStorage.getItem("post_auth_screen") || "app");
+            localStorage.removeItem("post_auth_screen");
+            useStore.setState({
+              currentUser: user, role: user.role, isLoggedIn: true,
+              activeTab: firstTab, screen: postAuthScreen,
+            });
+            toast.success("Welcome, " + user.first_name + "!");
+          } else {
+            useStore.getState().setScreen("login");
+            setTimeout(() => toast.error(data.error || "Google sign-in failed."), 400);
+          }
+        })
+        .catch(() => {
+          window.history.replaceState({}, "", "/");
+          useStore.getState().setScreen("login");
+          setTimeout(() => toast.error("Connection error during Google sign-in."), 400);
+        });
+      return;
+    }
 
     if (uid && token) {
       useStore.getState().setResetPasswordParams({ uid, token });

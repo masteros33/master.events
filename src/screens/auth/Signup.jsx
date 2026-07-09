@@ -1,12 +1,12 @@
 import React, { useState, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { useGoogleLogin } from "@react-oauth/google";
 import useStore from "../../store/useStore";
 import toast from "react-hot-toast";
 
 const API = "https://master-events-backend.onrender.com";
 const ATTENDEE_BG  = "https://images.unsplash.com/photo-1501281668745-f7f57925c3b4?w=1600&q=90";
 const ORGANIZER_BG = "https://images.unsplash.com/photo-1492684223066-81342ee5ff30?w=1600&q=90";
+const GOOGLE_CLIENT_ID = "495384335861-m8bhrto4skv6kmh4far62uuj486i9opt.apps.googleusercontent.com";
 
 const pwChecks = [
   { label:"8+ characters",    test: pw => pw.length >= 8 },
@@ -44,7 +44,6 @@ export function Signup() {
   const [showPw,        setShowPw]        = useState(false);
   const [honeypot,      setHoneypot]      = useState("");
   const [agreed,        setAgreed]        = useState(false);
-  const [googleLoading, setGoogleLoading] = useState(false);
   const checkRate = useRateLimit(3, 60000);
 
   const isOrg    = role === "organizer";
@@ -97,7 +96,6 @@ export function Signup() {
         toast.success("Welcome to Master Events, " + data.user.first_name + "!");
         afterAuth(data.user);
       } else {
-        // Email verification required
         useStore.getState().setScreen("login");
         toast.success("Account created! Please check your email to verify.");
       }
@@ -108,45 +106,18 @@ export function Signup() {
     setLoading(false);
   };
 
-  const googleLogin = useGoogleLogin({
-    onSuccess: async (tokenResponse) => {
-      setGoogleLoading(true);
-      try {
-        const userInfo = await fetch("https://www.googleapis.com/oauth2/v3/userinfo", {
-          headers: { Authorization: `Bearer ${tokenResponse.access_token}` },
-        }).then(r => r.json());
-        const res  = await fetch(`${API}/api/auth/google/`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            email:      userInfo.email,
-            first_name: userInfo.given_name  || "",
-            last_name:  userInfo.family_name || "",
-            google_id:  userInfo.sub,
-            role,
-          }),
-        });
-        const data = await res.json();
-        if (res.ok && data.tokens) {
-          localStorage.setItem("access_token",  data.tokens.access);
-          localStorage.setItem("refresh_token", data.tokens.refresh);
-          toast.success("Welcome, " + data.user.first_name + "!");
-          afterAuth(data.user);
-        } else {
-          if (setSignupError) setSignupError(data.detail || data.error || "Google sign-in failed.");
-        }
-      } catch (e) {
-        console.error("Google signup error:", e);
-        if (setSignupError) setSignupError("Google sign-in failed. Try again.");
-      } finally {
-        setGoogleLoading(false);
-      }
-    },
-    onError: () => {
-      setGoogleLoading(false);
-      if (setSignupError) setSignupError("Google sign-in was cancelled.");
-    },
-  });
+  const handleGoogleRedirect = () => {
+    localStorage.setItem("google_auth_role", role);
+    const params = new URLSearchParams({
+      client_id: GOOGLE_CLIENT_ID,
+      redirect_uri: "https://masterevents.events/auth/callback",
+      response_type: "code",
+      scope: "openid email profile",
+      access_type: "online",
+      prompt: "select_account",
+    });
+    window.location.href = `https://accounts.google.com/o/oauth2/v2/auth?${params.toString()}`;
+  };
 
   const inp = (extra = {}) => ({
     width: "100%", padding: "13px 16px", outline: "none",
@@ -169,7 +140,6 @@ export function Signup() {
   return (
     <div style={{ position: "fixed", inset: 0, fontFamily: "var(--font-sans)", overflowY: "auto" }}>
 
-      {/* Background */}
       <AnimatePresence mode="wait">
         <motion.img key={bgImage} src={bgImage} alt=""
           initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
@@ -179,13 +149,11 @@ export function Signup() {
       <div style={{ position: "fixed", inset: 0, background: "linear-gradient(135deg, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0.4) 50%, rgba(0,0,0,0.65) 100%)" }} />
       <div style={{ position: "fixed", bottom: "10%", right: "20%", width: "350px", height: "350px", borderRadius: "50%", background: isOrg ? "radial-gradient(circle, rgba(124,58,237,0.2) 0%, transparent 70%)" : "radial-gradient(circle, rgba(245,166,35,0.18) 0%, transparent 70%)", filter: "blur(40px)", pointerEvents: "none", transition: "background 0.6s" }} />
 
-      {/* Logo */}
       <div style={{ position: "fixed", top: "28px", left: "32px", zIndex: 20, display: "flex", alignItems: "center", gap: "10px" }}>
         <div style={{ width: "36px", height: "36px", borderRadius: "10px", background: "linear-gradient(135deg, #f5a623, #e8920f)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "17px", boxShadow: "0 4px 16px rgba(245,166,35,0.45)" }}>🎟️</div>
         <span style={{ fontWeight: 800, fontSize: "16px", color: "#fff", letterSpacing: "-0.3px" }}>Master Events</span>
       </div>
 
-      {/* Pending event banner */}
       {localStorage.getItem("pending_event_slug") && (
         <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}
           style={{ position: "fixed", top: "80px", left: "50%", transform: "translateX(-50%)", zIndex: 30, background: "rgba(249,115,22,0.95)", backdropFilter: "blur(10px)", color: "#fff", padding: "10px 20px", borderRadius: "10px", fontSize: "13px", fontWeight: 600, whiteSpace: "nowrap", boxShadow: "0 4px 20px rgba(249,115,22,0.4)" }}>
@@ -193,7 +161,6 @@ export function Signup() {
         </motion.div>
       )}
 
-      {/* Left side copy — desktop only */}
       {isWide && (
         <div style={{ position: "fixed", left: "6%", top: "50%", transform: "translateY(-50%)", zIndex: 5, maxWidth: "360px" }}>
           <AnimatePresence mode="wait">
@@ -230,14 +197,12 @@ export function Signup() {
         </div>
       )}
 
-      {/* Form */}
       <div style={{ position: "absolute", right: isWide ? "6%" : "50%", top: "50%", transform: isWide ? "translateY(-50%)" : "translate(50%, -50%)", width: "min(440px, 92vw)", zIndex: 10, marginTop: isWide ? "0" : "60px", marginBottom: "40px" }}>
         <motion.div
           initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
           style={{ background: "rgba(255,255,255,0.95)", backdropFilter: "blur(28px)", WebkitBackdropFilter: "blur(28px)", borderRadius: "24px", padding: "32px 28px", border: "1px solid rgba(255,255,255,0.6)", boxShadow: "0 32px 80px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.9)" }}>
 
-          {/* Role toggle */}
           <div style={{ display: "flex", gap: "8px", marginBottom: "22px", background: "rgba(0,0,0,0.04)", borderRadius: "14px", padding: "4px" }}>
             {[{ r: "attendee", icon: "🎟️", label: "Attendee" }, { r: "organizer", icon: "🎪", label: "Organizer" }].map(item => (
               <motion.button key={item.r} whileTap={{ scale: 0.97 }} onClick={() => setRole(item.r)}
@@ -247,7 +212,6 @@ export function Signup() {
             ))}
           </div>
 
-          {/* Heading */}
           <AnimatePresence mode="wait">
             <motion.div key={role} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} transition={{ duration: 0.25 }} style={{ marginBottom: "20px" }}>
               <h1 style={{ fontSize: "22px", fontWeight: 900, color: "#1a1a1a", letterSpacing: "-0.6px", marginBottom: "4px" }}>
@@ -259,37 +223,28 @@ export function Signup() {
             </motion.div>
           </AnimatePresence>
 
-          {/* Google */}
           <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}
-            onClick={() => googleLogin()} disabled={googleLoading}
+            onClick={handleGoogleRedirect}
             style={{ width: "100%", padding: "12px", borderRadius: "12px", background: "#fff", border: "1.5px solid rgba(0,0,0,0.1)", color: "#1a1a1a", fontWeight: 600, fontSize: "13px", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: "9px", marginBottom: "14px", fontFamily: "var(--font-sans)", boxShadow: "0 2px 8px rgba(0,0,0,0.06)", transition: "all 0.2s" }}>
-            {googleLoading ? (
-              <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 0.8, ease: "linear" }}
-                style={{ width: "15px", height: "15px", borderRadius: "50%", border: "2px solid #ccc", borderTopColor: "#333" }} />
-            ) : (
-              <svg width="16" height="16" viewBox="0 0 24 24">
-                <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-                <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-                <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
-                <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
-              </svg>
-            )}
-            {googleLoading ? "Signing in..." : `Sign up with Google as ${isOrg ? "Organizer" : "Attendee"}`}
+            <svg width="16" height="16" viewBox="0 0 24 24">
+              <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+              <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+              <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+              <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+            </svg>
+            {`Sign up with Google as ${isOrg ? "Organizer" : "Attendee"}`}
           </motion.button>
 
-          {/* Divider */}
           <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "14px" }}>
             <div style={{ flex: 1, height: "1px", background: "rgba(0,0,0,0.08)" }} />
             <span style={{ fontSize: "10px", color: "rgba(0,0,0,0.35)" }}>or with email</span>
             <div style={{ flex: 1, height: "1px", background: "rgba(0,0,0,0.08)" }} />
           </div>
 
-          {/* Honeypot */}
           <div style={{ position: "absolute", left: "-9999px" }} aria-hidden="true">
             <input tabIndex={-1} autoComplete="off" value={honeypot} onChange={e => setHoneypot(e.target.value)} name="website" />
           </div>
 
-          {/* Fields */}
           <AnimatePresence mode="wait">
             <motion.div key={role} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}>
               {isOrg ? (
@@ -342,7 +297,6 @@ export function Signup() {
             </motion.div>
           </AnimatePresence>
 
-          {/* Password */}
           <div style={{ marginBottom: "10px" }}>
             <label style={{ fontSize: "11px", fontWeight: 600, color: "rgba(0,0,0,0.5)", marginBottom: "5px", display: "block", letterSpacing: "0.5px" }}>PASSWORD</label>
             <div style={{ position: "relative" }}>
@@ -375,7 +329,6 @@ export function Signup() {
             )}
           </div>
 
-          {/* Terms */}
           <div style={{ display: "flex", alignItems: "flex-start", gap: "10px", marginBottom: "14px", marginTop: "4px" }}>
             <div onClick={() => setAgreed(!agreed)}
               style={{ width: "18px", height: "18px", borderRadius: "5px", border: "1.5px solid " + (agreed ? "#f5a623" : "rgba(0,0,0,0.18)"), background: agreed ? "#f5a623" : "transparent", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", flexShrink: 0, marginTop: "1px", transition: "all 0.2s" }}>
@@ -389,7 +342,6 @@ export function Signup() {
             </p>
           </div>
 
-          {/* Error */}
           <AnimatePresence>
             {signupError && (
               <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
@@ -399,25 +351,28 @@ export function Signup() {
             )}
           </AnimatePresence>
 
-          {/* Submit */}
           <motion.button
             whileHover={!loading && allPwMet && agreed ? { scale: 1.02 } : {}}
             whileTap={!loading && allPwMet && agreed ? { scale: 0.97 } : {}}
             onClick={handleCreate}
             disabled={loading || !allPwMet || !agreed}
-            style={{ width: "100%", padding: "14px", borderRadius: "13px", background: allPwMet && agreed ? (isOrg ? "linear-gradient(135deg, #7c3aed, #6d28d9)" : "linear-gradient(135deg, #f5a623, #e8920f)") : "rgba(0,0,0,0.05)", color: allPwMet && agreed ? "#fff" : "rgba(0,0,0,0.3)", fontWeight: 700, fontSize: "14px", border: "none", cursor: loading || !allPwMet || !agreed ? "not-allowed" : "pointer", boxShadow: allPwMet && agreed ? (isOrg ? "0 8px 24px rgba(124,58,237,0.35)" : "0 8px 24px rgba(245,166,35,0.35)") : "none", marginBottom: "14px", fontFamily: "var(--font-sans)", display: "flex", alignItems: "center", justifyContent: "center", gap: "10px", transition: "all 0.2s" }}>
+            style={{ width: "100%", padding: "14px", borderRadius: "13px", background: allPwMet && agreed ? (isOrg ? "linear-gradient(135deg, #7c3aed, #6d28d9)" : "linear-gradient(135deg, #f5a623, #e8920f)") : "rgba(0,0,0,0.05)", color: allPwMet && agreed ? "#fff" : "rgba(0,0,0,0.3)", fontWeight: 700, fontSize: "15px", border: "none", cursor: loading || !allPwMet || !agreed ? "not-allowed" : "pointer", boxShadow: allPwMet && agreed ? (isOrg ? "0 8px 24px rgba(124,58,237,0.35)" : "0 8px 24px rgba(245,166,35,0.35)") : "none", marginBottom: "16px", fontFamily: "var(--font-sans)", display: "flex", alignItems: "center", justifyContent: "center", gap: "10px", transition: "all 0.2s" }}>
             {loading ? (
               <>
                 <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 0.7, ease: "linear" }}
                   style={{ width: "16px", height: "16px", borderRadius: "50%", border: "2.5px solid rgba(255,255,255,0.4)", borderTopColor: "#fff" }} />
                 Creating account...
               </>
-            ) : `Create ${isOrg ? "Organizer" : "Attendee"} Account →`}
+            ) : (
+              `Create ${isOrg ? "Organizer" : "Attendee"} Account →`
+            )}
           </motion.button>
 
-          <p style={{ fontSize: "13px", color: "rgba(0,0,0,0.4)", textAlign: "center" }}>
+          <p style={{ fontSize: "13px", color: "rgba(0,0,0,0.45)", textAlign: "center" }}>
             Already have an account?{" "}
-            <span onClick={() => setScreen("login")} style={{ color: "#e8920f", fontWeight: 700, cursor: "pointer" }}>Log in</span>
+            <span onClick={() => setScreen("login")} style={{ color: "#e8920f", fontWeight: 700, cursor: "pointer" }}>
+              Log in
+            </span>
           </p>
         </motion.div>
       </div>
@@ -426,37 +381,7 @@ export function Signup() {
 }
 
 export function RoleSelect() {
-  const handleSelectRole = useStore(s => s.handleSelectRole);
-  const setScreen        = useStore(s => s.setScreen);
-  return (
-    <div style={{ minHeight: "100vh", background: "var(--bg)", display: "flex", alignItems: "center", justifyContent: "center", padding: "40px 24px", fontFamily: "var(--font-sans)" }}>
-      <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}
-        style={{ maxWidth: "440px", width: "100%", textAlign: "center" }}>
-        <motion.button whileTap={{ scale: 0.95 }} onClick={() => setScreen("home")}
-          style={{ background: "none", border: "none", cursor: "pointer", color: "var(--text-muted)", fontSize: "13px", fontWeight: 600, padding: "0 0 20px 0", fontFamily: "var(--font-sans)" }}>
-          ← Back
-        </motion.button>
-        <div style={{ width: "72px", height: "72px", borderRadius: "22px", background: "linear-gradient(135deg, #f5a623, #e8920f)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "32px", margin: "0 auto 24px", boxShadow: "var(--shadow-brand)" }}>🎉</div>
-        <h2 style={{ fontSize: "28px", fontWeight: 900, color: "var(--text-primary)", marginBottom: "8px", letterSpacing: "-0.5px" }}>You're in!</h2>
-        <p style={{ color: "var(--text-secondary)", fontSize: "15px", marginBottom: "32px" }}>How will you use Master Events?</p>
-        <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
-          {[
-            { role: "attendee",  icon: "🎟️", title: "I'm an Attendee",  sub: "Browse events, buy NFT tickets, resell and transfer" },
-            { role: "organizer", icon: "🎪", title: "I'm an Organizer", sub: "Create events, sell tickets, manage door access" },
-          ].map(item => (
-            <motion.div key={item.role} whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}
-              onClick={() => handleSelectRole(item.role)}
-              style={{ background: "var(--bg-card)", borderRadius: "18px", padding: "20px", cursor: "pointer", display: "flex", gap: "16px", alignItems: "center", boxShadow: "var(--shadow-sm)", border: "1.5px solid var(--border)", transition: "all 0.2s" }}>
-              <div style={{ width: "52px", height: "52px", background: "rgba(245,166,35,0.1)", borderRadius: "14px", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "24px", flexShrink: 0 }}>{item.icon}</div>
-              <div style={{ textAlign: "left" }}>
-                <div style={{ fontWeight: 700, fontSize: "16px", color: "var(--text-primary)", marginBottom: "4px" }}>{item.title}</div>
-                <div style={{ fontSize: "13px", color: "var(--text-secondary)" }}>{item.sub}</div>
-              </div>
-              <div style={{ marginLeft: "auto", color: "#f5a623", fontSize: "20px" }}>→</div>
-            </motion.div>
-          ))}
-        </div>
-      </motion.div>
-    </div>
-  );
+  const setScreen = useStore(s => s.setScreen);
+  React.useEffect(() => { setScreen("signup"); }, []);
+  return null;
 }

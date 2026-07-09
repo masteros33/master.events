@@ -1,11 +1,11 @@
 import React, { useState, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { useGoogleLogin } from "@react-oauth/google";
 import useStore from "../../store/useStore";
 import toast from "react-hot-toast";
 
 const API = "https://master-events-backend.onrender.com";
 const LOGIN_BG = "https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=1600&q=90";
+const GOOGLE_CLIENT_ID = "495384335861-m8bhrto4skv6kmh4far62uuj486i9opt.apps.googleusercontent.com";
 
 function useRateLimit(maxAttempts = 5, windowMs = 60000) {
   const attempts = useRef([]);
@@ -104,8 +104,6 @@ export default function Login() {
   const [showPw,        setShowPw]        = useState(false);
   const [rateLock,      setRateLock]      = useState(null);
   const [honeypot,      setHoneypot]      = useState("");
-  const [googleLoading, setGoogleLoading] = useState(false);
-  const [googleError,   setGoogleError]   = useState("");
   const checkRate = useRateLimit(5, 60000);
 
   const rateLockRef = useRef(null);
@@ -128,56 +126,18 @@ export default function Login() {
     setLoading(false);
   };
 
-  // ── KEY FIX: use useStore.setState instead of setCurrentUser ──
-  const googleLogin = useGoogleLogin({
-    onSuccess: async (tokenResponse) => {
-      setGoogleLoading(true);
-      setGoogleError("");
-      try {
-        const userInfo = await fetch("https://www.googleapis.com/oauth2/v3/userinfo", {
-          headers: { Authorization: `Bearer ${tokenResponse.access_token}` },
-        }).then(r => r.json());
-
-        const res = await fetch(`${API}/api/auth/google/`, {
-          method:  "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            email:      userInfo.email,
-            first_name: userInfo.given_name  || "",
-            last_name:  userInfo.family_name || "",
-            google_id:  userInfo.sub,
-          }),
-        });
-        const data = await res.json();
-
-        if (res.ok && data.tokens) {
-          localStorage.setItem("access_token",  data.tokens.access);
-          localStorage.setItem("refresh_token", data.tokens.refresh);
-          const user     = data.user;
-          const firstTab = user.role === "organizer" ? "dashboard" : "home";
-          useStore.setState({
-            currentUser: user,
-            role:        user.role,
-            isLoggedIn:  true,
-            activeTab:   firstTab,
-            screen:      "app",
-          });
-          toast.success("Welcome back, " + user.first_name + "!");
-        } else {
-          setGoogleError(data.detail || data.error || "Google sign-in failed. Try again.");
-        }
-      } catch (e) {
-        console.error("Google login error:", e);
-        setGoogleError("Connection error. Please try again.");
-      } finally {
-        setGoogleLoading(false);
-      }
-    },
-    onError: () => {
-      setGoogleLoading(false);
-      setGoogleError("Google sign-in was cancelled.");
-    },
-  });
+  const handleGoogleRedirect = () => {
+    localStorage.setItem("google_auth_role", "attendee");
+    const params = new URLSearchParams({
+      client_id: GOOGLE_CLIENT_ID,
+      redirect_uri: "https://masterevents.events/auth/callback",
+      response_type: "code",
+      scope: "openid email profile",
+      access_type: "online",
+      prompt: "select_account",
+    });
+    window.location.href = `https://accounts.google.com/o/oauth2/v2/auth?${params.toString()}`;
+  };
 
   const inp = (extra = {}) => ({
     width:"100%", padding:"13px 16px", outline:"none",
@@ -196,13 +156,11 @@ export default function Login() {
       <div style={{ position:"absolute", inset:0, background:"linear-gradient(135deg, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.35) 50%, rgba(0,0,0,0.6) 100%)" }} />
       <div style={{ position:"absolute", top:"30%", left:"20%", width:"400px", height:"400px", borderRadius:"50%", background:"radial-gradient(circle, rgba(245,166,35,0.18) 0%, transparent 70%)", filter:"blur(40px)", pointerEvents:"none" }} />
 
-      {/* Logo */}
       <div style={{ position:"absolute", top:"28px", left:"32px", zIndex:10, display:"flex", alignItems:"center", gap:"10px" }}>
         <div style={{ width:"36px", height:"36px", borderRadius:"10px", background:"linear-gradient(135deg, #f5a623, #e8920f)", display:"flex", alignItems:"center", justifyContent:"center", fontSize:"17px", boxShadow:"0 4px 16px rgba(245,166,35,0.45)" }}>🎟️</div>
         <span style={{ fontWeight:800, fontSize:"16px", color:"#fff", letterSpacing:"-0.3px" }}>Master Events</span>
       </div>
 
-      {/* Left side — desktop */}
       <div style={{ position:"absolute", left:"6%", top:"50%", transform:"translateY(-50%)", zIndex:5, maxWidth:"380px", display:window.innerWidth>=900?"block":"none" }}>
         <div style={{ fontSize:"10px", fontWeight:700, color:"#f5a623", letterSpacing:"2.5px", marginBottom:"16px", fontFamily:"var(--font-mono)" }}>GHANA'S #1 NFT TICKETING PLATFORM</div>
         <h2 style={{ fontSize:"clamp(32px, 3.5vw, 48px)", fontWeight:900, color:"#fff", lineHeight:1.1, letterSpacing:"-1.5px", marginBottom:"20px" }}>
@@ -224,7 +182,6 @@ export default function Login() {
         </div>
       </div>
 
-      {/* Form */}
       <div style={{ position:"absolute", right:window.innerWidth>=900?"6%":"50%", top:"50%", transform:window.innerWidth>=900?"translateY(-50%)":"translate(50%, -50%)", width:"min(420px, 90vw)", zIndex:10 }}>
         <motion.div initial={{ opacity:0, y:24 }} animate={{ opacity:1, y:0 }} transition={{ duration:0.5, ease:[0.16,1,0.3,1] }}
           style={{ background:"rgba(255,255,255,0.94)", backdropFilter:"blur(28px)", WebkitBackdropFilter:"blur(28px)", borderRadius:"24px", padding:"36px 32px", border:"1px solid rgba(255,255,255,0.6)", boxShadow:"0 32px 80px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.9)" }}>
@@ -234,53 +191,33 @@ export default function Login() {
             <p style={{ fontSize:"13px", color:"rgba(0,0,0,0.5)" }}>Log in to access your NFT tickets and wallet</p>
           </div>
 
-          {/* Google button */}
           <motion.button whileHover={{ scale:1.02 }} whileTap={{ scale:0.97 }}
-            onClick={() => googleLogin()} disabled={googleLoading}
+            onClick={handleGoogleRedirect}
             style={{ width:"100%", padding:"13px", borderRadius:"13px", background:"#fff", border:"1.5px solid rgba(0,0,0,0.1)", color:"#1a1a1a", fontWeight:600, fontSize:"14px", cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", gap:"10px", marginBottom:"8px", fontFamily:"var(--font-sans)", transition:"all 0.2s", boxShadow:"0 2px 8px rgba(0,0,0,0.06)" }}>
-            {googleLoading ? (
-              <motion.div animate={{ rotate:360 }} transition={{ repeat:Infinity, duration:0.8, ease:"linear" }}
-                style={{ width:"16px", height:"16px", borderRadius:"50%", border:"2px solid #ccc", borderTopColor:"#333" }} />
-            ) : (
-              <svg width="18" height="18" viewBox="0 0 24 24">
-                <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-                <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-                <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
-                <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
-              </svg>
-            )}
-            {googleLoading ? "Signing in..." : "Continue with Google"}
+            <svg width="18" height="18" viewBox="0 0 24 24">
+              <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+              <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+              <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+              <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+            </svg>
+            Continue with Google
           </motion.button>
 
-          {/* Google error */}
-          <AnimatePresence>
-            {googleError && (
-              <motion.div initial={{ opacity:0 }} animate={{ opacity:1 }} exit={{ opacity:0 }}
-                style={{ background:"rgba(220,38,38,0.08)", border:"1px solid rgba(220,38,38,0.2)", borderRadius:"8px", padding:"8px 12px", marginBottom:"8px", color:"#dc2626", fontSize:"12px" }}>
-                ⚠️ {googleError}
-              </motion.div>
-            )}
-          </AnimatePresence>
-
-          {/* Divider */}
           <div style={{ display:"flex", alignItems:"center", gap:"10px", marginBottom:"18px", marginTop:"10px" }}>
             <div style={{ flex:1, height:"1px", background:"rgba(0,0,0,0.08)" }} />
             <span style={{ fontSize:"11px", color:"rgba(0,0,0,0.35)", fontWeight:500 }}>or with email</span>
             <div style={{ flex:1, height:"1px", background:"rgba(0,0,0,0.08)" }} />
           </div>
 
-          {/* Honeypot */}
           <div style={{ position:"absolute", left:"-9999px" }} aria-hidden="true">
             <input tabIndex={-1} autoComplete="off" value={honeypot} onChange={e => setHoneypot(e.target.value)} name="website" />
           </div>
 
-          {/* Email */}
           <div style={{ marginBottom:"12px" }}>
             <label style={{ fontSize:"12px", fontWeight:600, color:"rgba(0,0,0,0.55)", marginBottom:"6px", display:"block", letterSpacing:"0.3px" }}>EMAIL</label>
             <input placeholder="you@email.com" value={email} onChange={e => setEmail(e.target.value)} type="email" autoComplete="email" style={inp()} onFocus={focusInp} onBlur={blurInp} />
           </div>
 
-          {/* Password */}
           <div style={{ marginBottom:"20px" }}>
             <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:"6px" }}>
               <label style={{ fontSize:"12px", fontWeight:600, color:"rgba(0,0,0,0.55)", letterSpacing:"0.3px" }}>PASSWORD</label>
@@ -298,7 +235,6 @@ export default function Login() {
             </div>
           </div>
 
-          {/* Rate lock */}
           <AnimatePresence>
             {rateLock && (
               <motion.div initial={{ opacity:0 }} animate={{ opacity:1 }} exit={{ opacity:0 }}
@@ -308,7 +244,6 @@ export default function Login() {
             )}
           </AnimatePresence>
 
-          {/* Login error */}
           <AnimatePresence>
             {loginError && !rateLock && (
               <motion.div initial={{ opacity:0, y:-6 }} animate={{ opacity:1, y:0 }} exit={{ opacity:0 }}
@@ -318,7 +253,6 @@ export default function Login() {
             )}
           </AnimatePresence>
 
-          {/* Login button */}
           <motion.button
             whileHover={!loading&&!rateLock?{scale:1.02}:{}} whileTap={!loading&&!rateLock?{scale:0.97}:{}}
             onClick={onLogin} disabled={loading||!!rateLock}

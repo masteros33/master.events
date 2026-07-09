@@ -112,16 +112,39 @@ function NavBar({ onNavigate }) {
       style={{ position: "sticky", top: 0, zIndex: 50, background: "var(--bg-card)", backdropFilter: "blur(20px)", WebkitBackdropFilter: "blur(20px)", borderBottom: "1px solid var(--border)", boxShadow: scrolled ? "0 2px 16px rgba(0,0,0,0.08)" : "var(--shadow-sm)", transition: "box-shadow 0.3s ease" }}>
 
       {isMobile ? (
-        <div style={{ padding: "0 20px", height: "60px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-          <div style={{ width: "36px" }} />
-          <motion.div whileTap={{ scale: 0.97 }} onClick={() => onNavigate("home")}
-            style={{ display: "flex", alignItems: "center", gap: "8px", cursor: "pointer" }}>
-            <div style={{ width: "32px", height: "32px", borderRadius: "10px", background: `linear-gradient(135deg, ${BRAND}, ${BRAND_DARK})`, display: "flex", alignItems: "center", justifyContent: "center", boxShadow: `0 3px 10px ${BRAND}35` }}>
-              <Ticket size={16} color="#fff" strokeWidth={2.5} />
-            </div>
-            <span style={{ fontWeight: 800, fontSize: "16px", color: "var(--text-primary)", letterSpacing: "-0.3px" }}>Master Events</span>
-          </motion.div>
+        <div style={{ padding: "0 16px", height: "60px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
           <ThemeBtn compact={true} />
+
+          <motion.div whileTap={{ scale: 0.97 }} onClick={() => onNavigate("home")}
+            animate={{ flex: scrolled ? 1 : 0, justifyContent: scrolled ? "center" : "flex-start" }}
+            style={{ display: "flex", alignItems: "center", gap: "7px", cursor: "pointer", transform: scrolled ? "none" : "translateX(8px)" }}>
+            <div style={{ width: "30px", height: "30px", borderRadius: "10px", background: `linear-gradient(135deg, ${BRAND}, ${BRAND_DARK})`, display: "flex", alignItems: "center", justifyContent: "center", boxShadow: `0 3px 10px ${BRAND}35`, flexShrink: 0 }}>
+              <Ticket size={15} color="#fff" strokeWidth={2.5} />
+            </div>
+            <span style={{ fontWeight: 800, fontSize: "15px", color: "var(--text-primary)", letterSpacing: "-0.3px", whiteSpace: "nowrap" }}>Master Events</span>
+          </motion.div>
+
+          <AnimatePresence>
+            {!scrolled && (
+              <motion.div
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: 20 }}
+                transition={{ duration: 0.2 }}
+                style={{ display: "flex", alignItems: "center", gap: "8px", flexShrink: 0 }}
+              >
+                <motion.span whileTap={{ scale: 0.95 }} onClick={() => onNavigate("login")}
+                  style={{ fontSize: "12px", fontWeight: 600, color: "var(--text-secondary)", cursor: "pointer", whiteSpace: "nowrap" }}>
+                  Log in
+                </motion.span>
+                <motion.button whileTap={{ scale: 0.95 }}
+                  onClick={() => onNavigate("signup")}
+                  style={{ padding: "7px 14px", borderRadius: "8px", border: "none", background: `linear-gradient(135deg,${BRAND},${BRAND_DARK})`, color: "#fff", fontSize: "12px", fontWeight: 700, cursor: "pointer", fontFamily: "var(--font-sans)", whiteSpace: "nowrap", boxShadow: `0 2px 8px ${BRAND}40` }}>
+                  Sign up free
+                </motion.button>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
       ) : (
         <div style={{ maxWidth: "1200px", margin: "0 auto", padding: "0 32px", height: "68px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>

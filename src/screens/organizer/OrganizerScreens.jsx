@@ -1077,6 +1077,25 @@ export function OrganizerEventDetail() {
 
   useEffect(() => { const r=()=>setIsDesk(desk()); window.addEventListener("resize",r); return ()=>window.removeEventListener("resize",r); }, []);
 
+  const fetchHolders = async (eventId) => {
+    if (!eventId) return;
+    setHolderLoad(true);
+    try {
+      const token = localStorage.getItem("access_token")||"";
+      const r = await fetch(`https://master-events-backend.onrender.com/api/tickets/event/${eventId}/`, { headers:{ Authorization:`Bearer ${token}` } });
+      const d = await r.json();
+      setHolders(Array.isArray(d)?d:[]);
+    } catch { setHolders([]); } finally { setHolderLoad(false); }
+  };
+
+  useEffect(() => {
+    if (viewingOrgEvent?.id) {
+      setHolders([]);
+      fetchHolders(viewingOrgEvent.id);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [viewingOrgEvent?.id]);
+
   if (!viewingOrgEvent) return null;
   const ev      = viewingOrgEvent;
   const isFree  = ev.event_type === "free";
@@ -1087,19 +1106,9 @@ export function OrganizerEventDetail() {
   const pct     = ev.totalTickets > 0 ? Math.round((ev.ticketsSold/ev.totalTickets)*100) : 0;
   const cover   = ev.image || catImg[ev.category] || catImg.other;
   const evUrl   = ev.event_url || (ev.slug ? `https://masterevents.events/events/${ev.slug}` : "https://masterevents.events");
+  const admittedCount = holders.filter(t => t.status === "redeemed").length;
 
-  const fetchHolders = async () => {
-    if (holders.length) return;
-    setHolderLoad(true);
-    try {
-      const token = localStorage.getItem("access_token")||"";
-      const r = await fetch(`https://master-events-backend.onrender.com/api/tickets/event/${ev.id}/`, { headers:{ Authorization:`Bearer ${token}` } });
-      const d = await r.json();
-      setHolders(Array.isArray(d)?d:[]);
-    } catch { setHolders([]); } finally { setHolderLoad(false); }
-  };
-
-  const onTab    = t => { setActiveTab(t); if(t==="holders") fetchHolders(); };
+  const onTab    = t => { setActiveTab(t); };
   const filtered = holders.filter(t => {
     if (!holderSearch) return true;
     const q = holderSearch.toLowerCase();
@@ -1233,13 +1242,13 @@ export function OrganizerEventDetail() {
               {(isFree ? [
                 ["🎉","Registered",(ev.regs||ev.ticketsSold).toLocaleString(),C.purple],
                 ["🎫","Capacity",ev.totalTickets.toLocaleString(),C.text],
-                ["✅","Checked In",(ev.admittedCount||0)+" ppl",C.green],
+                ["✅","Checked In",admittedCount+" ppl",C.green],
                 ["📅","Date",ev.date,C.blue],
               ] : [
                 ["💰","Revenue (95%)",`${curr} ${revenue.toLocaleString()}`,C.green],
                 ["🏦","Platform Fee",`${curr} ${fee.toLocaleString()}`,C.red],
                 ["🎟","Sold",`${ev.ticketsSold}/${ev.totalTickets}`,C.blue],
-                ["🚪","Admitted",(ev.admittedCount||0)+" ppl",C.accent],
+                ["🚪","Admitted",admittedCount+" ppl",C.accent],
               ]).map(([icon,label,value,color]) => (
                 <motion.div key={label} whileHover={{ y:-1 }} style={{ background:C.card, border:`1px solid ${C.border}`, borderRadius:"12px", padding:"14px 15px" }}>
                   <div style={{ fontSize:"14px", marginBottom:"6px" }}>{icon}</div>

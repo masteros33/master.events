@@ -1,6 +1,6 @@
 import React from "react";
-import { motion } from "framer-motion";
 import useStore from "../../store/useStore";
+import { ArrowLeft, Mail } from "lucide-react";
 
 const isDesktop = () => window.innerWidth > 768;
 
@@ -52,68 +52,51 @@ export default function PrivacyPolicy() {
   ];
 
   return (
-    <div style={{ background: "var(--bg)", minHeight: "100%", paddingBottom: "60px" }}>
+    <div className="bg-brand-canvas min-h-full pb-14 font-sans">
 
       {/* Header */}
-      <div style={{
-        position: "sticky", top: 0, zIndex: 20,
-        background: "var(--bg-card)", borderBottom: "1px solid var(--border)",
-        padding: desktop ? "0 40px" : "0 16px",
-        height: "60px", display: "flex", alignItems: "center",
-        justifyContent: "space-between",
-      }}>
-        <motion.button whileTap={{ scale: 0.9 }}
-          onClick={() => setScreen("settings")}
-          style={{ display: "flex", alignItems: "center", gap: "6px", background: "none", border: "none", cursor: "pointer", color: "var(--text-muted)", fontSize: "13px", fontWeight: 500, fontFamily: "var(--font-sans)", padding: 0 }}>
-          ← Back
-        </motion.button>
-        <div style={{ fontWeight: 800, fontSize: "16px", color: "var(--text-primary)", letterSpacing: "-0.3px" }}>Privacy Policy</div>
-        <div style={{ width: "60px" }} />
+      <div className={`sticky top-0 z-20 bg-white border-b border-gray-100 h-15 flex items-center justify-between ${desktop ? "px-10" : "px-4"}`}>
+        <button onClick={() => setScreen("settings")}
+          className="flex items-center gap-1.5 text-brand-muted text-sm font-medium hover:text-brand-text transition-colors">
+          <ArrowLeft size={15} strokeWidth={2} /> Back
+        </button>
+        <div className="font-extrabold text-base text-brand-text tracking-tight">Privacy Policy</div>
+        <div className="w-14" />
       </div>
 
-      <div style={{ maxWidth: desktop ? "720px" : "100%", margin: "0 auto", padding: desktop ? "32px 40px 60px" : "20px 16px 60px" }}>
+      <div className={`mx-auto ${desktop ? "max-w-[720px] px-10 py-8" : "px-4 py-5"}`}>
 
         {/* Hero */}
-        <div style={{ marginBottom: "32px" }}>
-          <div style={{ fontSize: "11px", fontWeight: 700, color: "var(--text-muted)", letterSpacing: "2px", fontFamily: "var(--font-mono)", marginBottom: "8px" }}>
+        <div className="mb-8">
+          <div className="text-[11px] font-bold text-brand-muted tracking-widest font-mono mb-2">
             LAST UPDATED: JUNE 2026
           </div>
-          <h1 style={{ fontSize: "clamp(24px, 4vw, 32px)", fontWeight: 900, color: "var(--text-primary)", letterSpacing: "-0.8px", lineHeight: 1.2, marginBottom: "12px" }}>
+          <h1 className="text-3xl font-extrabold text-brand-text tracking-tight leading-tight mb-3">
             Privacy Policy
           </h1>
-          <p style={{ fontSize: "15px", color: "var(--text-secondary)", lineHeight: 1.75 }}>
+          <p className="text-[15px] text-brand-text leading-relaxed">
             Master Events Ghana is committed to protecting your privacy. This policy explains what data we collect, why we collect it, and how we use it.
           </p>
         </div>
 
         {/* Sections */}
         {sections.map((s, i) => (
-          <motion.div key={i}
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: i * 0.04 }}
-            style={{
-              background: "var(--bg-card)",
-              borderRadius: "14px",
-              padding: "20px",
-              marginBottom: "10px",
-              border: "1px solid var(--border)",
-            }}>
-            <div style={{ fontSize: "14px", fontWeight: 700, color: "var(--text-primary)", marginBottom: "10px", letterSpacing: "-0.2px" }}>
+          <div key={i} className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 mb-2.5">
+            <div className="text-sm font-bold text-brand-text mb-2.5 tracking-tight">
               {s.title}
             </div>
-            <div style={{ fontSize: "13px", color: "var(--text-secondary)", lineHeight: 1.75 }}>
+            <div className="text-[13px] text-brand-text leading-relaxed">
               {s.body}
             </div>
-          </motion.div>
+          </div>
         ))}
 
         {/* Contact card */}
-        <div style={{ marginTop: "24px", background: "linear-gradient(135deg, rgba(249,115,22,0.06), transparent)", border: "1px solid rgba(249,115,22,0.2)", borderRadius: "14px", padding: "20px", textAlign: "center" }}>
-          <div style={{ fontSize: "13px", color: "var(--text-muted)", marginBottom: "6px" }}>Questions about your privacy?</div>
+        <div className="mt-6 bg-pastel-orange rounded-2xl p-5 text-center">
+          <div className="text-[13px] text-brand-text mb-1.5">Questions about your privacy?</div>
           <a href="mailto:mastereventgh@gmail.com"
-            style={{ fontSize: "15px", fontWeight: 700, color: "#F97316", textDecoration: "none" }}>
-            mastereventgh@gmail.com
+            className="inline-flex items-center gap-1.5 text-[15px] font-bold text-brand-orange">
+            <Mail size={15} strokeWidth={1.75} /> mastereventgh@gmail.com
           </a>
         </div>
       </div>

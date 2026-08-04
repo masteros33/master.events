@@ -279,15 +279,19 @@ const useStore = create((set, get) => ({
   ticketQty:        1,
   payMethod:        "momo",
   viewingTicket:    null,
+  // ── NEW: selected ticket tier (VIP/VVIP/Regular), null for
+  // non-tiered events — carried alongside checkoutEvent through checkout
+  selectedTier:     null,
   setCheckoutEvent: (v) => set({ checkoutEvent: v }),
   setTicketQty:     (v) => set({ ticketQty: v }),
   setPayMethod:     (v) => set({ payMethod: v }),
   setViewingTicket: (v) => set({ viewingTicket: v }),
+  setSelectedTier:  (v) => set({ selectedTier: v }),
 
   // ── handleBuyTicket ────────────────────────────────────────
   handleBuyTicket: async (paymentReference) => {
     const { ticketsAPI } = await import("../api");
-    const { checkoutEvent, ticketQty, payMethod, myTickets } = get();
+    const { checkoutEvent, ticketQty, payMethod, myTickets, selectedTier } = get();
     const loadingToast = toast.loading("Verifying payment...");
 
     const buildTicket = (found) => ({
@@ -305,6 +309,7 @@ const useStore = create((set, get) => ({
         price:    found.event?.price    || checkoutEvent?.price,
         image:    found.event?.image    || checkoutEvent?.image,
       },
+      tierName:     found.tier?.name    || selectedTier?.name || null,
       qty:          found.quantity || ticketQty,
       quantity:     found.quantity || ticketQty,
       payMethod,
@@ -331,6 +336,7 @@ const useStore = create((set, get) => ({
       set({
         myTickets:          [...get().myTickets, ticket],
         checkoutEvent:      null,
+        selectedTier:       null,
         overlayEvent:       null,
         activeTab:          "tickets",
         screen:             "paymentSuccess",
@@ -364,17 +370,23 @@ const useStore = create((set, get) => ({
       try {
         const controller = new AbortController();
         const timeoutId  = setTimeout(() => controller.abort(), 120000);
+        const body = {
+          event_id:          checkoutEvent.id,
+          quantity:          ticketQty,
+          payment_reference: reference,
+        };
+        // ── Include tier_id only when a tier was actually selected —
+        // omitting it entirely keeps non-tiered events on the exact
+        // same request shape they've always used ──
+        if (selectedTier?.id) body.tier_id = selectedTier.id;
+
         const res = await fetch(`${BACKEND}/api/tickets/purchase/`, {
           method:  "POST",
           headers: {
             "Content-Type":  "application/json",
             "Authorization": `Bearer ${localStorage.getItem("access_token") || ""}`,
           },
-          body: JSON.stringify({
-            event_id:          checkoutEvent.id,
-            quantity:          ticketQty,
-            payment_reference: reference,
-          }),
+          body: JSON.stringify(body),
           signal: controller.signal,
         });
         clearTimeout(timeoutId);
@@ -406,12 +418,12 @@ const useStore = create((set, get) => ({
           if (!shown) {
             toast.dismiss();
             toast.success("🎉 Payment confirmed! Check My Tickets.");
-            set({ screen: "app", activeTab: "tickets", checkoutEvent: null });
+            set({ screen: "app", activeTab: "tickets", checkoutEvent: null, selectedTier: null });
           }
         } catch {
           toast.dismiss();
           toast.success("🎉 Payment confirmed! Check My Tickets.");
-          set({ screen: "app", activeTab: "tickets", checkoutEvent: null });
+          set({ screen: "app", activeTab: "tickets", checkoutEvent: null, selectedTier: null });
         }
         return;
       }
@@ -436,6 +448,7 @@ const useStore = create((set, get) => ({
             price:       eventData.price       || checkoutEvent.price,
             image:       eventData.image       || checkoutEvent.image,
           },
+          tierName:     data.tier?.name        || selectedTier?.name || null,
           qty:          ticketQty,
           quantity:     data.quantity          || ticketQty,
           payMethod,
@@ -460,6 +473,7 @@ const useStore = create((set, get) => ({
         set({
           myTickets:          [...myTickets, ticket],
           checkoutEvent:      null,
+          selectedTier:       null,
           overlayEvent:       null,
           activeTab:          "tickets",
           screen:             "paymentSuccess",
@@ -629,6 +643,10 @@ const useStore = create((set, get) => ({
         sales_open:    true,
       };
       if (addEventForm.image) payload.image = addEventForm.image;
+      // ── NEW: pass ticket tiers through to the backend when present ──
+      if (Array.isArray(addEventForm.ticket_tiers) && addEventForm.ticket_tiers.length) {
+        payload.ticket_tiers = addEventForm.ticket_tiers;
+      }
       const data = await eventsAPI.create(payload);
       if (data.id) {
         const cat = data.category || addEventForm.category || "other";
@@ -642,6 +660,7 @@ const useStore = create((set, get) => ({
             currency: data.currency || "GHS",
             slug: data.slug || "",
             event_url: data.event_url || "",
+            tiers: data.tiers || [],
             image: data.image || categoryImages[cat] || categoryImages.other,
           }],
           addEventForm: {

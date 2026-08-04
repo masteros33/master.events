@@ -2,10 +2,12 @@ import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import useStore from "../../store/useStore";
 import { ticketsAPI } from "../../api";
+import {
+  ArrowLeft, Tag, Lock, Link2, Wallet, X, AlertCircle,
+  MapPin, Ticket, CheckCircle2, Loader2,
+} from "lucide-react";
 
 const API = "https://master-events-backend.onrender.com";
-const BRAND   = "#F97316";
-const BRAND_D = "#EA6C0A";
 const isDesktop = () => window.innerWidth > 768;
 
 const categoryImages = {
@@ -146,67 +148,66 @@ export default function ResaleMarket() {
   // ── Payment success screen ──
   if (payDone && newTicket) {
     return (
-      <div style={{ background: "var(--bg)", minHeight: "100%", display: "flex", alignItems: "center", justifyContent: "center", padding: "24px" }}>
-        <motion.div initial={{ opacity: 0, scale: 0.92 }} animate={{ opacity: 1, scale: 1 }}
-          style={{ background: "var(--bg-card)", borderRadius: "22px", padding: desktop ? "40px 36px" : "28px 20px", maxWidth: "440px", width: "100%", textAlign: "center", border: "1px solid var(--border)", boxShadow: "var(--shadow-lg)" }}>
-          <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: "spring", stiffness: 400, damping: 20, delay: 0.1 }}
-            style={{ width: "72px", height: "72px", borderRadius: "50%", background: "#16a34a", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "32px", margin: "0 auto 20px", boxShadow: "0 4px 20px rgba(22,163,74,0.3)" }}>✅</motion.div>
-          <h2 style={{ fontSize: "22px", fontWeight: 800, color: "var(--text-primary)", marginBottom: "8px", letterSpacing: "-0.5px" }}>Ticket Purchased!</h2>
-          <p style={{ color: "var(--text-muted)", fontSize: "14px", lineHeight: 1.6, marginBottom: "24px" }}>
-            Your resale ticket for <strong style={{ color: "var(--text-primary)" }}>{selected?.event?.name}</strong> is confirmed. NFT minting on Polygon.
+      <div className="bg-fintech-gray min-h-full flex items-center justify-center p-6">
+        <motion.div initial={{ opacity: 0, scale: 0.96 }} animate={{ opacity: 1, scale: 1 }}
+          className={`bg-white rounded-3xl border border-gray-100 shadow-sm max-w-[440px] w-full text-center ${desktop ? "px-9 py-10" : "px-5 py-7"}`}>
+          <div className="w-[72px] h-[72px] rounded-full bg-pastel-green flex items-center justify-center mx-auto mb-5">
+            <CheckCircle2 size={32} strokeWidth={1.75} className="text-fintech-green" />
+          </div>
+          <h2 className="text-xl font-extrabold text-brand-text mb-2 tracking-tight">Ticket Purchased!</h2>
+          <p className="text-brand-muted text-sm leading-relaxed mb-6">
+            Your resale ticket for <strong className="text-brand-text">{selected?.event?.name}</strong> is confirmed. NFT minting on Polygon.
           </p>
-          <div style={{ background: "rgba(124,58,237,0.05)", border: "1px solid rgba(124,58,237,0.15)", borderRadius: "12px", padding: "12px 16px", marginBottom: "22px", display: "flex", alignItems: "center", gap: "10px" }}>
-            <span style={{ fontSize: "18px" }}>⛓️</span>
-            <div style={{ textAlign: "left" }}>
-              <div style={{ fontSize: "12px", fontWeight: 700, color: "#7c3aed" }}>NFT Ownership Transfer</div>
-              <div style={{ fontSize: "11px", color: "var(--text-muted)", marginTop: "2px" }}>On-chain transfer in progress · Polygon Amoy</div>
+          <div className="flex items-center gap-2.5 bg-pastel-blue rounded-xl px-4 py-3 mb-5 text-left">
+            <Link2 size={18} strokeWidth={1.75} className="text-fintech-blue shrink-0" />
+            <div>
+              <div className="text-xs font-bold text-fintech-blue">NFT Ownership Transfer</div>
+              <div className="text-[11px] text-brand-muted mt-0.5">On-chain transfer in progress · Polygon Amoy</div>
             </div>
           </div>
-          <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}
-            onClick={() => {
-              if (newTicket) setViewingTicket(newTicket);
-              setScreen("ticketView");
-            }}
-            style={{ width: "100%", padding: "15px", background: `linear-gradient(135deg, ${BRAND}, ${BRAND_D})`, color: "#fff", border: "none", borderRadius: "13px", fontSize: "15px", fontWeight: 700, cursor: "pointer", boxShadow: "var(--shadow-brand)", marginBottom: "10px", fontFamily: "var(--font-sans)" }}>
+          <button onClick={() => { if (newTicket) setViewingTicket(newTicket); setScreen("ticketView"); }}
+            className="w-full py-3.5 rounded-full bg-brand-orange hover:bg-brand-orange-hover text-white font-bold text-sm mb-2.5 transition-colors">
             View My Ticket
-          </motion.button>
-          <motion.button whileTap={{ scale: 0.97 }} onClick={() => setScreen("app")}
-            style={{ width: "100%", padding: "13px", background: "transparent", border: "1px solid var(--border)", borderRadius: "13px", color: "var(--text-muted)", cursor: "pointer", fontSize: "14px", fontFamily: "var(--font-sans)" }}>
+          </button>
+          <button onClick={() => setScreen("app")}
+            className="w-full py-3 rounded-full bg-transparent border border-gray-200 text-brand-muted text-sm">
             Back to Events
-          </motion.button>
+          </button>
         </motion.div>
       </div>
     );
   }
 
   return (
-    <div style={{ background: "var(--bg)", minHeight: "100%", paddingBottom: desktop ? "60px" : "100px" }}>
+    <div className={`bg-fintech-gray min-h-full ${desktop ? "pb-16" : "pb-24"}`}>
 
       {/* Header */}
-      <div style={{ padding: desktop ? "28px 40px 0" : "16px 16px 0" }}>
-        <motion.button whileTap={{ scale: 0.9 }} onClick={() => setScreen("app")}
-          style={{ display: "flex", alignItems: "center", gap: "8px", background: "none", border: "none", cursor: "pointer", color: "var(--text-muted)", fontSize: "13px", fontWeight: 500, padding: "0 0 16px", fontFamily: "var(--font-sans)" }}>
-          ← Back
-        </motion.button>
+      <div className={desktop ? "px-10 pt-7" : "px-4 pt-4"}>
+        <button onClick={() => setScreen("app")}
+          className="flex items-center gap-1.5 text-brand-muted text-sm font-medium hover:text-brand-text transition-colors mb-4">
+          <ArrowLeft size={15} strokeWidth={2} /> Back
+        </button>
 
-        <div style={{ display: "flex", alignItems: "center", gap: "14px", marginBottom: "6px" }}>
-          <div style={{ width: "42px", height: "42px", borderRadius: "13px", background: "linear-gradient(135deg, #7c3aed, #2563eb)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "20px", flexShrink: 0 }}>🏷️</div>
+        <div className="flex items-center gap-3.5 mb-1.5">
+          <div className="w-11 h-11 rounded-full bg-pastel-blue flex items-center justify-center shrink-0">
+            <Tag size={20} strokeWidth={1.75} className="text-fintech-blue" />
+          </div>
           <div>
-            <h1 style={{ fontWeight: 900, fontSize: desktop ? "26px" : "20px", color: "var(--text-primary)", letterSpacing: "-0.6px", marginBottom: "3px" }}>Resale Market</h1>
-            <div style={{ fontSize: "11px", color: "var(--text-muted)", fontFamily: "var(--font-mono)" }}>FAN_TO_FAN · NFT_TRANSFER · 2%_FEE</div>
+            <h1 className={`font-extrabold text-brand-text tracking-tight mb-0.5 ${desktop ? "text-2xl" : "text-xl"}`}>Resale Market</h1>
+            <div className="text-[11px] text-brand-muted font-mono">FAN_TO_FAN · NFT_TRANSFER · 2%_FEE</div>
           </div>
         </div>
 
         {/* Info strip */}
-        <div style={{ display: "flex", gap: "8px", marginTop: "16px", marginBottom: "4px", flexWrap: "wrap" }}>
+        <div className="flex gap-2 mt-4 mb-1 flex-wrap">
           {[
-            ["🔒", "Secure checkout via Paystack"],
-            ["⛓️", "NFT transfers on-chain automatically"],
-            ["💰", "Seller keeps 98% of sale"],
-          ].map(([icon, text]) => (
-            <div key={text} style={{ display: "flex", alignItems: "center", gap: "5px", padding: "5px 11px", borderRadius: "99px", background: "var(--bg-subtle)", border: "1px solid var(--border)" }}>
-              <span style={{ fontSize: "11px" }}>{icon}</span>
-              <span style={{ fontSize: "10px", color: "var(--text-secondary)", fontWeight: 600 }}>{text}</span>
+            [Lock, "Secure checkout via Paystack"],
+            [Link2, "NFT transfers on-chain automatically"],
+            [Wallet, "Seller keeps 98% of sale"],
+          ].map(([Icon, text]) => (
+            <div key={text} className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white border border-gray-100">
+              <Icon size={12} strokeWidth={1.75} className="text-brand-muted" />
+              <span className="text-[10px] text-brand-text font-semibold">{text}</span>
             </div>
           ))}
         </div>
@@ -216,22 +217,23 @@ export default function ResaleMarket() {
       <AnimatePresence>
         {payError && (
           <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
-            style={{ margin: desktop ? "12px 40px 0" : "12px 16px 0", background: "var(--error-bg)", border: "1px solid rgba(220,38,38,0.2)", borderRadius: "12px", padding: "12px 16px", color: "var(--error)", fontSize: "13px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-            <span>⚠️ {payError}</span>
-            <motion.div whileTap={{ scale: 0.9 }} onClick={() => setPayError("")}
-              style={{ cursor: "pointer", fontWeight: 700, fontSize: "14px", color: "var(--text-muted)" }}>✕</motion.div>
+            className={`${desktop ? "mx-10" : "mx-4"} mt-3 bg-red-50 border border-red-100 rounded-xl px-4 py-3 text-red-600 text-sm flex justify-between items-center gap-3`}>
+            <span className="flex items-center gap-2"><AlertCircle size={14} strokeWidth={2} className="shrink-0" /> {payError}</span>
+            <button onClick={() => setPayError("")} className="text-brand-muted shrink-0">
+              <X size={14} strokeWidth={2} />
+            </button>
           </motion.div>
         )}
       </AnimatePresence>
 
       {/* Listings */}
-      <div style={{ padding: desktop ? "16px 40px 0" : "14px 16px 0" }}>
+      <div className={desktop ? "px-10 pt-4" : "px-4 pt-3.5"}>
         {loading ? (
-          <div style={{ display: "grid", gridTemplateColumns: desktop ? "repeat(3,1fr)" : "1fr", gap: desktop ? "18px" : "12px" }}>
+          <div className={`grid gap-4 ${desktop ? "grid-cols-3" : "grid-cols-1"}`}>
             {[1,2,3].map(i => (
-              <div key={i} style={{ background: "var(--bg-card)", borderRadius: "16px", overflow: "hidden", border: "1px solid var(--border)" }}>
-                <div className="skeleton" style={{ height: "180px" }} />
-                <div style={{ padding: "14px" }}>
+              <div key={i} className="bg-white rounded-2xl overflow-hidden border border-gray-100">
+                <div className="skeleton" style={{ height: "160px" }} />
+                <div className="p-3.5">
                   <div className="skeleton" style={{ height: "14px", width: "70%", marginBottom: "10px" }} />
                   <div className="skeleton" style={{ height: "11px", width: "45%" }} />
                 </div>
@@ -239,15 +241,16 @@ export default function ResaleMarket() {
             ))}
           </div>
         ) : listings.length === 0 ? (
-          <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
-            style={{ textAlign: "center", padding: "80px 24px", background: "var(--bg-card)", borderRadius: "20px", border: "1px solid var(--border)", marginTop: "8px" }}>
-            <div style={{ fontSize: "48px", marginBottom: "14px" }}>🏷️</div>
-            <div style={{ fontWeight: 800, fontSize: "17px", color: "var(--text-primary)", marginBottom: "8px" }}>No resale listings</div>
-            <div style={{ fontSize: "13px", color: "var(--text-muted)", lineHeight: 1.6 }}>When attendees list tickets for resale, they'll appear here.</div>
-          </motion.div>
+          <div className="text-center py-20 px-6 bg-white rounded-2xl border border-gray-100 shadow-sm mt-2">
+            <div className="w-14 h-14 rounded-full bg-pastel-blue flex items-center justify-center mx-auto mb-3.5">
+              <Tag size={24} strokeWidth={1.75} className="text-fintech-blue" />
+            </div>
+            <div className="font-extrabold text-base text-brand-text mb-2">No resale listings</div>
+            <div className="text-sm text-brand-muted leading-relaxed">When attendees list tickets for resale, they'll appear here.</div>
+          </div>
         ) : (
-          <div style={{ display: "grid", gridTemplateColumns: desktop ? "repeat(3,1fr)" : "1fr", gap: desktop ? "18px" : "12px" }}>
-            {listings.map((listing, i) => {
+          <div className={`grid gap-4 ${desktop ? "grid-cols-3" : "grid-cols-1"}`}>
+            {listings.map(listing => {
               const ev          = listing.event;
               const isBuying    = paying && selected?.ticket_id === listing.ticket_id;
               const isOwn       = listing.seller === currentUser?.first_name;
@@ -255,101 +258,75 @@ export default function ResaleMarket() {
               const savingsPct  = Math.round(((listing.original_price - listing.resale_price) / listing.original_price) * 100);
 
               return (
-                <motion.div key={listing.ticket_id}
-                  initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}
-                  style={{ background: "var(--bg-card)", borderRadius: "18px", overflow: "hidden", border: "1px solid var(--border)", boxShadow: "var(--shadow-sm)" }}>
+                <div key={listing.ticket_id} className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
 
                   {/* Event image */}
-                  <div style={{ height: "160px", position: "relative" }}>
-                    <img src={img} alt={ev.name} style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                  <div className="h-40 relative">
+                    <img src={img} alt={ev.name} className="w-full h-full object-cover"
                       onError={e => { e.target.src = categoryImages.other; }} />
-                    <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to bottom, rgba(0,0,0,0.05), rgba(0,0,0,0.72))" }} />
 
-                    {/* NFT badge */}
-                    <div style={{ position: "absolute", top: "10px", left: "10px", display: "flex", alignItems: "center", gap: "4px", background: "rgba(124,58,237,0.85)", backdropFilter: "blur(8px)", padding: "3px 9px", borderRadius: "99px" }}>
-                      <span style={{ fontSize: "8px" }}>⛓️</span>
-                      <span style={{ fontSize: "8px", fontWeight: 700, color: "#fff", fontFamily: "var(--font-mono)" }}>NFT</span>
-                    </div>
+                    <span className="absolute top-2.5 left-2.5 flex items-center gap-1 bg-brand-text text-white text-[9px] font-bold px-2.5 py-1 rounded-full">
+                      <Link2 size={9} strokeWidth={2.5} /> NFT
+                    </span>
 
-                    {/* Savings badge */}
                     {savingsPct > 0 && (
-                      <div style={{ position: "absolute", top: "10px", right: "10px", background: "#16a34a", color: "#fff", fontSize: "9px", fontWeight: 700, padding: "3px 9px", borderRadius: "99px", fontFamily: "var(--font-mono)" }}>
+                      <span className="absolute top-2.5 right-2.5 bg-fintech-green text-white text-[9px] font-bold px-2.5 py-1 rounded-full font-mono">
                         -{savingsPct}%
-                      </div>
+                      </span>
                     )}
-
-                    {/* Event name at bottom */}
-                    <div style={{ position: "absolute", bottom: "10px", left: "12px", right: "12px" }}>
-                      <div style={{ color: "#fff", fontWeight: 700, fontSize: "14px", lineHeight: 1.25, marginBottom: "2px" }}>{ev.name}</div>
-                      <div style={{ color: "rgba(255,255,255,0.6)", fontSize: "10px", fontFamily: "var(--font-mono)" }}>📍 {ev.venue} · {ev.date}</div>
-                    </div>
                   </div>
 
                   {/* Card body */}
-                  <div style={{ padding: "14px 16px" }}>
+                  <div className="p-4">
+                    <div className="font-bold text-sm text-brand-text mb-1 leading-snug">{ev.name}</div>
+                    <div className="flex items-center gap-1 text-[11px] text-brand-muted font-mono mb-3">
+                      <MapPin size={10} strokeWidth={1.75} /> {ev.venue} · {ev.date}
+                    </div>
+
                     {/* Price row */}
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginBottom: "12px" }}>
+                    <div className="flex justify-between items-end mb-3">
                       <div>
-                        <div style={{ fontSize: "22px", fontWeight: 900, color: BRAND, letterSpacing: "-0.5px", lineHeight: 1 }}>
+                        <div className="text-3xl font-bold text-fintech-slate tracking-tight font-mono leading-none">
                           GHS {listing.resale_price.toLocaleString()}
                         </div>
-                        <div style={{ fontSize: "11px", color: "var(--text-muted)", marginTop: "3px", fontFamily: "var(--font-mono)" }}>
-                          Original: GHS {listing.original_price.toLocaleString()}
+                        <div className="text-[11px] text-brand-muted mt-1 font-mono line-through">
+                          GHS {listing.original_price.toLocaleString()}
                         </div>
                       </div>
-                      <div style={{ textAlign: "right" }}>
-                        <div style={{ fontSize: "10px", color: "var(--text-muted)", fontFamily: "var(--font-mono)" }}>Sold by</div>
-                        <div style={{ fontSize: "12px", fontWeight: 700, color: "var(--text-primary)" }}>{listing.seller || "Fan"}</div>
+                      <div className="text-right">
+                        <div className="text-[10px] text-brand-muted font-mono">Sold by</div>
+                        <div className="text-xs font-bold text-brand-text">{listing.seller || "Fan"}</div>
                       </div>
                     </div>
 
                     {/* Ticket meta */}
-                    <div style={{ display: "flex", gap: "8px", marginBottom: "14px", flexWrap: "wrap" }}>
+                    <div className="flex gap-1.5 mb-3.5 flex-wrap">
                       {[
-                        ["🎟️", listing.quantity + "x ticket"],
-                        ...(listing.nft_token_id ? [["⛓️", "NFT #" + listing.nft_token_id]] : [["⛓️", "NFT verified"]]),
-                      ].map(([icon, text]) => (
-                        <div key={text} style={{ display: "flex", alignItems: "center", gap: "4px", padding: "3px 9px", borderRadius: "99px", background: "var(--bg-subtle)", border: "1px solid var(--border)" }}>
-                          <span style={{ fontSize: "10px" }}>{icon}</span>
-                          <span style={{ fontSize: "10px", color: "var(--text-secondary)", fontWeight: 600, fontFamily: "var(--font-mono)" }}>{text}</span>
+                        [Ticket, listing.quantity + "x ticket"],
+                        [Link2, listing.nft_token_id ? "NFT #" + listing.nft_token_id : "NFT verified"],
+                      ].map(([Icon, text]) => (
+                        <div key={text} className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-pastel-blue">
+                          <Icon size={10} strokeWidth={1.75} className="text-fintech-blue" />
+                          <span className="text-[10px] text-fintech-blue font-semibold font-mono">{text}</span>
                         </div>
                       ))}
                     </div>
 
                     {/* Buy button */}
                     {isOwn ? (
-                      <div style={{ textAlign: "center", padding: "10px", background: "var(--bg-subtle)", borderRadius: "11px", fontSize: "12px", color: "var(--text-muted)", fontWeight: 600 }}>
+                      <div className="text-center py-2.5 bg-brand-canvas rounded-full text-xs text-brand-muted font-semibold">
                         Your listing
                       </div>
                     ) : (
-                      <motion.button
-                        whileHover={!isBuying ? { scale: 1.02 } : {}}
-                        whileTap={!isBuying ? { scale: 0.97 } : {}}
-                        onClick={() => handleBuy(listing)}
-                        disabled={isBuying || paying}
-                        style={{
-                          width: "100%", padding: "13px",
-                          background: isBuying ? "var(--bg-subtle)" : `linear-gradient(135deg, ${BRAND}, ${BRAND_D})`,
-                          color: isBuying ? "var(--text-muted)" : "#fff",
-                          border: "none", borderRadius: "11px",
-                          fontSize: "14px", fontWeight: 700,
-                          cursor: isBuying || paying ? "not-allowed" : "pointer",
-                          boxShadow: isBuying ? "none" : "var(--shadow-brand)",
-                          display: "flex", alignItems: "center", justifyContent: "center", gap: "8px",
-                          fontFamily: "var(--font-sans)", transition: "all 0.2s",
-                          opacity: paying && !isBuying ? 0.5 : 1,
-                        }}>
+                      <button onClick={() => handleBuy(listing)} disabled={isBuying || paying}
+                        className={`w-full py-3 rounded-full font-bold text-sm flex items-center justify-center gap-2 transition-colors ${isBuying ? "bg-gray-100 text-brand-muted" : "bg-brand-orange hover:bg-brand-orange-hover text-white"} ${paying && !isBuying ? "opacity-50" : ""}`}>
                         {isBuying ? (
-                          <>
-                            <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 0.7, ease: "linear" }}
-                              style={{ width: "16px", height: "16px", borderRadius: "50%", border: "2px solid rgba(0,0,0,0.2)", borderTopColor: "var(--text-muted)", flexShrink: 0 }} />
-                            Processing...
-                          </>
+                          <><Loader2 size={16} className="animate-spin" /> Processing...</>
                         ) : `Buy for GHS ${listing.resale_price.toLocaleString()} →`}
-                      </motion.button>
+                      </button>
                     )}
                   </div>
-                </motion.div>
+                </div>
               );
             })}
           </div>

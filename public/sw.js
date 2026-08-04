@@ -1,4 +1,4 @@
-const CACHE = "me-v1";
+const CACHE = "me-v2";
 const STATIC = [
   "/",
   "/index.html",

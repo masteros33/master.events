@@ -1,5 +1,8 @@
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import {
+  Link2, KeyRound, Lock, Eye, EyeOff, Loader2, AlertCircle, Check, CheckCircle2, ArrowRight,
+} from "lucide-react";
 import useStore from "../../store/useStore";
 
 const API = "https://master-events-backend.onrender.com";
@@ -15,16 +18,16 @@ export default function ResetPassword() {
   const setScreen            = useStore(s => s.setScreen);
   const resetPasswordParams  = useStore(s => s.resetPasswordParams);
 
-  const [password,    setPassword]    = useState("");
-  const [confirm,     setConfirm]     = useState("");
-  const [showPw,      setShowPw]      = useState(false);
-  const [loading,     setLoading]     = useState(false);
-  const [error,       setError]       = useState("");
-  const [done,        setDone]        = useState(false);
+  const [password, setPassword] = useState("");
+  const [confirm,  setConfirm]  = useState("");
+  const [showPw,   setShowPw]   = useState(false);
+  const [loading,  setLoading]  = useState(false);
+  const [error,    setError]    = useState("");
+  const [done,     setDone]     = useState(false);
 
-  const allPwMet   = pwChecks.every(c => c.test(password));
-  const pwsMatch   = password === confirm;
-  const canSubmit  = allPwMet && pwsMatch && !loading;
+  const allPwMet  = pwChecks.every(c => c.test(password));
+  const pwsMatch  = password === confirm;
+  const canSubmit = allPwMet && pwsMatch && !loading;
 
   const handleReset = async () => {
     if (!canSubmit) return;
@@ -46,7 +49,6 @@ export default function ResetPassword() {
       const data = await res.json();
       if (res.ok) {
         setDone(true);
-        // Clean URL params
         window.history.replaceState({}, "", window.location.pathname);
       } else {
         setError(data.error || "Reset failed. The link may have expired.");
@@ -59,76 +61,77 @@ export default function ResetPassword() {
 
   // ── Success state ─────────────────────────────────────────
   if (done) return (
-    <div style={{ minHeight: "100vh", background: "#080810", display: "flex", alignItems: "center", justifyContent: "center", padding: "24px", fontFamily: "var(--font-sans)" }}>
-      <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}
-        style={{ maxWidth: "420px", width: "100%", background: "var(--bg-card)", borderRadius: "24px", padding: "48px 40px", textAlign: "center", boxShadow: "var(--shadow-lg)", border: "1px solid var(--border)" }}>
-        <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: "spring", stiffness: 300, damping: 20 }}
-          style={{ width: "72px", height: "72px", borderRadius: "50%", background: "#16a34a", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "32px", margin: "0 auto 24px", boxShadow: "0 4px 20px rgba(22,163,74,0.3)" }}>✅</motion.div>
-        <h2 style={{ fontSize: "24px", fontWeight: 800, color: "var(--text-primary)", marginBottom: "12px", letterSpacing: "-0.5px" }}>
-          Password Reset!
-        </h2>
-        <p style={{ color: "var(--text-muted)", fontSize: "15px", lineHeight: 1.6, marginBottom: "32px" }}>
+    <div className="h-full bg-brand-canvas overflow-y-auto flex justify-center items-start px-6 py-10 font-sans">
+      <motion.div initial={{ opacity: 0, scale: 0.96 }} animate={{ opacity: 1, scale: 1 }}
+        className="max-w-[420px] w-full bg-white rounded-3xl border border-gray-100 shadow-sm p-10 text-center">
+        <div className="w-16 h-16 rounded-full bg-pastel-green flex items-center justify-center mx-auto mb-6">
+          <CheckCircle2 size={30} strokeWidth={1.75} className="text-fintech-green" />
+        </div>
+        <h2 className="text-2xl font-extrabold text-brand-text mb-3">Password Reset!</h2>
+        <p className="text-brand-muted text-[15px] leading-relaxed mb-8">
           Your password has been updated successfully. You can now log in with your new password.
         </p>
-        <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}
-          onClick={() => { useStore.getState().setResetPasswordParams(null); setScreen("login"); }}
-          style={{ width: "100%", padding: "16px", background: "linear-gradient(135deg, #f5a623, #e8920f)", color: "#fff", border: "none", borderRadius: "14px", fontSize: "15px", fontWeight: 700, cursor: "pointer", boxShadow: "var(--shadow-brand)", fontFamily: "var(--font-sans)" }}>
-          Log In →
-        </motion.button>
+        <button onClick={() => { useStore.getState().setResetPasswordParams(null); setScreen("login"); }}
+          className="w-full py-3.5 rounded-full bg-brand-orange hover:bg-brand-orange-hover text-white font-bold text-sm flex items-center justify-center gap-2 transition-colors">
+          Log In <ArrowRight size={16} strokeWidth={2} />
+        </button>
       </motion.div>
     </div>
   );
 
   // ── Form ──────────────────────────────────────────────────
   return (
-    <div style={{ minHeight: "100vh", background: "#080810", display: "flex", alignItems: "center", justifyContent: "center", padding: "24px", fontFamily: "var(--font-sans)" }}>
-      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
-        style={{ maxWidth: "420px", width: "100%", background: "var(--bg-card)", borderRadius: "24px", padding: "40px 36px", boxShadow: "var(--shadow-lg)", border: "1px solid var(--border)" }}>
+    <div className="h-full bg-brand-canvas overflow-y-auto flex justify-center items-start px-6 py-10 font-sans">
+      <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}
+        className="max-w-[420px] w-full bg-white rounded-3xl border border-gray-100 shadow-sm p-8">
 
-        {/* Logo */}
-        <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "28px" }}>
-          <div style={{ width: "36px", height: "36px", borderRadius: "10px", background: "linear-gradient(135deg, #f5a623, #e8920f)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "18px" }}>🎟️</div>
-          <span style={{ fontWeight: 800, fontSize: "16px", color: "var(--text-primary)" }}>Master Events</span>
+        <div className="flex flex-col items-center mb-6">
+          <div className="w-12 h-12 rounded-full bg-brand-orange flex items-center justify-center mb-3">
+            <Link2 size={20} strokeWidth={2} color="#fff" />
+          </div>
+          <span className="font-extrabold text-base text-brand-text tracking-tight">Master Events</span>
         </div>
 
-        <div style={{ width: "52px", height: "52px", borderRadius: "16px", background: "linear-gradient(135deg, #f5a623, #e8920f)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "24px", marginBottom: "20px", boxShadow: "var(--shadow-brand)" }}>🔐</div>
+        <div className="w-12 h-12 rounded-full bg-pastel-orange flex items-center justify-center mb-4">
+          <KeyRound size={20} strokeWidth={1.75} className="text-brand-orange" />
+        </div>
 
-        <h1 style={{ fontSize: "24px", fontWeight: 800, color: "var(--text-primary)", marginBottom: "8px", letterSpacing: "-0.5px" }}>
-          Set New Password
-        </h1>
-        <p style={{ color: "var(--text-muted)", fontSize: "14px", lineHeight: 1.6, marginBottom: "28px" }}>
+        <h1 className="text-2xl font-extrabold text-brand-text mb-1.5">Set New Password</h1>
+        <p className="text-brand-muted text-sm leading-relaxed mb-6">
           Choose a strong password for your Master Events account.
         </p>
 
         {/* New password */}
-        <div style={{ marginBottom: "16px" }}>
-          <label style={{ fontSize: "13px", fontWeight: 600, color: "var(--text-secondary)", marginBottom: "8px", display: "block" }}>
-            New Password
-          </label>
-          <div style={{ position: "relative" }}>
+        <div className="mb-4">
+          <label className="text-xs font-semibold text-brand-muted mb-1.5 block">New Password</label>
+          <div className="relative">
+            <Lock size={16} strokeWidth={1.75} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-brand-muted" />
             <input
               type={showPw ? "text" : "password"}
               value={password}
               onChange={e => setPassword(e.target.value)}
               placeholder="Min 8 chars, uppercase, number, special"
               autoComplete="new-password"
-              style={{ width: "100%", padding: "14px 48px 14px 18px", background: "var(--bg)", border: "1.5px solid " + (password && !allPwMet ? "var(--error)" : "var(--border)"), borderRadius: "14px", fontSize: "15px", color: "var(--text-primary)", outline: "none", boxSizing: "border-box", fontFamily: "var(--font-sans)" }}
+              className={`w-full pl-10 pr-11 py-3 rounded-xl border bg-white text-sm text-brand-text outline-none focus:ring-2 focus:ring-orange-100 transition-colors ${
+                password && !allPwMet ? "border-red-200" : "border-gray-200 focus:border-brand-orange"
+              }`}
             />
-            <button onClick={() => setShowPw(!showPw)}
-              style={{ position: "absolute", right: "14px", top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", color: "var(--text-muted)", fontSize: "16px", padding: 0 }}>
-              {showPw ? "🙈" : "👁️"}
+            <button onClick={() => setShowPw(!showPw)} type="button"
+              className="absolute right-3.5 top-1/2 -translate-y-1/2 text-brand-muted hover:text-brand-text transition-colors">
+              {showPw ? <EyeOff size={16} strokeWidth={1.75} /> : <Eye size={16} strokeWidth={1.75} />}
             </button>
           </div>
 
-          {/* Strength chips */}
           {password && (
-            <motion.div initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }}
-              style={{ display: "flex", flexWrap: "wrap", gap: "6px", marginTop: "10px" }}>
+            <motion.div initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }} className="flex flex-wrap gap-1.5 mt-2.5">
               {pwChecks.map(c => {
                 const met = c.test(password);
                 return (
-                  <div key={c.label} style={{ padding: "3px 10px", borderRadius: "99px", fontSize: "11px", fontWeight: 600, background: met ? "rgba(22,163,74,0.1)" : "var(--bg-subtle)", color: met ? "#16a34a" : "var(--text-muted)", border: "1px solid " + (met ? "rgba(22,163,74,0.2)" : "var(--border)") }}>
-                    {met ? "✓" : "·"} {c.label}
+                  <div key={c.label}
+                    className={`px-2.5 py-1 rounded-full text-[10px] font-semibold border flex items-center gap-1 ${
+                      met ? "bg-pastel-green text-fintech-green border-fintech-green/20" : "bg-brand-canvas text-brand-muted border-gray-100"
+                    }`}>
+                    {met && <Check size={10} strokeWidth={3} />} {c.label}
                   </div>
                 );
               })}
@@ -137,63 +140,57 @@ export default function ResetPassword() {
         </div>
 
         {/* Confirm password */}
-        <div style={{ marginBottom: "20px" }}>
-          <label style={{ fontSize: "13px", fontWeight: 600, color: "var(--text-secondary)", marginBottom: "8px", display: "block" }}>
-            Confirm Password
-          </label>
-          <input
-            type="password"
-            value={confirm}
-            onChange={e => setConfirm(e.target.value)}
-            onKeyDown={e => e.key === "Enter" && handleReset()}
-            placeholder="Repeat your password"
-            autoComplete="new-password"
-            style={{ width: "100%", padding: "14px 18px", background: "var(--bg)", border: "1.5px solid " + (confirm && !pwsMatch ? "var(--error)" : confirm && pwsMatch ? "rgba(22,163,74,0.5)" : "var(--border)"), borderRadius: "14px", fontSize: "15px", color: "var(--text-primary)", outline: "none", boxSizing: "border-box", fontFamily: "var(--font-sans)" }}
-          />
+        <div className="mb-5">
+          <label className="text-xs font-semibold text-brand-muted mb-1.5 block">Confirm Password</label>
+          <div className="relative">
+            <Lock size={16} strokeWidth={1.75} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-brand-muted" />
+            <input
+              type="password"
+              value={confirm}
+              onChange={e => setConfirm(e.target.value)}
+              onKeyDown={e => e.key === "Enter" && handleReset()}
+              placeholder="Repeat your password"
+              autoComplete="new-password"
+              className={`w-full pl-10 pr-4 py-3 rounded-xl border bg-white text-sm text-brand-text outline-none focus:ring-2 focus:ring-orange-100 transition-colors ${
+                confirm && !pwsMatch ? "border-red-200" : confirm && pwsMatch ? "border-fintech-green/40" : "border-gray-200 focus:border-brand-orange"
+              }`}
+            />
+          </div>
           {confirm && !pwsMatch && (
-            <div style={{ fontSize: "12px", color: "var(--error)", marginTop: "6px", fontWeight: 500 }}>
-              ⚠️ Passwords don't match
+            <div className="flex items-center gap-1.5 text-red-600 text-xs mt-1.5 font-medium">
+              <AlertCircle size={12} strokeWidth={2} /> Passwords don't match
             </div>
           )}
           {confirm && pwsMatch && (
-            <div style={{ fontSize: "12px", color: "#16a34a", marginTop: "6px", fontWeight: 500 }}>
-              ✓ Passwords match
+            <div className="flex items-center gap-1.5 text-fintech-green text-xs mt-1.5 font-medium">
+              <Check size={12} strokeWidth={2.5} /> Passwords match
             </div>
           )}
         </div>
 
-        {/* Error */}
         <AnimatePresence>
           {error && (
             <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
-              style={{ background: "var(--error-bg)", border: "1px solid rgba(220,38,38,0.2)", borderRadius: "12px", padding: "12px 16px", marginBottom: "16px", color: "var(--error)", fontSize: "13px" }}>
-              ⚠️ {error}
+              className="flex items-center gap-2 bg-red-50 border border-red-100 rounded-xl px-4 py-3 mb-4 text-red-600 text-[13px]">
+              <AlertCircle size={14} strokeWidth={2} /> {error}
             </motion.div>
           )}
         </AnimatePresence>
 
-        {/* Submit */}
-        <motion.button
-          whileHover={canSubmit ? { scale: 1.02, boxShadow: "0 12px 36px rgba(245,166,35,0.4)" } : {}}
-          whileTap={canSubmit ? { scale: 0.97 } : {}}
-          onClick={handleReset}
-          disabled={!canSubmit}
-          style={{ width: "100%", padding: "16px", borderRadius: "14px", background: canSubmit ? "linear-gradient(135deg, #f5a623, #e8920f)" : "var(--bg-subtle)", color: canSubmit ? "#fff" : "var(--text-muted)", fontWeight: 700, fontSize: "16px", border: "none", cursor: canSubmit ? "pointer" : "not-allowed", boxShadow: canSubmit ? "var(--shadow-brand)" : "none", fontFamily: "var(--font-sans)", transition: "all 0.2s", display: "flex", alignItems: "center", justifyContent: "center", gap: "10px", marginBottom: "16px" }}>
+        <button onClick={handleReset} disabled={!canSubmit}
+          className="w-full py-3.5 rounded-full bg-brand-orange hover:bg-brand-orange-hover disabled:bg-gray-100 disabled:text-brand-muted text-white font-bold text-[15px] flex items-center justify-center gap-2 mb-4 transition-colors">
           {loading ? (
-            <>
-              <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 0.7, ease: "linear" }}
-                style={{ width: "18px", height: "18px", borderRadius: "50%", border: "2.5px solid rgba(255,255,255,0.3)", borderTopColor: "#fff", flexShrink: 0 }} />
-              Resetting...
-            </>
-          ) : "Reset Password →"}
-        </motion.button>
+            <><Loader2 size={16} className="animate-spin" /> Resetting...</>
+          ) : (
+            <>Reset Password <ArrowRight size={16} strokeWidth={2} /></>
+          )}
+        </button>
 
-        <p style={{ textAlign: "center", fontSize: "13px", color: "var(--text-muted)" }}>
+        <p className="text-center text-[13px] text-brand-muted">
           Remember your password?{" "}
-          <motion.span whileHover={{ color: "#e8920f" }} onClick={() => setScreen("login")}
-            style={{ color: "#f5a623", fontWeight: 700, cursor: "pointer" }}>
+          <span onClick={() => setScreen("login")} className="text-brand-orange font-bold cursor-pointer hover:text-brand-orange-hover transition-colors">
             Log in
-          </motion.span>
+          </span>
         </p>
       </motion.div>
     </div>

@@ -5,142 +5,112 @@ import {
   Avatar, AVATAR_PRESETS, getSavedAvatarSeed,
   saveAvatarSeed
 } from "../../utils/avatar";
-import { useTheme } from "../../hooks/useTheme";
 import {
-  User, Mail, Shield, LogOut, ChevronRight,
-  Sun, Moon, Monitor, Bell, Globe,
-  CheckCircle, Edit3, Save, Link2, Cookie,
+  User, Mail, Shield, LogOut, ChevronRight, ArrowLeft,
+  Bell, Globe, CheckCircle, Edit3, Save, Link2, Cookie,
   FileText, Lock, Eye, EyeOff, Trash2
 } from "lucide-react";
 import toast from "react-hot-toast";
 
 const BACKEND   = "https://master-events-backend.onrender.com";
 const isDesktop = () => window.innerWidth > 768;
-const BRAND     = "#F97316";
 
 function SectionHeader({ title }) {
   return (
-    <div style={{
-      fontSize: "10px", fontWeight: 700, letterSpacing: "1.5px",
-      color: "var(--text-muted)", textTransform: "uppercase",
-      fontFamily: "var(--font-mono)", padding: "20px 0 8px",
-    }}>
+    <div className="text-[10px] font-bold text-brand-muted uppercase tracking-widest font-mono pt-5 pb-2">
       {title}
     </div>
   );
 }
 
-function SettingRow({ icon: Icon, label, value, action, danger, onClick, toggle, checked, onToggle, color }) {
+function SettingRow({ icon: Icon, label, value, action, danger, onClick, toggle, checked, onToggle, badgeBg = "bg-pastel-blue", iconClass = "text-fintech-blue" }) {
   return (
-    <motion.div whileTap={onClick ? { scale: 0.99 } : {}} onClick={onClick}
-      style={{
-        display: "flex", alignItems: "center", gap: "14px",
-        padding: "14px 16px", background: "var(--bg-card)",
-        borderRadius: "14px", marginBottom: "6px",
-        border: "1px solid var(--border)",
-        cursor: onClick ? "pointer" : "default",
-        transition: "all 0.15s",
-      }}
-      onMouseEnter={e => { if (onClick) e.currentTarget.style.borderColor = danger ? "rgba(220,38,38,0.3)" : `${BRAND}40`; }}
-      onMouseLeave={e => { e.currentTarget.style.borderColor = "var(--border)"; }}>
-      <div style={{
-        width: "36px", height: "36px", borderRadius: "10px", flexShrink: 0,
-        background: danger ? "rgba(220,38,38,0.08)" : color ? color + "12" : "var(--bg-subtle)",
-        display: "flex", alignItems: "center", justifyContent: "center",
-        border: `1px solid ${danger ? "rgba(220,38,38,0.15)" : color ? color + "20" : "var(--border)"}`,
-      }}>
-        <Icon size={16} color={danger ? "#dc2626" : color || "var(--text-secondary)"} />
+    <div onClick={onClick}
+      className={`flex items-center gap-3.5 px-4 py-3.5 bg-white rounded-2xl border border-gray-100 shadow-sm mb-1.5 transition-colors ${onClick ? "cursor-pointer hover:border-gray-200" : ""}`}>
+      <div className={`w-9 h-9 rounded-full flex items-center justify-center shrink-0 ${danger ? "bg-red-50" : badgeBg}`}>
+        <Icon size={16} strokeWidth={1.75} className={danger ? "text-red-600" : iconClass} />
       </div>
-      <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ fontSize: "14px", fontWeight: 600, color: danger ? "#dc2626" : "var(--text-primary)", lineHeight: 1.3 }}>{label}</div>
-        {value && <div style={{ fontSize: "12px", color: "var(--text-muted)", marginTop: "2px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{value}</div>}
+      <div className="flex-1 min-w-0">
+        <div className={`text-sm font-semibold leading-tight ${danger ? "text-red-600" : "text-brand-text"}`}>{label}</div>
+        {value && <div className="text-xs text-brand-muted mt-0.5 truncate">{value}</div>}
       </div>
       {toggle ? (
-        <motion.div whileTap={{ scale: 0.9 }} onClick={e => { e.stopPropagation(); onToggle(); }}
-          style={{ width: "44px", height: "24px", borderRadius: "99px", cursor: "pointer", background: checked ? BRAND : "var(--bg-subtle)", border: `1px solid ${checked ? BRAND : "var(--border)"}`, position: "relative", transition: "all 0.2s" }}>
-          <motion.div animate={{ x: checked ? 22 : 2 }} transition={{ type: "spring", stiffness: 500, damping: 30 }}
-            style={{ position: "absolute", top: "2px", width: "18px", height: "18px", borderRadius: "50%", background: checked ? "#fff" : "var(--text-muted)" }} />
-        </motion.div>
+        <button onClick={e => { e.stopPropagation(); onToggle(); }}
+          className={`w-11 h-6 rounded-full relative shrink-0 transition-colors ${checked ? "bg-brand-orange" : "bg-gray-200"}`}>
+          <motion.div animate={{ x: checked ? 20 : 2 }} transition={{ type: "spring", stiffness: 500, damping: 30 }}
+            className="absolute top-0.5 w-5 h-5 rounded-full bg-white shadow" />
+        </button>
       ) : onClick ? (
-        <ChevronRight size={16} color="var(--text-muted)" />
+        <ChevronRight size={16} strokeWidth={1.75} className="text-brand-muted shrink-0" />
       ) : action ? (
-        <span style={{ fontSize: "12px", color: BRAND, fontWeight: 600 }}>{action}</span>
+        <span className="text-xs font-semibold text-brand-orange shrink-0">{action}</span>
       ) : null}
-    </motion.div>
+    </div>
   );
 }
+
+function SheetShell({ onClose, children, maxWidth = "480px" }) {
+  return (
+    <>
+      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+        onClick={onClose} className="fixed inset-0 z-[300] bg-black/40" />
+      <motion.div initial={{ opacity: 0, y: 40 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 40 }}
+        transition={{ type: "spring", stiffness: 340, damping: 30 }}
+        className="fixed bottom-0 left-0 right-0 mx-auto z-[301] bg-white rounded-t-3xl border border-gray-100 p-6"
+        style={{ maxWidth, paddingBottom: "calc(24px + env(safe-area-inset-bottom, 0px))", maxHeight: "85vh", display: "flex", flexDirection: "column" }}>
+        <div className="w-10 h-1 rounded-full bg-gray-200 mx-auto mb-5 shrink-0" />
+        {children}
+      </motion.div>
+    </>
+  );
+}
+
+const fieldClass = "w-full px-3.5 py-2.5 rounded-xl border border-gray-200 bg-white text-sm text-brand-text outline-none focus:border-brand-orange focus:ring-2 focus:ring-orange-100 transition-colors";
 
 // ── Avatar Picker Modal ───────────────────────────────────────
 function AvatarPickerModal({ currentSeed, onSelect, onClose }) {
   const [selected, setSelected] = useState(currentSeed);
-  const [hovered,  setHovered]  = useState(null);
 
   return (
-    <>
-      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-        onClick={onClose}
-        style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.7)", zIndex: 300, backdropFilter: "blur(8px)" }} />
-      <motion.div
-        initial={{ opacity: 0, y: 40 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 40 }}
-        transition={{ type: "spring", stiffness: 340, damping: 30 }}
-        style={{
-          position: "fixed", bottom: 0, left: 0, right: 0,
-          margin: "0 auto", maxWidth: "520px",
-          background: "var(--bg-card)", borderRadius: "24px 24px 0 0",
-          padding: "24px 20px calc(24px + env(safe-area-inset-bottom, 0px))",
-          zIndex: 301, border: "1px solid var(--border)", borderBottom: "none",
-          maxHeight: "85vh", display: "flex", flexDirection: "column",
-        }}>
-        <div style={{ width: "40px", height: "4px", borderRadius: "2px", background: "var(--border-strong)", margin: "0 auto 20px" }} />
-        <div style={{ fontWeight: 800, fontSize: "18px", color: "var(--text-primary)", marginBottom: "6px", letterSpacing: "-0.3px" }}>Choose Your Avatar</div>
-        <div style={{ fontSize: "13px", color: "var(--text-muted)", marginBottom: "20px" }}>Pick a character — it stays consistent across your account</div>
-        <div style={{ flex: 1, overflowY: "auto", marginBottom: "16px" }}>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(6, 1fr)", gap: "10px" }}>
-            {AVATAR_PRESETS.map(seed => {
-              const isSelected = selected === seed;
-              const isHovered  = hovered === seed;
-              return (
-                <motion.div key={seed} whileTap={{ scale: 0.92 }}
-                  onClick={() => setSelected(seed)}
-                  onMouseEnter={() => setHovered(seed)}
-                  onMouseLeave={() => setHovered(null)}
-                  style={{
-                    position: "relative", cursor: "pointer", borderRadius: "14px", padding: "4px",
-                    background: isSelected ? `${BRAND}15` : isHovered ? "var(--bg-subtle)" : "transparent",
-                    border: isSelected ? `2px solid ${BRAND}` : "2px solid transparent",
-                    transition: "all 0.15s",
-                  }}>
-                  <Avatar seed={seed} size={44} style={{ width: "100%", height: "auto", aspectRatio: "1", borderRadius: "10px" }} />
-                  {isSelected && (
-                    <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }}
-                      style={{ position: "absolute", top: "2px", right: "2px", width: "16px", height: "16px", borderRadius: "50%", background: BRAND, display: "flex", alignItems: "center", justifyContent: "center", border: "2px solid var(--bg-card)" }}>
-                      <CheckCircle size={9} color="#fff" />
-                    </motion.div>
-                  )}
-                </motion.div>
-              );
-            })}
-          </div>
+    <SheetShell onClose={onClose}>
+      <div className="font-extrabold text-lg text-brand-text mb-1.5">Choose Your Avatar</div>
+      <div className="text-sm text-brand-muted mb-5">Pick a character — it stays consistent across your account</div>
+      <div className="flex-1 overflow-y-auto mb-4">
+        <div className="grid grid-cols-6 gap-2.5">
+          {AVATAR_PRESETS.map(seed => {
+            const isSelected = selected === seed;
+            return (
+              <button key={seed} onClick={() => setSelected(seed)}
+                className={`relative rounded-2xl p-1 border-2 transition-colors ${isSelected ? "border-brand-orange bg-pastel-orange" : "border-transparent"}`}>
+                <Avatar seed={seed} size={44} style={{ width: "100%", height: "auto", aspectRatio: "1", borderRadius: "10px" }} />
+                {isSelected && (
+                  <span className="absolute top-0.5 right-0.5 w-4 h-4 rounded-full bg-brand-orange flex items-center justify-center border-2 border-white">
+                    <CheckCircle size={9} className="text-white" />
+                  </span>
+                )}
+              </button>
+            );
+          })}
         </div>
-        <div style={{ display: "flex", alignItems: "center", gap: "14px", padding: "16px", background: "var(--bg-subtle)", borderRadius: "14px", marginBottom: "14px", border: "1px solid var(--border)" }}>
-          <Avatar seed={selected} size={52} style={{ border: `3px solid ${BRAND}40`, borderRadius: "50%", flexShrink: 0 }} />
-          <div>
-            <div style={{ fontSize: "13px", fontWeight: 700, color: "var(--text-primary)" }}>Preview</div>
-            <div style={{ fontSize: "11px", color: "var(--text-muted)", fontFamily: "var(--font-mono)", marginTop: "2px" }}>{selected}</div>
-          </div>
+      </div>
+      <div className="flex items-center gap-3.5 bg-brand-canvas border border-gray-100 rounded-2xl p-4 mb-3.5">
+        <Avatar seed={selected} size={52} style={{ borderRadius: "50%", flexShrink: 0 }} />
+        <div>
+          <div className="text-sm font-bold text-brand-text">Preview</div>
+          <div className="text-[11px] text-brand-muted font-mono mt-0.5">{selected}</div>
         </div>
-        <div style={{ display: "flex", gap: "10px" }}>
-          <motion.button whileTap={{ scale: 0.97 }} onClick={onClose}
-            style={{ flex: 1, padding: "13px", background: "var(--bg-subtle)", border: "1px solid var(--border)", borderRadius: "12px", fontWeight: 600, fontSize: "14px", cursor: "pointer", color: "var(--text-secondary)", fontFamily: "var(--font-sans)" }}>
-            Cancel
-          </motion.button>
-          <motion.button whileTap={{ scale: 0.97 }} onClick={() => { onSelect(selected); onClose(); }}
-            style={{ flex: 2, padding: "13px", background: `linear-gradient(135deg, ${BRAND}, #EA6C0A)`, border: "none", borderRadius: "12px", fontWeight: 700, fontSize: "14px", cursor: "pointer", color: "#fff", fontFamily: "var(--font-sans)" }}>
-            Apply Avatar
-          </motion.button>
-        </div>
-      </motion.div>
-    </>
+      </div>
+      <div className="flex gap-2.5">
+        <button onClick={onClose}
+          className="flex-1 py-3 rounded-full bg-brand-canvas border border-gray-200 font-semibold text-sm text-brand-text">
+          Cancel
+        </button>
+        <button onClick={() => { onSelect(selected); onClose(); }}
+          className="flex-[2] py-3 rounded-full bg-brand-orange hover:bg-brand-orange-hover text-white font-bold text-sm transition-colors">
+          Apply Avatar
+        </button>
+      </div>
+    </SheetShell>
   );
 }
 
@@ -175,72 +145,49 @@ function PasswordModal({ onClose }) {
     } finally { setSaving(false); }
   };
 
-  const inp = {
-    width: "100%", padding: "11px 42px 11px 14px",
-    background: "var(--bg-subtle)", border: "1.5px solid var(--border)",
-    borderRadius: "10px", fontSize: "14px", color: "var(--text-primary)",
-    outline: "none", fontFamily: "var(--font-sans)", boxSizing: "border-box",
-  };
-
   return (
-    <>
-      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-        onClick={onClose}
-        style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.65)", zIndex: 300, backdropFilter: "blur(8px)" }} />
-      <motion.div
-        initial={{ opacity: 0, y: 40 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 40 }}
-        transition={{ type: "spring", stiffness: 340, damping: 30 }}
-        style={{ position: "fixed", bottom: 0, left: 0, right: 0, margin: "0 auto", maxWidth: "480px", background: "var(--bg-card)", borderRadius: "24px 24px 0 0", padding: "24px 24px calc(24px + env(safe-area-inset-bottom, 0px))", zIndex: 301, border: "1px solid var(--border)", borderBottom: "none" }}>
-        <div style={{ width: "40px", height: "4px", borderRadius: "2px", background: "var(--border-strong)", margin: "0 auto 20px" }} />
-        <div style={{ fontWeight: 800, fontSize: "18px", color: "var(--text-primary)", marginBottom: "6px" }}>Change Password</div>
-        <div style={{ fontSize: "13px", color: "var(--text-muted)", marginBottom: "20px" }}>At least 8 characters.</div>
+    <SheetShell onClose={onClose}>
+      <div className="font-extrabold text-lg text-brand-text mb-1.5">Change Password</div>
+      <div className="text-sm text-brand-muted mb-5">At least 8 characters.</div>
 
-        <div style={{ marginBottom: "12px" }}>
-          <div style={{ fontSize: "12px", fontWeight: 600, color: "var(--text-secondary)", marginBottom: "6px" }}>Current Password</div>
-          <div style={{ position: "relative" }}>
-            <input type={showCur ? "text" : "password"} value={current} onChange={e => setCurrent(e.target.value)} placeholder="Enter current password" style={inp}
-              onFocus={e => { e.target.style.borderColor = BRAND; e.target.style.boxShadow = `0 0 0 3px ${BRAND}15`; }}
-              onBlur={e => { e.target.style.borderColor = "var(--border)"; e.target.style.boxShadow = "none"; }} />
-            <div onClick={() => setShowCur(!showCur)} style={{ position: "absolute", right: "12px", top: "50%", transform: "translateY(-50%)", cursor: "pointer" }}>
-              {showCur ? <EyeOff size={15} color="var(--text-muted)" /> : <Eye size={15} color="var(--text-muted)" />}
-            </div>
-          </div>
+      <div className="mb-3">
+        <div className="text-xs font-semibold text-brand-muted mb-1.5">Current Password</div>
+        <div className="relative">
+          <input type={showCur ? "text" : "password"} value={current} onChange={e => setCurrent(e.target.value)} placeholder="Enter current password" className={fieldClass} />
+          <button onClick={() => setShowCur(!showCur)} type="button" className="absolute right-3.5 top-1/2 -translate-y-1/2 text-brand-muted">
+            {showCur ? <EyeOff size={15} strokeWidth={1.75} /> : <Eye size={15} strokeWidth={1.75} />}
+          </button>
         </div>
+      </div>
 
-        <div style={{ marginBottom: "12px" }}>
-          <div style={{ fontSize: "12px", fontWeight: 600, color: "var(--text-secondary)", marginBottom: "6px" }}>New Password</div>
-          <div style={{ position: "relative" }}>
-            <input type={showNew ? "text" : "password"} value={newPass} onChange={e => setNewPass(e.target.value)} placeholder="Min 8 characters" style={inp}
-              onFocus={e => { e.target.style.borderColor = BRAND; e.target.style.boxShadow = `0 0 0 3px ${BRAND}15`; }}
-              onBlur={e => { e.target.style.borderColor = "var(--border)"; e.target.style.boxShadow = "none"; }} />
-            <div onClick={() => setShowNew(!showNew)} style={{ position: "absolute", right: "12px", top: "50%", transform: "translateY(-50%)", cursor: "pointer" }}>
-              {showNew ? <EyeOff size={15} color="var(--text-muted)" /> : <Eye size={15} color="var(--text-muted)" />}
-            </div>
-          </div>
+      <div className="mb-3">
+        <div className="text-xs font-semibold text-brand-muted mb-1.5">New Password</div>
+        <div className="relative">
+          <input type={showNew ? "text" : "password"} value={newPass} onChange={e => setNewPass(e.target.value)} placeholder="Min 8 characters" className={fieldClass} />
+          <button onClick={() => setShowNew(!showNew)} type="button" className="absolute right-3.5 top-1/2 -translate-y-1/2 text-brand-muted">
+            {showNew ? <EyeOff size={15} strokeWidth={1.75} /> : <Eye size={15} strokeWidth={1.75} />}
+          </button>
         </div>
+      </div>
 
-        <div style={{ marginBottom: "20px" }}>
-          <div style={{ fontSize: "12px", fontWeight: 600, color: "var(--text-secondary)", marginBottom: "6px" }}>Confirm New Password</div>
-          <input type="password" value={confirm} onChange={e => setConfirm(e.target.value)} placeholder="Repeat new password" style={inp}
-            onFocus={e => { e.target.style.borderColor = BRAND; e.target.style.boxShadow = `0 0 0 3px ${BRAND}15`; }}
-            onBlur={e => { e.target.style.borderColor = "var(--border)"; e.target.style.boxShadow = "none"; }} />
-          {confirm && newPass && confirm !== newPass && (
-            <div style={{ fontSize: "11px", color: "#dc2626", marginTop: "4px" }}>Passwords don't match</div>
-          )}
-        </div>
+      <div className="mb-5">
+        <div className="text-xs font-semibold text-brand-muted mb-1.5">Confirm New Password</div>
+        <input type="password" value={confirm} onChange={e => setConfirm(e.target.value)} placeholder="Repeat new password" className={fieldClass} />
+        {confirm && newPass && confirm !== newPass && (
+          <div className="text-[11px] text-red-600 mt-1">Passwords don't match</div>
+        )}
+      </div>
 
-        <div style={{ display: "flex", gap: "10px" }}>
-          <motion.button whileTap={{ scale: 0.97 }} onClick={onClose}
-            style={{ flex: 1, padding: "13px", background: "var(--bg-subtle)", border: "1px solid var(--border)", borderRadius: "12px", fontWeight: 600, fontSize: "14px", cursor: "pointer", color: "var(--text-secondary)", fontFamily: "var(--font-sans)" }}>
-            Cancel
-          </motion.button>
-          <motion.button whileTap={{ scale: 0.97 }} onClick={handleSave} disabled={saving}
-            style={{ flex: 2, padding: "13px", background: saving ? "var(--bg-subtle)" : `linear-gradient(135deg, ${BRAND}, #EA6C0A)`, border: "none", borderRadius: "12px", fontWeight: 700, fontSize: "14px", cursor: saving ? "not-allowed" : "pointer", color: saving ? "var(--text-muted)" : "#fff", fontFamily: "var(--font-sans)" }}>
-            {saving ? "Saving..." : "Change Password"}
-          </motion.button>
-        </div>
-      </motion.div>
-    </>
+      <div className="flex gap-2.5">
+        <button onClick={onClose} className="flex-1 py-3 rounded-full bg-brand-canvas border border-gray-200 font-semibold text-sm text-brand-text">
+          Cancel
+        </button>
+        <button onClick={handleSave} disabled={saving}
+          className="flex-[2] py-3 rounded-full bg-brand-orange hover:bg-brand-orange-hover disabled:opacity-60 text-white font-bold text-sm transition-colors">
+          {saving ? "Saving..." : "Change Password"}
+        </button>
+      </div>
+    </SheetShell>
   );
 }
 
@@ -275,62 +222,45 @@ function DeleteModal({ onClose, handleLogout }) {
   };
 
   return (
-    <>
-      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-        onClick={onClose}
-        style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.7)", zIndex: 300, backdropFilter: "blur(8px)" }} />
-      <motion.div
-        initial={{ opacity: 0, y: 40 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 40 }}
-        transition={{ type: "spring", stiffness: 340, damping: 30 }}
-        style={{ position: "fixed", bottom: 0, left: 0, right: 0, margin: "0 auto", maxWidth: "480px", background: "var(--bg-card)", borderRadius: "24px 24px 0 0", padding: "24px 24px calc(24px + env(safe-area-inset-bottom, 0px))", zIndex: 301, border: "1px solid var(--border)", borderBottom: "none" }}>
-        <div style={{ width: "40px", height: "4px", borderRadius: "2px", background: "var(--border-strong)", margin: "0 auto 20px" }} />
-
-        <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "12px" }}>
-          <div style={{ width: "44px", height: "44px", borderRadius: "14px", background: "rgba(220,38,38,0.1)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-            <Trash2 size={20} color="#dc2626" />
-          </div>
-          <div>
-            <div style={{ fontWeight: 800, fontSize: "18px", color: "#dc2626", letterSpacing: "-0.3px" }}>Delete Account</div>
-            <div style={{ fontSize: "12px", color: "var(--text-muted)", marginTop: "2px" }}>This cannot be undone</div>
-          </div>
+    <SheetShell onClose={onClose}>
+      <div className="flex items-center gap-3 mb-3">
+        <div className="w-11 h-11 rounded-2xl bg-red-50 flex items-center justify-center shrink-0">
+          <Trash2 size={20} strokeWidth={1.75} className="text-red-600" />
         </div>
-
-        <div style={{ background: "rgba(220,38,38,0.06)", border: "1px solid rgba(220,38,38,0.15)", borderRadius: "12px", padding: "12px 14px", marginBottom: "18px" }}>
-          <div style={{ fontSize: "13px", color: "var(--text-secondary)", lineHeight: 1.6 }}>
-            Deleting your account will permanently remove all your tickets, wallet balance, and personal data. This action cannot be reversed.
-          </div>
+        <div>
+          <div className="font-extrabold text-lg text-red-600">Delete Account</div>
+          <div className="text-xs text-brand-muted mt-0.5">This cannot be undone</div>
         </div>
+      </div>
 
-        <div style={{ marginBottom: "20px" }}>
-          <div style={{ fontSize: "12px", fontWeight: 600, color: "var(--text-secondary)", marginBottom: "6px" }}>Confirm with your password</div>
-          <div style={{ position: "relative" }}>
-            <input
-              type={showPass ? "text" : "password"} value={password}
-              onChange={e => setPassword(e.target.value)}
-              placeholder="Enter your password"
-              style={{ width: "100%", padding: "12px 42px 12px 14px", background: "var(--bg-subtle)", border: "1.5px solid rgba(220,38,38,0.3)", borderRadius: "10px", fontSize: "14px", color: "var(--text-primary)", outline: "none", fontFamily: "var(--font-sans)", boxSizing: "border-box" }}
-              onFocus={e => { e.target.style.borderColor = "#dc2626"; e.target.style.boxShadow = "0 0 0 3px rgba(220,38,38,0.12)"; }}
-              onBlur={e => { e.target.style.borderColor = "rgba(220,38,38,0.3)"; e.target.style.boxShadow = "none"; }}
-            />
-            <div onClick={() => setShowPass(!showPass)} style={{ position: "absolute", right: "12px", top: "50%", transform: "translateY(-50%)", cursor: "pointer" }}>
-              {showPass ? <EyeOff size={15} color="var(--text-muted)" /> : <Eye size={15} color="var(--text-muted)" />}
-            </div>
-          </div>
+      <div className="bg-red-50 border border-red-100 rounded-xl px-3.5 py-3 mb-4.5">
+        <div className="text-sm text-brand-text leading-relaxed">
+          Deleting your account will permanently remove all your tickets, wallet balance, and personal data. This action cannot be reversed.
         </div>
+      </div>
 
-        <div style={{ display: "flex", gap: "10px" }}>
-          <motion.button whileTap={{ scale: 0.97 }} onClick={onClose}
-            style={{ flex: 1, padding: "14px", background: "var(--bg-subtle)", border: "1px solid var(--border)", borderRadius: "13px", fontWeight: 600, fontSize: "14px", cursor: "pointer", color: "var(--text-secondary)", fontFamily: "var(--font-sans)" }}>
-            Cancel
-          </motion.button>
-          <motion.button whileTap={{ scale: 0.97 }} onClick={handleDelete}
-            disabled={deleting || !password}
-            style={{ flex: 1, padding: "14px", background: deleting || !password ? "var(--bg-subtle)" : "rgba(220,38,38,0.12)", border: "1.5px solid rgba(220,38,38,0.3)", borderRadius: "13px", fontWeight: 700, fontSize: "14px", cursor: deleting || !password ? "not-allowed" : "pointer", color: "#dc2626", fontFamily: "var(--font-sans)" }}>
-            {deleting ? "Deleting..." : "Delete Forever"}
-          </motion.button>
+      <div className="mb-5">
+        <div className="text-xs font-semibold text-brand-muted mb-1.5">Confirm with your password</div>
+        <div className="relative">
+          <input type={showPass ? "text" : "password"} value={password} onChange={e => setPassword(e.target.value)}
+            placeholder="Enter your password"
+            className="w-full px-3.5 py-2.5 rounded-xl border border-red-200 bg-white text-sm text-brand-text outline-none focus:border-red-400 focus:ring-2 focus:ring-red-100 transition-colors" />
+          <button onClick={() => setShowPass(!showPass)} type="button" className="absolute right-3.5 top-1/2 -translate-y-1/2 text-brand-muted">
+            {showPass ? <EyeOff size={15} strokeWidth={1.75} /> : <Eye size={15} strokeWidth={1.75} />}
+          </button>
         </div>
-      </motion.div>
-    </>
+      </div>
+
+      <div className="flex gap-2.5">
+        <button onClick={onClose} className="flex-1 py-3.5 rounded-full bg-brand-canvas border border-gray-200 font-semibold text-sm text-brand-text">
+          Cancel
+        </button>
+        <button onClick={handleDelete} disabled={deleting || !password}
+          className="flex-1 py-3.5 rounded-full bg-red-50 border border-red-200 disabled:opacity-60 font-bold text-sm text-red-600">
+          {deleting ? "Deleting..." : "Delete Forever"}
+        </button>
+      </div>
+    </SheetShell>
   );
 }
 
@@ -340,7 +270,6 @@ export default function Settings() {
   const setActiveTab = useStore(s => s.setActiveTab);
   const currentUser  = useStore(s => s.currentUser);
   const handleLogout = useStore(s => s.handleLogout);
-  const { theme, setTheme } = useTheme();
   const desktop = isDesktop();
 
   const [avatarSeed,   setAvatarSeed]   = useState(() => getSavedAvatarSeed(currentUser?.email));
@@ -357,12 +286,6 @@ export default function Settings() {
 
   const [displayFirst, setDisplayFirst] = useState(currentUser?.first_name || "");
   const [displayLast,  setDisplayLast]  = useState(currentUser?.last_name  || "");
-
-  const themeOptions = [
-    { id: "light",  icon: Sun,     label: "Light"  },
-    { id: "dark",   icon: Moon,    label: "Dark"   },
-    { id: "system", icon: Monitor, label: "System" },
-  ];
 
   const handleAvatarSelect = (seed) => {
     setAvatarSeed(seed);
@@ -406,189 +329,152 @@ export default function Settings() {
   };
 
   return (
-    <div style={{ background: "var(--bg)", minHeight: "100%", paddingBottom: "60px" }}>
+    <div className="bg-brand-canvas min-h-full pb-14 font-sans">
 
       {/* Header */}
-      <div style={{
-        position: "sticky", top: 0, zIndex: 20,
-        background: "var(--bg-card)", borderBottom: "1px solid var(--border)",
-        padding: desktop ? "0 40px" : "0 16px",
-        height: "60px", display: "flex", alignItems: "center", justifyContent: "space-between",
-      }}>
-        <motion.button whileTap={{ scale: 0.9 }}
-          onClick={() => { setScreen("app"); setActiveTab(undefined); }}
-          style={{ background: "none", border: "none", cursor: "pointer", color: "var(--text-muted)", fontSize: "13px", fontWeight: 500, fontFamily: "var(--font-sans)", padding: 0 }}>
-          ← Back
-        </motion.button>
-        <div style={{ fontWeight: 800, fontSize: "16px", color: "var(--text-primary)", letterSpacing: "-0.3px" }}>Settings</div>
-        <div style={{ width: "60px" }} />
+      <div className={`sticky top-0 z-20 bg-white border-b border-gray-100 h-15 flex items-center justify-between ${desktop ? "px-10" : "px-4"}`}>
+        <button onClick={() => { setScreen("app"); setActiveTab(undefined); }}
+          className="flex items-center gap-1.5 text-brand-muted text-sm font-medium hover:text-brand-text transition-colors">
+          <ArrowLeft size={15} strokeWidth={2} /> Back
+        </button>
+        <div className="font-extrabold text-base text-brand-text tracking-tight">Settings</div>
+        <div className="w-14" />
       </div>
 
-      <div style={{ maxWidth: desktop ? "640px" : "100%", margin: "0 auto", padding: desktop ? "24px 40px 60px" : "16px 16px 60px" }}>
+      <div className={`mx-auto ${desktop ? "max-w-[640px] px-10 py-6" : "px-4 py-4"}`}>
 
         {/* ── Profile card ── */}
-        <div style={{ background: "var(--bg-card)", borderRadius: "20px", border: "1px solid var(--border)", overflow: "hidden", marginBottom: "8px" }}>
-          <div style={{ padding: "24px", background: `linear-gradient(135deg, ${BRAND}08, transparent)`, borderBottom: "1px solid var(--border)" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
-              <motion.div whileTap={{ scale: 0.94 }} onClick={() => setShowPicker(true)}
-                style={{ position: "relative", cursor: "pointer", flexShrink: 0 }}>
-                <Avatar seed={avatarSeed} size={64} style={{ border: `3px solid ${BRAND}40`, borderRadius: "50%" }} />
-                <motion.div whileHover={{ scale: 1.1 }}
-                  style={{ position: "absolute", bottom: 0, right: 0, width: "22px", height: "22px", borderRadius: "50%", background: `linear-gradient(135deg, ${BRAND}, #EA6C0A)`, display: "flex", alignItems: "center", justifyContent: "center", border: "2px solid var(--bg-card)", boxShadow: `0 2px 8px ${BRAND}40` }}>
-                  <Edit3 size={10} color="#fff" />
-                </motion.div>
-              </motion.div>
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontWeight: 900, fontSize: "20px", color: "var(--text-primary)", letterSpacing: "-0.5px" }}>
+        <div className="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden mb-2">
+          <div className="p-6 border-b border-gray-100">
+            <div className="flex items-center gap-4">
+              <button onClick={() => setShowPicker(true)} className="relative shrink-0">
+                <Avatar seed={avatarSeed} size={64} style={{ borderRadius: "50%" }} />
+                <span className="absolute bottom-0 right-0 w-[22px] h-[22px] rounded-full bg-brand-orange flex items-center justify-center border-2 border-white">
+                  <Edit3 size={10} className="text-white" />
+                </span>
+              </button>
+              <div className="flex-1 min-w-0">
+                <div className="font-extrabold text-xl text-brand-text tracking-tight">
                   {displayFirst} {displayLast}
                 </div>
-                <div style={{ fontSize: "13px", color: "var(--text-muted)", marginTop: "2px" }}>{currentUser?.email}</div>
-                <div style={{ marginTop: "8px", display: "inline-flex", alignItems: "center", gap: "5px", padding: "3px 10px", borderRadius: "99px", background: `${BRAND}12`, border: `1px solid ${BRAND}25` }}>
-                  <span style={{ fontSize: "10px", fontWeight: 700, color: BRAND }}>🎟️ {currentUser?.role?.toUpperCase() || "ATTENDEE"}</span>
-                </div>
+                <div className="text-sm text-brand-muted mt-0.5">{currentUser?.email}</div>
+                <span className="inline-flex items-center gap-1.5 mt-2 px-2.5 py-1 rounded-full bg-pastel-orange">
+                  <span className="text-[10px] font-bold text-brand-orange">{(currentUser?.role || "ATTENDEE").toUpperCase()}</span>
+                </span>
               </div>
             </div>
 
-            <motion.div whileTap={{ scale: 0.98 }} onClick={() => setShowPicker(true)}
-              style={{ marginTop: "14px", display: "flex", alignItems: "center", gap: "8px", padding: "10px 14px", background: `${BRAND}06`, border: `1px solid ${BRAND}18`, borderRadius: "11px", cursor: "pointer" }}>
-              <div style={{ display: "flex", gap: "4px" }}>
+            <button onClick={() => setShowPicker(true)}
+              className="w-full mt-3.5 flex items-center gap-2 px-3.5 py-2.5 bg-pastel-orange rounded-xl">
+              <div className="flex gap-1">
                 {AVATAR_PRESETS.slice(0, 5).map(seed => (
                   <Avatar key={seed} seed={seed} size={20}
-                    style={{ border: seed === avatarSeed ? `2px solid ${BRAND}` : "2px solid transparent", borderRadius: "50%" }} />
+                    style={{ borderRadius: "50%", border: seed === avatarSeed ? "2px solid #FF5A1F" : "2px solid transparent" }} />
                 ))}
-                <div style={{ width: "20px", height: "20px", borderRadius: "50%", background: "var(--bg-subtle)", border: "1px solid var(--border)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "9px", color: "var(--text-muted)", fontWeight: 700 }}>
+                <div className="w-5 h-5 rounded-full bg-white border border-gray-200 flex items-center justify-center text-[9px] font-bold text-brand-muted">
                   +{AVATAR_PRESETS.length - 5}
                 </div>
               </div>
-              <span style={{ fontSize: "12px", fontWeight: 600, color: BRAND, marginLeft: "4px" }}>Change Avatar</span>
-              <ChevronRight size={14} color={BRAND} style={{ marginLeft: "auto" }} />
-            </motion.div>
+              <span className="text-xs font-semibold text-brand-orange ml-1">Change Avatar</span>
+              <ChevronRight size={14} strokeWidth={2} className="text-brand-orange ml-auto" />
+            </button>
           </div>
 
           {/* Edit form */}
           <AnimatePresence>
             {editing && (
               <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} style={{ overflow: "hidden" }}>
-                <div style={{ padding: "16px 24px", borderBottom: "1px solid var(--border)" }}>
-                  <div style={{ display: "flex", gap: "10px", marginBottom: "10px" }}>
-                    <div style={{ flex: 1 }}>
-                      <div style={{ fontSize: "12px", fontWeight: 600, color: "var(--text-secondary)", marginBottom: "6px" }}>First Name</div>
-                      <input value={editFirst} onChange={e => setEditFirst(e.target.value)}
-                        style={{ width: "100%", padding: "11px 14px", background: "var(--bg-subtle)", border: "1.5px solid var(--border)", borderRadius: "10px", fontSize: "14px", color: "var(--text-primary)", outline: "none", fontFamily: "var(--font-sans)", boxSizing: "border-box" }}
-                        onFocus={e => { e.target.style.borderColor = BRAND; e.target.style.boxShadow = `0 0 0 3px ${BRAND}15`; }}
-                        onBlur={e => { e.target.style.borderColor = "var(--border)"; e.target.style.boxShadow = "none"; }} />
+                <div className="px-6 py-4 border-b border-gray-100">
+                  <div className="flex gap-2.5 mb-2.5">
+                    <div className="flex-1">
+                      <div className="text-xs font-semibold text-brand-muted mb-1.5">First Name</div>
+                      <input value={editFirst} onChange={e => setEditFirst(e.target.value)} className={fieldClass} />
                     </div>
-                    <div style={{ flex: 1 }}>
-                      <div style={{ fontSize: "12px", fontWeight: 600, color: "var(--text-secondary)", marginBottom: "6px" }}>Last Name</div>
-                      <input value={editLast} onChange={e => setEditLast(e.target.value)}
-                        style={{ width: "100%", padding: "11px 14px", background: "var(--bg-subtle)", border: "1.5px solid var(--border)", borderRadius: "10px", fontSize: "14px", color: "var(--text-primary)", outline: "none", fontFamily: "var(--font-sans)", boxSizing: "border-box" }}
-                        onFocus={e => { e.target.style.borderColor = BRAND; e.target.style.boxShadow = `0 0 0 3px ${BRAND}15`; }}
-                        onBlur={e => { e.target.style.borderColor = "var(--border)"; e.target.style.boxShadow = "none"; }} />
+                    <div className="flex-1">
+                      <div className="text-xs font-semibold text-brand-muted mb-1.5">Last Name</div>
+                      <input value={editLast} onChange={e => setEditLast(e.target.value)} className={fieldClass} />
                     </div>
                   </div>
-                  <div style={{ fontSize: "12px", fontWeight: 600, color: "var(--text-secondary)", marginBottom: "6px" }}>Phone (optional)</div>
-                  <input value={editPhone} onChange={e => setEditPhone(e.target.value)}
-                    placeholder="e.g. 0241234567" type="tel"
-                    style={{ width: "100%", padding: "11px 14px", background: "var(--bg-subtle)", border: "1.5px solid var(--border)", borderRadius: "10px", fontSize: "14px", color: "var(--text-primary)", outline: "none", fontFamily: "var(--font-sans)", boxSizing: "border-box" }}
-                    onFocus={e => { e.target.style.borderColor = BRAND; e.target.style.boxShadow = `0 0 0 3px ${BRAND}15`; }}
-                    onBlur={e => { e.target.style.borderColor = "var(--border)"; e.target.style.boxShadow = "none"; }} />
-                  <div style={{ display: "flex", gap: "8px", marginTop: "14px" }}>
-                    <motion.button whileTap={{ scale: 0.97 }} onClick={handleSave} disabled={saving}
-                      style={{ flex: 2, padding: "12px", background: saving ? "var(--bg-subtle)" : `linear-gradient(135deg, ${BRAND}, #EA6C0A)`, color: saving ? "var(--text-muted)" : "#fff", border: "none", borderRadius: "11px", fontWeight: 700, fontSize: "13px", cursor: saving ? "not-allowed" : "pointer", fontFamily: "var(--font-sans)", display: "flex", alignItems: "center", justifyContent: "center", gap: "6px" }}>
-                      <Save size={14} /> {saving ? "Saving..." : "Save Changes"}
-                    </motion.button>
-                    <motion.button whileTap={{ scale: 0.97 }} onClick={() => { setEditing(false); setEditFirst(displayFirst); setEditLast(displayLast); }}
-                      style={{ flex: 1, padding: "12px", background: "var(--bg-subtle)", color: "var(--text-secondary)", border: "1px solid var(--border)", borderRadius: "11px", fontWeight: 600, fontSize: "13px", cursor: "pointer", fontFamily: "var(--font-sans)" }}>
+                  <div className="text-xs font-semibold text-brand-muted mb-1.5">Phone (optional)</div>
+                  <input value={editPhone} onChange={e => setEditPhone(e.target.value)} placeholder="e.g. 0241234567" type="tel" className={fieldClass} />
+                  <div className="flex gap-2 mt-3.5">
+                    <button onClick={handleSave} disabled={saving}
+                      className="flex-[2] py-2.5 rounded-full bg-brand-orange hover:bg-brand-orange-hover disabled:opacity-60 text-white font-bold text-sm flex items-center justify-center gap-1.5 transition-colors">
+                      <Save size={14} strokeWidth={2} /> {saving ? "Saving..." : "Save Changes"}
+                    </button>
+                    <button onClick={() => { setEditing(false); setEditFirst(displayFirst); setEditLast(displayLast); }}
+                      className="flex-1 py-2.5 rounded-full bg-brand-canvas border border-gray-200 text-brand-text font-semibold text-sm">
                       Cancel
-                    </motion.button>
+                    </button>
                   </div>
                 </div>
               </motion.div>
             )}
           </AnimatePresence>
 
-          <div style={{ padding: "12px 24px" }}>
+          <div className="p-3">
             {!editing && (
-              <motion.button whileTap={{ scale: 0.97 }}
+              <button
                 onClick={() => { setEditing(true); setEditFirst(displayFirst); setEditLast(displayLast); setEditPhone(currentUser?.phone || ""); }}
-                style={{ width: "100%", padding: "11px", background: "var(--bg-subtle)", border: "1px solid var(--border)", borderRadius: "11px", color: "var(--text-secondary)", fontWeight: 600, fontSize: "13px", cursor: "pointer", fontFamily: "var(--font-sans)", display: "flex", alignItems: "center", justifyContent: "center", gap: "7px" }}>
-                <Edit3 size={14} /> Edit Profile
-              </motion.button>
+                className="w-full py-2.5 bg-brand-canvas border border-gray-200 rounded-full text-brand-text font-semibold text-sm flex items-center justify-center gap-1.5">
+                <Edit3 size={14} strokeWidth={1.75} /> Edit Profile
+              </button>
             )}
           </div>
         </div>
 
         {/* Account */}
         <SectionHeader title="Account" />
-        <SettingRow icon={Mail} label="Email Address" value={currentUser?.email} color="#2563eb" />
-        <SettingRow icon={User} label="Full Name" value={`${displayFirst} ${displayLast}`.trim() || "Not set"} color={BRAND} onClick={() => setEditing(true)} action="Edit" />
-        <SettingRow icon={Lock} label="Password" value="Change your account password" color="#7c3aed" onClick={() => setShowPassword(true)} />
-
-        {/* Appearance */}
-        <SectionHeader title="Appearance" />
-        <div style={{ background: "var(--bg-card)", borderRadius: "14px", border: "1px solid var(--border)", padding: "16px", marginBottom: "6px" }}>
-          <div style={{ fontSize: "13px", fontWeight: 600, color: "var(--text-primary)", marginBottom: "12px" }}>Theme</div>
-          <div style={{ display: "flex", gap: "8px" }}>
-            {themeOptions.map(({ id, icon: Icon, label }) => {
-              const active = theme === id;
-              return (
-                <motion.button key={id} whileTap={{ scale: 0.95 }} onClick={() => setTheme(id)}
-                  style={{ flex: 1, padding: "12px 8px", borderRadius: "12px", cursor: "pointer", border: active ? `1.5px solid ${BRAND}` : "1.5px solid var(--border)", background: active ? `${BRAND}10` : "var(--bg-subtle)", display: "flex", flexDirection: "column", alignItems: "center", gap: "6px", transition: "all 0.15s", fontFamily: "var(--font-sans)" }}>
-                  <Icon size={18} color={active ? BRAND : "var(--text-muted)"} />
-                  <span style={{ fontSize: "11px", fontWeight: active ? 700 : 500, color: active ? BRAND : "var(--text-secondary)" }}>{label}</span>
-                </motion.button>
-              );
-            })}
-          </div>
-        </div>
+        <SettingRow icon={Mail} label="Email Address" value={currentUser?.email} badgeBg="bg-pastel-blue" iconClass="text-fintech-blue" />
+        <SettingRow icon={User} label="Full Name" value={`${displayFirst} ${displayLast}`.trim() || "Not set"} badgeBg="bg-pastel-orange" iconClass="text-brand-orange" onClick={() => setEditing(true)} action="Edit" />
+        <SettingRow icon={Lock} label="Password" value="Change your account password" badgeBg="bg-pastel-blue" iconClass="text-fintech-blue" onClick={() => setShowPassword(true)} />
 
         {/* Notifications */}
         <SectionHeader title="Notifications" />
-        <SettingRow icon={Bell} label="Email Notifications" value="Ticket activity, NFT confirmations, sales" color="#16a34a"
+        <SettingRow icon={Bell} label="Email Notifications" value="Ticket activity, NFT confirmations, sales" badgeBg="bg-pastel-orange" iconClass="text-brand-orange"
           toggle checked={notifs} onToggle={() => setNotifs(!notifs)} />
 
-        {/* Blockchain info — no connect button */}
+        {/* Blockchain info */}
         <SectionHeader title="Blockchain" />
-        <div style={{ background: "var(--bg-card)", borderRadius: "14px", border: "1px solid rgba(124,58,237,0.2)", padding: "16px", marginBottom: "6px" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "12px" }}>
-            <div style={{ width: "36px", height: "36px", borderRadius: "10px", background: "rgba(124,58,237,0.1)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-              <Link2 size={17} color="#a78bfa" />
+        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 mb-1.5">
+          <div className="flex items-center gap-3 mb-3">
+            <div className="w-9 h-9 rounded-full bg-pastel-blue flex items-center justify-center shrink-0">
+              <Link2 size={16} strokeWidth={1.75} className="text-fintech-blue" />
             </div>
             <div>
-              <div style={{ fontSize: "13px", fontWeight: 700, color: "#a78bfa" }}>Polygon Amoy Testnet</div>
-              <div style={{ fontSize: "11px", color: "var(--text-muted)", marginTop: "1px", fontFamily: "var(--font-mono)" }}>Chain ID: 80002 · NFT tickets auto-minted</div>
+              <div className="text-sm font-bold text-fintech-blue">Polygon Amoy Testnet</div>
+              <div className="text-[11px] text-brand-muted font-mono mt-0.5">Chain ID: 80002 · NFT tickets auto-minted</div>
             </div>
-            <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: "4px" }}>
-              <motion.div animate={{ scale: [1,1.4,1] }} transition={{ duration: 2, repeat: Infinity }}
-                style={{ width: "6px", height: "6px", borderRadius: "50%", background: "#4ade80" }} />
-              <span style={{ fontSize: "9px", fontWeight: 700, color: "#4ade80", fontFamily: "var(--font-mono)" }}>LIVE</span>
+            <div className="ml-auto flex items-center gap-1.5">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+              <span className="text-[9px] font-bold text-emerald-700 font-mono">LIVE</span>
             </div>
           </div>
-          <div style={{ background: "var(--bg-subtle)", borderRadius: "10px", padding: "10px 12px", border: "1px solid var(--border)", marginBottom: "10px" }}>
-            <div style={{ fontSize: "10px", color: "var(--text-muted)", fontFamily: "var(--font-mono)", marginBottom: "4px" }}>NFT CONTRACT</div>
-            <div style={{ fontSize: "11px", fontWeight: 700, color: "#a78bfa", fontFamily: "var(--font-mono)", wordBreak: "break-all" }}>
+          <div className="bg-brand-canvas border border-gray-100 rounded-xl px-3 py-2.5 mb-2.5">
+            <div className="text-[10px] text-brand-muted font-mono mb-1">NFT CONTRACT</div>
+            <div className="text-[11px] font-bold text-fintech-blue font-mono break-all">
               0x956F051d666fAc2B956b83BdDD6746127F270Daf
             </div>
           </div>
-          <div style={{ padding: "9px 12px", background: "rgba(124,58,237,0.04)", borderRadius: "9px", border: "1px solid rgba(124,58,237,0.1)" }}>
-            <div style={{ fontSize: "11px", color: "var(--text-muted)", lineHeight: 1.5 }}>
-              🎟️ NFT tickets are automatically minted on Polygon when you purchase. No wallet setup needed.
+          <div className="px-3 py-2.5 bg-pastel-blue rounded-xl">
+            <div className="text-[11px] text-brand-text leading-relaxed">
+              NFT tickets are automatically minted on Polygon when you purchase. No wallet setup needed.
             </div>
           </div>
         </div>
 
         {/* Legal */}
         <SectionHeader title="Legal & Privacy" />
-        <SettingRow icon={FileText} label="Privacy Policy"     color="var(--text-muted)" onClick={() => setScreen("privacy")} />
-        <SettingRow icon={Shield}   label="Terms of Service"   color="var(--text-muted)" onClick={() => setScreen("privacy")} />
-        <SettingRow icon={Cookie}   label="Cookie Preferences" value="Manage what we track" color="var(--text-muted)" onClick={() => {
+        <SettingRow icon={FileText} label="Privacy Policy"     badgeBg="bg-gray-100" iconClass="text-brand-muted" onClick={() => setScreen("privacy")} />
+        <SettingRow icon={Shield}   label="Terms of Service"   badgeBg="bg-gray-100" iconClass="text-brand-muted" onClick={() => setScreen("privacy")} />
+        <SettingRow icon={Cookie}   label="Cookie Preferences" value="Manage what we track" badgeBg="bg-gray-100" iconClass="text-brand-muted" onClick={() => {
           localStorage.removeItem("me_cookie_consent");
           window.location.reload();
         }} />
 
         {/* About */}
         <SectionHeader title="About" />
-        <SettingRow icon={Globe} label="Version" value="Master Events v1.0 · Built on Polygon" color="#0891b2" />
+        <SettingRow icon={Globe} label="Version" value="Master Events v1.0 · Built on Polygon" badgeBg="bg-pastel-blue" iconClass="text-fintech-blue" />
 
         {/* Account Actions */}
         <SectionHeader title="Account Actions" />
@@ -598,27 +484,20 @@ export default function Settings() {
         {/* Logout modal */}
         <AnimatePresence>
           {showLogout && (
-            <>
-              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-                onClick={() => setShowLogout(false)}
-                style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.6)", zIndex: 200, backdropFilter: "blur(4px)" }} />
-              <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 20 }}
-                style={{ position: "fixed", bottom: 0, left: 0, right: 0, margin: "0 auto", maxWidth: "480px", background: "var(--bg-card)", borderRadius: "24px 24px 0 0", padding: "24px 24px calc(24px + env(safe-area-inset-bottom, 0px))", zIndex: 201, border: "1px solid var(--border)", borderBottom: "none" }}>
-                <div style={{ width: "40px", height: "4px", borderRadius: "2px", background: "var(--border-strong)", margin: "0 auto 20px" }} />
-                <div style={{ fontWeight: 800, fontSize: "18px", color: "var(--text-primary)", marginBottom: "8px" }}>Log out?</div>
-                <div style={{ fontSize: "14px", color: "var(--text-muted)", marginBottom: "24px", lineHeight: 1.6 }}>You'll need to sign in again to access your tickets and wallet.</div>
-                <div style={{ display: "flex", gap: "10px" }}>
-                  <motion.button whileTap={{ scale: 0.97 }} onClick={() => setShowLogout(false)}
-                    style={{ flex: 1, padding: "14px", background: "var(--bg-subtle)", border: "1px solid var(--border)", borderRadius: "13px", fontWeight: 600, fontSize: "14px", cursor: "pointer", color: "var(--text-secondary)", fontFamily: "var(--font-sans)" }}>
-                    Cancel
-                  </motion.button>
-                  <motion.button whileTap={{ scale: 0.97 }} onClick={() => { setShowLogout(false); handleLogout(); }}
-                    style={{ flex: 1, padding: "14px", background: "rgba(220,38,38,0.1)", border: "1.5px solid rgba(220,38,38,0.25)", borderRadius: "13px", fontWeight: 700, fontSize: "14px", cursor: "pointer", color: "#dc2626", fontFamily: "var(--font-sans)" }}>
-                    Log Out
-                  </motion.button>
-                </div>
-              </motion.div>
-            </>
+            <SheetShell onClose={() => setShowLogout(false)}>
+              <div className="font-extrabold text-lg text-brand-text mb-2">Log out?</div>
+              <div className="text-sm text-brand-muted mb-6 leading-relaxed">You'll need to sign in again to access your tickets and wallet.</div>
+              <div className="flex gap-2.5">
+                <button onClick={() => setShowLogout(false)}
+                  className="flex-1 py-3.5 rounded-full bg-brand-canvas border border-gray-200 font-semibold text-sm text-brand-text">
+                  Cancel
+                </button>
+                <button onClick={() => { setShowLogout(false); handleLogout(); }}
+                  className="flex-1 py-3.5 rounded-full bg-red-50 border border-red-200 font-bold text-sm text-red-600">
+                  Log Out
+                </button>
+              </div>
+            </SheetShell>
           )}
         </AnimatePresence>
 

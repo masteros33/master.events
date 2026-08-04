@@ -21,7 +21,8 @@ The first revamp pass used a dark canvas with border-only, shadowless cards. **T
 - `brand.orange` `#FF5A1F` / `brand.orange-hover` `#E04810` — primary accent and its hover state (replaces the old `#F97316` accent). The old `primary`/`primary-dark` class names are kept as **deprecated aliases** pointing at these same values so unmigrated files don't break — do not use `primary`/`primary-dark` in new or rewritten code, use `brand-orange`/`brand-orange-hover`. Remove the aliases from `tailwind.config.js` once every file in the v2 rollout list below has been rewritten and confirmed.
 - `brand.canvas` `#FAF9F5` — page background (warm off-white, never dark)
 - `brand.card` `#FFFFFF`, `brand.text` `#121212`, `brand.muted` `#666666`
-- `fintech.slate` `#0F172A`, `fintech.green` `#10B981`, `fintech.blue` `#2563EB`, `fintech.gray` `#F8FAFC` — reserved for checkout/payment/transaction/receipt/balance screens only, not general UI
+- `fintech.slate` `#0F172A`, `fintech.blue` `#2563EB`, `fintech.gray` `#F8FAFC` — reserved for checkout/payment/transaction/receipt/balance screens only, not general UI
+- `fintech.green` `#10B981` (emerald) — the one exception: approved app-wide for **positive validation/success states** (password-requirement-met checklists, form validation, confirmations), not just payment success badges. Still not a general-purpose "brand color" — use it only for pass/fail or success semantics, never decoratively.
 - `pastel.orange/blue/green/pink` — circular icon badge backgrounds only (`w-12 h-12 rounded-full bg-pastel-*`)
 - `borderRadius`: `xl` 0.75rem, `2xl` 1rem, `3xl` 1.5rem, `full` 9999px
 - Fonts: **Plus Jakarta Sans** for body/headings everywhere; **JetBrains Mono** reserved for transaction hashes and other numeric/on-chain data only — never general body text
@@ -39,7 +40,7 @@ The first revamp pass used a dark canvas with border-only, shadowless cards. **T
 
 **Buttons:** primary buttons are solid `brand-orange`, pill-shaped (`rounded-full`), bold white text, no gradient, no glow. Exactly 3 size variants max (small / normal / large) — no one-off custom sizes anywhere; audit existing buttons before adding a new size.
 
-**Auth pages (Login / Signup / ResetPassword):** centered card on the warm canvas; circular logo top-center with brand title below in bold `text-brand-text`; white `rounded-3xl` card, `border-gray-100`, `shadow-sm`, `p-8`; inputs `rounded-xl`, `border-gray-200`, `focus:border-brand-orange focus:ring-2 focus:ring-orange-100`, icon-prefixed; primary button solid orange, `rounded-xl`, full width (auth buttons are the one deliberate exception to the pill shape — full-width `rounded-xl`, not `rounded-full`).
+**Auth pages (Login / Signup / ResetPassword):** centered card on the warm canvas; circular logo top-center with brand title below in bold `text-brand-text`; white `rounded-3xl` card, `border-gray-100`, `shadow-sm`, `p-8`; inputs `rounded-xl`, `border-gray-200`, `focus:border-brand-orange focus:ring-2 focus:ring-orange-100`, icon-prefixed; primary button solid orange, `rounded-full`, full width — pill-shaped like every other primary button (an earlier draft of this rule carved out `rounded-xl` as an exception for auth; that exception is reversed, auth buttons follow the same pill rule as everything else).
 
 **Fintech screens (checkout, MoMo, receipts, transaction/balance views — not general UI):** price display `text-3xl font-bold tracking-tight`; fee breakdowns `bg-fintech-gray rounded-2xl p-4`; payment method selector cards `border-2 border-brand-orange bg-orange-50/20` when active; status badges Success = `emerald-700`/`emerald-50`, Pending = `amber-700`/`amber-50`; transaction hashes `font-mono text-xs` with a one-tap copy button.
 

@@ -34,8 +34,6 @@ import {
   Menu, X, ShoppingBag
 } from "lucide-react";
 
-const BRAND = "#F97316";
-
 const FULL_SCREENS = [
   "checkout", "ticketView", "resale", "resaleSuccess",
   "transfer", "paymentSuccess", "addEvent", "orgEventDetail",
@@ -56,17 +54,21 @@ function MobileTopHeader({ onMenuOpen, title }) {
   const nextTheme  = themeOrder[(themeOrder.indexOf(theme) + 1) % 3];
   const ThemeIcon  = ThemeIcons[theme];
   return (
-    <div style={{ position:"sticky", top:0, zIndex:50, background:"var(--bg-card)", borderBottom:"1px solid var(--border)", height:"56px", display:"flex", alignItems:"center", justifyContent:"space-between", padding:"0 16px", boxShadow:"0 1px 0 var(--border)", flexShrink:0 }}>
-      <div style={{ display:"flex", alignItems:"center", gap:"8px" }}>
-        <div style={{ width:"30px", height:"30px", borderRadius:"9px", background:`linear-gradient(135deg, ${BRAND}, #EA6C0A)`, display:"flex", alignItems:"center", justifyContent:"center", fontSize:"14px", boxShadow:`0 3px 10px ${BRAND}35` }}>🎟️</div>
-        <span style={{ fontWeight:800, fontSize:"15px", color:"var(--text-primary)", letterSpacing:"-0.3px" }}>{title || "Master Events"}</span>
+    <div className="sticky top-0 z-50 bg-white border-b border-gray-100 h-14 flex items-center justify-between px-4 shrink-0">
+      <div className="flex items-center gap-2">
+        <div className="w-8 h-8 rounded-xl bg-brand-orange flex items-center justify-center shrink-0">
+          <Ticket size={15} strokeWidth={2} color="#fff" />
+        </div>
+        <span className="font-extrabold text-[15px] text-brand-text tracking-tight">{title || "Master Events"}</span>
       </div>
-      <div style={{ display:"flex", alignItems:"center", gap:"6px" }}>
-        <motion.button whileTap={{ scale:0.88 }} onClick={() => setTheme(nextTheme)} style={{ width:"34px", height:"34px", borderRadius:"9px", background:"var(--bg-subtle)", border:"1px solid var(--border)", display:"flex", alignItems:"center", justifyContent:"center", cursor:"pointer" }}>
-          <ThemeIcon size={15} color="var(--text-secondary)" />
+      <div className="flex items-center gap-1.5">
+        <motion.button whileTap={{ scale: 0.88 }} onClick={() => setTheme(nextTheme)}
+          className="w-[34px] h-[34px] rounded-xl bg-brand-canvas border border-gray-200 flex items-center justify-center">
+          <ThemeIcon size={15} className="text-brand-muted" />
         </motion.button>
-        <motion.button whileTap={{ scale:0.88 }} onClick={onMenuOpen} style={{ width:"34px", height:"34px", borderRadius:"9px", background:"var(--bg-subtle)", border:"1px solid var(--border)", display:"flex", alignItems:"center", justifyContent:"center", cursor:"pointer" }}>
-          <Menu size={17} color="var(--text-primary)" />
+        <motion.button whileTap={{ scale: 0.88 }} onClick={onMenuOpen}
+          className="w-[34px] h-[34px] rounded-xl bg-brand-canvas border border-gray-200 flex items-center justify-center">
+          <Menu size={17} className="text-brand-text" />
         </motion.button>
       </div>
     </div>
@@ -104,64 +106,68 @@ function MobileDrawer({ open, onClose }) {
       {open && (
         <>
           <motion.div initial={{ opacity:0 }} animate={{ opacity:1 }} exit={{ opacity:0 }} onClick={onClose}
-            style={{ position:"fixed", inset:0, background:"rgba(0,0,0,0.6)", zIndex:200, backdropFilter:"blur(6px)" }} />
-          <motion.div initial={{ x:"100%" }} animate={{ x:0 }} exit={{ x:"100%" }} transition={{ type:"spring", stiffness:320, damping:32 }}
-            style={{ position:"fixed", top:0, right:0, bottom:0, width:"82%", maxWidth:"320px", background:"var(--bg-card)", zIndex:201, display:"flex", flexDirection:"column", boxShadow:"-4px 0 32px rgba(0,0,0,0.25)", borderLeft:"1px solid var(--border)" }}>
-            <div style={{ padding:"16px 20px", borderBottom:"1px solid var(--border)", display:"flex", alignItems:"center", justifyContent:"space-between", flexShrink:0 }}>
-              <div style={{ display:"flex", alignItems:"center", gap:"10px" }}>
-                <Avatar seed={currentUser?.email} name={currentUser?.first_name} size={38} style={{ border:`2px solid ${BRAND}30`, borderRadius:"50%" }} />
+            className="fixed inset-0 bg-black/50 z-[200]" />
+          <motion.div initial={{ x:"100%" }} animate={{ x:0 }} exit={{ x:"100%" }} transition={{ duration:0.15 }}
+            className="fixed top-0 right-0 bottom-0 w-[82%] max-w-[320px] bg-white z-[201] flex flex-col shadow-xl border-l border-gray-100">
+            <div className="p-5 border-b border-gray-100 flex items-center justify-between shrink-0">
+              <div className="flex items-center gap-2.5">
+                <Avatar seed={currentUser?.email} name={currentUser?.first_name} size={38} className="rounded-full border-2 border-pastel-orange" />
                 <div>
-                  <div style={{ fontWeight:700, fontSize:"14px", color:"var(--text-primary)", lineHeight:1.2 }}>{currentUser?.first_name} {currentUser?.last_name}</div>
-                  <div style={{ fontSize:"10px", color:"var(--text-muted)", marginTop:"1px", overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap", maxWidth:"160px" }}>{currentUser?.email}</div>
+                  <div className="font-bold text-sm text-brand-text leading-tight">{currentUser?.first_name} {currentUser?.last_name}</div>
+                  <div className="text-[10px] text-brand-muted mt-0.5 truncate max-w-[160px]">{currentUser?.email}</div>
                 </div>
               </div>
-              <motion.button whileTap={{ scale:0.9 }} onClick={onClose} style={{ width:"32px", height:"32px", borderRadius:"9px", background:"var(--bg-subtle)", border:"1px solid var(--border)", display:"flex", alignItems:"center", justifyContent:"center", cursor:"pointer" }}>
-                <X size={15} color="var(--text-muted)" />
+              <motion.button whileTap={{ scale:0.9 }} onClick={onClose}
+                className="w-8 h-8 rounded-xl bg-brand-canvas border border-gray-200 flex items-center justify-center">
+                <X size={15} className="text-brand-muted" />
               </motion.button>
             </div>
-            <div style={{ padding:"10px 20px", borderBottom:"1px solid var(--border)", flexShrink:0 }}>
-              <div style={{ display:"inline-flex", alignItems:"center", gap:"5px", padding:"4px 10px", borderRadius:"99px", background:`${BRAND}10`, border:`1px solid ${BRAND}22` }}>
-                <Zap size={9} color={BRAND} />
-                <span style={{ fontSize:"9px", fontWeight:700, color:BRAND, letterSpacing:"0.8px" }}>{role === "organizer" ? "ORGANIZER" : "ATTENDEE"}</span>
+
+            <div className="px-5 py-2.5 border-b border-gray-100 shrink-0">
+              <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-pastel-orange">
+                <Zap size={9} className="text-brand-orange" />
+                <span className="text-[9px] font-bold text-brand-orange tracking-wide">{role === "organizer" ? "ORGANIZER" : "ATTENDEE"}</span>
               </div>
             </div>
-            <nav style={{ flex:1, padding:"8px 12px", overflowY:"auto" }}>
-              <div style={{ fontSize:"9px", fontWeight:700, color:"var(--text-muted)", letterSpacing:"1.5px", padding:"8px 8px 6px", fontFamily:"var(--font-mono)" }}>NAVIGATE</div>
+
+            <nav className="flex-1 px-3 py-2 overflow-y-auto">
+              <div className="text-[9px] font-bold text-brand-muted tracking-widest px-2 pt-2 pb-1.5 font-mono">NAVIGATE</div>
               {navItems.map(item => {
                 const active = isActive(item);
                 const Icon   = item.icon;
                 return (
                   <motion.div key={item.id} whileTap={{ scale:0.97 }} onClick={() => handleNav(item)}
-                    style={{ display:"flex", alignItems:"center", gap:"12px", padding:"11px 10px", cursor:"pointer", borderRadius:"12px", background:active?`${BRAND}10`:"transparent", border:active?`1px solid ${BRAND}20`:"1px solid transparent", marginBottom:"2px", transition:"all 0.15s", position:"relative" }}>
-                    {active && <div style={{ position:"absolute", left:0, top:"25%", height:"50%", width:"3px", borderRadius:"0 3px 3px 0", background:BRAND }} />}
-                    <Icon size={17} strokeWidth={active?2.5:1.8} color={active?BRAND:"var(--text-muted)"} />
-                    <span style={{ fontSize:"14px", fontWeight:active?700:500, color:active?BRAND:"var(--text-primary)" }}>{item.label}</span>
+                    className={`flex items-center gap-3 px-2.5 py-2.5 mb-0.5 rounded-xl cursor-pointer relative ${active ? "bg-pastel-orange" : ""}`}>
+                    {active && <div className="absolute left-0 top-[25%] h-1/2 w-[3px] rounded-r-full bg-brand-orange" />}
+                    <Icon size={17} strokeWidth={active ? 2.5 : 1.75} className={active ? "text-brand-orange" : "text-brand-muted"} />
+                    <span className={`text-sm ${active ? "font-bold text-brand-orange" : "font-medium text-brand-text"}`}>{item.label}</span>
                   </motion.div>
                 );
               })}
               {role === "organizer" && (
                 <>
-                  <div style={{ fontSize:"9px", fontWeight:700, color:"var(--text-muted)", letterSpacing:"1.5px", padding:"14px 8px 6px", fontFamily:"var(--font-mono)" }}>ACTIONS</div>
+                  <div className="text-[9px] font-bold text-brand-muted tracking-widest px-2 pt-3.5 pb-1.5 font-mono">ACTIONS</div>
                   <motion.div whileTap={{ scale:0.97 }} onClick={() => { onClose(); setScreen("addEvent"); }}
-                    style={{ display:"flex", alignItems:"center", gap:"12px", padding:"11px 10px", cursor:"pointer", borderRadius:"12px", border:"1.5px dashed rgba(249,115,22,0.3)", color:BRAND, marginBottom:"6px", transition:"all 0.15s" }}>
-                    <PlusCircle size={17} color={BRAND} /><span style={{ fontSize:"14px", fontWeight:600 }}>Create Event</span>
+                    className="flex items-center gap-3 px-2.5 py-2.5 mb-1.5 rounded-xl cursor-pointer border-[1.5px] border-dashed border-brand-orange/30 text-brand-orange">
+                    <PlusCircle size={17} /><span className="text-sm font-semibold">Create Event</span>
                   </motion.div>
                   <motion.div whileTap={{ scale:0.97 }} onClick={() => { onClose(); setScreen("scanTicket"); }}
-                    style={{ display:"flex", alignItems:"center", gap:"12px", padding:"11px 10px", cursor:"pointer", borderRadius:"12px", color:"var(--text-secondary)", marginBottom:"2px", transition:"all 0.15s" }}>
-                    <ScanLine size={17} color="var(--text-secondary)" /><span style={{ fontSize:"14px", fontWeight:500 }}>Scan Tickets</span>
+                    className="flex items-center gap-3 px-2.5 py-2.5 mb-0.5 rounded-xl cursor-pointer text-brand-muted">
+                    <ScanLine size={17} /><span className="text-sm font-medium">Scan Tickets</span>
                   </motion.div>
                 </>
               )}
             </nav>
-            <div style={{ borderTop:"1px solid var(--border)", padding:"12px", flexShrink:0, paddingBottom:"calc(12px + env(safe-area-inset-bottom, 0px))" }}>
+
+            <div className="border-t border-gray-100 pt-3 px-3 pb-[calc(0.75rem+env(safe-area-inset-bottom,0px))] shrink-0">
               <motion.div whileTap={{ scale:0.97 }} onClick={() => { onClose(); setScreen("settings"); }}
-                style={{ display:"flex", alignItems:"center", gap:"12px", padding:"12px 10px", cursor:"pointer", borderRadius:"12px", background:screen==="settings"?`${BRAND}08`:"transparent", border:screen==="settings"?`1px solid ${BRAND}15`:"1px solid transparent", marginBottom:"6px", transition:"all 0.15s" }}>
-                <SettingsIcon size={17} color={screen==="settings"?BRAND:"var(--text-secondary)"} strokeWidth={1.8} />
-                <span style={{ fontSize:"14px", fontWeight:500, color:screen==="settings"?BRAND:"var(--text-primary)" }}>Account Settings</span>
+                className={`flex items-center gap-3 px-2.5 py-3 mb-1.5 rounded-xl cursor-pointer ${screen === "settings" ? "bg-pastel-orange" : ""}`}>
+                <SettingsIcon size={17} strokeWidth={1.75} className={screen === "settings" ? "text-brand-orange" : "text-brand-muted"} />
+                <span className={`text-sm font-medium ${screen === "settings" ? "text-brand-orange" : "text-brand-text"}`}>Account Settings</span>
               </motion.div>
               <motion.button whileTap={{ scale:0.97 }} onClick={() => { onClose(); handleLogout(); }}
-                style={{ width:"100%", minHeight:"48px", padding:"13px 14px", background:"var(--error-bg)", border:"1.5px solid rgba(220,38,38,0.2)", borderRadius:"13px", display:"flex", alignItems:"center", justifyContent:"center", gap:"10px", cursor:"pointer", fontFamily:"var(--font-sans)" }}>
-                <LogOut size={16} color="var(--error)" /><span style={{ fontWeight:700, fontSize:"14px", color:"var(--error)" }}>Log Out</span>
+                className="w-full min-h-[48px] px-3.5 py-3 rounded-xl bg-red-50 border-[1.5px] border-red-200 flex items-center justify-center gap-2.5">
+                <LogOut size={16} className="text-red-600" /><span className="font-bold text-sm text-red-600">Log Out</span>
               </motion.button>
             </div>
           </motion.div>
@@ -237,12 +243,12 @@ function MobileAppShell() {
 function NavItem({ icon: Icon, label, active, collapsed, onClick, title }) {
   return (
     <motion.div whileTap={{ scale:0.94 }} onClick={onClick} title={title}
-      style={{ display:"flex", alignItems:"center", gap:"10px", padding:collapsed?"10px 0":"9px 12px", justifyContent:collapsed?"center":"flex-start", borderRadius:"10px", marginBottom:"2px", cursor:"pointer", background:active?`${BRAND}10`:"transparent", transition:"all 0.18s ease", position:"relative" }}
-      onMouseEnter={e => { if (!active) e.currentTarget.style.background = "var(--bg-hover)"; }}
-      onMouseLeave={e => { e.currentTarget.style.background = active ? `${BRAND}10` : "transparent"; }}>
-      {active && <div style={{ position:"absolute", left:0, top:"20%", height:"60%", width:"3px", borderRadius:"0 3px 3px 0", background:BRAND }} />}
-      <Icon size={17} strokeWidth={active?2.5:1.8} color={active?BRAND:"var(--text-muted)"} style={{ flexShrink:0 }} />
-      {!collapsed && <span style={{ fontWeight:600, fontSize:"13px", whiteSpace:"nowrap", color:active?BRAND:"var(--text-secondary)" }}>{label}</span>}
+      className={`flex items-center gap-2.5 mb-0.5 rounded-xl cursor-pointer relative transition-colors
+        ${collapsed ? "justify-center py-2.5" : "justify-start px-3 py-2.5"}
+        ${active ? "bg-pastel-orange" : "hover:bg-brand-canvas"}`}>
+      {active && <div className="absolute left-0 top-[20%] h-3/5 w-[3px] rounded-r-full bg-brand-orange" />}
+      <Icon size={17} strokeWidth={active ? 2.5 : 1.75} className={`shrink-0 ${active ? "text-brand-orange" : "text-brand-muted"}`} />
+      {!collapsed && <span className={`text-[13px] whitespace-nowrap ${active ? "font-bold text-brand-orange" : "font-semibold text-brand-text"}`}>{label}</span>}
     </motion.div>
   );
 }
@@ -255,35 +261,37 @@ function DesktopTopbar({ navItems, activeTab, isFullScreen, screen, screenTitles
   const pageTitle  = isFullScreen ? screenTitles[screen] || "Master Events" : navItems.find(n => n.id === activeTab)?.label || "Master Events";
 
   return (
-    <div style={{ background:"var(--bg-card)", borderBottom:"1px solid var(--border)", padding:"0 28px", height:"60px", display:"flex", alignItems:"center", justifyContent:"space-between", gap:"20px", position:"sticky", top:0, zIndex:40, boxShadow:"var(--shadow-sm)", flexShrink:0 }}>
-      <div style={{ flexShrink:0, minWidth:"120px" }}>
-        <h1 style={{ fontWeight:800, fontSize:"16px", color:"var(--text-primary)", letterSpacing:"-0.4px", lineHeight:1.2 }}>{pageTitle}</h1>
-        <p style={{ fontSize:"10px", color:"var(--text-muted)", marginTop:"1px", fontFamily:"var(--font-mono)" }}>{new Date().toLocaleDateString("en-GH", { weekday:"short", month:"short", day:"numeric" })}</p>
+    <div className="sticky top-0 z-40 bg-white border-b border-gray-100 h-[60px] px-7 flex items-center justify-between gap-5 shrink-0">
+      <div className="shrink-0 min-w-[120px]">
+        <h1 className="font-extrabold text-[16px] text-brand-text tracking-tight leading-tight">{pageTitle}</h1>
+        <p className="text-[10px] text-brand-muted mt-0.5 font-mono">{new Date().toLocaleDateString("en-GH", { weekday:"short", month:"short", day:"numeric" })}</p>
       </div>
-      <div style={{ flex:1, maxWidth:"420px", position:"relative" }}>
-        <div style={{ position:"absolute", left:"12px", top:"50%", transform:"translateY(-50%)", pointerEvents:"none" }}><Search size={14} color="var(--text-muted)" /></div>
+
+      <div className="flex-1 max-w-[420px] relative">
+        <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-brand-muted pointer-events-none" />
         <input value={searchQ} onChange={e => { setSearchQ(e.target.value); if (activeTab !== "home" && role === "attendee") { setActiveTab("home"); setScreen("app"); } }}
           placeholder="Search events, venues..."
-          style={{ width:"100%", padding:"8px 14px 8px 36px", background:"var(--bg-subtle)", border:"1.5px solid var(--border)", borderRadius:"10px", fontSize:"13px", color:"var(--text-primary)", outline:"none", boxSizing:"border-box", fontFamily:"var(--font-sans)", transition:"all 0.2s" }}
-          onFocus={e => { e.target.style.borderColor = BRAND; e.target.style.background = "var(--bg-card)"; e.target.style.boxShadow = `0 0 0 3px ${BRAND}12`; }}
-          onBlur={e => { e.target.style.borderColor = "var(--border)"; e.target.style.background = "var(--bg-subtle)"; e.target.style.boxShadow = "none"; }} />
-        {searchQ && <div onClick={() => setSearchQ("")} style={{ position:"absolute", right:"11px", top:"50%", transform:"translateY(-50%)", cursor:"pointer", color:"var(--text-muted)", fontSize:"13px" }}>✕</div>}
+          className="w-full pl-9 pr-3.5 py-2 bg-brand-canvas border border-gray-200 rounded-xl text-[13px] text-brand-text outline-none focus:border-brand-orange focus:bg-white transition-colors" />
+        {searchQ && (
+          <button onClick={() => setSearchQ("")} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-brand-muted">
+            <X size={13} />
+          </button>
+        )}
       </div>
-      <div style={{ display:"flex", alignItems:"center", gap:"10px", flexShrink:0 }}>
-        <div style={{ display:"flex", alignItems:"center", gap:"5px", padding:"5px 10px", borderRadius:"99px", border:"1px solid rgba(22,163,74,0.2)", background:"rgba(22,163,74,0.06)" }}>
-          <motion.div animate={{ scale:[1,1.5,1] }} transition={{ repeat:Infinity, duration:2 }} style={{ width:"6px", height:"6px", borderRadius:"50%", background:"#16a34a" }} />
-          <span style={{ fontSize:"10px", fontWeight:700, color:"#16a34a", fontFamily:"var(--font-mono)" }}>AMOY</span>
+
+      <div className="flex items-center gap-2.5 shrink-0">
+        <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full border border-emerald-200 bg-emerald-50">
+          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 pulse-dot" />
+          <span className="text-[10px] font-bold text-emerald-600 font-mono">AMOY</span>
         </div>
-        <motion.div whileTap={{ scale:0.88 }} onClick={() => setTheme(["light","dark","system"][(["light","dark","system"].indexOf(theme)+1)%3])}
-          style={{ width:"32px", height:"32px", borderRadius:"9px", background:"var(--bg-subtle)", border:"1px solid var(--border)", display:"flex", alignItems:"center", justifyContent:"center", cursor:"pointer", transition:"all 0.2s" }}
-          onMouseEnter={e => { e.currentTarget.style.borderColor = BRAND; e.currentTarget.style.background = `${BRAND}08`; }}
-          onMouseLeave={e => { e.currentTarget.style.borderColor = "var(--border)"; e.currentTarget.style.background = "var(--bg-subtle)"; }}>
-          <ThemeIcon size={14} color="var(--text-secondary)" />
-        </motion.div>
-        <div style={{ display:"flex", alignItems:"center", gap:"8px", padding:"5px 10px 5px 6px", borderRadius:"99px", background:"var(--bg-subtle)", border:"1px solid var(--border)" }}>
-          <Avatar seed={currentUser?.email} name={currentUser?.first_name} size={28} style={{ borderRadius:"50%", flexShrink:0 }} />
-          <span style={{ fontSize:"12px", fontWeight:600, color:"var(--text-primary)", whiteSpace:"nowrap", maxWidth:"100px", overflow:"hidden", textOverflow:"ellipsis" }}>{currentUser?.first_name} {currentUser?.last_name}</span>
-          <span style={{ display:"inline-flex", alignItems:"center", gap:"3px", padding:"2px 7px", borderRadius:"99px", background:`${BRAND}10`, border:`1px solid ${BRAND}20`, fontSize:"8px", fontWeight:700, color:BRAND, whiteSpace:"nowrap" }}>{role === "organizer" ? "ORGANIZER" : "ATTENDEE"}</span>
+        <motion.button whileTap={{ scale:0.88 }} onClick={() => setTheme(["light","dark","system"][(["light","dark","system"].indexOf(theme)+1)%3])}
+          className="w-8 h-8 rounded-xl bg-brand-canvas border border-gray-200 flex items-center justify-center hover:border-brand-orange transition-colors">
+          <ThemeIcon size={14} className="text-brand-muted" />
+        </motion.button>
+        <div className="flex items-center gap-2 pl-1.5 pr-2.5 py-1 rounded-full bg-brand-canvas border border-gray-200">
+          <Avatar seed={currentUser?.email} name={currentUser?.first_name} size={28} className="rounded-full shrink-0" />
+          <span className="text-xs font-semibold text-brand-text whitespace-nowrap max-w-[100px] truncate">{currentUser?.first_name} {currentUser?.last_name}</span>
+          <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-pastel-orange text-[8px] font-bold text-brand-orange whitespace-nowrap">{role === "organizer" ? "ORGANIZER" : "ATTENDEE"}</span>
         </div>
       </div>
     </div>
@@ -350,37 +358,36 @@ function DesktopAppLayout() {
     return null;
   };
 
-  const sidebarW = collapsed ? "64px" : "220px";
-
   return (
-    <div style={{ display:"flex", height:"100vh", background:"var(--bg)", fontFamily:"var(--font-sans)", overflow:"hidden" }}>
-      <motion.aside animate={{ width:sidebarW }} transition={{ duration:0.22, ease:[0.16,1,0.3,1] }}
-        style={{ flexShrink:0, background:"var(--bg-card)", borderRight:"1px solid var(--border)", display:"flex", flexDirection:"column", height:"100vh", overflow:"hidden", position:"relative", zIndex:10 }}>
-        <div style={{ padding:"0 12px", borderBottom:"1px solid var(--border)", display:"flex", alignItems:"center", justifyContent:collapsed?"center":"space-between", gap:"8px", height:"60px", flexShrink:0 }}>
+    <div className="flex h-screen bg-brand-canvas font-sans overflow-hidden">
+      <motion.aside animate={{ width: collapsed ? 64 : 220 }} transition={{ duration:0.22, ease:[0.16,1,0.3,1] }}
+        className="shrink-0 bg-white border-r border-gray-100 flex flex-col h-screen overflow-hidden relative z-10">
+        <div className={`border-b border-gray-100 h-[60px] flex items-center gap-2 shrink-0 ${collapsed ? "justify-center px-0" : "justify-between px-3"}`}>
           <AnimatePresence>
             {!collapsed && (
               <motion.div initial={{ opacity:0, x:-8 }} animate={{ opacity:1, x:0 }} exit={{ opacity:0, x:-8 }} transition={{ duration:0.16 }}
-                style={{ display:"flex", alignItems:"center", gap:"9px", overflow:"hidden" }}>
-                <div style={{ width:"30px", height:"30px", borderRadius:"9px", background:`linear-gradient(135deg, ${BRAND}, #EA6C0A)`, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
+                className="flex items-center gap-2 overflow-hidden">
+                <div className="w-[30px] h-[30px] rounded-xl bg-brand-orange flex items-center justify-center shrink-0">
                   <Ticket size={15} color="#fff" strokeWidth={2.5} />
                 </div>
                 <div>
-                  <div style={{ fontWeight:800, fontSize:"13px", color:"var(--text-primary)", letterSpacing:"-0.3px", whiteSpace:"nowrap" }}>Master Events</div>
-                  <div style={{ display:"flex", alignItems:"center", gap:"4px", marginTop:"1px" }}>
-                    <motion.div animate={{ scale:[1,1.5,1] }} transition={{ repeat:Infinity, duration:2 }} style={{ width:"4px", height:"4px", borderRadius:"50%", background:"#16a34a" }} />
-                    <span style={{ fontSize:"8px", color:"#16a34a", fontWeight:700, letterSpacing:"0.8px", fontFamily:"var(--font-mono)", whiteSpace:"nowrap" }}>POLYGON AMOY</span>
+                  <div className="font-extrabold text-[13px] text-brand-text tracking-tight whitespace-nowrap">Master Events</div>
+                  <div className="flex items-center gap-1 mt-0.5">
+                    <span className="w-1 h-1 rounded-full bg-emerald-500 pulse-dot" />
+                    <span className="text-[8px] text-emerald-600 font-bold tracking-wide font-mono whitespace-nowrap">POLYGON AMOY</span>
                   </div>
                 </div>
               </motion.div>
             )}
           </AnimatePresence>
           <motion.button whileTap={{ scale:0.88 }} onClick={() => setCollapsed(!collapsed)}
-            style={{ width:"24px", height:"24px", borderRadius:"7px", background:"var(--bg-subtle)", border:"1px solid var(--border)", display:"flex", alignItems:"center", justifyContent:"center", cursor:"pointer", flexShrink:0 }}>
-            {collapsed ? <ChevronRight size={12} color="var(--text-muted)" /> : <ChevronLeft size={12} color="var(--text-muted)" />}
+            className="w-6 h-6 rounded-lg bg-brand-canvas border border-gray-200 flex items-center justify-center shrink-0">
+            {collapsed ? <ChevronRight size={12} className="text-brand-muted" /> : <ChevronLeft size={12} className="text-brand-muted" />}
           </motion.button>
         </div>
-        <nav style={{ flex:1, padding:"8px", overflowY:"auto" }}>
-          {!collapsed && <div style={{ fontSize:"9px", fontWeight:700, color:"var(--text-muted)", letterSpacing:"1.5px", padding:"8px 10px 6px", fontFamily:"var(--font-mono)" }}>NAVIGATE</div>}
+
+        <nav className="flex-1 p-2 overflow-y-auto">
+          {!collapsed && <div className="text-[9px] font-bold text-brand-muted tracking-widest px-2.5 pt-2 pb-1.5 font-mono">NAVIGATE</div>}
           {navItems.map(item => (
             <NavItem key={item.id} icon={item.Icon} label={item.label} active={!isFullScreen && activeTab === item.id}
               collapsed={collapsed} title={collapsed ? item.label : ""} onClick={() => { setActiveTab(item.id); setScreen("app"); }} />
@@ -392,39 +399,41 @@ function DesktopAppLayout() {
             </>
           )}
           {role === "organizer" && (
-            <div style={{ marginTop:"8px" }}>
-              {!collapsed && <div style={{ fontSize:"9px", fontWeight:700, color:"var(--text-muted)", letterSpacing:"1.5px", padding:"8px 10px 6px", fontFamily:"var(--font-mono)" }}>ACTIONS</div>}
+            <div className="mt-2">
+              {!collapsed && <div className="text-[9px] font-bold text-brand-muted tracking-widest px-2.5 pt-2 pb-1.5 font-mono">ACTIONS</div>}
               <motion.div whileTap={{ scale:0.94 }} onClick={() => setScreen("addEvent")}
-                style={{ display:"flex", alignItems:"center", gap:"10px", padding:collapsed?"10px 0":"9px 12px", justifyContent:collapsed?"center":"flex-start", borderRadius:"10px", cursor:"pointer", border:collapsed?"none":"1.5px dashed rgba(249,115,22,0.3)", color:BRAND, transition:"all 0.18s ease", marginBottom:"3px" }}
-                onMouseEnter={e => { e.currentTarget.style.background = `${BRAND}07`; }} onMouseLeave={e => { e.currentTarget.style.background = "transparent"; }}>
-                <PlusCircle size={16} color={BRAND} style={{ flexShrink:0 }} />
-                {!collapsed && <span style={{ fontWeight:600, fontSize:"13px" }}>Create Event</span>}
+                className={`flex items-center gap-2.5 mb-0.5 rounded-xl cursor-pointer text-brand-orange hover:bg-pastel-orange transition-colors
+                  ${collapsed ? "justify-center py-2.5" : "justify-start px-3 py-2.5 border-[1.5px] border-dashed border-brand-orange/30"}`}>
+                <PlusCircle size={16} className="shrink-0" />
+                {!collapsed && <span className="font-semibold text-[13px]">Create Event</span>}
               </motion.div>
               <motion.div whileTap={{ scale:0.94 }} onClick={() => setScreen("scanTicket")}
-                style={{ display:"flex", alignItems:"center", gap:"10px", padding:collapsed?"10px 0":"9px 12px", justifyContent:collapsed?"center":"flex-start", borderRadius:"10px", cursor:"pointer", color:"var(--text-secondary)", transition:"all 0.18s ease" }}
-                onMouseEnter={e => { e.currentTarget.style.background = "var(--bg-hover)"; }} onMouseLeave={e => { e.currentTarget.style.background = "transparent"; }}>
-                <ScanLine size={16} color="var(--text-secondary)" style={{ flexShrink:0 }} />
-                {!collapsed && <span style={{ fontWeight:600, fontSize:"13px" }}>Scan Tickets</span>}
+                className={`flex items-center gap-2.5 mb-0.5 rounded-xl cursor-pointer text-brand-muted hover:bg-brand-canvas transition-colors
+                  ${collapsed ? "justify-center py-2.5" : "justify-start px-3 py-2.5"}`}>
+                <ScanLine size={16} className="shrink-0" />
+                {!collapsed && <span className="font-semibold text-[13px]">Scan Tickets</span>}
               </motion.div>
             </div>
           )}
-          <div style={{ marginTop:"8px" }}>
+          <div className="mt-2">
             <NavItem icon={SettingsIcon} label="Settings" active={screen==="settings"} collapsed={collapsed} title={collapsed?"Settings":""} onClick={() => setScreen("settings")} />
           </div>
         </nav>
-        <div style={{ padding:"8px", borderTop:"1px solid var(--border)", flexShrink:0 }}>
+
+        <div className="p-2 border-t border-gray-100 shrink-0">
           <motion.div whileTap={{ scale:0.9 }} onClick={handleLogout} title={collapsed?"Log Out":""}
-            style={{ display:"flex", alignItems:"center", gap:"10px", padding:collapsed?"10px 0":"9px 12px", justifyContent:collapsed?"center":"flex-start", borderRadius:"10px", cursor:"pointer", transition:"all 0.18s" }}
-            onMouseEnter={e => { e.currentTarget.style.background = "var(--error-bg)"; }} onMouseLeave={e => { e.currentTarget.style.background = "transparent"; }}>
-            <LogOut size={16} color="var(--error)" style={{ flexShrink:0 }} />
-            {!collapsed && <span style={{ fontWeight:600, fontSize:"13px", color:"var(--error)" }}>Log Out</span>}
+            className={`flex items-center gap-2.5 rounded-xl cursor-pointer hover:bg-red-50 transition-colors
+              ${collapsed ? "justify-center py-2.5" : "justify-start px-3 py-2.5"}`}>
+            <LogOut size={16} className="text-red-600 shrink-0" />
+            {!collapsed && <span className="font-semibold text-[13px] text-red-600">Log Out</span>}
           </motion.div>
         </div>
       </motion.aside>
-      <main style={{ flex:1, display:"flex", flexDirection:"column", minWidth:0, overflow:"hidden" }}>
+
+      <main className="flex-1 flex flex-col min-w-0 overflow-hidden">
         <DesktopTopbar navItems={navItems} activeTab={activeTab} isFullScreen={isFullScreen} screen={screen} screenTitles={screenTitles} role={role} setScreen={setScreen} setActiveTab={setActiveTab} theme={theme} setTheme={setTheme} currentUser={currentUser} />
-        <div style={{ flex:1, overflowY:"auto", overflowX:"hidden", WebkitOverflowScrolling:"touch" }}>
-          <div key={screen + activeTab} className="screen-enter" style={{ minHeight:"100%" }}>{renderContent()}</div>
+        <div className="flex-1 overflow-y-auto overflow-x-hidden">
+          <div key={screen + activeTab} className="screen-enter min-h-full">{renderContent()}</div>
         </div>
       </main>
       <CookieBanner />
@@ -436,10 +445,10 @@ function MobileAppContent() {
   const screen = useStore(s => s.screen);
   const authRoutes = { login:<Login />, signup:<Signup />, role:<RoleSelect />, resetPassword:<ResetPassword /> };
   if (authRoutes[screen]) return (
-    <div key={screen} className="screen-enter app-shell" style={{ background:"var(--bg)" }}>{authRoutes[screen]}</div>
+    <div key={screen} className="screen-enter app-shell bg-brand-canvas">{authRoutes[screen]}</div>
   );
   return (
-    <div key={screen} className="screen-enter" style={{ height:"100dvh", overflow:"hidden", background:"var(--bg)" }}>
+    <div key={screen} className="screen-enter h-dvh overflow-hidden bg-brand-canvas">
       <MobileAppShell />
     </div>
   );
@@ -471,7 +480,7 @@ export default function App() {
       fetch("https://master-events-backend.onrender.com/api/auth/google/callback/", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ code, role: pendingRole }),
+        body: JSON.stringify({ code, role: pendingRole, redirect_uri: `${window.location.origin}/auth/callback` }),
       })
         .then(r => r.json())
         .then(data => {

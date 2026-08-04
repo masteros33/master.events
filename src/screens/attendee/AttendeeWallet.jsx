@@ -3,15 +3,26 @@ import { motion, AnimatePresence } from "framer-motion";
 import useStore from "../../store/useStore";
 import { paymentsAPI } from "../../api";
 import toast from "react-hot-toast";
+import {
+  ArrowLeft, Info, Smartphone, ArrowDownLeft, ArrowUpRight, Wallet,
+} from "lucide-react";
 
-const BACKEND   = "https://master-events-backend.onrender.com";
-const BRAND     = "#F97316";
 const isDesktop = () => window.innerWidth > 768;
 
+const STATUS_CLASS = {
+  completed: "text-emerald-700 bg-emerald-50",
+  pending:   "text-amber-700 bg-amber-50",
+};
+
+function txMeta(type) {
+  if (type === "resale_sale") return { Icon: ArrowDownLeft, badgeBg: "bg-pastel-green", iconClass: "text-fintech-green", label: "Resale Earned" };
+  if (type === "withdrawal")  return { Icon: ArrowUpRight,  badgeBg: "bg-gray-100",      iconClass: "text-brand-muted", label: "Withdrawn" };
+  return { Icon: Wallet, badgeBg: "bg-pastel-green", iconClass: "text-fintech-green", label: "Credit" };
+}
+
 export default function AttendeeWallet() {
-  const currentUser = useStore(s => s.currentUser);
-  const setScreen   = useStore(s => s.setScreen);
-  const desktop     = isDesktop();
+  const setScreen = useStore(s => s.setScreen);
+  const desktop   = isDesktop();
 
   const [wallet,       setWallet]       = useState(null);
   const [loading,      setLoading]      = useState(true);
@@ -49,7 +60,7 @@ export default function AttendeeWallet() {
       });
       toast.dismiss(t);
       if (data.reference) {
-        toast.success(`✅ ${data.message} — Ref: ${data.reference}`);
+        toast.success(`${data.message} — Ref: ${data.reference}`);
         setShowWithdraw(false);
         setAmount("");
         setMomoNumber("");
@@ -65,131 +76,102 @@ export default function AttendeeWallet() {
     }
   };
 
-  const txIcon = (type) => {
-    if (type === "resale_sale") return { icon: "💸", color: "#16a34a", label: "Resale Earned" };
-    if (type === "withdrawal")  return { icon: "📤", color: "#dc2626", label: "Withdrawn" };
-    return { icon: "💰", color: BRAND, label: "Credit" };
-  };
+  const canWithdraw = (wallet?.balance || 0) >= 10;
 
   return (
-    <div style={{ background: "var(--bg)", minHeight: "100%", paddingBottom: "80px" }}>
+    <div className="bg-fintech-gray min-h-full pb-20 font-sans">
 
       {/* Header */}
-      <div style={{
-        position: "sticky", top: 0, zIndex: 20,
-        background: "var(--bg-card)", borderBottom: "1px solid var(--border)",
-        padding: desktop ? "0 40px" : "0 16px",
-        height: "60px", display: "flex", alignItems: "center", justifyContent: "space-between",
-      }}>
-        <motion.button whileTap={{ scale: 0.9 }} onClick={() => setScreen("app")}
-          style={{ background: "none", border: "none", cursor: "pointer", color: "var(--text-muted)", fontSize: "13px", fontWeight: 500, fontFamily: "var(--font-sans)", padding: 0 }}>
-          ← Back
-        </motion.button>
-        <div style={{ fontWeight: 800, fontSize: "16px", color: "var(--text-primary)", letterSpacing: "-0.3px" }}>My Wallet</div>
-        <div style={{ width: "60px" }} />
+      <div className={`sticky top-0 z-20 bg-white border-b border-gray-100 h-15 flex items-center justify-between ${desktop ? "px-10" : "px-4"}`}>
+        <button onClick={() => setScreen("app")}
+          className="flex items-center gap-1.5 text-brand-muted text-sm font-medium hover:text-brand-text transition-colors">
+          <ArrowLeft size={15} strokeWidth={2} /> Back
+        </button>
+        <div className="font-extrabold text-base text-brand-text tracking-tight">My Wallet</div>
+        <div className="w-14" />
       </div>
 
-      <div style={{ maxWidth: desktop ? "600px" : "100%", margin: "0 auto", padding: desktop ? "28px 40px 60px" : "16px 16px 60px" }}>
+      <div className={`mx-auto ${desktop ? "max-w-[600px] px-10 py-7" : "px-4 py-4"}`}>
 
         {loading ? (
-          <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
-            {[1,2,3].map(i => <div key={i} className="skeleton" style={{ height: "80px", borderRadius: "14px" }} />)}
+          <div className="flex flex-col gap-3">
+            {[1,2,3].map(i => <div key={i} className="skeleton" style={{ height: "80px", borderRadius: "16px" }} />)}
           </div>
         ) : (
           <>
             {/* Balance card */}
-            <div style={{
-              background: `linear-gradient(135deg, ${BRAND}, #EA6C0A)`,
-              borderRadius: "20px", padding: "28px 24px", marginBottom: "16px",
-              position: "relative", overflow: "hidden",
-            }}>
-              <div style={{ position: "absolute", top: "-20px", right: "-20px", width: "120px", height: "120px", borderRadius: "50%", background: "rgba(255,255,255,0.08)" }} />
-              <div style={{ position: "absolute", bottom: "-30px", left: "40px", width: "80px", height: "80px", borderRadius: "50%", background: "rgba(255,255,255,0.05)" }} />
-              <div style={{ position: "relative", zIndex: 1 }}>
-                <div style={{ fontSize: "11px", fontWeight: 700, color: "rgba(255,255,255,0.7)", letterSpacing: "1.5px", marginBottom: "8px", fontFamily: "var(--font-mono)" }}>
-                  AVAILABLE BALANCE
+            <div className="bg-fintech-slate rounded-2xl p-6 mb-4">
+              <div className="text-[11px] font-bold text-slate-400 tracking-widest font-mono mb-2">
+                AVAILABLE BALANCE
+              </div>
+              <div className="text-4xl font-extrabold text-white tracking-tight font-mono mb-4">
+                GHS {(wallet?.balance || 0).toFixed(2)}
+              </div>
+              <div className="flex gap-6">
+                <div>
+                  <div className="text-[10px] text-slate-400 mb-0.5">Total Earned</div>
+                  <div className="text-sm font-bold text-white font-mono">GHS {(wallet?.total_earned || 0).toFixed(2)}</div>
                 </div>
-                <div style={{ fontSize: "38px", fontWeight: 900, color: "#fff", letterSpacing: "-1.5px", lineHeight: 1, marginBottom: "16px" }}>
-                  GHS {(wallet?.balance || 0).toFixed(2)}
-                </div>
-                <div style={{ display: "flex", gap: "20px" }}>
-                  <div>
-                    <div style={{ fontSize: "10px", color: "rgba(255,255,255,0.6)", marginBottom: "2px" }}>Total Earned</div>
-                    <div style={{ fontSize: "14px", fontWeight: 700, color: "#fff" }}>GHS {(wallet?.total_earned || 0).toFixed(2)}</div>
-                  </div>
-                  <div>
-                    <div style={{ fontSize: "10px", color: "rgba(255,255,255,0.6)", marginBottom: "2px" }}>Withdrawn</div>
-                    <div style={{ fontSize: "14px", fontWeight: 700, color: "#fff" }}>GHS {(wallet?.total_withdrawn || 0).toFixed(2)}</div>
-                  </div>
+                <div>
+                  <div className="text-[10px] text-slate-400 mb-0.5">Withdrawn</div>
+                  <div className="text-sm font-bold text-white font-mono">GHS {(wallet?.total_withdrawn || 0).toFixed(2)}</div>
                 </div>
               </div>
             </div>
 
             {/* Info card */}
-            <div style={{ background: "rgba(22,163,74,0.06)", border: "1px solid rgba(22,163,74,0.2)", borderRadius: "12px", padding: "12px 16px", marginBottom: "16px", display: "flex", alignItems: "center", gap: "10px" }}>
-              <span style={{ fontSize: "18px" }}>💡</span>
-              <div style={{ fontSize: "12px", color: "var(--text-secondary)", lineHeight: 1.5 }}>
+            <div className="flex items-center gap-2.5 bg-pastel-blue rounded-xl px-4 py-3 mb-4">
+              <Info size={16} strokeWidth={1.75} className="text-fintech-blue shrink-0" />
+              <div className="text-xs text-brand-text leading-relaxed">
                 Earn money by reselling tickets. Your earnings land here instantly and you can withdraw to MoMo anytime.
               </div>
             </div>
 
             {/* Withdraw button */}
-            <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}
-              onClick={() => setShowWithdraw(true)}
-              disabled={(wallet?.balance || 0) < 10}
-              style={{
-                width: "100%", padding: "15px",
-                background: (wallet?.balance || 0) >= 10 ? `linear-gradient(135deg, ${BRAND}, #EA6C0A)` : "var(--bg-subtle)",
-                color: (wallet?.balance || 0) >= 10 ? "#fff" : "var(--text-muted)",
-                border: "none", borderRadius: "13px", fontSize: "15px", fontWeight: 700,
-                cursor: (wallet?.balance || 0) >= 10 ? "pointer" : "not-allowed",
-                boxShadow: (wallet?.balance || 0) >= 10 ? "var(--shadow-brand)" : "none",
-                fontFamily: "var(--font-sans)", marginBottom: "24px",
-              }}>
-              {(wallet?.balance || 0) < 10 ? "Minimum GHS 10 to withdraw" : "Withdraw to MoMo 📲"}
-            </motion.button>
+            <button onClick={() => setShowWithdraw(true)} disabled={!canWithdraw}
+              className={`w-full py-4 rounded-full font-bold text-[15px] flex items-center justify-center gap-2 mb-6 transition-colors ${canWithdraw ? "bg-brand-orange hover:bg-brand-orange-hover text-white" : "bg-gray-100 text-brand-muted cursor-not-allowed"}`}>
+              {canWithdraw ? <><Smartphone size={16} strokeWidth={1.75} /> Withdraw to MoMo</> : "Minimum GHS 10 to withdraw"}
+            </button>
 
             {/* Transaction history */}
-            <div style={{ fontWeight: 800, fontSize: "16px", color: "var(--text-primary)", letterSpacing: "-0.3px", marginBottom: "14px" }}>
+            <div className="font-extrabold text-base text-brand-text tracking-tight mb-3.5">
               Transaction History
             </div>
 
             {(wallet?.transactions || []).length === 0 ? (
-              <div style={{ textAlign: "center", padding: "48px 20px", background: "var(--bg-card)", borderRadius: "16px", border: "1px solid var(--border)" }}>
-                <div style={{ fontSize: "36px", marginBottom: "12px" }}>💸</div>
-                <div style={{ fontWeight: 700, fontSize: "15px", color: "var(--text-primary)", marginBottom: "6px" }}>No transactions yet</div>
-                <div style={{ fontSize: "13px", color: "var(--text-muted)" }}>Sell a ticket on the resale market to earn your first payout</div>
+              <div className="text-center py-12 px-5 bg-white rounded-2xl border border-gray-100 shadow-sm">
+                <div className="w-14 h-14 rounded-full bg-pastel-green flex items-center justify-center mx-auto mb-3">
+                  <Wallet size={24} strokeWidth={1.75} className="text-fintech-green" />
+                </div>
+                <div className="font-bold text-sm text-brand-text mb-1.5">No transactions yet</div>
+                <div className="text-xs text-brand-muted">Sell a ticket on the resale market to earn your first payout</div>
               </div>
             ) : (
-              <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+              <div className="flex flex-col gap-2">
                 {(wallet?.transactions || []).map((t, i) => {
-                  const { icon, color, label } = txIcon(t.type);
+                  const { Icon, badgeBg, iconClass, label } = txMeta(t.type);
                   const isCredit = t.type !== "withdrawal";
                   return (
-                    <motion.div key={i}
-                      initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.04 }}
-                      style={{ background: "var(--bg-card)", borderRadius: "12px", padding: "14px 16px", border: "1px solid var(--border)", display: "flex", alignItems: "center", gap: "12px" }}>
-                      <div style={{ width: "40px", height: "40px", borderRadius: "12px", background: color + "12", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "18px", flexShrink: 0, border: `1px solid ${color}20` }}>
-                        {icon}
+                    <div key={i} className="bg-white rounded-xl border border-gray-100 shadow-sm px-4 py-3.5 flex items-center gap-3">
+                      <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${badgeBg}`}>
+                        <Icon size={17} strokeWidth={1.75} className={iconClass} />
                       </div>
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ fontSize: "13px", fontWeight: 700, color: "var(--text-primary)", marginBottom: "2px" }}>{label}</div>
-                        <div style={{ fontSize: "11px", color: "var(--text-muted)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                          {t.description}
-                        </div>
-                        <div style={{ fontSize: "10px", color: "var(--text-muted)", marginTop: "2px", fontFamily: "var(--font-mono)" }}>
+                      <div className="flex-1 min-w-0">
+                        <div className="text-[13px] font-bold text-brand-text mb-0.5">{label}</div>
+                        <div className="text-[11px] text-brand-muted truncate">{t.description}</div>
+                        <div className="text-[10px] text-brand-muted font-mono mt-0.5">
                           {t.reference} · {new Date(t.created_at).toLocaleDateString()}
                         </div>
                       </div>
-                      <div style={{ textAlign: "right", flexShrink: 0 }}>
-                        <div style={{ fontSize: "15px", fontWeight: 800, color: isCredit ? "#16a34a" : "#dc2626" }}>
+                      <div className="text-right shrink-0">
+                        <div className="text-[15px] font-extrabold text-fintech-slate font-mono">
                           {isCredit ? "+" : "-"}GHS {parseFloat(t.amount).toFixed(2)}
                         </div>
-                        <div style={{ fontSize: "9px", fontWeight: 700, color: t.status === "completed" ? "#16a34a" : "#f5a623", fontFamily: "var(--font-mono)", marginTop: "2px" }}>
+                        <div className={`text-[9px] font-bold font-mono mt-0.5 px-1.5 py-0.5 rounded-full inline-block ${STATUS_CLASS[t.status] || "text-red-700 bg-red-50"}`}>
                           {t.status.toUpperCase()}
                         </div>
                       </div>
-                    </motion.div>
+                    </div>
                   );
                 })}
               </div>
@@ -203,59 +185,45 @@ export default function AttendeeWallet() {
         {showWithdraw && (
           <>
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-              onClick={() => setShowWithdraw(false)}
-              style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.65)", zIndex: 300, backdropFilter: "blur(8px)" }} />
-            <motion.div
-              initial={{ opacity: 0, y: 40 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 40 }}
+              onClick={() => setShowWithdraw(false)} className="fixed inset-0 z-[300] bg-black/40" />
+            <motion.div initial={{ opacity: 0, y: 40 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 40 }}
               transition={{ type: "spring", stiffness: 340, damping: 30 }}
-              style={{
-                position: "fixed", bottom: 0, left: 0, right: 0,
-                margin: "0 auto", maxWidth: "480px",
-                background: "var(--bg-card)", borderRadius: "24px 24px 0 0",
-                padding: "24px 24px calc(24px + env(safe-area-inset-bottom, 0px))",
-                zIndex: 301, border: "1px solid var(--border)", borderBottom: "none",
-              }}>
-              <div style={{ width: "40px", height: "4px", borderRadius: "2px", background: "var(--border-strong)", margin: "0 auto 20px" }} />
-              <div style={{ fontWeight: 800, fontSize: "18px", color: "var(--text-primary)", marginBottom: "4px", letterSpacing: "-0.3px" }}>Withdraw to MoMo</div>
-              <div style={{ fontSize: "13px", color: "var(--text-muted)", marginBottom: "20px" }}>
-                Available: <strong style={{ color: BRAND }}>GHS {(wallet?.balance || 0).toFixed(2)}</strong>
+              className="fixed bottom-0 left-0 right-0 mx-auto max-w-[480px] z-[301] bg-white rounded-t-3xl border border-gray-100 p-6"
+              style={{ paddingBottom: "calc(24px + env(safe-area-inset-bottom, 0px))" }}>
+              <div className="w-10 h-1 rounded-full bg-gray-200 mx-auto mb-5" />
+              <div className="font-extrabold text-lg text-brand-text mb-1">Withdraw to MoMo</div>
+              <div className="text-sm text-brand-muted mb-5">
+                Available: <strong className="text-brand-orange font-mono">GHS {(wallet?.balance || 0).toFixed(2)}</strong>
               </div>
 
-              <div style={{ marginBottom: "12px" }}>
-                <div style={{ fontSize: "12px", fontWeight: 600, color: "var(--text-secondary)", marginBottom: "6px" }}>Amount (GHS)</div>
-                <input
-                  type="number" value={amount} onChange={e => setAmount(e.target.value)}
-                  placeholder="e.g. 50"
-                  style={{ width: "100%", padding: "12px 14px", background: "var(--bg-subtle)", border: "1.5px solid var(--border)", borderRadius: "10px", fontSize: "14px", color: "var(--text-primary)", outline: "none", fontFamily: "var(--font-sans)", boxSizing: "border-box" }}
-                  onFocus={e => { e.target.style.borderColor = BRAND; e.target.style.boxShadow = `0 0 0 3px ${BRAND}15`; }}
-                  onBlur={e => { e.target.style.borderColor = "var(--border)"; e.target.style.boxShadow = "none"; }}
-                />
+              <div className="mb-3">
+                <div className="text-xs font-semibold text-brand-muted mb-1.5">Amount (GHS)</div>
+                <input type="number" value={amount} onChange={e => setAmount(e.target.value)} placeholder="e.g. 50"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 bg-white text-sm text-brand-text outline-none focus:border-brand-orange focus:ring-2 focus:ring-orange-100 transition-colors font-mono" />
               </div>
 
-              <div style={{ marginBottom: "20px" }}>
-                <div style={{ fontSize: "12px", fontWeight: 600, color: "var(--text-secondary)", marginBottom: "6px" }}>MoMo Number</div>
-                <input
-                  type="tel" value={momoNumber} onChange={e => setMomoNumber(e.target.value)}
-                  placeholder="e.g. 0241234567"
-                  style={{ width: "100%", padding: "12px 14px", background: "var(--bg-subtle)", border: "1.5px solid var(--border)", borderRadius: "10px", fontSize: "14px", color: "var(--text-primary)", outline: "none", fontFamily: "var(--font-sans)", boxSizing: "border-box" }}
-                  onFocus={e => { e.target.style.borderColor = BRAND; e.target.style.boxShadow = `0 0 0 3px ${BRAND}15`; }}
-                  onBlur={e => { e.target.style.borderColor = "var(--border)"; e.target.style.boxShadow = "none"; }}
-                />
+              <div className="mb-5">
+                <div className="text-xs font-semibold text-brand-muted mb-1.5">MoMo Number</div>
+                <input type="tel" value={momoNumber} onChange={e => setMomoNumber(e.target.value)} placeholder="e.g. 0241234567"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 bg-white text-sm text-brand-text outline-none focus:border-brand-orange focus:ring-2 focus:ring-orange-100 transition-colors font-mono" />
               </div>
 
-              <div style={{ background: "var(--bg-subtle)", borderRadius: "10px", padding: "10px 14px", marginBottom: "18px", fontSize: "12px", color: "var(--text-muted)", lineHeight: 1.5 }}>
-                💡 Funds are sent via Paystack to your MTN/Vodafone/AirtelTigo MoMo. Usually instant.
+              <div className="flex items-start gap-2 bg-pastel-blue rounded-xl px-3.5 py-3 mb-4.5">
+                <Info size={14} strokeWidth={1.75} className="text-fintech-blue shrink-0 mt-0.5" />
+                <div className="text-xs text-brand-text leading-relaxed">
+                  Funds are sent via Paystack to your MTN/Vodafone/AirtelTigo MoMo. Usually instant.
+                </div>
               </div>
 
-              <div style={{ display: "flex", gap: "10px" }}>
-                <motion.button whileTap={{ scale: 0.97 }} onClick={() => setShowWithdraw(false)}
-                  style={{ flex: 1, padding: "13px", background: "var(--bg-subtle)", border: "1px solid var(--border)", borderRadius: "12px", fontWeight: 600, fontSize: "14px", cursor: "pointer", color: "var(--text-secondary)", fontFamily: "var(--font-sans)" }}>
+              <div className="flex gap-2.5">
+                <button onClick={() => setShowWithdraw(false)}
+                  className="flex-1 py-3 rounded-full bg-brand-canvas border border-gray-200 font-semibold text-sm text-brand-text">
                   Cancel
-                </motion.button>
-                <motion.button whileTap={{ scale: 0.97 }} onClick={handleWithdraw} disabled={withdrawing}
-                  style={{ flex: 2, padding: "13px", background: withdrawing ? "var(--bg-subtle)" : `linear-gradient(135deg, ${BRAND}, #EA6C0A)`, border: "none", borderRadius: "12px", fontWeight: 700, fontSize: "14px", cursor: withdrawing ? "not-allowed" : "pointer", color: withdrawing ? "var(--text-muted)" : "#fff", fontFamily: "var(--font-sans)" }}>
+                </button>
+                <button onClick={handleWithdraw} disabled={withdrawing}
+                  className="flex-[2] py-3 rounded-full bg-brand-orange hover:bg-brand-orange-hover disabled:opacity-60 text-white font-bold text-sm transition-colors">
                   {withdrawing ? "Processing..." : "Withdraw Now"}
-                </motion.button>
+                </button>
               </div>
             </motion.div>
           </>

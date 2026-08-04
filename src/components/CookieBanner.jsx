@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { Cookie } from "lucide-react";
 
 const COOKIE_KEY = "me_cookie_consent";
 
@@ -29,57 +30,28 @@ export default function CookieBanner() {
           animate={{ y: 0,   opacity: 1 }}
           exit={{   y: 100, opacity: 0 }}
           transition={{ type: "spring", stiffness: 380, damping: 36 }}
-          style={{
-            position: "fixed",
-            bottom: "16px",
-            left: "16px",
-            right: "16px",
-            margin: "0 auto",
-            maxWidth: "480px",
-            width: "auto",
-            background: "#111",
-            border: "1px solid #333",
-            borderRadius: "14px",
-            padding: "14px 16px",
-            zIndex: 9999,
-            display: "flex",
-            alignItems: "center",
-            gap: "14px",
-            boxShadow: "0 8px 32px rgba(0,0,0,0.4)",
-            boxSizing: "border-box",
-          }}>
+          className="fixed bottom-4 left-4 right-4 mx-auto max-w-[480px] w-auto bg-white border border-gray-100 rounded-2xl shadow-sm p-4 z-[9999] flex items-center gap-3.5 box-border font-sans">
 
-          {/* Icon */}
-          <div style={{ fontSize: "20px", flexShrink: 0 }}>🍪</div>
+          <div className="w-9 h-9 rounded-full bg-pastel-orange flex items-center justify-center shrink-0">
+            <Cookie size={17} strokeWidth={1.75} className="text-brand-orange" />
+          </div>
 
-          {/* Text */}
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ fontSize: "13px", fontWeight: 700, color: "#fff", marginBottom: "2px" }}>
+          <div className="flex-1 min-w-0">
+            <div className="text-[13px] font-bold text-brand-text mb-0.5">
               We use cookies
             </div>
-            <div style={{ fontSize: "11px", color: "#888", lineHeight: 1.5 }}>
+            <div className="text-[11px] text-brand-muted leading-relaxed">
               Essential cookies keep the app working. Analytics help us improve.
             </div>
           </div>
 
-          {/* Buttons */}
-          <div style={{ display: "flex", flexDirection: "column", gap: "6px", flexShrink: 0 }}>
+          <div className="flex flex-col gap-1.5 shrink-0">
             <motion.button whileTap={{ scale: 0.94 }} onClick={accept}
-              style={{
-                padding: "7px 14px", borderRadius: "8px",
-                background: "#fff", border: "none",
-                color: "#111", fontSize: "12px", fontWeight: 700,
-                cursor: "pointer", fontFamily: "inherit", whiteSpace: "nowrap",
-              }}>
+              className="px-3.5 py-1.5 rounded-full bg-brand-orange hover:bg-brand-orange-hover text-white text-xs font-bold whitespace-nowrap transition-colors">
               Accept All
             </motion.button>
             <motion.button whileTap={{ scale: 0.94 }} onClick={decline}
-              style={{
-                padding: "7px 12px", borderRadius: "8px",
-                background: "transparent", border: "1px solid #444",
-                color: "#aaa", fontSize: "12px", fontWeight: 600,
-                cursor: "pointer", fontFamily: "inherit", whiteSpace: "nowrap",
-              }}>
+              className="px-3 py-1.5 rounded-full bg-transparent border border-gray-200 text-brand-muted text-xs font-semibold whitespace-nowrap hover:border-gray-300 transition-colors">
               Essential
             </motion.button>
           </div>

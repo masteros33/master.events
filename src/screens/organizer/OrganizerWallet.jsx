@@ -1,10 +1,26 @@
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { paymentsAPI } from "../../api";
+import {
+  Wallet, TrendingUp, ArrowUpRight, ArrowDownLeft, Percent,
+  Smartphone, Landmark, Lock, AlertCircle, CheckCircle2,
+} from "lucide-react";
 
-const BRAND   = "#F97316";
-const BRAND_D = "#EA6C0A";
 const isDesktop = () => window.innerWidth > 768;
+
+const TX_META = {
+  sale:         { badgeBg: "bg-pastel-green", iconClass: "text-fintech-green", Icon: ArrowDownLeft },
+  resale_sale:  { badgeBg: "bg-pastel-blue",  iconClass: "text-fintech-blue",  Icon: ArrowDownLeft },
+  withdrawal:   { badgeBg: "bg-gray-100",     iconClass: "text-brand-muted",   Icon: ArrowUpRight },
+  fee:          { badgeBg: "bg-gray-100",     iconClass: "text-brand-muted",   Icon: Percent },
+};
+const STATUS_CLASS = {
+  completed: "text-emerald-700 bg-emerald-50",
+  pending:   "text-amber-700 bg-amber-50",
+};
+
+const fieldClass = "w-full px-3.5 py-3 mb-3.5 rounded-xl border border-gray-200 bg-white text-sm text-brand-text outline-none focus:border-brand-orange focus:ring-2 focus:ring-orange-100 transition-colors font-mono";
+const primaryBtnClass = "w-full py-3.5 rounded-full bg-brand-orange hover:bg-brand-orange-hover text-white font-bold text-[15px] transition-colors";
 
 export default function OrganizerWallet() {
   const [showModal, setShowModal]       = useState(false);
@@ -58,141 +74,118 @@ export default function OrganizerWallet() {
     }
   };
 
-  const TX_COLOR = { sale: "#16a34a", resale_sale: "#7c3aed", withdrawal: "#2563eb", fee: "#dc2626" };
-  const TX_ICON  = { sale: "💰", resale_sale: "🔄", withdrawal: "💸", fee: "🔗" };
-
-  const inp = {
-    width: "100%", padding: "14px 18px", marginBottom: "14px",
-    background: "var(--bg)", border: "1.5px solid var(--border)",
-    borderRadius: "14px", fontSize: "14px", color: "var(--text-primary)",
-    outline: "none", fontFamily: "var(--font-sans)", boxSizing: "border-box",
-    caretColor: BRAND,
-  };
-  const primaryBtn = {
-    width: "100%", padding: "16px",
-    background: `linear-gradient(135deg, ${BRAND}, ${BRAND_D})`,
-    color: "#fff", border: "none", borderRadius: "16px",
-    fontSize: "15px", fontWeight: 700, cursor: "pointer",
-    boxShadow: "var(--shadow-brand)", marginBottom: 0,
-    fontFamily: "var(--font-sans)",
-  };
+  const miniStats = [
+    { Icon: TrendingUp,   label: "Total Earned", value: "GHS " + Math.round(totalEarned).toLocaleString(),    badgeBg: "bg-pastel-green", iconClass: "text-fintech-green" },
+    { Icon: ArrowUpRight, label: "Withdrawn",    value: "GHS " + Math.round(totalWithdrawn).toLocaleString(), badgeBg: "bg-pastel-blue",  iconClass: "text-fintech-blue" },
+    { Icon: Percent,      label: "Fees Paid",    value: "GHS " + Math.round(feesPaid).toLocaleString(),       badgeBg: "bg-gray-100",     iconClass: "text-brand-muted" },
+    { Icon: Wallet,       label: "Balance",      value: "GHS " + Math.round(balance).toLocaleString(),        badgeBg: "bg-pastel-orange", iconClass: "text-brand-orange" },
+  ];
 
   return (
-    <div style={{ background: "var(--bg)", minHeight: "100%", padding: desktop ? "40px" : "20px 16px 100px" }}>
-      <div style={{ maxWidth: desktop ? "900px" : "100%", margin: "0 auto" }}>
+    <div className={`bg-fintech-gray min-h-full font-sans ${desktop ? "p-10" : "px-4 pt-5 pb-24"}`}>
+      <div className={`mx-auto ${desktop ? "max-w-[900px]" : ""}`}>
 
         {/* Header */}
-        <div style={{ marginBottom: "28px" }}>
-          <div style={{ fontSize: "11px", color: BRAND, fontWeight: 700, letterSpacing: "2px", marginBottom: "6px", fontFamily: "var(--font-mono)" }}>WALLET</div>
-          <h1 style={{ fontWeight: 900, fontSize: desktop ? "28px" : "22px", color: "var(--text-primary)", letterSpacing: "-0.7px", marginBottom: "4px" }}>Your Earnings</h1>
-          <p style={{ color: "var(--text-muted)", fontSize: "14px" }}>Track revenue and withdraw to MoMo or bank</p>
+        <div className="mb-7">
+          <div className="text-[11px] text-brand-orange font-bold tracking-widest font-mono mb-1.5">WALLET</div>
+          <h1 className={`font-extrabold text-brand-text tracking-tight mb-1 ${desktop ? "text-3xl" : "text-2xl"}`}>Your Earnings</h1>
+          <p className="text-brand-muted text-sm">Track revenue and withdraw to MoMo or bank</p>
         </div>
 
         {loading ? (
           <div>{[1,2,3].map(i => <div key={i} className="skeleton" style={{ height: "64px", marginBottom: "12px", borderRadius: "16px" }} />)}</div>
         ) : (
-          <div style={{ display: "grid", gridTemplateColumns: desktop ? "1fr 1fr" : "1fr", gap: desktop ? "24px" : "0" }}>
+          <div className={`grid gap-6 ${desktop ? "grid-cols-2" : "grid-cols-1"}`}>
 
             {/* ── Left — balance card ── */}
             <div>
               {/* Balance hero card */}
-              <div style={{ background: `linear-gradient(135deg, ${BRAND}, ${BRAND_D})`, borderRadius: "24px", padding: "28px", color: "#fff", boxShadow: `0 8px 32px ${BRAND}45`, marginBottom: "16px", position: "relative", overflow: "hidden" }}>
-                <div style={{ position: "absolute", top: 0, right: 0, width: "200px", height: "200px", borderRadius: "50%", background: "rgba(255,255,255,0.06)", transform: "translate(30%,-30%)", pointerEvents: "none" }} />
-                <div style={{ position: "absolute", bottom: 0, left: 0, width: "150px", height: "150px", borderRadius: "50%", background: "rgba(0,0,0,0.06)", transform: "translate(-30%,30%)", pointerEvents: "none" }} />
-
-                <div style={{ fontSize: "11px", fontWeight: 700, opacity: 0.8, letterSpacing: "2px", marginBottom: "8px", fontFamily: "var(--font-mono)" }}>AVAILABLE_BALANCE</div>
-                <div style={{ fontSize: "46px", fontWeight: 900, marginBottom: "4px", letterSpacing: "-2px", lineHeight: 1 }}>
+              <div className="bg-fintech-slate rounded-3xl p-7 mb-4">
+                <div className="text-[11px] font-bold text-slate-400 tracking-widest font-mono mb-2">AVAILABLE_BALANCE</div>
+                <div className="text-5xl font-extrabold text-white tracking-tight font-mono mb-1 leading-none">
                   GHS {Math.round(balance).toLocaleString()}
                 </div>
-                <div style={{ fontSize: "13px", opacity: 0.7, marginBottom: "22px" }}>Ready to withdraw · updated live</div>
+                <div className="text-[13px] text-slate-400 mb-5">Ready to withdraw · updated live</div>
 
                 {/* Stats strip */}
-                <div style={{ display: "flex", justifyContent: "space-between", background: "rgba(255,255,255,0.14)", borderRadius: "16px", padding: "14px 16px", marginBottom: "16px" }}>
+                <div className="flex justify-between bg-slate-800 rounded-2xl px-4 py-3.5 mb-4">
                   {[
                     ["Lifetime",  "GHS " + Math.round(totalEarned).toLocaleString()],
                     ["Fees",      "GHS " + Math.round(feesPaid).toLocaleString()],
                     ["Withdrawn", "GHS " + Math.round(totalWithdrawn).toLocaleString()],
                   ].map(([k,v]) => (
-                    <div key={k} style={{ textAlign: "center" }}>
-                      <div style={{ fontSize: "15px", fontWeight: 800 }}>{v}</div>
-                      <div style={{ fontSize: "11px", opacity: 0.65, marginTop: "2px" }}>{k}</div>
+                    <div key={k} className="text-center">
+                      <div className="text-sm font-extrabold text-white font-mono">{v}</div>
+                      <div className="text-[11px] text-slate-400 mt-0.5">{k}</div>
                     </div>
                   ))}
                 </div>
 
                 {/* Payout split bar */}
-                <div style={{ background: "rgba(255,255,255,0.1)", borderRadius: "12px", padding: "12px 14px", marginBottom: "18px" }}>
-                  <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "7px" }}>
-                    <span style={{ fontSize: "12px", fontWeight: 700 }}>95% You</span>
-                    <span style={{ fontSize: "12px", opacity: 0.65 }}>5% Platform</span>
+                <div className="bg-slate-800 rounded-xl px-3.5 py-3 mb-4.5">
+                  <div className="flex justify-between mb-1.5">
+                    <span className="text-xs font-bold text-emerald-400">95% You</span>
+                    <span className="text-xs text-slate-400">5% Platform</span>
                   </div>
-                  <div style={{ height: "6px", borderRadius: "99px", background: "rgba(255,255,255,0.2)", overflow: "hidden" }}>
-                    <div style={{ width: "95%", height: "100%", background: "#fff", borderRadius: "99px" }} />
+                  <div className="h-1.5 rounded-full bg-slate-700 overflow-hidden">
+                    <div className="w-[95%] h-full bg-emerald-400 rounded-full" />
                   </div>
                 </div>
 
-                <motion.button
-                  whileHover={{ scale: 1.02, background: "rgba(255,255,255,0.28)" }}
-                  whileTap={{ scale: 0.97 }}
-                  onClick={() => { setShowModal(true); setStep(1); setAmount(""); setMomoNumber(""); setAmountError(""); }}
-                  style={{ width: "100%", padding: "15px", background: "rgba(255,255,255,0.2)", color: "#fff", border: "2px solid rgba(255,255,255,0.4)", borderRadius: "14px", fontWeight: 800, fontSize: "15px", cursor: "pointer", fontFamily: "var(--font-sans)", transition: "all 0.2s" }}>
-                  💸 Withdraw Funds
-                </motion.button>
+                <button onClick={() => { setShowModal(true); setStep(1); setAmount(""); setMomoNumber(""); setAmountError(""); }}
+                  className="w-full py-3.5 rounded-full bg-brand-orange hover:bg-brand-orange-hover text-white font-bold text-[15px] transition-colors">
+                  Withdraw Funds
+                </button>
               </div>
 
               {/* Mini stat cards */}
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px", marginBottom: desktop ? 0 : "24px" }}>
-                {[
-                  ["💰", "Total Earned",  "GHS " + Math.round(totalEarned).toLocaleString(),    "#16a34a"],
-                  ["💸", "Withdrawn",     "GHS " + Math.round(totalWithdrawn).toLocaleString(), "#2563eb"],
-                  ["🔗", "Fees Paid",     "GHS " + Math.round(feesPaid).toLocaleString(),       "#dc2626"],
-                  ["📊", "Balance",       "GHS " + Math.round(balance).toLocaleString(),         BRAND],
-                ].map(([icon, label, value, color]) => (
-                  <motion.div key={label} whileHover={{ y: -2, boxShadow: "var(--shadow-md)" }}
-                    style={{ background: "var(--bg-card)", borderRadius: "14px", padding: "16px", border: "1px solid var(--border)", boxShadow: "var(--shadow-sm)", transition: "all 0.2s" }}>
-                    <div style={{ fontSize: "20px", marginBottom: "8px" }}>{icon}</div>
-                    <div style={{ fontSize: "17px", fontWeight: 900, color, letterSpacing: "-0.5px", marginBottom: "3px" }}>{value}</div>
-                    <div style={{ fontSize: "11px", color: "var(--text-muted)", fontWeight: 600 }}>{label}</div>
-                  </motion.div>
+              <div className={`grid grid-cols-2 gap-2.5 ${desktop ? "" : "mb-6"}`}>
+                {miniStats.map(s => (
+                  <div key={s.label} className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4">
+                    <div className={`w-9 h-9 rounded-full ${s.badgeBg} flex items-center justify-center mb-2.5`}>
+                      <s.Icon size={16} strokeWidth={1.75} className={s.iconClass} />
+                    </div>
+                    <div className="text-base font-extrabold text-fintech-slate font-mono mb-0.5">{s.value}</div>
+                    <div className="text-[11px] text-brand-muted font-semibold">{s.label}</div>
+                  </div>
                 ))}
               </div>
             </div>
 
             {/* ── Right — transactions ── */}
             <div>
-              <div style={{ fontWeight: 800, fontSize: "17px", color: "var(--text-primary)", letterSpacing: "-0.3px", marginBottom: "16px" }}>Transaction History</div>
+              <div className="font-extrabold text-base text-brand-text tracking-tight mb-4">Transaction History</div>
               {transactions.length === 0 ? (
-                <div style={{ textAlign: "center", padding: "48px 20px", color: "var(--text-muted)", background: "var(--bg-card)", borderRadius: "18px", border: "1px solid var(--border)" }}>
-                  <div style={{ fontSize: "36px", marginBottom: "10px" }}>💸</div>
-                  <div style={{ fontWeight: 700, fontSize: "15px", color: "var(--text-primary)", marginBottom: "6px" }}>No transactions yet</div>
-                  <div style={{ fontSize: "13px" }}>Revenue will appear here when tickets are sold</div>
+                <div className="text-center py-12 px-5 bg-white rounded-2xl border border-gray-100 shadow-sm">
+                  <div className="w-14 h-14 rounded-full bg-pastel-green flex items-center justify-center mx-auto mb-3">
+                    <Wallet size={24} strokeWidth={1.75} className="text-fintech-green" />
+                  </div>
+                  <div className="font-bold text-sm text-brand-text mb-1.5">No transactions yet</div>
+                  <div className="text-xs text-brand-muted">Revenue will appear here when tickets are sold</div>
                 </div>
               ) : transactions.map((t, i) => {
-                const color = TX_COLOR[t.type] || "var(--text-muted)";
-                const icon  = TX_ICON[t.type]  || "📋";
+                const meta = TX_META[t.type] || { badgeBg: "bg-gray-100", iconClass: "text-brand-muted", Icon: Wallet };
+                const isDebit = t.type === "withdrawal" || t.type === "fee";
                 return (
-                  <motion.div key={i}
-                    initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.04 }}
-                    whileHover={{ y: -2, boxShadow: "var(--shadow-md)" }}
-                    style={{ background: "var(--bg-card)", borderRadius: "14px", padding: "14px 16px", marginBottom: "8px", display: "flex", gap: "12px", alignItems: "center", boxShadow: "var(--shadow-sm)", border: "1px solid var(--border)", transition: "all 0.2s" }}>
-                    <div style={{ width: "40px", height: "40px", borderRadius: "12px", background: color + "14", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "18px", flexShrink: 0, border: `1px solid ${color}20` }}>
-                      {icon}
+                  <div key={i} className="bg-white rounded-xl border border-gray-100 shadow-sm px-4 py-3.5 mb-2 flex items-center gap-3">
+                    <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${meta.badgeBg}`}>
+                      <meta.Icon size={17} strokeWidth={1.75} className={meta.iconClass} />
                     </div>
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontWeight: 700, fontSize: "14px", color: "var(--text-primary)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{t.description}</div>
-                      <div style={{ fontSize: "11px", color: "var(--text-muted)", marginTop: "2px", fontFamily: "var(--font-mono)" }}>
+                    <div className="flex-1 min-w-0">
+                      <div className="font-bold text-sm text-brand-text truncate">{t.description}</div>
+                      <div className="text-[11px] text-brand-muted font-mono mt-0.5">
                         {new Date(t.created_at).toLocaleDateString("en-GH", { day: "numeric", month: "short", year: "numeric" })}
                       </div>
                     </div>
-                    <div style={{ textAlign: "right", flexShrink: 0 }}>
-                      <div style={{ fontWeight: 800, fontSize: "14px", color }}>
-                        {t.type === "withdrawal" || t.type === "fee" ? "-" : "+"}GHS {parseFloat(t.amount).toLocaleString()}
+                    <div className="text-right shrink-0">
+                      <div className="font-extrabold text-sm text-fintech-slate font-mono">
+                        {isDebit ? "-" : "+"}GHS {parseFloat(t.amount).toLocaleString()}
                       </div>
-                      <div style={{ fontSize: "10px", color, fontWeight: 700, background: color + "12", padding: "2px 8px", borderRadius: "99px", marginTop: "4px", fontFamily: "var(--font-mono)" }}>
+                      <div className={`text-[9px] font-bold font-mono mt-1 px-1.5 py-0.5 rounded-full inline-block ${STATUS_CLASS[t.status] || "text-red-700 bg-red-50"}`}>
                         {t.status?.toUpperCase()}
                       </div>
                     </div>
-                  </motion.div>
+                  </div>
                 );
               })}
             </div>
@@ -205,101 +198,83 @@ export default function OrganizerWallet() {
         {showModal && (
           <>
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-              onClick={() => setShowModal(false)}
-              style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.6)", zIndex: 200, backdropFilter: "blur(4px)" }} />
+              onClick={() => setShowModal(false)} className="fixed inset-0 z-[200] bg-black/40" />
 
             <motion.div
               initial={{ y: "100%" }} animate={{ y: 0 }} exit={{ y: "100%" }}
               transition={{ type: "spring", stiffness: 300, damping: 30 }}
-              style={{
-                position: "fixed", bottom: 0, left: 0, right: 0,
-                margin: desktop ? "0 auto" : 0,
-                width: desktop ? "480px" : "100%",
-                ...(desktop ? { left: "50%", transform: "translateX(-50%)" } : {}),
-                background: "var(--bg-card)", borderRadius: "24px 24px 0 0",
-                zIndex: 201, boxShadow: "0 -8px 40px rgba(0,0,0,0.25)",
-                border: "1px solid var(--border)", borderBottom: "none",
-                maxHeight: "85dvh", display: "flex", flexDirection: "column",
-                paddingBottom: "env(safe-area-inset-bottom, 0px)",
-              }}>
+              className={`fixed bottom-0 z-[201] bg-white rounded-t-3xl border border-gray-100 flex flex-col ${desktop ? "left-1/2 -translate-x-1/2 w-[480px]" : "left-0 right-0 w-full"}`}
+              style={{ maxHeight: "85dvh", paddingBottom: "env(safe-area-inset-bottom, 0px)" }}>
 
-              {/* Handle */}
-              <div style={{ flexShrink: 0, display: "flex", flexDirection: "column", alignItems: "center", paddingTop: "12px", paddingBottom: "4px" }}>
-                <div style={{ width: "40px", height: "4px", borderRadius: "2px", background: "var(--border-strong)" }} />
+              <div className="shrink-0 flex flex-col items-center pt-3 pb-1">
+                <div className="w-10 h-1 rounded-full bg-gray-200" />
               </div>
 
-              {/* Title */}
-              <div style={{ flexShrink: 0, padding: "8px 24px 0" }}>
-                <div style={{ fontWeight: 900, fontSize: "20px", color: "var(--text-primary)", marginBottom: "2px", letterSpacing: "-0.5px" }}>
-                  {step === 1 ? "Withdraw Funds" : step === 2 ? "Confirm Withdrawal" : "Done! 🎉"}
+              <div className="shrink-0 px-6 pt-2">
+                <div className="font-extrabold text-xl text-brand-text mb-0.5">
+                  {step === 1 ? "Withdraw Funds" : step === 2 ? "Confirm Withdrawal" : "Done!"}
                 </div>
-                {step === 1 && <div style={{ fontSize: "13px", color: "var(--text-muted)", marginBottom: "8px" }}>Available: <span style={{ color: BRAND, fontWeight: 700 }}>GHS {Math.round(balance).toLocaleString()}</span></div>}
+                {step === 1 && <div className="text-sm text-brand-muted mb-2">Available: <span className="text-brand-orange font-bold font-mono">GHS {Math.round(balance).toLocaleString()}</span></div>}
               </div>
 
-              {/* Scrollable content */}
-              <div style={{ flex: 1, overflowY: "auto", WebkitOverflowScrolling: "touch", overscrollBehavior: "contain", padding: "14px 24px 32px" }}>
+              <div className="flex-1 overflow-y-auto px-6 pt-3.5 pb-8" style={{ WebkitOverflowScrolling: "touch", overscrollBehavior: "contain" }}>
 
                 {step === 1 && (
                   <>
-                    <div style={{ fontSize: "13px", fontWeight: 600, color: "var(--text-secondary)", marginBottom: "8px" }}>Amount (GHS)</div>
+                    <div className="text-xs font-semibold text-brand-muted mb-2">Amount (GHS)</div>
                     <input type="number" placeholder="Min: GHS 10" value={amount}
                       onChange={e => { setAmount(e.target.value); setAmountError(""); }}
-                      style={{ ...inp, borderColor: amountError ? "var(--error)" : "var(--border)" }}
-                      onFocus={e => { e.target.style.borderColor = BRAND; e.target.style.boxShadow = `0 0 0 3px ${BRAND}15`; }}
-                      onBlur={e => { e.target.style.borderColor = amountError ? "var(--error)" : "var(--border)"; e.target.style.boxShadow = "none"; }}
-                    />
+                      className={`${fieldClass} ${amountError ? "border-red-300" : ""}`} />
 
                     {/* Quick amounts */}
-                    <div style={{ display: "flex", gap: "8px", marginTop: "-8px", marginBottom: "18px" }}>
+                    <div className="flex gap-2 -mt-1.5 mb-4.5">
                       {[50, 100, 200, 500].map(q => (
-                        <motion.div key={q} whileTap={{ scale: 0.93 }}
-                          onClick={() => { setAmount(String(q)); setAmountError(""); }}
-                          style={{ flex: 1, padding: "9px 4px", borderRadius: "11px", background: amount === String(q) ? `${BRAND}12` : "var(--bg-subtle)", border: `1.5px solid ${amount === String(q) ? BRAND : "var(--border)"}`, textAlign: "center", cursor: "pointer", fontSize: "13px", fontWeight: 700, color: amount === String(q) ? BRAND : "var(--text-secondary)", transition: "all 0.15s" }}>
+                        <button key={q} onClick={() => { setAmount(String(q)); setAmountError(""); }}
+                          className={`flex-1 py-2 rounded-xl border text-center text-[13px] font-bold transition-colors ${amount === String(q) ? "border-brand-orange bg-pastel-orange text-brand-orange" : "border-gray-200 bg-white text-brand-muted"}`}>
                           {q}
-                        </motion.div>
+                        </button>
                       ))}
                     </div>
 
-                    <div style={{ fontSize: "13px", fontWeight: 600, color: "var(--text-secondary)", marginBottom: "10px" }}>Payment Method</div>
-                    <div style={{ display: "flex", gap: "10px", marginBottom: "16px" }}>
-                      {[["momo","📱 MTN MoMo"],["bank","🏦 Bank Transfer"]].map(([id, label]) => (
-                        <motion.button key={id} whileTap={{ scale: 0.95 }} onClick={() => setMethod(id)}
-                          style={{ flex: 1, padding: "13px", borderRadius: "13px", border: `1.5px solid ${method === id ? BRAND : "var(--border)"}`, background: method === id ? `${BRAND}10` : "var(--bg)", color: method === id ? BRAND : "var(--text-muted)", fontWeight: 700, fontSize: "13px", cursor: "pointer", fontFamily: "var(--font-sans)", transition: "all 0.2s" }}>
-                          {label}
-                        </motion.button>
+                    <div className="text-xs font-semibold text-brand-muted mb-2.5">Payment Method</div>
+                    <div className="flex gap-2.5 mb-4">
+                      {[["momo", Smartphone, "MTN MoMo"], ["bank", Landmark, "Bank Transfer"]].map(([id, Icon, label]) => (
+                        <button key={id} onClick={() => setMethod(id)}
+                          className={`flex-1 py-3 rounded-xl border-2 flex flex-col items-center gap-1.5 transition-colors ${method === id ? "border-brand-orange bg-orange-50/20" : "border-gray-200 bg-white"}`}>
+                          <Icon size={17} strokeWidth={1.75} className={method === id ? "text-brand-orange" : "text-brand-muted"} />
+                          <span className={`text-[13px] font-bold ${method === id ? "text-brand-orange" : "text-brand-muted"}`}>{label}</span>
+                        </button>
                       ))}
                     </div>
 
                     <input placeholder={method === "momo" ? "MoMo number e.g. 0241234567" : "Bank account number"}
                       value={momoNumber}
                       onChange={e => { setMomoNumber(e.target.value); setAmountError(""); }}
-                      style={{ ...inp, borderColor: amountError ? "var(--error)" : "var(--border)" }}
-                      onFocus={e => { e.target.style.borderColor = BRAND; e.target.style.boxShadow = `0 0 0 3px ${BRAND}15`; }}
-                      onBlur={e => { e.target.style.borderColor = amountError ? "var(--error)" : "var(--border)"; e.target.style.boxShadow = "none"; }}
-                    />
+                      className={`${fieldClass} ${amountError ? "border-red-300" : ""}`} />
 
                     <AnimatePresence>
                       {amountError && (
                         <motion.div initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
-                          style={{ color: "var(--error)", fontSize: "13px", marginTop: "-8px", marginBottom: "14px", fontWeight: 600 }}>
-                          ⚠️ {amountError}
+                          className="flex items-center gap-1.5 text-red-600 text-[13px] font-semibold -mt-2 mb-3.5">
+                          <AlertCircle size={14} strokeWidth={2} /> {amountError}
                         </motion.div>
                       )}
                     </AnimatePresence>
 
-                    <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}
-                      onClick={() => { if (validateWithdraw()) setStep(2); }}
-                      style={primaryBtn}>
+                    <button onClick={() => { if (validateWithdraw()) setStep(2); }} className={primaryBtnClass}>
                       Continue →
-                    </motion.button>
+                    </button>
                   </>
                 )}
 
                 {step === 2 && (
                   <>
-                    <div style={{ background: "rgba(37,99,235,0.05)", border: "1px solid rgba(37,99,235,0.15)", borderRadius: "13px", padding: "13px 16px", marginBottom: "18px" }}>
-                      <div style={{ fontSize: "12px", color: "#2563eb", fontWeight: 700, marginBottom: "3px" }}>🔒 Verify your details</div>
-                      <div style={{ fontSize: "12px", color: "var(--text-muted)" }}>This action cannot be reversed once confirmed.</div>
+                    <div className="flex items-start gap-2 bg-pastel-blue rounded-xl px-4 py-3 mb-4.5">
+                      <Lock size={14} strokeWidth={1.75} className="text-fintech-blue shrink-0 mt-0.5" />
+                      <div>
+                        <div className="text-xs font-bold text-fintech-blue mb-0.5">Verify your details</div>
+                        <div className="text-xs text-brand-muted">This action cannot be reversed once confirmed.</div>
+                      </div>
                     </div>
                     {[
                       ["Amount",     "GHS " + amount],
@@ -307,44 +282,41 @@ export default function OrganizerWallet() {
                       ["Send to",    momoNumber],
                       ["Processing", "5–10 minutes"],
                     ].map(([k, v]) => (
-                      <div key={k} style={{ display: "flex", justifyContent: "space-between", padding: "13px 0", borderBottom: "1px solid var(--border)" }}>
-                        <span style={{ color: "var(--text-muted)", fontSize: "14px" }}>{k}</span>
-                        <span style={{ color: "var(--text-primary)", fontSize: "14px", fontWeight: 700 }}>{v}</span>
+                      <div key={k} className="flex justify-between py-3 border-b border-gray-100">
+                        <span className="text-brand-muted text-sm">{k}</span>
+                        <span className="text-brand-text text-sm font-bold font-mono">{v}</span>
                       </div>
                     ))}
-                    <div style={{ display: "flex", gap: "10px", marginTop: "22px" }}>
-                      <motion.button whileTap={{ scale: 0.97 }} onClick={() => setStep(1)}
-                        style={{ flex: 1, padding: "14px", background: "var(--bg-subtle)", color: "var(--text-secondary)", border: "1.5px solid var(--border)", borderRadius: "14px", fontWeight: 600, cursor: "pointer", fontFamily: "var(--font-sans)", fontSize: "14px" }}>
+                    <div className="flex gap-2.5 mt-5">
+                      <button onClick={() => setStep(1)}
+                        className="flex-1 py-3.5 rounded-full bg-brand-canvas border border-gray-200 text-brand-text font-semibold text-sm">
                         ← Back
-                      </motion.button>
-                      <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }} onClick={handleWithdraw}
-                        style={{ ...primaryBtn, flex: 2 }}>
+                      </button>
+                      <button onClick={handleWithdraw} className={`${primaryBtnClass} flex-[2]`}>
                         Confirm Withdrawal
-                      </motion.button>
+                      </button>
                     </div>
                   </>
                 )}
 
                 {step === 3 && (
-                  <motion.div initial={{ opacity: 0, scale: 0.92 }} animate={{ opacity: 1, scale: 1 }}
-                    style={{ textAlign: "center", paddingTop: "8px" }}>
-                    <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }}
-                      transition={{ type: "spring", stiffness: 400, damping: 20 }}
-                      style={{ width: "76px", height: "76px", borderRadius: "24px", background: "rgba(22,163,74,0.1)", border: "2px solid rgba(22,163,74,0.25)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "36px", margin: "0 auto 18px" }}>✅</motion.div>
-                    <div style={{ fontWeight: 900, fontSize: "22px", color: "var(--text-primary)", marginBottom: "8px", letterSpacing: "-0.5px" }}>Withdrawal Initiated!</div>
-                    <div style={{ color: "var(--text-secondary)", fontSize: "14px", marginBottom: "22px", lineHeight: 1.65 }}>
+                  <motion.div initial={{ opacity: 0, scale: 0.96 }} animate={{ opacity: 1, scale: 1 }} className="text-center pt-2">
+                    <div className="w-[76px] h-[76px] rounded-2xl bg-pastel-green flex items-center justify-center mx-auto mb-4.5">
+                      <CheckCircle2 size={34} strokeWidth={1.75} className="text-fintech-green" />
+                    </div>
+                    <div className="font-extrabold text-xl text-brand-text mb-2">Withdrawal Initiated!</div>
+                    <div className="text-brand-muted text-sm mb-5 leading-relaxed">
                       GHS {amount} will arrive in your {method === "momo" ? "MoMo" : "bank"} within 5–10 minutes.
                     </div>
-                    <div style={{ background: "rgba(22,163,74,0.06)", border: "1px solid rgba(22,163,74,0.2)", borderRadius: "14px", padding: "14px 16px", marginBottom: "24px", textAlign: "left" }}>
-                      <div style={{ fontSize: "10px", color: "#16a34a", fontWeight: 700, marginBottom: "5px", letterSpacing: "1px", fontFamily: "var(--font-mono)" }}>TRANSACTION REFERENCE</div>
-                      <div style={{ fontFamily: "var(--font-mono)", fontWeight: 700, color: BRAND, fontSize: "14px", wordBreak: "break-all" }}>{txRef}</div>
-                      <div style={{ fontSize: "12px", color: "var(--text-muted)", marginTop: "5px" }}>Save this for your records</div>
+                    <div className="bg-emerald-50 border border-emerald-100 rounded-xl px-4 py-3.5 mb-6 text-left">
+                      <div className="text-[10px] text-emerald-700 font-bold tracking-wide font-mono mb-1">TRANSACTION REFERENCE</div>
+                      <div className="font-mono font-bold text-brand-orange text-sm break-all">{txRef}</div>
+                      <div className="text-xs text-brand-muted mt-1">Save this for your records</div>
                     </div>
-                    <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}
-                      onClick={() => { setShowModal(false); setStep(1); setAmount(""); setMomoNumber(""); setAmountError(""); }}
-                      style={primaryBtn}>
+                    <button onClick={() => { setShowModal(false); setStep(1); setAmount(""); setMomoNumber(""); setAmountError(""); }}
+                      className={primaryBtnClass}>
                       Done
-                    </motion.button>
+                    </button>
                   </motion.div>
                 )}
               </div>

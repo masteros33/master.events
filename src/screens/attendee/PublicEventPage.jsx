@@ -1,13 +1,12 @@
 import React, { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import useStore from "../../store/useStore";
+import {
+  Ticket, Link2, Lock, Smartphone, Search, Calendar, Clock, MapPin,
+  Loader2, Frown, PartyPopper, Navigation, FileText, Crown, Star, Check,
+} from "lucide-react";
 
 const BACKEND = "https://master-events-backend.onrender.com";
-const BRAND   = "#F97316";
-const BRAND_D = "#EA6C0A";
-const FONT    = "'Inter','SF Pro Display',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif";
-const MONO    = "'JetBrains Mono','SF Mono','Fira Code',ui-monospace,monospace";
-
 const isDesktop = () => window.innerWidth >= 1024;
 
 const catImg = {
@@ -20,108 +19,195 @@ const catImg = {
   other:    "https://images.unsplash.com/photo-1492684223066-81342ee5ff30?w=1200",
 };
 
-function TrustBadge({ icon, label }) {
+function hasRealDescription(desc, name) {
+  const d = (desc || "").trim();
+  if (!d) return false;
+  if (d.toLowerCase() === (name || "").trim().toLowerCase()) return false;
+  return d.length >= 12;
+}
+
+function tierIcon(name) {
+  const n = (name || "").toLowerCase();
+  if (n.includes("vvip")) return Crown;
+  if (n.includes("vip"))  return Star;
+  return Ticket;
+}
+
+function TrustBadge({ Icon, label }) {
   return (
-    <div style={{ display:"flex", alignItems:"center", gap:"6px" }}>
-      <span style={{ fontSize:"13px" }}>{icon}</span>
-      <span style={{ fontSize:"11px", color:"var(--text-muted)", fontWeight:500 }}>{label}</span>
+    <span className="flex items-center gap-1.5">
+      <Icon size={13} strokeWidth={1.75} className="text-brand-muted" />
+      <span className="text-[11px] text-brand-muted font-medium">{label}</span>
+    </span>
+  );
+}
+
+function DetailRow({ Icon, label, value }) {
+  return (
+    <div className="flex items-center gap-3.5 py-3.5 border-b border-gray-100 last:border-b-0">
+      <div className="w-9 h-9 rounded-lg bg-brand-canvas border border-gray-100 flex items-center justify-center shrink-0">
+        <Icon size={16} strokeWidth={1.75} className="text-brand-muted" />
+      </div>
+      <div className="min-w-0">
+        <div className="text-[9px] font-bold text-brand-muted tracking-wide font-mono mb-0.5">{label}</div>
+        <div className="text-sm font-semibold text-brand-text truncate">{value}</div>
+      </div>
     </div>
   );
 }
 
-function DetailRow({ icon, label, value }) {
+// ── Location & Directions — placeholder until Maps Embed API key is set up ──
+function LocationCard({ venue, city }) {
+  const address = [venue, city].filter(Boolean).join(", ") || "Venue TBA";
   return (
-    <div style={{ display:"flex", alignItems:"center", gap:"14px", padding:"14px 0", borderBottom:"1px solid var(--border)" }}>
-      <div style={{ width:"36px", height:"36px", borderRadius:"10px", background:"var(--bg-subtle)", border:"1px solid var(--border)", display:"flex", alignItems:"center", justifyContent:"center", fontSize:"15px", flexShrink:0 }}>
-        {icon}
+    <div className="bg-white border border-gray-100 rounded-2xl shadow-sm p-5 mb-6">
+      <div className="flex items-center justify-between mb-3.5">
+        <div className="flex items-center gap-2.5">
+          <div className="w-9 h-9 rounded-lg bg-brand-canvas border border-gray-100 flex items-center justify-center shrink-0">
+            <MapPin size={16} strokeWidth={1.75} className="text-brand-muted" />
+          </div>
+          <div>
+            <div className="text-[9px] font-bold text-brand-muted tracking-wide font-mono mb-0.5">LOCATION</div>
+            <div className="text-sm font-semibold text-brand-text">{address}</div>
+          </div>
+        </div>
+        <span className="text-[9px] font-bold text-brand-muted bg-gray-100 px-2 py-1 rounded-full font-mono whitespace-nowrap">
+          MAP COMING SOON
+        </span>
       </div>
-      <div style={{ minWidth:0 }}>
-        <div style={{ fontSize:"9px", fontWeight:700, color:"var(--text-muted)", letterSpacing:"1.2px", marginBottom:"2px", fontFamily:MONO }}>{label}</div>
-        <div style={{ fontSize:"14px", fontWeight:600, color:"var(--text-primary)", overflow:"hidden", textOverflow:"ellipsis" }}>{value}</div>
+
+      <div className="rounded-xl border border-dashed border-gray-200 bg-brand-canvas h-[160px] flex flex-col items-center justify-center gap-2">
+        <MapPin size={22} strokeWidth={1.5} className="text-gray-300" />
+        <span className="text-[11px] text-brand-muted">Interactive map will appear here</span>
+      </div>
+
+      <button disabled
+        className="w-full mt-3.5 py-3 rounded-full bg-gray-100 text-brand-muted text-[13px] font-bold flex items-center justify-center gap-2 cursor-not-allowed">
+        <Navigation size={14} strokeWidth={2} /> Get Directions
+      </button>
+    </div>
+  );
+}
+
+// ── Tier picker — VIP/VVIP/Regular selection cards ──────────────
+function TierPicker({ tiers, curr, selectedId, onSelect }) {
+  return (
+    <div className="mb-4">
+      <div className="text-[10px] font-bold text-brand-muted font-mono tracking-wide mb-2.5">SELECT TICKET TYPE</div>
+      <div className="flex flex-col gap-2">
+        {tiers.map(t => {
+          const Icon    = tierIcon(t.name);
+          const soldOut = t.is_sold_out || t.remaining <= 0;
+          const active  = selectedId === t.id;
+          return (
+            <button key={t.id} disabled={soldOut} onClick={() => onSelect(t)}
+              className={`flex items-center justify-between text-left px-4 py-3.5 rounded-xl border-2 transition-colors ${
+                soldOut ? "border-gray-100 bg-gray-50 cursor-not-allowed opacity-60"
+                : active ? "border-brand-orange bg-orange-50/30" : "border-gray-200 bg-white hover:border-gray-300"
+              }`}>
+              <div className="flex items-center gap-3 min-w-0">
+                <div className={`w-9 h-9 rounded-lg flex items-center justify-center shrink-0 ${active ? "bg-brand-orange" : "bg-pastel-orange"}`}>
+                  <Icon size={16} strokeWidth={1.75} className={active ? "text-white" : "text-brand-orange"} />
+                </div>
+                <div className="min-w-0">
+                  <div className="text-[13px] font-bold text-brand-text truncate">{t.name}</div>
+                  <div className="text-[11px] text-brand-muted mt-0.5">
+                    {soldOut ? "Sold out" : `${t.remaining} of ${t.capacity} left`}
+                  </div>
+                </div>
+              </div>
+              <div className="flex items-center gap-2.5 shrink-0 ml-3">
+                <span className="text-[15px] font-extrabold text-brand-text">{curr} {parseFloat(t.price).toLocaleString()}</span>
+                {active && (
+                  <span className="w-5 h-5 rounded-full bg-brand-orange flex items-center justify-center">
+                    <Check size={12} strokeWidth={3} color="#fff" />
+                  </span>
+                )}
+              </div>
+            </button>
+          );
+        })}
       </div>
     </div>
   );
 }
 
-function TicketCard({ event, isFree, curr, isLoggedIn, onAction, actionLoading, error, isDesk }) {
-  const remaining = (event.total_tickets || 0) - (event.tickets_sold || 0);
-  const soldPct   = event.total_tickets > 0
-    ? Math.max(3, Math.min(100, ((event.tickets_sold || 0) / event.total_tickets) * 100))
+function TicketCard({ event, tiers, isFree, curr, isLoggedIn, onAction, actionLoading, error, isDesk, selectedTierObj, onSelectTier }) {
+  const hasTiers = tiers.length > 0;
+  const remaining = hasTiers
+    ? (selectedTierObj?.remaining ?? 0)
+    : (event.total_tickets || 0) - (event.tickets_sold || 0);
+  const displayPrice = hasTiers ? (selectedTierObj?.price ?? null) : event.price;
+
+  const total_tickets = hasTiers ? (selectedTierObj?.capacity || 0) : event.total_tickets;
+  const sold           = hasTiers ? (selectedTierObj?.sold || 0)    : event.tickets_sold;
+  const soldPct   = total_tickets > 0
+    ? Math.max(3, Math.min(100, (sold / total_tickets) * 100))
     : 0;
-  const lowStock  = remaining > 0 && remaining <= Math.max(10, event.total_tickets * 0.1);
+  const lowStock  = remaining > 0 && remaining <= Math.max(10, total_tickets * 0.1);
+  const soldOut   = hasTiers ? !selectedTierObj || remaining <= 0 : remaining <= 0;
+  const needsSelection = hasTiers && !selectedTierObj;
 
   return (
-    <div style={{
-      background:"var(--bg-card)", borderRadius:"18px", border:"1px solid var(--border)",
-      boxShadow:"0 8px 28px rgba(0,0,0,0.06)", padding: isDesk ? "24px" : "18px",
-      position: isDesk ? "sticky" : "static", top: isDesk ? "24px" : "auto",
-    }}>
-      <div style={{ display:"flex", alignItems:"baseline", gap:"8px", marginBottom:"16px" }}>
-        <div style={{ fontSize: isDesk ? "30px" : "26px", fontWeight:800, letterSpacing:"-1px",
-          color: isFree ? "#16a34a" : BRAND, lineHeight:1 }}>
-          {isFree ? "FREE" : `${curr} ${parseFloat(event.price).toLocaleString()}`}
+    <div className={`bg-white rounded-2xl border border-gray-100 shadow-sm ${isDesk ? "p-6 sticky top-6" : "p-5"}`}>
+
+      {hasTiers && (
+        <TierPicker tiers={tiers} curr={curr} selectedId={selectedTierObj?.id} onSelect={onSelectTier} />
+      )}
+
+      <div className="flex items-baseline gap-2 mb-4">
+        <div className={`font-bold tracking-tight leading-none ${isDesk ? "text-3xl" : "text-[26px]"} ${isFree ? "text-fintech-green" : "text-brand-orange"}`}>
+          {isFree ? "FREE" : needsSelection ? "Select above" : `${curr} ${parseFloat(displayPrice || 0).toLocaleString()}`}
         </div>
-        {!isFree && <span style={{ fontSize:"12px", color:"var(--text-muted)" }}>per ticket</span>}
+        {!isFree && !needsSelection && <span className="text-xs text-brand-muted">per ticket</span>}
       </div>
 
-      <div style={{ marginBottom:"16px" }}>
-        <div style={{ display:"flex", justifyContent:"space-between", marginBottom:"6px" }}>
-          <span style={{ fontSize:"10px", fontWeight:700, color:"var(--text-muted)", fontFamily:MONO, letterSpacing:"0.5px" }}>AVAILABILITY</span>
-          <span style={{ fontSize:"10px", fontWeight:700, color: lowStock ? "#dc2626" : "#16a34a", fontFamily:MONO }}>
-            {remaining <= 0 ? "SOLD OUT" : lowStock ? "ALMOST GONE" : "AVAILABLE"}
-          </span>
+      {!needsSelection && (
+        <div className="mb-4">
+          <div className="flex justify-between mb-1.5">
+            <span className="text-[10px] font-bold text-brand-muted font-mono tracking-wide">AVAILABILITY</span>
+            <span className={`text-[10px] font-bold font-mono ${lowStock || soldOut ? "text-red-600" : "text-fintech-green"}`}>
+              {soldOut ? "SOLD OUT" : lowStock ? "ALMOST GONE" : "AVAILABLE"}
+            </span>
+          </div>
+          <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
+            <motion.div initial={{ width: 0 }} animate={{ width: `${soldPct}%` }} transition={{ duration: 0.6, ease: "easeOut" }}
+              className={`h-full rounded-full ${lowStock ? "bg-red-500" : "bg-fintech-green"}`} />
+          </div>
+          <div className="text-[11px] text-brand-muted mt-1.5">
+            {sold || 0} {isFree ? "registered" : "sold"} · {Math.max(0, remaining)} remaining
+          </div>
         </div>
-        <div style={{ height:"5px", background:"var(--bg-subtle)", borderRadius:"99px", overflow:"hidden", border:"1px solid var(--border)" }}>
-          <motion.div initial={{ width:0 }} animate={{ width:`${soldPct}%` }} transition={{ duration:0.7, ease:"easeOut" }}
-            style={{ height:"100%", borderRadius:"99px",
-              background: lowStock ? "linear-gradient(90deg,#dc2626,#ef4444)" : "linear-gradient(90deg,#16a34a,#22c55e)" }} />
-        </div>
-        <div style={{ fontSize:"11px", color:"var(--text-muted)", marginTop:"5px" }}>
-          {event.tickets_sold || 0} {isFree ? "registered" : "sold"} · {Math.max(0, remaining)} remaining
-        </div>
-      </div>
+      )}
 
       <AnimatePresence>
         {error && (
-          <motion.div initial={{ opacity:0, height:0 }} animate={{ opacity:1, height:"auto" }} exit={{ opacity:0, height:0 }}
-            style={{ background:"rgba(220,38,38,0.08)", border:"1px solid rgba(220,38,38,0.2)", borderRadius:"10px", padding:"10px 14px", marginBottom:"14px", fontSize:"12px", color:"#dc2626" }}>
+          <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }}
+            className="bg-red-50 border border-red-100 rounded-xl px-3.5 py-2.5 mb-3.5 text-red-600 text-xs">
             {error}
           </motion.div>
         )}
       </AnimatePresence>
 
-      <motion.button
-        whileHover={remaining > 0 ? { scale:1.01 } : {}}
-        whileTap={remaining > 0 ? { scale:0.98 } : {}}
-        onClick={onAction}
-        disabled={actionLoading || remaining <= 0}
-        style={{
-          width:"100%", padding:"15px", borderRadius:"12px", border:"none",
-          background: remaining <= 0
-            ? "var(--bg-subtle)"
-            : actionLoading
-              ? "var(--bg-subtle)"
-              : `linear-gradient(135deg,${isFree ? "#16a34a,#15803d" : `${BRAND},${BRAND_D}`})`,
-          color: remaining <= 0 || actionLoading ? "var(--text-muted)" : "#fff",
-          fontSize:"15px", fontWeight:700, cursor: remaining <= 0 ? "not-allowed" : "pointer",
-          fontFamily:FONT, boxShadow: remaining > 0 && !actionLoading ? "0 6px 18px rgba(0,0,0,0.14)" : "none",
-          transition:"all 0.15s",
-        }}>
-        {remaining <= 0
+      <button onClick={onAction} disabled={actionLoading || soldOut || needsSelection}
+        className={`w-full py-4 rounded-full font-bold text-[15px] transition-colors ${soldOut || actionLoading || needsSelection ? "bg-gray-100 text-brand-muted cursor-not-allowed" : "bg-brand-orange hover:bg-brand-orange-hover text-white"}`}>
+        {soldOut
           ? "Sold Out"
-          : actionLoading
-            ? "Processing…"
-            : isFree
-              ? "Register Free — Get Ticket"
-              : isLoggedIn
-                ? `Buy Ticket — ${curr} ${parseFloat(event.price).toLocaleString()}`
-                : "Sign Up & Buy Ticket"}
-      </motion.button>
+          : needsSelection
+            ? "Select a ticket type"
+            : actionLoading
+              ? "Processing…"
+              : isFree
+                ? "Register Free — Get Ticket"
+                : isLoggedIn
+                  ? `Buy Ticket — ${curr} ${parseFloat(displayPrice || 0).toLocaleString()}`
+                  : "Sign Up & Buy Ticket"}
+      </button>
 
-      <div style={{ display:"flex", flexWrap:"wrap", gap:"12px", justifyContent:"center", marginTop:"16px", paddingTop:"16px", borderTop:"1px solid var(--border)" }}>
-        <TrustBadge icon="🔒" label="Secure checkout" />
-        <TrustBadge icon="⛓️" label="NFT ticket" />
-        <TrustBadge icon="📱" label="MoMo accepted" />
+      <div className="flex flex-wrap gap-3 justify-center mt-4 pt-4 border-t border-gray-100">
+        <TrustBadge Icon={Lock} label="Secure checkout" />
+        <TrustBadge Icon={Link2} label="NFT ticket" />
+        <TrustBadge Icon={Smartphone} label="MoMo accepted" />
       </div>
     </div>
   );
@@ -130,6 +216,7 @@ function TicketCard({ event, isFree, curr, isLoggedIn, onAction, actionLoading, 
 export default function PublicEventPage() {
   const setScreen        = useStore(s => s.setScreen);
   const setCheckoutEvent = useStore(s => s.setCheckoutEvent);
+  const setSelectedTier  = useStore(s => s.setSelectedTier);
   const setSearchQ       = useStore(s => s.setSearchQ);
   const isLoggedIn       = useStore(s => s.isLoggedIn);
   const [event,      setEvent]      = useState(null);
@@ -139,6 +226,7 @@ export default function PublicEventPage() {
   const [regLoading, setRegLoading] = useState(false);
   const [isDesk,     setIsDesk]     = useState(isDesktop());
   const [searchVal,  setSearchVal]  = useState("");
+  const [pickedTier, setPickedTier] = useState(null);
 
   const slug = localStorage.getItem("pending_event_slug");
 
@@ -200,32 +288,38 @@ export default function PublicEventPage() {
       setScreen("signup");
       return;
     }
+    const tiers = event.tiers || [];
+    if (tiers.length > 0 && !pickedTier) return; // guarded by disabled button too
+
+    setSelectedTier(pickedTier ? { id: pickedTier.id, name: pickedTier.name, price: parseFloat(pickedTier.price) } : null);
     setCheckoutEvent({
       id: event.id, name: event.name, date: event.date,
-      venue: event.venue, price: parseFloat(event.price),
+      venue: event.venue, price: pickedTier ? parseFloat(pickedTier.price) : parseFloat(event.price),
       image: event.image, category: event.category,
       currency: event.currency || "GHS",
+      tierName: pickedTier?.name || null,
     });
     localStorage.removeItem("pending_event_slug");
     setScreen("checkout");
   };
 
   if (loading) return (
-    <div style={{ height:"100%", display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", background:"var(--bg)", gap:"14px" }}>
-      <motion.div animate={{ rotate:360 }} transition={{ repeat:Infinity, duration:0.9, ease:"linear" }}
-        style={{ width:"26px", height:"26px", borderRadius:"50%", border:"3px solid var(--border)", borderTopColor:BRAND }} />
-      <div style={{ fontSize:"13px", color:"var(--text-muted)", fontFamily:FONT }}>Loading event…</div>
+    <div className="h-full flex flex-col items-center justify-center bg-brand-canvas gap-3.5">
+      <Loader2 size={26} className="text-brand-orange animate-spin" />
+      <div className="text-sm text-brand-muted">Loading event…</div>
     </div>
   );
 
   if (error && !event) return (
-    <div style={{ height:"100%", display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", background:"var(--bg)", gap:"14px", padding:"24px", textAlign:"center" }}>
-      <div style={{ fontSize:"36px" }}>😕</div>
-      <div style={{ fontSize:"15px", fontWeight:600, color:"var(--text-primary)", fontFamily:FONT }}>{error || "Event not found"}</div>
-      <motion.button whileTap={{ scale:0.97 }} onClick={() => { localStorage.removeItem("pending_event_slug"); setScreen("home"); }}
-        style={{ padding:"11px 22px", background:`linear-gradient(135deg,${BRAND},${BRAND_D})`, color:"#fff", border:"none", borderRadius:"10px", cursor:"pointer", fontFamily:FONT, fontWeight:600, fontSize:"13px" }}>
+    <div className="h-full flex flex-col items-center justify-center bg-brand-canvas gap-3.5 px-6 text-center">
+      <div className="w-14 h-14 rounded-full bg-pastel-orange flex items-center justify-center">
+        <Frown size={24} strokeWidth={1.75} className="text-brand-orange" />
+      </div>
+      <div className="text-[15px] font-semibold text-brand-text">{error || "Event not found"}</div>
+      <button onClick={() => { localStorage.removeItem("pending_event_slug"); setScreen("home"); }}
+        className="px-6 py-2.5 bg-brand-orange hover:bg-brand-orange-hover text-white rounded-full font-semibold text-[13px] transition-colors">
         Browse Events
-      </motion.button>
+      </button>
     </div>
   );
 
@@ -235,155 +329,169 @@ export default function PublicEventPage() {
   const orgName = event.organizer?.first_name
     ? `${event.organizer.first_name} ${event.organizer.last_name || ""}`.trim()
     : event.organizer_name || null;
+  const tiers   = event.tiers || [];
 
   if (regDone) return (
-    <div style={{ height:"100%", display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", background:"var(--bg)", padding:"24px", textAlign:"center" }}>
-      <motion.div initial={{ scale:0 }} animate={{ scale:1 }} transition={{ type:"spring", stiffness:300, damping:20 }}
-        style={{ fontSize:"52px", marginBottom:"16px" }}>🎉</motion.div>
-      <h2 style={{ fontSize:"22px", fontWeight:800, color:"var(--text-primary)", marginBottom:"8px", fontFamily:FONT, letterSpacing:"-0.5px" }}>You're registered!</h2>
-      <p style={{ fontSize:"14px", color:"var(--text-muted)", marginBottom:"6px", maxWidth:"340px" }}>Check your email — your PDF ticket with QR code has been sent.</p>
-      <p style={{ fontSize:"13px", color:"var(--text-muted)", marginBottom:"26px" }}>You can also view it in the app under My Tickets.</p>
-      <motion.button whileTap={{ scale:0.97 }} onClick={() => setScreen("app")}
-        style={{ padding:"13px 28px", background:`linear-gradient(135deg,${BRAND},${BRAND_D})`, color:"#fff", border:"none", borderRadius:"12px", fontSize:"14px", fontWeight:700, cursor:"pointer", fontFamily:FONT, boxShadow:"0 6px 18px rgba(0,0,0,0.14)" }}>
+    <div className="h-full flex flex-col items-center justify-center bg-brand-canvas px-6 text-center">
+      <div className="w-16 h-16 rounded-full bg-pastel-green flex items-center justify-center mb-4">
+        <PartyPopper size={28} strokeWidth={1.75} className="text-fintech-green" />
+      </div>
+      <h2 className="text-xl font-extrabold text-brand-text mb-2 tracking-tight">You're registered!</h2>
+      <p className="text-sm text-brand-muted mb-1.5 max-w-[340px]">Check your email — your PDF ticket with QR code has been sent.</p>
+      <p className="text-[13px] text-brand-muted mb-6">You can also view it in the app under My Tickets.</p>
+      <button onClick={() => setScreen("app")}
+        className="px-7 py-3.5 bg-brand-orange hover:bg-brand-orange-hover text-white rounded-full font-bold text-sm transition-colors">
         Go to My Tickets →
-      </motion.button>
+      </button>
     </div>
   );
 
+  const realDescription = hasRealDescription(event.description, event.name);
+
   return (
-    <div style={{ height:"100%", overflowY:"auto", WebkitOverflowScrolling:"touch", background:"var(--bg)", fontFamily:FONT }}>
+    <div className="h-full overflow-y-auto bg-brand-canvas" style={{ WebkitOverflowScrolling: "touch" }}>
 
       {/* Real nav bar with working search */}
-      <div style={{ position:"sticky", top:0, zIndex:30, background:"var(--bg-card)", borderBottom:"1px solid var(--border)", padding: isDesk ? "0 40px" : "0 16px", height:"58px", display:"flex", alignItems:"center", justifyContent:"space-between", gap:"20px" }}>
-        <motion.div whileTap={{ scale:0.97 }}
-          onClick={() => { localStorage.removeItem("pending_event_slug"); setScreen("home"); }}
-          style={{ display:"flex", alignItems:"center", gap:"9px", cursor:"pointer", flexShrink:0 }}>
-          <div style={{ width:"28px", height:"28px", borderRadius:"8px", background:`linear-gradient(135deg,${BRAND},${BRAND_D})`, display:"flex", alignItems:"center", justifyContent:"center", fontSize:"13px" }}>🎟️</div>
-          {isDesk && <span style={{ fontWeight:800, fontSize:"14px", color:"var(--text-primary)", letterSpacing:"-0.3px" }}>Master Events</span>}
-        </motion.div>
+      <div className={`sticky top-0 z-30 bg-white border-b border-gray-100 h-[58px] flex items-center justify-between gap-5 ${isDesk ? "px-10" : "px-4"}`}>
+        <button onClick={() => { localStorage.removeItem("pending_event_slug"); setScreen("home"); }}
+          className="flex items-center gap-2 shrink-0">
+          <div className="w-7 h-7 rounded-lg bg-brand-orange flex items-center justify-center">
+            <Ticket size={13} strokeWidth={2} color="#fff" />
+          </div>
+          {isDesk && <span className="font-extrabold text-sm text-brand-text tracking-tight">Master Events</span>}
+        </button>
 
         {isDesk && (
-          <div style={{ flex:1, maxWidth:"420px", position:"relative" }}>
-            <div style={{ position:"absolute", left:"12px", top:"50%", transform:"translateY(-50%)", pointerEvents:"none", fontSize:"13px", opacity:0.5 }}>🔍</div>
+          <div className="flex-1 max-w-[420px] relative">
+            <Search size={14} strokeWidth={1.75} className="absolute left-3 top-1/2 -translate-y-1/2 text-brand-muted" />
             <input
               value={searchVal}
               onChange={e => setSearchVal(e.target.value)}
               onKeyDown={e => e.key === "Enter" && handleSearch()}
               placeholder="Search events, venues..."
-              style={{ width:"100%", padding:"8px 14px 8px 34px", background:"var(--bg-subtle)", border:"1.5px solid var(--border)", borderRadius:"10px", fontSize:"13px", color:"var(--text-primary)", outline:"none", boxSizing:"border-box", fontFamily:FONT }}
-            />
+              className="w-full pl-9 pr-3.5 py-2 bg-brand-canvas border border-gray-200 rounded-xl text-[13px] text-brand-text outline-none focus:border-brand-orange transition-colors" />
           </div>
         )}
 
         {!isLoggedIn && (
-          <motion.button whileTap={{ scale:0.96 }} onClick={() => setScreen("login")}
-            style={{ padding:"7px 15px", borderRadius:"8px", border:"1px solid var(--border)", background:"transparent", color:"var(--text-primary)", fontSize:"12px", fontWeight:600, cursor:"pointer", fontFamily:FONT, flexShrink:0 }}>
+          <button onClick={() => setScreen("login")}
+            className="px-3.5 py-1.5 rounded-lg border border-gray-200 text-brand-text text-xs font-semibold shrink-0">
             Log in
-          </motion.button>
+          </button>
         )}
       </div>
 
       {/* Mobile search row */}
       {!isDesk && (
-        <div style={{ padding:"10px 16px", borderBottom:"1px solid var(--border)", background:"var(--bg-card)" }}>
-          <div style={{ position:"relative" }}>
-            <div style={{ position:"absolute", left:"12px", top:"50%", transform:"translateY(-50%)", pointerEvents:"none", fontSize:"13px", opacity:0.5 }}>🔍</div>
+        <div className="px-4 py-2.5 border-b border-gray-100 bg-white">
+          <div className="relative">
+            <Search size={14} strokeWidth={1.75} className="absolute left-3 top-1/2 -translate-y-1/2 text-brand-muted" />
             <input
               value={searchVal}
               onChange={e => setSearchVal(e.target.value)}
               onKeyDown={e => e.key === "Enter" && handleSearch()}
               placeholder="Search events, venues..."
-              style={{ width:"100%", padding:"9px 14px 9px 34px", background:"var(--bg-subtle)", border:"1.5px solid var(--border)", borderRadius:"10px", fontSize:"13px", color:"var(--text-primary)", outline:"none", boxSizing:"border-box", fontFamily:FONT }}
-            />
+              className="w-full pl-9 pr-3.5 py-2.5 bg-brand-canvas border border-gray-200 rounded-xl text-[13px] text-brand-text outline-none focus:border-brand-orange transition-colors" />
           </div>
         </div>
       )}
 
       {/* Contained content */}
-      <div style={{ maxWidth:"1100px", margin:"0 auto", padding: isDesk ? "28px 40px 60px" : "16px 16px 40px" }}>
+      <div className={`max-w-[1100px] mx-auto ${isDesk ? "px-10 pt-7 pb-14" : "px-4 pt-4 pb-10"}`}>
 
-        {/* Image banner — full image visible, no cropping */}
-        <div style={{ borderRadius:"16px", overflow:"hidden", border:"1px solid var(--border)", marginBottom:"24px", position:"relative", height: isDesk ? "360px" : "200px", background:"#000" }}>
-          <img src={cover} alt=""
-            style={{ position:"absolute", inset:0, width:"100%", height:"100%", objectFit:"cover", filter:"blur(24px) brightness(0.6)", transform:"scale(1.15)" }}
-            onError={e => { e.target.style.display = "none"; }} />
-          <img src={cover} alt={event.name}
-            style={{ position:"relative", width:"100%", height:"100%", objectFit:"contain", display:"block" }}
-            onError={e => { e.target.src = catImg.other; e.target.style.objectFit = "cover"; }} />
-          <div style={{ position:"absolute", top:"14px", left:"14px", display:"flex", gap:"6px" }}>
-            <span style={{ background:BRAND, color:"#fff", fontSize:"9px", fontWeight:700, padding:"4px 10px", borderRadius:"99px", letterSpacing:"0.5px", fontFamily:MONO }}>
+        {/* Image banner */}
+        <div className={`rounded-2xl overflow-hidden border border-gray-100 mb-6 relative ${isDesk ? "h-[360px]" : "h-[200px]"}`}>
+          <img src={cover} alt={event.name} className="w-full h-full object-cover object-top block"
+            onError={e => { e.target.src = catImg.other; }} />
+          <div className="absolute top-3.5 left-3.5 flex gap-1.5">
+            <span className="bg-brand-orange text-white text-[9px] font-bold px-2.5 py-1 rounded-full font-mono">
               {(event.category || "").toUpperCase()}
             </span>
             {isFree && (
-              <span style={{ background:"#16a34a", color:"#fff", fontSize:"9px", fontWeight:700, padding:"4px 10px", borderRadius:"99px", fontFamily:MONO }}>FREE</span>
+              <span className="bg-fintech-green text-white text-[9px] font-bold px-2.5 py-1 rounded-full font-mono">FREE</span>
             )}
-            <span style={{ display:"flex", alignItems:"center", gap:"4px", background:"rgba(124,58,237,0.85)", backdropFilter:"blur(8px)", color:"#fff", fontSize:"9px", fontWeight:700, padding:"4px 10px", borderRadius:"99px" }}>
-              ⛓️ NFT
+            {tiers.length > 0 && (
+              <span className="flex items-center gap-1 bg-white text-brand-text text-[9px] font-bold px-2.5 py-1 rounded-full">
+                <Crown size={9} strokeWidth={2.5} className="text-brand-orange" /> {tiers.length} TIERS
+              </span>
+            )}
+            <span className="flex items-center gap-1 bg-brand-text text-white text-[9px] font-bold px-2.5 py-1 rounded-full">
+              <Link2 size={9} strokeWidth={2.5} /> NFT
             </span>
           </div>
         </div>
 
         {/* Body — title, organizer, then two columns */}
-        <div style={{ display:"flex", gap:"40px", alignItems:"flex-start", flexDirection: isDesk ? "row" : "column" }}>
+        <div className={`flex gap-10 items-start ${isDesk ? "flex-row" : "flex-col"}`}>
 
-          <div style={{ flex:1, minWidth:0, width:"100%" }}>
+          <div className="flex-1 min-w-0 w-full">
 
-            <h1 style={{ fontSize: isDesk ? "30px" : "22px", fontWeight:800, color:"var(--text-primary)", letterSpacing:"-0.7px", lineHeight:1.15, marginBottom:"10px" }}>
+            <h1 className={`font-extrabold text-brand-text tracking-tight leading-tight mb-2.5 ${isDesk ? "text-3xl" : "text-2xl"}`}>
               {event.name}
             </h1>
 
             {orgName && (
-              <div style={{ display:"flex", alignItems:"center", gap:"10px", marginBottom:"14px" }}>
-                <div style={{ width:"32px", height:"32px", borderRadius:"50%", background:`linear-gradient(135deg,${BRAND},${BRAND_D})`, display:"flex", alignItems:"center", justifyContent:"center", fontSize:"13px", color:"#fff", fontWeight:700, flexShrink:0 }}>
+              <div className="flex items-center gap-2.5 mb-3.5">
+                <div className="w-8 h-8 rounded-full bg-brand-orange flex items-center justify-center text-xs font-bold text-white shrink-0">
                   {orgName.charAt(0).toUpperCase()}
                 </div>
-                <div style={{ fontSize:"13px", color:"var(--text-secondary)" }}>
-                  by <span style={{ fontWeight:700, color:"var(--text-primary)" }}>{orgName}</span>
+                <div className="text-[13px] text-brand-muted">
+                  by <span className="font-bold text-brand-text">{orgName}</span>
                 </div>
               </div>
             )}
 
-            <div style={{ fontSize:"13px", color:"var(--text-muted)", marginBottom:"24px", display:"flex", flexDirection:"column", gap:"4px" }}>
-              <div>📍 {event.venue}{event.city ? `, ${event.city}` : ""}</div>
-              <div>📅 {event.date}{event.time ? ` · ${event.time.substring(0,5)}` : ""}</div>
+            <div className="text-[13px] text-brand-muted mb-6 flex flex-col gap-1">
+              <span className="flex items-center gap-1.5"><MapPin size={13} strokeWidth={1.75} /> {event.venue}{event.city ? `, ${event.city}` : ""}</span>
+              <span className="flex items-center gap-1.5"><Calendar size={13} strokeWidth={1.75} /> {event.date}{event.time ? ` · ${event.time.substring(0,5)}` : ""}</span>
             </div>
 
             {!isDesk && (
-              <div style={{ marginBottom:"24px" }}>
-                <TicketCard event={event} isFree={isFree} curr={curr} isLoggedIn={isLoggedIn}
-                  onAction={isFree ? handleRegister : handleBuy} actionLoading={regLoading} error={error} isDesk={false} />
+              <div className="mb-6">
+                <TicketCard event={event} tiers={tiers} isFree={isFree} curr={curr} isLoggedIn={isLoggedIn}
+                  onAction={isFree ? handleRegister : handleBuy} actionLoading={regLoading} error={error} isDesk={false}
+                  selectedTierObj={pickedTier} onSelectTier={setPickedTier} />
               </div>
             )}
 
-            {event.description && (
-              <div style={{ marginBottom:"24px" }}>
-                <h2 style={{ fontSize:"15px", fontWeight:700, color:"var(--text-primary)", marginBottom:"10px" }}>Overview</h2>
-                <p style={{ fontSize:"14px", color:"var(--text-secondary)", lineHeight:1.75, margin:0, whiteSpace:"pre-line" }}>
+            <div className="mb-6">
+              <h2 className="text-[15px] font-bold text-brand-text mb-2.5">Overview</h2>
+              {realDescription ? (
+                <p className="text-sm text-brand-text leading-relaxed whitespace-pre-line">
                   {event.description}
                 </p>
-              </div>
-            )}
-
-            <div style={{ background:"var(--bg-card)", border:"1px solid var(--border)", borderRadius:"14px", overflow:"hidden", marginBottom:"24px" }}>
-              <DetailRow icon="📅" label="DATE" value={event.date || "TBA"} />
-              <DetailRow icon="🕐" label="TIME" value={event.time ? event.time.substring(0,5) : "TBA"} />
-              <DetailRow icon="📍" label="VENUE" value={`${event.venue || "TBA"}${event.city ? `, ${event.city}` : ""}`} />
-              <DetailRow icon="🎟" label="CAPACITY" value={`${event.total_tickets || 0} spots total`} />
+              ) : (
+                <div className="flex items-center gap-2.5 bg-white border border-gray-100 rounded-xl px-3.5 py-3">
+                  <FileText size={15} strokeWidth={1.75} className="text-brand-muted shrink-0" />
+                  <span className="text-[13px] text-brand-muted">No description yet — check back closer to the event.</span>
+                </div>
+              )}
             </div>
 
-            <div style={{ background:"rgba(124,58,237,0.05)", border:"1px solid rgba(124,58,237,0.15)", borderRadius:"12px", padding:"14px 16px", display:"flex", alignItems:"center", gap:"12px" }}>
-              <span style={{ fontSize:"18px" }}>⛓️</span>
+            <div className="bg-white border border-gray-100 rounded-2xl shadow-sm overflow-hidden mb-6 px-4">
+              <DetailRow Icon={Calendar} label="DATE" value={event.date || "TBA"} />
+              <DetailRow Icon={Clock} label="TIME" value={event.time ? event.time.substring(0,5) : "TBA"} />
+              <DetailRow Icon={MapPin} label="VENUE" value={`${event.venue || "TBA"}${event.city ? `, ${event.city}` : ""}`} />
+              <DetailRow Icon={Ticket} label="CAPACITY" value={`${event.total_tickets || 0} spots total`} />
+            </div>
+
+            {/* Location & Directions — placeholder, wire in once Maps API key is set up */}
+            <LocationCard venue={event.venue} city={event.city} />
+
+            <div className="flex items-center gap-3 bg-pastel-blue rounded-xl px-4 py-3.5">
+              <Link2 size={18} strokeWidth={1.75} className="text-fintech-blue shrink-0" />
               <div>
-                <div style={{ fontSize:"11px", fontWeight:700, color:"#7c3aed", marginBottom:"1px" }}>Secured by Polygon Blockchain</div>
-                <div style={{ fontSize:"10px", color:"var(--text-muted)" }}>Every ticket is minted as an NFT — cannot be duplicated or faked</div>
+                <div className="text-[11px] font-bold text-fintech-blue mb-0.5">Secured by Polygon Blockchain</div>
+                <div className="text-[10px] text-brand-muted">Every ticket is minted as an NFT — cannot be duplicated or faked</div>
               </div>
             </div>
           </div>
 
           {isDesk && (
-            <div style={{ width:"340px", flexShrink:0 }}>
-              <TicketCard event={event} isFree={isFree} curr={curr} isLoggedIn={isLoggedIn}
-                onAction={isFree ? handleRegister : handleBuy} actionLoading={regLoading} error={error} isDesk={true} />
+            <div className="w-[340px] shrink-0">
+              <TicketCard event={event} tiers={tiers} isFree={isFree} curr={curr} isLoggedIn={isLoggedIn}
+                onAction={isFree ? handleRegister : handleBuy} actionLoading={regLoading} error={error} isDesk={true}
+                selectedTierObj={pickedTier} onSelectTier={setPickedTier} />
             </div>
           )}
         </div>

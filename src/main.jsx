@@ -18,11 +18,11 @@ const queryClient = new QueryClient({
   },
 });
 
-if ("serviceWorker" in navigator) {
+if (import.meta.env.PROD && "serviceWorker" in navigator) {
   window.addEventListener("load", () => {
     navigator.serviceWorker
       .register("/sw.js")
-      .then(reg => console.log("✅ SW registered:", reg.scope))
+      .then(reg => console.log("SW registered:", reg.scope))
       .catch(err => console.log("SW registration failed:", err));
   });
 }

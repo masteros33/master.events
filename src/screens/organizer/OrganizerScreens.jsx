@@ -767,7 +767,12 @@ export function AddEvent() {
 
   const submit = () => {
     if (!validate()) return;
-    const form = { ...addEventForm, event_type:evType, currency:evType==="free"?"FREE":currency, country, price:evType==="free"?0:addEventForm.price };
+    // ── FIX: "FREE" is not a valid currency choice on the backend
+    // (CURRENCY_CHOICES only has GHS/USD/EUR/GBP/NGN) — free events
+    // just keep the selected currency; price is already forced to 0
+    // for free events below, so currency becomes irrelevant but must
+    // still be a valid value or the whole request gets rejected.
+    const form = { ...addEventForm, event_type:evType, currency, country, price:evType==="free"?0:addEventForm.price };
     if (isMultiDay) { form.is_multi_day=true; form.event_dates=eventDates; form.date=eventDates[0]?.date||""; }
     if (useTiers && tiers.length) {
       // ── Build ticket_tiers as a guaranteed plain array of plain

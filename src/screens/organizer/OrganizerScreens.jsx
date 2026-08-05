@@ -64,6 +64,7 @@ const mapEvent = e => ({
   regs:         e.registrations_count || 0,
   description:  e.description    || "",
   image:        e.image || catImg[e.category] || catImg.other,
+  tiers:        e.tiers || [],
 });
 
 // pct-based capacity color: red past 80%, brand orange mid, green low
@@ -692,10 +693,10 @@ export function OrganizerAlerts() {
 }
 
 // ═══════════════════════════════════════════════════════════════
-//  ADD EVENT — now with Ticket Tiers (VIP/VVIP/Regular)
-//  NOTE: tiers are captured in the form here, but the backend
-//  (Event/Ticket models + serializers) does not yet store or use
-//  them — see the yellow notice in the tiers section below.
+//  ADD EVENT — Ticket Tiers (VIP/VVIP/Regular) now fully live
+//  on the backend (TicketTier model + serializers deployed).
+//  The tier array built in submit() below is sent as-is to
+//  handleAddEvent(), which forwards it untouched to the API.
 // ═══════════════════════════════════════════════════════════════
 export function AddEvent() {
   const addEventForm    = useStore(s => s.addEventForm);
@@ -769,14 +770,24 @@ export function AddEvent() {
     const form = { ...addEventForm, event_type:evType, currency:evType==="free"?"FREE":currency, country, price:evType==="free"?0:addEventForm.price };
     if (isMultiDay) { form.is_multi_day=true; form.event_dates=eventDates; form.date=eventDates[0]?.date||""; }
     if (useTiers && tiers.length) {
-      // Not yet consumed by the backend — Event/Ticket models need a
-      // tiers table before this actually creates tiered tickets.
-      // Included here so the payload is ready once that lands, and so
-      // the lowest-tier price / summed capacity keep the existing
-      // single-price flow working as a fallback in the meantime.
-      form.ticket_tiers  = tiers.map(t => ({ name: t.name, price: parseFloat(t.price), capacity: parseInt(t.capacity) }));
+      // ── Build ticket_tiers as a guaranteed plain array of plain
+      // objects — Array.prototype.map always returns an array, but
+      // we spread + rebuild each entry explicitly here too so there's
+      // no chance of a Date/class-instance/proxy object slipping
+      // through and getting serialized as something other than a
+      // clean JSON array of dicts on the way to the backend.
+      const cleanTiers = [];
+      for (let i = 0; i < tiers.length; i++) {
+        const t = tiers[i];
+        cleanTiers.push({
+          name:     String(t.name),
+          price:    parseFloat(t.price)   || 0,
+          capacity: parseInt(t.capacity)  || 0,
+        });
+      }
+      form.ticket_tiers  = cleanTiers;
       form.totalTickets  = tierTotalCapacity;
-      form.price         = Math.min(...tiers.map(t => parseFloat(t.price) || Infinity));
+      form.price         = Math.min(...cleanTiers.map(t => t.price || Infinity));
     }
     setAddEventForm(form);
     handleAddEvent();
@@ -964,10 +975,10 @@ export function AddEvent() {
               <div className={isDesk ? "col-span-2" : ""}>
                 <label className={labelClass}>Ticket Tiers {errors.tiers && <span className="text-red-600 font-normal normal-case">— {errors.tiers}</span>}</label>
 
-                <div className="bg-pastel-blue border border-fintech-blue/15 rounded-xl px-3.5 py-2.5 mb-3 flex items-start gap-2">
-                  <Sparkles size={13} strokeWidth={1.75} className="text-fintech-blue shrink-0 mt-0.5" />
-                  <span className="text-[11px] text-fintech-blue leading-relaxed">
-                    Tiers are saved with this event, but checkout tier-selection is still being wired up on the backend — for now the lowest tier price is used as the event's listed price.
+                <div className="bg-pastel-green border border-fintech-green/15 rounded-xl px-3.5 py-2.5 mb-3 flex items-start gap-2">
+                  <CheckCircle2 size={13} strokeWidth={1.75} className="text-fintech-green shrink-0 mt-0.5" />
+                  <span className="text-[11px] text-fintech-green leading-relaxed">
+                    Each tier is saved as its own capacity-tracked ticket type — attendees will see a tier picker on the event's public page to choose Regular, VIP, or VVIP at checkout.
                   </span>
                 </div>
 
@@ -1364,6 +1375,20 @@ export function OrganizerEventDetail() {
                   </motion.div>
                 ))}
               </div>
+
+              {ev.tiers && ev.tiers.length > 0 && (
+                <Panel className="mb-3">
+                  <div className="text-[10px] font-semibold text-brand-muted font-mono mb-3">TICKET TIERS</div>
+                  <div className="flex flex-col gap-2">
+                    {ev.tiers.map(t => (
+                      <div key={t.id} className="flex items-center justify-between bg-brand-canvas rounded-xl px-3.5 py-2.5">
+                        <div className="text-[13px] font-semibold text-brand-text">{t.name}</div>
+                        <div className="text-[12px] text-brand-muted font-mono">{curr} {t.price} · {t.sold}/{t.capacity} sold</div>
+                      </div>
+                    ))}
+                  </div>
+                </Panel>
+              )}
 
               <Panel className="mb-3">
                 <div className="flex justify-between mb-2">

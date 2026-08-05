@@ -458,6 +458,7 @@ export default function App() {
   const isLoggedIn = useStore(s => s.isLoggedIn);
   const screen     = useStore(s => s.screen);
   const [desktop, setDesktop] = React.useState(window.innerWidth > 768);
+  const oauthHandled = React.useRef(false);
   useTheme();
 
   React.useEffect(() => {
@@ -474,7 +475,16 @@ export default function App() {
     const code   = params.get("code");
 
     // ── Google OAuth redirect callback ─────────────────────
+    // Guarded against React Strict Mode's dev-only double-invoke — without
+    // this, the auth code (single-use) gets sent twice: the first request
+    // succeeds and logs the user in, the second is rejected by Google
+    // with a 400 since the code was already consumed, surfacing a
+    // confusing "sign-in failed" toast even though sign-in actually
+    // worked. Production isn't affected (Strict Mode double-invoke is
+    // dev-only), but this keeps local testing honest too.
     if (code && window.location.pathname === "/auth/callback") {
+      if (oauthHandled.current) return;
+      oauthHandled.current = true;
       const pendingRole = localStorage.getItem("google_auth_role") || "attendee";
       localStorage.removeItem("google_auth_role");
       fetch("https://master-events-backend.onrender.com/api/auth/google/callback/", {

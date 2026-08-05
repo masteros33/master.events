@@ -500,9 +500,21 @@ export default function App() {
             localStorage.setItem("refresh_token", data.tokens.refresh);
             const user = data.user;
             const firstTab = user.role === "organizer" ? "dashboard" : "home";
-            const pendingSlug = localStorage.getItem("pending_event_slug");
-            const postAuthScreen = pendingSlug ? "pendingEvent" : (localStorage.getItem("post_auth_screen") || "app");
+            // ── FIX: only trust pending_event_slug (and thus route to
+            // the pendingEvent screen) if THIS sign-in was actually
+            // initiated from an event page's "sign up to buy" flow —
+            // tracked via post_auth_screen, which Signup.jsx /
+            // PublicEventPage.jsx set deliberately right before the
+            // Google redirect. Without this check, a stale
+            // pending_event_slug left over from just browsing some
+            // unrelated event days earlier could hijack an ordinary
+            // sign-in and redirect the person to that old event
+            // instead of their normal dashboard.
+            const postAuthScreen = localStorage.getItem("post_auth_screen") || "app";
             localStorage.removeItem("post_auth_screen");
+            if (postAuthScreen !== "pendingEvent") {
+              localStorage.removeItem("pending_event_slug");
+            }
             useStore.setState({
               currentUser: user, role: user.role, isLoggedIn: true,
               activeTab: firstTab, screen: postAuthScreen,

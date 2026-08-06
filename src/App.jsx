@@ -475,13 +475,6 @@ export default function App() {
     const code   = params.get("code");
 
     // ── Google OAuth redirect callback ─────────────────────
-    // Guarded against React Strict Mode's dev-only double-invoke — without
-    // this, the auth code (single-use) gets sent twice: the first request
-    // succeeds and logs the user in, the second is rejected by Google
-    // with a 400 since the code was already consumed, surfacing a
-    // confusing "sign-in failed" toast even though sign-in actually
-    // worked. Production isn't affected (Strict Mode double-invoke is
-    // dev-only), but this keeps local testing honest too.
     if (code && window.location.pathname === "/auth/callback") {
       if (oauthHandled.current) return;
       oauthHandled.current = true;
@@ -500,16 +493,6 @@ export default function App() {
             localStorage.setItem("refresh_token", data.tokens.refresh);
             const user = data.user;
             const firstTab = user.role === "organizer" ? "dashboard" : "home";
-            // ── FIX: only trust pending_event_slug (and thus route to
-            // the pendingEvent screen) if THIS sign-in was actually
-            // initiated from an event page's "sign up to buy" flow —
-            // tracked via post_auth_screen, which Signup.jsx /
-            // PublicEventPage.jsx set deliberately right before the
-            // Google redirect. Without this check, a stale
-            // pending_event_slug left over from just browsing some
-            // unrelated event days earlier could hijack an ordinary
-            // sign-in and redirect the person to that old event
-            // instead of their normal dashboard.
             const postAuthScreen = localStorage.getItem("post_auth_screen") || "app";
             localStorage.removeItem("post_auth_screen");
             if (postAuthScreen !== "pendingEvent") {

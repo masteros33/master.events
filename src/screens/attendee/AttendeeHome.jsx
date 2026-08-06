@@ -53,15 +53,24 @@ function tierIconFor(name) {
   return Ticket;
 }
 
+// ── DescriptionBlock — now matches PublicEventPage's "Overview"
+// section exactly: same heading text/size, same text-sm body at every
+// breakpoint (no larger text-[15px] variant on desktop), same
+// whitespace-pre-line handling, same bg-white empty-state card. Kept
+// as its own component here (rather than sharing one file) since
+// AttendeeHome and PublicEventPage are separate screens, but the
+// rendering is now identical between the two entry points. ──
 function DescriptionBlock({ desc, name, compact }) {
   const real = hasRealDescription(desc, name);
   return (
     <div className={compact ? "mb-5" : "mb-7"}>
-      <div className="text-[10px] font-bold text-brand-muted uppercase tracking-widest font-mono mb-2.5">About</div>
+      <div className="text-[15px] font-bold text-brand-text mb-2.5">Overview</div>
       {real ? (
-        <div className={`text-brand-text leading-relaxed ${compact ? "text-sm" : "text-[15px]"}`}>{desc.trim()}</div>
+        <p className="text-sm text-brand-text leading-relaxed whitespace-pre-line">
+          {desc.trim()}
+        </p>
       ) : (
-        <div className="flex items-center gap-2.5 bg-brand-canvas border border-gray-100 rounded-xl px-3.5 py-3">
+        <div className="flex items-center gap-2.5 bg-white border border-gray-100 rounded-xl px-3.5 py-3">
           <FileText size={15} strokeWidth={1.75} className="text-brand-muted shrink-0" />
           <span className="text-[13px] text-brand-muted">No description yet — check back closer to the event.</span>
         </div>
@@ -273,8 +282,8 @@ function InfoTile({ Icon, label, value }) {
   );
 }
 
-// ── EventDetailOverlay — now tier-aware. When ev.tiers has entries,
-// a TierPicker renders above the buy button, the button is disabled
+// ── EventDetailOverlay — tier-aware. When ev.tiers has entries, a
+// TierPicker renders above the buy button, the button is disabled
 // until a tier is chosen, and onCheckout receives the selected tier
 // so Checkout shows the right price. ──
 function EventDetailOverlay({ ev, onBack, onCheckout }) {
@@ -503,6 +512,7 @@ export default function AttendeeHome() {
   const overlayEvent     = useStore(s => s.overlayEvent);
   const searchQ          = useStore(s => s.searchQ);
   const setSearchQ       = useStore(s => s.setSearchQ);
+  const isLoggedIn       = useStore(s => s.isLoggedIn);
   const [activeCategory, setActiveCategory] = useState("all");
   const [page,           setPage]           = useState(1);
   const [searchFocused,  setSearchFocused]  = useState(false);
@@ -541,10 +551,6 @@ export default function AttendeeHome() {
               organizerName: e.organizer?.first_name
                 ? `${e.organizer.first_name} ${e.organizer.last_name || ""}`.trim()
                 : e.organizer_name || null,
-              // ── NEW: tiers were coming back from the API all along —
-              // just never mapped onto the event object the UI reads from.
-              // Each tier already has id/name/price/capacity/sold/remaining
-              // from TicketTierSerializer. ──
               tiers: Array.isArray(e.tiers) ? e.tiers.map(t => ({
                 id:        t.id,
                 name:      t.name,
@@ -583,11 +589,6 @@ export default function AttendeeHome() {
   const totalPages = Math.ceil(filtered.length / perPage);
   const paginated  = filtered.slice((page - 1) * perPage, page * perPage);
 
-  // ── goToCheckout now accepts the selected tier (or null for
-  // non-tiered/free events). The event object handed to Checkout gets
-  // its price overridden to the tier's price so the existing Checkout
-  // component — which reads checkoutEvent.price — shows the right
-  // total without needing its own tier-price logic. ──
   const goToCheckout = useCallback((ev, tier) => {
     const eventForCheckout = tier ? { ...ev, price: tier.price } : ev;
     setCheckoutEvent(eventForCheckout);
@@ -625,7 +626,7 @@ export default function AttendeeHome() {
     return (
       <div className="flex flex-col h-full overflow-hidden">
         <div className="shrink-0 sticky top-0 z-40">
-          <MobileNavbar scrolled={scrolled} />
+          {!isLoggedIn && <MobileNavbar scrolled={scrolled} />}
 
           <div className="bg-white border-b border-gray-100 px-4">
             <div className="py-2.5">
@@ -715,4 +716,4 @@ export default function AttendeeHome() {
       </div>
     </div>
   );
-}
+}git

@@ -693,10 +693,12 @@ export function OrganizerAlerts() {
 }
 
 // ═══════════════════════════════════════════════════════════════
-//  ADD EVENT — Ticket Tiers (VIP/VVIP/Regular) now fully live
-//  on the backend (TicketTier model + serializers deployed).
-//  The tier array built in submit() below is sent as-is to
-//  handleAddEvent(), which forwards it untouched to the API.
+//  ADD EVENT — Ticket Tiers (VIP/VVIP/Regular) fully live on the
+//  backend. ticket_tiers is only ever attached for paid events,
+//  built via an explicit for-loop into a fresh array, then passed
+//  through JSON.parse(JSON.stringify(...)) as a final guarantee
+//  that only plain serializable data reaches the API — no
+//  possibility of a non-array making it through this function.
 // ═══════════════════════════════════════════════════════════════
 export function AddEvent() {
   const addEventForm    = useStore(s => s.addEventForm);
@@ -758,7 +760,7 @@ export function AddEvent() {
     if (isMultiDay && eventDates.length < 2)                     e.dates = "Add at least 2 dates";
     if (!addEventForm.venue?.trim())                             e.venue = "Required";
     if (!useTiers && !addEventForm.totalTickets)                 e.total = "Required";
-    if (useTiers && tiers.length < 1)                            e.tiers = "Add at least one ticket tier";
+    if (evType === "paid" && useTiers && tiers.length < 1)       e.tiers = "Add at least one ticket tier";
     if (!addEventForm.category)                                  e.cat   = "Select a category";
     if (evType === "paid" && !isMultiDay && !useTiers && !addEventForm.price) e.price = "Required";
     setErrors(e);
@@ -767,33 +769,44 @@ export function AddEvent() {
 
   const submit = () => {
     if (!validate()) return;
-    // ── FIX: "FREE" is not a valid currency choice on the backend
-    // (CURRENCY_CHOICES only has GHS/USD/EUR/GBP/NGN) — free events
-    // just keep the selected currency; price is already forced to 0
-    // for free events below, so currency becomes irrelevant but must
-    // still be a valid value or the whole request gets rejected.
-    const form = { ...addEventForm, event_type:evType, currency, country, price:evType==="free"?0:addEventForm.price };
-    if (isMultiDay) { form.is_multi_day=true; form.event_dates=eventDates; form.date=eventDates[0]?.date||""; }
-    if (useTiers && tiers.length) {
-      // ── Build ticket_tiers as a guaranteed plain array of plain
-      // objects — Array.prototype.map always returns an array, but
-      // we spread + rebuild each entry explicitly here too so there's
-      // no chance of a Date/class-instance/proxy object slipping
-      // through and getting serialized as something other than a
-      // clean JSON array of dicts on the way to the backend.
+
+    const form = {
+      ...addEventForm,
+      event_type: evType,
+      currency,           // always a real currency code, never "FREE"
+      country,
+      price: evType === "free" ? 0 : addEventForm.price,
+    };
+
+    if (isMultiDay) {
+      form.is_multi_day = true;
+      form.event_dates  = eventDates;
+      form.date          = eventDates[0]?.date || "";
+    }
+
+    // Tiers only ever apply to paid, non-multi-day events.
+    if (evType === "paid" && !isMultiDay && useTiers && tiers.length) {
       const cleanTiers = [];
       for (let i = 0; i < tiers.length; i++) {
         const t = tiers[i];
         cleanTiers.push({
           name:     String(t.name),
-          price:    parseFloat(t.price)   || 0,
-          capacity: parseInt(t.capacity)  || 0,
+          price:    parseFloat(t.price)  || 0,
+          capacity: parseInt(t.capacity) || 0,
         });
       }
-      form.ticket_tiers  = cleanTiers;
-      form.totalTickets  = tierTotalCapacity;
-      form.price         = Math.min(...cleanTiers.map(t => t.price || Infinity));
+      // Final belt-and-suspenders guarantee: round-trip through JSON
+      // so absolutely nothing but a plain array of plain objects can
+      // reach handleAddEvent / the API, regardless of what shape
+      // anything upstream might otherwise carry.
+      const safeTiers = JSON.parse(JSON.stringify(cleanTiers));
+      form.ticket_tiers = safeTiers;
+      form.totalTickets = tierTotalCapacity;
+      form.price = Math.min(...safeTiers.map(t => t.price || Infinity));
     }
+    // Free events, or paid events without tiers, never get a
+    // ticket_tiers key at all — nothing for the backend to reject.
+
     setAddEventForm(form);
     handleAddEvent();
   };
@@ -833,7 +846,12 @@ export function AddEvent() {
             <label className={labelClass}>Event Type</label>
             <div className="flex gap-1 bg-brand-canvas rounded-xl p-1 border border-gray-100 w-fit">
               {[{v:"paid",Icon:CreditCard,label:"Paid Event"},{v:"free",Icon:PartyPopper,label:"Free Event"}].map(item => (
-                <button key={item.v} onClick={() => setEvType(item.v)}
+                <button key={item.v} onClick={() => {
+                    setEvType(item.v);
+                    // Switching to Free clears any tier state left over
+                    // from when the form was set to Paid.
+                    if (item.v === "free") { setUseTiers(false); setTiers([]); setErrors(p=>({...p,tiers:null})); }
+                  }}
                   className={`px-5 py-2 rounded-lg text-[13px] font-semibold flex items-center gap-1.5 transition-colors ${evType===item.v ? "bg-brand-orange text-white" : "bg-transparent text-brand-muted"}`}>
                   <item.Icon size={14} strokeWidth={1.75} /> {item.label}
                 </button>
@@ -956,7 +974,7 @@ export function AddEvent() {
               </select>
             </div>
 
-            {/* ── Ticket Tiers toggle ── */}
+            {/* ── Ticket Tiers toggle — paid, single-day events only ── */}
             {!isMultiDay && evType === "paid" && (
               <div className={isDesk ? "col-span-2" : ""}>
                 <div className="flex items-center justify-between px-4 py-3.5 bg-brand-canvas rounded-xl border border-gray-100">
@@ -975,8 +993,8 @@ export function AddEvent() {
               </div>
             )}
 
-            {/* ── Ticket Tiers builder ── */}
-            {!isMultiDay && useTiers && (
+            {/* ── Ticket Tiers builder — mirrors the toggle's gating exactly ── */}
+            {!isMultiDay && evType === "paid" && useTiers && (
               <div className={isDesk ? "col-span-2" : ""}>
                 <label className={labelClass}>Ticket Tiers {errors.tiers && <span className="text-red-600 font-normal normal-case">— {errors.tiers}</span>}</label>
 
@@ -1050,7 +1068,7 @@ export function AddEvent() {
               </div>
             )}
 
-            {!isMultiDay && !useTiers && (
+            {!isMultiDay && !(evType === "paid" && useTiers) && (
               <>
                 <div>
                   <label className={labelClass}>{evType==="free"?"Total Spots":"Total Tickets"}{errors.total && <span className="text-red-600 font-normal normal-case"> — {errors.total}</span>}</label>
@@ -1140,13 +1158,14 @@ export function AddEvent() {
             {evType==="paid" && <span className="flex items-center gap-1.5 text-xs text-fintech-green bg-pastel-green px-3 py-1.5 rounded-lg font-medium"><Wallet size={12} strokeWidth={1.75} /> 95% revenue to you</span>}
             {evType==="free" && <span className="flex items-center gap-1.5 text-xs text-fintech-green bg-pastel-green px-3 py-1.5 rounded-lg font-medium"><PartyPopper size={12} strokeWidth={1.75} /> Free · QR pass via email</span>}
             {isMultiDay && <span className="flex items-center gap-1.5 text-xs text-fintech-blue bg-pastel-blue px-3 py-1.5 rounded-lg font-medium"><Calendar size={12} strokeWidth={1.75} /> Attendees pick their day(s)</span>}
-            {useTiers && tiers.length > 0 && <span className="flex items-center gap-1.5 text-xs text-brand-orange bg-pastel-orange px-3 py-1.5 rounded-lg font-medium"><Crown size={12} strokeWidth={1.75} /> {tiers.length} ticket tiers</span>}
+            {evType==="paid" && useTiers && tiers.length > 0 && <span className="flex items-center gap-1.5 text-xs text-brand-orange bg-pastel-orange px-3 py-1.5 rounded-lg font-medium"><Crown size={12} strokeWidth={1.75} /> {tiers.length} ticket tiers</span>}
             <span className="flex items-center gap-1.5 text-xs text-fintech-blue bg-pastel-blue px-3 py-1.5 rounded-lg font-medium"><Link2 size={12} strokeWidth={1.75} /> NFT on Polygon</span>
           </div>
 
+          {/* ── Button text simplified — "Create Event" always, no branching on type/multi-day ── */}
           <motion.button whileHover={{ scale:1.01 }} whileTap={{ scale:0.97 }} onClick={submit}
             className="w-full py-4 rounded-full bg-brand-orange hover:bg-brand-orange-hover text-white font-bold text-base transition-colors">
-            Create {isMultiDay?"Multi-Day ":""}{evType==="free"?"Free":"Paid"} Event
+            Create Event
           </motion.button>
         </motion.div>
       </div>

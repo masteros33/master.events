@@ -351,15 +351,16 @@ export function PaymentSuccess() {
 //  CHECKOUT — fintech payment screen, tier-aware, correct fee math
 // ═══════════════════════════════════════════════════════════════
 export function Checkout() {
-  const checkoutEvent   = useStore(s => s.checkoutEvent);
-  const selectedTier    = useStore(s => s.selectedTier);
-  const ticketQty       = useStore(s => s.ticketQty);
-  const payMethod       = useStore(s => s.payMethod);
-  const setTicketQty    = useStore(s => s.setTicketQty);
-  const setPayMethod    = useStore(s => s.setPayMethod);
-  const handleBuyTicket = useStore(s => s.handleBuyTicket);
-  const setScreen       = useStore(s => s.setScreen);
-  const currentUser     = useStore(s => s.currentUser);
+  const checkoutEvent      = useStore(s => s.checkoutEvent);
+  const selectedTier       = useStore(s => s.selectedTier);
+  const ticketQty          = useStore(s => s.ticketQty);
+  const payMethod          = useStore(s => s.payMethod);
+  const setTicketQty       = useStore(s => s.setTicketQty);
+  const setPayMethod       = useStore(s => s.setPayMethod);
+  const handleBuyTicket    = useStore(s => s.handleBuyTicket);
+  const handleRegisterFree = useStore(s => s.handleRegisterFree);
+  const setScreen          = useStore(s => s.setScreen);
+  const currentUser        = useStore(s => s.currentUser);
 
   const [paying,   setPaying]   = useState(false);
   const [payError, setPayError] = useState("");
@@ -387,9 +388,17 @@ export function Checkout() {
     if (paying) return;
     setPayError(""); setPaying(true);
 
+    // ── Free events never touch Paystack. A fabricated "FREE-<timestamp>"
+    // reference was never actually processed by Paystack, so the
+    // backend's verify_paystack_payment() correctly rejects it with a
+    // 402 "Payment could not be verified" — that was the exact bug.
+    // Free events instead call the dedicated register-free-event
+    // endpoint via handleRegisterFree, which only checks capacity and
+    // creates a Registration record — no payment involved at all. ──
     if (isFree) {
-      try { await handleBuyTicket("FREE-" + Date.now()); }
-      catch { setPayError("Something went wrong. Please try again."); setPaying(false); }
+      try { await handleRegisterFree(); }
+      catch { setPayError("Something went wrong. Please try again."); }
+      setPaying(false);
       return;
     }
 

@@ -288,6 +288,79 @@ const useStore = create((set, get) => ({
   setViewingTicket: (v) => set({ viewingTicket: v }),
   setSelectedTier:  (v) => set({ selectedTier: v }),
 
+  // ── handleRegisterFree ───────────────────────────────────────
+  // Free events must NEVER go through purchase_ticket / Paystack —
+  // there's no real payment reference to verify, so verify_paystack_payment
+  // correctly rejects the fabricated one with a 402 "Payment could not be
+  // verified" error. Free events instead use the dedicated
+  // register-free-event endpoint, which just checks capacity and creates
+  // a Registration record — no payment involved at all.
+  handleRegisterFree: async () => {
+    const { checkoutEvent } = get();
+    if (!checkoutEvent) return;
+    const loadingToast = toast.loading("Registering...");
+    try {
+      const token = localStorage.getItem("access_token") || "";
+      const res = await fetch(`${BACKEND}/api/tickets/register-free/`, {
+        method:  "POST",
+        headers: {
+          "Content-Type":  "application/json",
+          "Authorization": `Bearer ${token}`,
+        },
+        body: JSON.stringify({ event_id: checkoutEvent.id, quantity: 1 }),
+      });
+      const data = await res.json();
+
+      if (res.ok && (data.registration_id || data.id)) {
+        const registration = {
+          id:           data.registration_id || data.id,
+          ticket_id:    data.registration_id || data.id,
+          event: {
+            id:    checkoutEvent.id,
+            name:  checkoutEvent.name,
+            date:  checkoutEvent.date,
+            venue: checkoutEvent.venue,
+            price: 0,
+            image: checkoutEvent.image,
+          },
+          qty:          1,
+          quantity:     1,
+          purchasedAt:  new Date().toLocaleDateString(),
+          status:       data.status || "active",
+          qr_data:      data.qr_data      || null,
+          qr_base64:    data.qr_base64    || null,
+          qr_image_url: data.qr_image_url || null,
+          qr_image:     data.qr_image
+            ? (data.qr_image.startsWith("http") ? data.qr_image : BACKEND + data.qr_image)
+            : null,
+          is_free_registration: true,
+        };
+
+        set({
+          myTickets:          [...get().myTickets, registration],
+          checkoutEvent:      null,
+          selectedTier:       null,
+          overlayEvent:       null,
+          activeTab:          "tickets",
+          screen:             "paymentSuccess",
+          viewingTicket:      registration,
+          newTicketCount:     (get().newTicketCount || 0) + 1,
+          successToastTicket: registration,
+          showSuccessToast:   true,
+        });
+        toast.dismiss(loadingToast);
+        toast.success("🎉 Registered! Check your email for your entry pass.");
+      } else {
+        toast.dismiss(loadingToast);
+        toast.error(data.error || "Registration failed. Please try again.");
+      }
+    } catch (e) {
+      console.error("Free registration error:", e);
+      toast.dismiss(loadingToast);
+      toast.error("Connection error. Please try again.");
+    }
+  },
+
   // ── handleBuyTicket ────────────────────────────────────────
   handleBuyTicket: async (paymentReference) => {
     const { ticketsAPI } = await import("../api");

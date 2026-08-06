@@ -5,7 +5,7 @@ import {
   Ticket, Search, X, MapPin, Link2, Tag, Calendar, Clock,
   ShieldCheck, Smartphone, ArrowLeft, ArrowRight, LayoutGrid,
   Music, Cpu, UtensilsCrossed, Palette, Trophy, Briefcase, MoreHorizontal,
-  FileText,
+  FileText, Star, Crown, CheckCircle2,
 } from "lucide-react";
 import useStore from "../../store/useStore";
 import { eventsAPI } from "../../api";
@@ -44,6 +44,15 @@ function hasRealDescription(desc, name) {
   return d.length >= 12;
 }
 
+// ── Tier icon — inferred from tier name text since the backend only
+// stores a plain name string, not a type key ──
+function tierIconFor(name) {
+  const n = (name || "").toLowerCase();
+  if (n.includes("vvip")) return Crown;
+  if (n.includes("vip"))  return Star;
+  return Ticket;
+}
+
 function DescriptionBlock({ desc, name, compact }) {
   const real = hasRealDescription(desc, name);
   return (
@@ -57,6 +66,51 @@ function DescriptionBlock({ desc, name, compact }) {
           <span className="text-[13px] text-brand-muted">No description yet — check back closer to the event.</span>
         </div>
       )}
+    </div>
+  );
+}
+
+// ── Tier picker — shown whenever the event has tiers. Mirrors the
+// picker on the public slug page so both entry points behave the same. ──
+function TierPicker({ tiers, selectedId, onSelect, compact }) {
+  return (
+    <div className={compact ? "mb-5" : "mb-6"}>
+      <div className="text-[10px] font-bold text-brand-muted uppercase tracking-widest font-mono mb-2.5">
+        Select Ticket Type
+      </div>
+      <div className="flex flex-col gap-2">
+        {tiers.map(t => {
+          const Icon      = tierIconFor(t.name);
+          const soldOut   = t.remaining <= 0;
+          const active    = String(selectedId) === String(t.id);
+          return (
+            <button key={t.id} disabled={soldOut} onClick={() => onSelect(t)}
+              className={`flex items-center justify-between px-4 py-3 rounded-xl border-2 text-left transition-colors ${
+                soldOut ? "border-gray-100 bg-gray-50 opacity-50 cursor-not-allowed"
+                : active ? "border-brand-orange bg-orange-50/30"
+                : "border-gray-200 bg-white"
+              }`}>
+              <div className="flex items-center gap-3 min-w-0">
+                <span className={`w-9 h-9 rounded-lg flex items-center justify-center shrink-0 ${active ? "bg-brand-orange text-white" : "bg-brand-canvas text-brand-muted"}`}>
+                  <Icon size={16} strokeWidth={1.75} />
+                </span>
+                <div className="min-w-0">
+                  <div className="text-[13px] font-bold text-brand-text truncate">{t.name}</div>
+                  <div className="text-[11px] text-brand-muted font-mono">
+                    {soldOut ? "Sold out" : `${t.remaining} left`}
+                  </div>
+                </div>
+              </div>
+              <div className="flex items-center gap-2 shrink-0">
+                <span className={`text-sm font-extrabold font-mono ${active ? "text-brand-orange" : "text-brand-text"}`}>
+                  GHS {t.price}
+                </span>
+                {active && <CheckCircle2 size={16} strokeWidth={2} className="text-brand-orange" />}
+              </div>
+            </button>
+          );
+        })}
+      </div>
     </div>
   );
 }
@@ -126,10 +180,10 @@ function MobileNavbar({ scrolled }) {
 }
 
 // ── Redesigned event card ─────────────────────────────────────
-// Key fixes: gradient scrim behind image badges for legibility on any
-// poster art; organizer pill now reads clearly as "hosted by" with its
-// own visual row instead of crowding the image edge.
 function EventCard({ ev, onClick }) {
+  const hasTiers   = Array.isArray(ev.tiers) && ev.tiers.length > 0;
+  const fromPrice  = hasTiers ? Math.min(...ev.tiers.map(t => parseFloat(t.price) || 0)) : ev.price;
+
   return (
     <motion.div whileHover={{ y: -3 }} whileTap={{ scale: 0.98 }} onClick={onClick}
       className="bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow overflow-hidden cursor-pointer">
@@ -138,15 +192,19 @@ function EventCard({ ev, onClick }) {
         <img src={ev.image} alt={ev.name} onError={e => { e.target.src = categoryImages.other; }}
           className="w-full h-full object-cover block" />
 
-        {/* Scrim so badges stay legible over any poster art */}
         <div className="absolute inset-x-0 top-0 h-16 bg-gradient-to-b from-black/35 to-transparent pointer-events-none" />
         <div className="absolute inset-x-0 bottom-0 h-14 bg-gradient-to-t from-black/40 to-transparent pointer-events-none" />
 
         <span className="absolute top-2.5 right-2.5 bg-brand-orange text-white text-[9px] font-bold px-2.5 py-1 rounded-full font-mono shadow-sm">
           {ev.category.toUpperCase()}
         </span>
-        {ev.price === 0 && (
+        {ev.price === 0 && !hasTiers && (
           <span className="absolute top-2.5 left-2.5 bg-fintech-green text-white text-[9px] font-bold px-2.5 py-1 rounded-full font-mono shadow-sm">FREE</span>
+        )}
+        {hasTiers && (
+          <span className="absolute top-2.5 left-2.5 bg-brand-text text-white text-[9px] font-bold px-2.5 py-1 rounded-full font-mono shadow-sm">
+            {ev.tiers.length} TIERS
+          </span>
         )}
         <span className="absolute bottom-2.5 left-2.5 flex items-center gap-1 bg-brand-text text-white text-[9px] font-bold px-2 py-1 rounded-full shadow-sm">
           <Link2 size={9} strokeWidth={2.5} /> NFT
@@ -172,7 +230,7 @@ function EventCard({ ev, onClick }) {
 
         <div className="flex justify-between items-center">
           <div className="text-brand-orange font-extrabold text-lg tracking-tight">
-            {ev.price === 0 ? "FREE" : `GHS ${ev.price}`}
+            {fromPrice === 0 ? "FREE" : `${hasTiers ? "From " : ""}GHS ${fromPrice}`}
           </div>
           <span className="text-xs font-semibold text-brand-muted flex items-center gap-1">
             View <ArrowRight size={12} strokeWidth={2} />
@@ -215,10 +273,27 @@ function InfoTile({ Icon, label, value }) {
   );
 }
 
+// ── EventDetailOverlay — now tier-aware. When ev.tiers has entries,
+// a TierPicker renders above the buy button, the button is disabled
+// until a tier is chosen, and onCheckout receives the selected tier
+// so Checkout shows the right price. ──
 function EventDetailOverlay({ ev, onBack, onCheckout }) {
   const desktop   = isDesktop();
+  const hasTiers  = Array.isArray(ev.tiers) && ev.tiers.length > 0;
   const remaining = ev.totalTickets - ev.ticketsSold;
   const soldPct   = Math.max(5, Math.min(100, ((ev.ticketsSold || 0) / (ev.totalTickets || 1)) * 100));
+
+  // Auto-select when there's only one tier — no real choice to make.
+  const [selectedTier, setSelectedTier] = useState(hasTiers && ev.tiers.length === 1 ? ev.tiers[0] : null);
+
+  const displayPrice = hasTiers ? (selectedTier ? selectedTier.price : null) : ev.price;
+  const buyDisabled  = hasTiers && !selectedTier;
+
+  const buyLabel = () => {
+    if (buyDisabled) return "Select a ticket type";
+    if (displayPrice === 0 || ev.price === 0) return "Get Free Ticket";
+    return `Buy Ticket — GHS ${displayPrice}`;
+  };
 
   const trustRow = (
     <div className="flex items-center justify-center gap-4 mt-3 flex-wrap">
@@ -277,6 +352,10 @@ function EventDetailOverlay({ ev, onBack, onCheckout }) {
 
             <DescriptionBlock desc={ev.description} name={ev.name} compact />
 
+            {hasTiers && (
+              <TierPicker tiers={ev.tiers} selectedId={selectedTier?.id} onSelect={setSelectedTier} compact />
+            )}
+
             <div className="flex items-center gap-2.5 bg-pastel-blue rounded-xl px-3.5 py-3 mb-5">
               <Link2 size={16} strokeWidth={1.75} className="text-fintech-blue shrink-0" />
               <div>
@@ -285,9 +364,11 @@ function EventDetailOverlay({ ev, onBack, onCheckout }) {
               </div>
             </div>
 
-            <button onClick={onCheckout}
-              className="w-full py-4 bg-brand-orange hover:bg-brand-orange-hover text-white rounded-full text-[15px] font-bold transition-colors">
-              {ev.price === 0 ? "Get Free Ticket" : `Buy Ticket — GHS ${ev.price}`}
+            <button onClick={() => !buyDisabled && onCheckout(selectedTier)} disabled={buyDisabled}
+              className={`w-full py-4 rounded-full text-[15px] font-bold transition-colors ${
+                buyDisabled ? "bg-gray-200 text-gray-400 cursor-not-allowed" : "bg-brand-orange hover:bg-brand-orange-hover text-white"
+              }`}>
+              {buyLabel()}
             </button>
             {trustRow}
           </div>
@@ -375,14 +456,25 @@ function EventDetailOverlay({ ev, onBack, onCheckout }) {
 
           <DescriptionBlock desc={ev.description} name={ev.name} />
 
+          {hasTiers && (
+            <TierPicker tiers={ev.tiers} selectedId={selectedTier?.id} onSelect={setSelectedTier} />
+          )}
+
           <div className="bg-white border border-gray-100 rounded-2xl shadow-sm p-5">
             <div className="flex items-baseline gap-2 mb-4">
-              <div className="text-[34px] font-extrabold text-brand-orange tracking-tight leading-none">{ev.price === 0 ? "FREE" : `GHS ${ev.price}`}</div>
-              {ev.price > 0 && <span className="text-xs text-brand-muted">per ticket</span>}
+              <div className="text-[34px] font-extrabold text-brand-orange tracking-tight leading-none">
+                {hasTiers
+                  ? (selectedTier ? `GHS ${selectedTier.price}` : "Select a tier")
+                  : (ev.price === 0 ? "FREE" : `GHS ${ev.price}`)}
+              </div>
+              {!hasTiers && ev.price > 0 && <span className="text-xs text-brand-muted">per ticket</span>}
+              {hasTiers && selectedTier && <span className="text-xs text-brand-muted">per ticket</span>}
             </div>
-            <button onClick={onCheckout}
-              className="w-full py-4 bg-brand-orange hover:bg-brand-orange-hover text-white rounded-full text-base font-bold transition-colors mb-3">
-              {ev.price === 0 ? "Get Free Ticket →" : `Buy Ticket — GHS ${ev.price} →`}
+            <button onClick={() => !buyDisabled && onCheckout(selectedTier)} disabled={buyDisabled}
+              className={`w-full py-4 rounded-full text-base font-bold transition-colors mb-3 ${
+                buyDisabled ? "bg-gray-200 text-gray-400 cursor-not-allowed" : "bg-brand-orange hover:bg-brand-orange-hover text-white"
+              }`}>
+              {buyLabel()}{!buyDisabled && " →"}
             </button>
             {trustRow}
           </div>
@@ -407,6 +499,7 @@ export default function AttendeeHome() {
   const setCheckoutEvent = useStore(s => s.setCheckoutEvent);
   const setTicketQty     = useStore(s => s.setTicketQty);
   const setOverlayEvent  = useStore(s => s.setOverlayEvent);
+  const setSelectedTier  = useStore(s => s.setSelectedTier);
   const overlayEvent     = useStore(s => s.overlayEvent);
   const searchQ          = useStore(s => s.searchQ);
   const setSearchQ       = useStore(s => s.setSearchQ);
@@ -448,6 +541,18 @@ export default function AttendeeHome() {
               organizerName: e.organizer?.first_name
                 ? `${e.organizer.first_name} ${e.organizer.last_name || ""}`.trim()
                 : e.organizer_name || null,
+              // ── NEW: tiers were coming back from the API all along —
+              // just never mapped onto the event object the UI reads from.
+              // Each tier already has id/name/price/capacity/sold/remaining
+              // from TicketTierSerializer. ──
+              tiers: Array.isArray(e.tiers) ? e.tiers.map(t => ({
+                id:        t.id,
+                name:      t.name,
+                price:     parseFloat(t.price) || 0,
+                capacity:  t.capacity,
+                sold:      t.sold,
+                remaining: t.remaining,
+              })) : [],
             }))
           : []
       ),
@@ -478,12 +583,19 @@ export default function AttendeeHome() {
   const totalPages = Math.ceil(filtered.length / perPage);
   const paginated  = filtered.slice((page - 1) * perPage, page * perPage);
 
-  const goToCheckout = useCallback((ev) => {
-    setCheckoutEvent(ev);
+  // ── goToCheckout now accepts the selected tier (or null for
+  // non-tiered/free events). The event object handed to Checkout gets
+  // its price overridden to the tier's price so the existing Checkout
+  // component — which reads checkoutEvent.price — shows the right
+  // total without needing its own tier-price logic. ──
+  const goToCheckout = useCallback((ev, tier) => {
+    const eventForCheckout = tier ? { ...ev, price: tier.price } : ev;
+    setCheckoutEvent(eventForCheckout);
+    setSelectedTier(tier || null);
     setTicketQty(1);
     setOverlayEvent(null);
     setScreen("checkout");
-  }, [setCheckoutEvent, setTicketQty, setOverlayEvent, setScreen]);
+  }, [setCheckoutEvent, setSelectedTier, setTicketQty, setOverlayEvent, setScreen]);
 
   const handlePageChange = (p) => {
     setPage(p);
@@ -505,7 +617,7 @@ export default function AttendeeHome() {
     <EventDetailOverlay
       ev={overlayEvent}
       onBack={() => setOverlayEvent(null)}
-      onCheckout={() => goToCheckout(overlayEvent)}
+      onCheckout={(tier) => goToCheckout(overlayEvent, tier)}
     />
   );
 

@@ -887,15 +887,32 @@ const useStore = create((set, get) => ({
 // ── History subscription — see comment block above the store for
 // full explanation. This must be set up AFTER the store is created,
 // and it initializes the browser's history state to match the boot
-// screen so the very first popstate has something valid to read. ──
+// screen so the very first popstate has something valid to read.
+//
+// FIX: both calls below now preserve window.location.search and
+// .hash, not just .pathname. The original version dropped the query
+// string entirely — which silently deleted Google's ?code=... on the
+// OAuth callback, ?verify=... on email verification links, ?uid=&
+// token= on password reset, ?event=... on shared event links, and
+// ?admin=1/?door=1 — before App.jsx's effect ever got a chance to
+// read them. This is what caused "Google sign-in loads then does
+// nothing." ──
 if (typeof window !== "undefined") {
-  window.history.replaceState({ screen: bootState.screen }, "", window.location.pathname);
+  window.history.replaceState(
+    { screen: bootState.screen },
+    "",
+    window.location.pathname + window.location.search + window.location.hash
+  );
   let _lastPushedScreen = bootState.screen;
   useStore.subscribe((state) => {
     if (state.screen !== _lastPushedScreen) {
       _lastPushedScreen = state.screen;
       if (!_isRestoringFromHistory) {
-        window.history.pushState({ screen: state.screen }, "", window.location.pathname);
+        window.history.pushState(
+          { screen: state.screen },
+          "",
+          window.location.pathname + window.location.search + window.location.hash
+        );
       }
     }
   });

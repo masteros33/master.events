@@ -1,6 +1,6 @@
 import React from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import useStore from "./store/useStore";
+import useStore, { _setRestoringFromHistory } from "./store/useStore";
 import PhoneFrame from "./components/PhoneFrame";
 import Login from "./screens/auth/Login";
 import { Signup, RoleSelect } from "./screens/auth/Signup";
@@ -551,6 +551,35 @@ export default function App() {
         })
         .catch(() => { window.history.replaceState({}, "", "/"); useStore.getState().setScreen("login"); });
     }
+  }, []);
+
+  // ── NEW: back button / mobile back gesture support ──────────
+  // Listens for the browser's popstate event (fired when the user
+  // presses the browser back button, or the mobile back gesture,
+  // or a hardware back button on Android). Restores whatever screen
+  // was stored in that history entry's state, set via the
+  // useStore.subscribe() call in useStore.js. The
+  // _setRestoringFromHistory flag tells that subscription not to
+  // push a NEW history entry for this restoration — otherwise every
+  // back-press would immediately get re-pushed forward, making the
+  // back button feel like it does nothing.
+  React.useEffect(() => {
+    const onPopState = (e) => {
+      const prevScreen = e.state?.screen;
+      _setRestoringFromHistory(true);
+      if (prevScreen) {
+        useStore.setState({ screen: prevScreen });
+      } else {
+        // No screen recorded in this history entry (e.g. the very
+        // first load, before any navigation happened) — fall back to
+        // the app's natural home screen rather than letting the
+        // browser navigate away from the app entirely.
+        useStore.setState({ screen: useStore.getState().isLoggedIn ? "app" : "home" });
+      }
+      _setRestoringFromHistory(false);
+    };
+    window.addEventListener("popstate", onPopState);
+    return () => window.removeEventListener("popstate", onPopState);
   }, []);
 
   React.useEffect(() => {

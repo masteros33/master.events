@@ -22,6 +22,16 @@ function tierIcon(name) {
   return Ticket;
 }
 
+// ── NEW: badge color scheme by tier — Regular stays neutral so it
+// doesn't compete visually, VIP gets blue, VVIP gets the brand orange
+// treatment so it reads as the premium tier at a glance ──
+function tierBadgeColor(name) {
+  const n = (name || "").toLowerCase();
+  if (n.includes("vvip")) return "bg-pastel-orange text-brand-orange border-brand-orange/20";
+  if (n.includes("vip"))  return "bg-pastel-blue text-fintech-blue border-fintech-blue/20";
+  return "bg-gray-100 text-gray-600 border-gray-200";
+}
+
 // ── Fintech primary button ────────────────────────────────────
 function PrimaryBtn({ children, onClick, disabled, loading }) {
   return (
@@ -135,9 +145,10 @@ function PerforatedLine() {
 }
 
 // ── Premium Ticket ────────────────────────────────────────────
-function PremiumTicket({ ev, ownerName, qrSrc, qrLoaded, qrError, refreshing, setQrLoaded, setQrError, timeLeft, isExpiringSoon, progressColor, ticketId, txHash, tokenId, status, quantity }) {
+function PremiumTicket({ ev, ownerName, qrSrc, qrLoaded, qrError, refreshing, setQrLoaded, setQrError, timeLeft, isExpiringSoon, progressColor, ticketId, txHash, tokenId, status, quantity, tierName }) {
   const desktop  = isDesktop();
   const [showId, setShowId] = useState(false);
+  const TierIcon = tierIcon(tierName);
 
   const idStr  = (ticketId || "").toString().toUpperCase();
   const idMask = idStr.length > 8 ? idStr.slice(0, 8) + "••••••••" : "••••••••";
@@ -162,7 +173,17 @@ function PremiumTicket({ ev, ownerName, qrSrc, qrLoaded, qrError, refreshing, se
       </div>
 
       <div className="px-4 pt-3.5 pb-3">
-        <div className="text-[9px] font-bold text-brand-muted tracking-widest font-mono mb-1">YOUR TICKET</div>
+        <div className="flex items-center justify-between gap-2 mb-1">
+          <div className="text-[9px] font-bold text-brand-muted tracking-widest font-mono">YOUR TICKET</div>
+          {/* ── NEW: tier badge — only rendered when the ticket has a
+          tierName (tiered events). Non-tiered events show nothing
+          here, keeping the header the same as before for them. ── */}
+          {tierName && (
+            <span className={`flex items-center gap-1 text-[9px] font-bold px-2 py-1 rounded-full border ${tierBadgeColor(tierName)}`}>
+              <TierIcon size={10} strokeWidth={2.5} /> {tierName.toUpperCase()}
+            </span>
+          )}
+        </div>
         <div className="font-bold text-brand-text text-[17px] leading-tight mb-1">{ev?.name || "Event Ticket"}</div>
         <div className="flex items-center gap-1 text-brand-muted text-[11px]">
           <MapPin size={11} strokeWidth={1.75} /> {ev?.venue || "Venue TBA"}
@@ -368,18 +389,9 @@ export function Checkout() {
 
   if (!checkoutEvent) return null;
 
-  // No premature rounding — keep the exact price so what we charge via
-  // Paystack matches exactly what the backend expects in
-  // verify_paystack_payment(). Rounding only happens at pesewas conversion.
   const unitPrice = parseFloat(checkoutEvent.price) || 0;
   const qty       = Math.max(1, parseInt(ticketQty) || 1);
   const subtotal  = unitPrice * qty;
-  // No added customer surcharge — the backend already deducts the
-  // platform's 5% from the organizer's payout (organizer_amount = total *
-  // 0.95 in purchase_ticket). Charging the customer an *additional* 5% on
-  // top double-billed the same fee. Customer pays exactly the ticket
-  // price, matching what OrganizerHome's "You (95%) / Platform (5%)"
-  // already promises.
   const total     = subtotal;
   const isFree    = unitPrice === 0;
   const TierIcon  = tierIcon(selectedTier?.name);
@@ -388,13 +400,6 @@ export function Checkout() {
     if (paying) return;
     setPayError(""); setPaying(true);
 
-    // ── Free events never touch Paystack. A fabricated "FREE-<timestamp>"
-    // reference was never actually processed by Paystack, so the
-    // backend's verify_paystack_payment() correctly rejects it with a
-    // 402 "Payment could not be verified" — that was the exact bug.
-    // Free events instead call the dedicated register-free-event
-    // endpoint via handleRegisterFree, which only checks capacity and
-    // creates a Registration record — no payment involved at all. ──
     if (isFree) {
       try { await handleRegisterFree(); }
       catch { setPayError("Something went wrong. Please try again."); }
@@ -437,9 +442,6 @@ export function Checkout() {
 
     const openPaystack = () => {
       try {
-        // total * 100 is now the EXACT pesewas value the backend's
-        // verify_paystack_payment() will check against — no rounding
-        // drift between what's charged and what's verified.
         const handler = window.PaystackPop.setup({
           key: import.meta.env.VITE_PAYSTACK_PUBLIC_KEY || "",
           email: currentUser?.email || "",
@@ -472,11 +474,9 @@ export function Checkout() {
           </span>
         } />
 
-      {/* Body */}
       <div className="flex-1 overflow-y-auto" style={{ WebkitOverflowScrolling: "touch" }}>
         <div className={`mx-auto ${desktop ? "max-w-[600px] px-10 py-7" : "px-4 py-5"}`} style={{ paddingBottom: desktop ? "80px" : "100px" }}>
 
-          {/* Event banner */}
           <div className="rounded-2xl overflow-hidden border border-gray-100 shadow-sm mb-5">
             <div className="h-[120px] relative">
               {checkoutEvent.image
@@ -497,7 +497,6 @@ export function Checkout() {
             </div>
           </div>
 
-          {/* Quantity */}
           {!isFree && (
             <div className="bg-white rounded-2xl border border-gray-100 shadow-sm px-5 py-4.5 mb-4">
               <div className="text-[10px] font-bold text-brand-muted tracking-widest font-mono mb-3.5">QUANTITY</div>
@@ -520,7 +519,6 @@ export function Checkout() {
             </div>
           )}
 
-          {/* Payment method */}
           {!isFree && (
             <div className="bg-white rounded-2xl border border-gray-100 shadow-sm px-5 py-4.5 mb-4">
               <div className="text-[10px] font-bold text-brand-muted tracking-widest font-mono mb-3.5">PAYMENT METHOD</div>
@@ -541,7 +539,6 @@ export function Checkout() {
             </div>
           )}
 
-          {/* Order summary — no added fee line, matches what backend charges */}
           <div className="bg-fintech-gray rounded-2xl p-4 mb-5 border border-gray-100">
             <div className="text-[10px] font-bold text-brand-muted tracking-widest font-mono mb-4">ORDER SUMMARY</div>
             {isFree ? (
@@ -566,7 +563,6 @@ export function Checkout() {
             )}
           </div>
 
-          {/* Error */}
           <AnimatePresence>
             {payError && (
               <motion.div initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
@@ -576,12 +572,10 @@ export function Checkout() {
             )}
           </AnimatePresence>
 
-          {/* Pay button */}
           <PrimaryBtn onClick={onPay} loading={paying} disabled={paying}>
             {paying ? "Processing..." : isFree ? "Get Free Ticket" : `Pay GHS ${total.toLocaleString()} →`}
           </PrimaryBtn>
 
-          {/* Trust row */}
           <div className="flex items-center justify-center gap-4 mt-4 flex-wrap">
             {[[Lock,"Secured by Paystack"],[Link2,"NFT on Polygon"],[Smartphone,"MoMo & Card"]].map(([Icon,label]) => (
               <span key={label} className="flex items-center gap-1.5 text-[10px] text-brand-muted">
@@ -669,7 +663,8 @@ export function TicketView() {
           timeLeft={timeLeft} isExpiringSoon={isExpiringSoon} progressColor={progressColor}
           ticketId={viewingTicket.ticket_id || viewingTicket.id}
           txHash={viewingTicket.nft_tx_hash} tokenId={viewingTicket.nft_token_id}
-          status={viewingTicket.status} quantity={viewingTicket.quantity || viewingTicket.qty} />
+          status={viewingTicket.status} quantity={viewingTicket.quantity || viewingTicket.qty}
+          tierName={viewingTicket.tierName} />
       </div>
 
       {/* Security accordion */}

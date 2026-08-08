@@ -98,6 +98,28 @@ const bootState = saved && token ? {
   activeTab:   "home",
 };
 
+// ── Back button / history support ───────────────────────────
+// Rather than requiring every screen-change call site in this file
+// (there are dozens — handleLogin, handleLogout, handleBuyTicket,
+// handleAddEvent, etc.) to be individually rewritten to push browser
+// history, the store instead SUBSCRIBES to its own `screen` field and
+// pushes a real history entry automatically whenever it changes, no
+// matter how the change happened (setScreen, direct set(), or
+// useStore.setState() from App.jsx). This is what makes the browser
+// back button and mobile back gesture actually go to the previous
+// screen instead of exiting the app entirely — previously `screen`
+// was purely in-memory Zustand state with nothing in the real
+// browser history stack for "back" to go to.
+//
+// _isRestoringFromHistory is a plain module-level flag (not Zustand
+// state, so it never triggers a re-render) that App.jsx's popstate
+// listener sets to true right before restoring a screen FROM history
+// — this stops the subscription below from re-pushing that same
+// entry back onto the stack, which would otherwise create an
+// infinite forward-loop every time the user pressed back.
+let _isRestoringFromHistory = false;
+export function _setRestoringFromHistory(v) { _isRestoringFromHistory = v; }
+
 const useStore = create((set, get) => ({
 
   // ── Navigation ─────────────────────────────────────────────
@@ -279,8 +301,6 @@ const useStore = create((set, get) => ({
   ticketQty:        1,
   payMethod:        "momo",
   viewingTicket:    null,
-  // ── NEW: selected ticket tier (VIP/VVIP/Regular), null for
-  // non-tiered events — carried alongside checkoutEvent through checkout
   selectedTier:     null,
   setCheckoutEvent: (v) => set({ checkoutEvent: v }),
   setTicketQty:     (v) => set({ ticketQty: v }),
@@ -288,13 +308,6 @@ const useStore = create((set, get) => ({
   setViewingTicket: (v) => set({ viewingTicket: v }),
   setSelectedTier:  (v) => set({ selectedTier: v }),
 
-  // ── handleRegisterFree ───────────────────────────────────────
-  // Free events must NEVER go through purchase_ticket / Paystack —
-  // there's no real payment reference to verify, so verify_paystack_payment
-  // correctly rejects the fabricated one with a 402 "Payment could not be
-  // verified" error. Free events instead use the dedicated
-  // register-free-event endpoint, which just checks capacity and creates
-  // a Registration record — no payment involved at all.
   handleRegisterFree: async () => {
     const { checkoutEvent } = get();
     if (!checkoutEvent) return;
@@ -361,7 +374,6 @@ const useStore = create((set, get) => ({
     }
   },
 
-  // ── handleBuyTicket ────────────────────────────────────────
   handleBuyTicket: async (paymentReference) => {
     const { ticketsAPI } = await import("../api");
     const { checkoutEvent, ticketQty, payMethod, myTickets, selectedTier } = get();
@@ -448,9 +460,6 @@ const useStore = create((set, get) => ({
           quantity:          ticketQty,
           payment_reference: reference,
         };
-        // ── Include tier_id only when a tier was actually selected —
-        // omitting it entirely keeps non-tiered events on the exact
-        // same request shape they've always used ──
         if (selectedTier?.id) body.tier_id = selectedTier.id;
 
         const res = await fetch(`${BACKEND}/api/tickets/purchase/`, {
@@ -716,7 +725,6 @@ const useStore = create((set, get) => ({
         sales_open:    true,
       };
       if (addEventForm.image) payload.image = addEventForm.image;
-      // ── NEW: pass ticket tiers through to the backend when present ──
       if (Array.isArray(addEventForm.ticket_tiers) && addEventForm.ticket_tiers.length) {
         payload.ticket_tiers = addEventForm.ticket_tiers;
       }
@@ -875,5 +883,22 @@ const useStore = create((set, get) => ({
   },
 
 }));
+
+// ── History subscription — see comment block above the store for
+// full explanation. This must be set up AFTER the store is created,
+// and it initializes the browser's history state to match the boot
+// screen so the very first popstate has something valid to read. ──
+if (typeof window !== "undefined") {
+  window.history.replaceState({ screen: bootState.screen }, "", window.location.pathname);
+  let _lastPushedScreen = bootState.screen;
+  useStore.subscribe((state) => {
+    if (state.screen !== _lastPushedScreen) {
+      _lastPushedScreen = state.screen;
+      if (!_isRestoringFromHistory) {
+        window.history.pushState({ screen: state.screen }, "", window.location.pathname);
+      }
+    }
+  });
+}
 
 export default useStore;

@@ -5,6 +5,7 @@ import {
   Camera, Lock, Search, DoorOpen, Ticket, Landmark, Globe, Bell, Pause, Play,
   X, Users, Tag, LayoutDashboard, ArrowLeft, Plus, ChevronDown, ChevronUp,
   RefreshCw, Download, Copy, Check, ScanLine, Crown, Star, Sparkles,
+  ShieldCheck, Clock,
 } from "lucide-react";
 import useStore from "../../store/useStore";
 import { eventsAPI } from "../../api";
@@ -65,6 +66,7 @@ const mapEvent = e => ({
   description:  e.description    || "",
   image:        e.image || catImg[e.category] || catImg.other,
   tiers:        e.tiers || [],
+  isApproved:   e.is_approved !== undefined ? e.is_approved : true,
 });
 
 // pct-based capacity color: red past 80%, brand orange mid, green low
@@ -160,10 +162,17 @@ function EventCard({ ev, onClick }) {
           {isFree && <span className="bg-fintech-green text-white text-[8px] font-bold px-2 py-1 rounded-full font-mono">FREE</span>}
         </div>
 
-        <div className={`absolute top-2.5 right-2.5 flex items-center gap-1.5 px-2 py-1 rounded-full ${ev.salesOpen ? "bg-fintech-green" : "bg-gray-500"}`}>
-          <span className="w-1.5 h-1.5 rounded-full bg-white" />
-          <span className="text-[8px] font-bold text-white font-mono">{ev.salesOpen ? "LIVE" : "CLOSED"}</span>
-        </div>
+        {!ev.isApproved ? (
+          <div className="absolute top-2.5 right-2.5 flex items-center gap-1.5 px-2 py-1 rounded-full bg-amber-500">
+            <Clock size={9} strokeWidth={2.5} className="text-white" />
+            <span className="text-[8px] font-bold text-white font-mono">PENDING</span>
+          </div>
+        ) : (
+          <div className={`absolute top-2.5 right-2.5 flex items-center gap-1.5 px-2 py-1 rounded-full ${ev.salesOpen ? "bg-fintech-green" : "bg-gray-500"}`}>
+            <span className="w-1.5 h-1.5 rounded-full bg-white" />
+            <span className="text-[8px] font-bold text-white font-mono">{ev.salesOpen ? "LIVE" : "CLOSED"}</span>
+          </div>
+        )}
       </div>
 
       <div className="p-3.5 pb-4">
@@ -189,34 +198,48 @@ function EventCard({ ev, onClick }) {
   );
 }
 
-// ── Activity feed — ledger treatment ────────────────────────────
+// ── Activity feed — now pulls real transactions from the backend
+// instead of generating fake Math.random() events. Polls every 15s
+// while mounted so it still feels "live" without needing websockets.
+// Shows an honest empty state when there's genuinely no activity yet
+// instead of ever fabricating data. ──
 function ActivityFeed({ events }) {
-  const [feed, setFeed] = useState([]);
-  const ref = useRef(false);
+  const [feed,    setFeed]    = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  const typeConfig = {
+    sale:        { Icon: Ticket,    color: "text-fintech-green", bg: "bg-pastel-green", label: "Ticket purchased" },
+    resale_sale: { Icon: RefreshCw, color: "text-fintech-blue",  bg: "bg-pastel-blue",  label: "Resale sale" },
+    withdrawal:  { Icon: Wallet,    color: "text-brand-orange",  bg: "bg-pastel-orange", label: "Withdrawal" },
+    refund:      { Icon: RefreshCw, color: "text-red-600",       bg: "bg-red-50",        label: "Refund" },
+    fee:         { Icon: Landmark,  color: "text-brand-muted",   bg: "bg-gray-100",      label: "Platform fee" },
+  };
+
+  const timeAgo = (iso) => {
+    const diffMs = Date.now() - new Date(iso).getTime();
+    const mins   = Math.floor(diffMs / 60000);
+    if (mins < 1)   return "just now";
+    if (mins < 60)  return `${mins}m ago`;
+    const hrs = Math.floor(mins / 60);
+    if (hrs < 24)   return `${hrs}h ago`;
+    return `${Math.floor(hrs / 24)}d ago`;
+  };
+
+  const fetchActivity = () => {
+    const token = localStorage.getItem("access_token") || "";
+    fetch("https://master-events-backend.onrender.com/api/payments/organizer-activity/", {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+      .then(r => r.json())
+      .then(data => { if (Array.isArray(data)) setFeed(data); setLoading(false); })
+      .catch(() => setLoading(false));
+  };
 
   useEffect(() => {
-    if (!events.length || ref.current) return;
-    ref.current = true;
-    const types = [
-      ev => ({ Icon: Ticket,     color: "text-fintech-green", bg: "bg-pastel-green", label: "Ticket purchased",     detail: `×${Math.ceil(Math.random()*3)} · ${ev.name}`, amount: `+${ev.currency||"GHS"} ${Math.round(ev.price*Math.ceil(Math.random()*3)*0.95).toLocaleString()}`, ts: `${Math.floor(Math.random()*55)+1}m ago` }),
-      ev => ({ Icon: RefreshCw,  color: "text-fintech-blue",  bg: "bg-pastel-blue",  label: "Ticket transferred",   detail: ev.name,                                        amount: null, ts: `${Math.floor(Math.random()*3)+1}h ago`  }),
-      ev => ({ Icon: Link2,      color: "text-brand-text",    bg: "bg-gray-100",     label: "NFT minted on Polygon", detail: `Token #${Math.floor(Math.random()*9000)+1000}`, amount: null, ts: `${Math.floor(Math.random()*5)+1}h ago` }),
-      ev => ({ Icon: Wallet,     color: "text-brand-orange",  bg: "bg-pastel-orange", label: "Payout queued",       detail: ev.name, amount: `${ev.currency||"GHS"} ${Math.round(ev.price*Math.ceil(Math.random()*4)*0.95).toLocaleString()}`, ts: `${Math.floor(Math.random()*8)+2}h ago` }),
-    ];
-    const initial = [];
-    for (let i = 0; i < Math.min(8, events.length * 3); i++) {
-      const ev = events[Math.floor(Math.random() * events.length)];
-      initial.push({ id: i, ...types[Math.floor(Math.random() * types.length)](ev) });
-    }
-    setFeed(initial);
-    const tick = () => {
-      const ev = events[Math.floor(Math.random() * events.length)];
-      setFeed(prev => [{ id: Date.now(), ...types[0](ev), ts: "just now" }, ...prev].slice(0, 12));
-      setTimeout(tick, 8000 + Math.random() * 7000);
-    };
-    const t = setTimeout(tick, 5000 + Math.random() * 5000);
-    return () => clearTimeout(t);
-  }, [events.length]);
+    fetchActivity();
+    const interval = setInterval(fetchActivity, 15000);
+    return () => clearInterval(interval);
+  }, []);
 
   return (
     <div className="flex flex-col">
@@ -224,26 +247,39 @@ function ActivityFeed({ events }) {
         <span className="w-1.5 h-1.5 rounded-full bg-fintech-green" />
         <span className="text-[10px] font-bold text-fintech-green font-mono tracking-widest">LIVE ACTIVITY</span>
       </div>
-      <AnimatePresence initial={false}>
-        {feed.map(item => (
-          <motion.div key={item.id}
-            initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, height: 0 }} transition={{ duration: 0.22 }}
-            className="flex items-center gap-2.5 py-2.5 border-b border-gray-50 last:border-b-0">
-            <div className={`w-8 h-8 rounded-lg ${item.bg} flex items-center justify-center shrink-0`}>
-              <item.Icon size={14} strokeWidth={2} className={item.color} />
-            </div>
-            <div className="flex-1 min-w-0">
-              <div className="text-[13px] font-semibold text-brand-text truncate">{item.label}</div>
-              <div className="text-[10px] text-brand-muted truncate">{item.detail}</div>
-            </div>
-            <div className="text-right shrink-0">
-              {item.amount && <div className="text-[12px] font-bold text-fintech-slate font-mono">{item.amount}</div>}
-              <div className="text-[9px] text-brand-muted font-mono mt-0.5">{item.ts}</div>
-            </div>
-          </motion.div>
-        ))}
-      </AnimatePresence>
-      {!feed.length && <div className="p-6 text-center text-brand-muted text-sm">Activity will appear once events are live</div>}
+
+      {loading ? (
+        <div className="flex flex-col gap-2">
+          {[1,2,3].map(i => <div key={i} className="skeleton" style={{ height: "48px", borderRadius: "10px" }} />)}
+        </div>
+      ) : feed.length === 0 ? (
+        <div className="p-6 text-center text-brand-muted text-sm">Activity will appear here as tickets sell</div>
+      ) : (
+        <AnimatePresence initial={false}>
+          {feed.map(item => {
+            const cfg = typeConfig[item.type] || typeConfig.fee;
+            return (
+              <motion.div key={item.id}
+                initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, height: 0 }} transition={{ duration: 0.22 }}
+                className="flex items-center gap-2.5 py-2.5 border-b border-gray-50 last:border-b-0">
+                <div className={`w-8 h-8 rounded-lg ${cfg.bg} flex items-center justify-center shrink-0`}>
+                  <cfg.Icon size={14} strokeWidth={2} className={cfg.color} />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="text-[13px] font-semibold text-brand-text truncate">{cfg.label}</div>
+                  <div className="text-[10px] text-brand-muted truncate">{item.description}</div>
+                </div>
+                <div className="text-right shrink-0">
+                  <div className="text-[12px] font-bold text-fintech-slate font-mono">
+                    {item.type === "withdrawal" ? "-" : "+"}GHS {item.amount.toLocaleString()}
+                  </div>
+                  <div className="text-[9px] text-brand-muted font-mono mt-0.5">{timeAgo(item.created_at)}</div>
+                </div>
+              </motion.div>
+            );
+          })}
+        </AnimatePresence>
+      )}
     </div>
   );
 }
@@ -303,16 +339,22 @@ function EventRow({ ev, onClick }) {
   const isFree = ev.event_type === "free";
   return (
     <motion.div whileHover={{ y: -1 }} whileTap={{ scale: 0.99 }} onClick={onClick}
-      className={`bg-white border border-gray-100 rounded-2xl shadow-sm overflow-hidden cursor-pointer transition-shadow hover:shadow-md flex ${tab() ? "flex-row" : "flex-col"}`}>
+      className={`bg-white border rounded-2xl shadow-sm overflow-hidden cursor-pointer transition-shadow hover:shadow-md flex ${tab() ? "flex-row" : "flex-col"} ${!ev.isApproved ? "border-amber-200" : "border-gray-100"}`}>
       <div className={`relative shrink-0 ${tab() ? "w-40 h-auto min-h-[80px]" : "w-full h-[120px]"}`}>
         <img src={ev.image} alt={ev.name} onError={e=>{e.target.src=catImg.other}} className="w-full h-full object-cover object-top block" />
         <div className="absolute top-2 left-2 flex gap-1">
           <span className="bg-brand-text text-white text-[8px] font-bold px-1.5 py-0.5 rounded font-mono">NFT</span>
           {isFree && <span className="bg-fintech-green text-white text-[8px] font-bold px-1.5 py-0.5 rounded font-mono">FREE</span>}
         </div>
-        <div className={`absolute top-2 right-2 flex items-center gap-1 px-1.5 py-0.5 rounded font-mono text-[8px] font-bold text-white ${ev.salesOpen ? "bg-fintech-green" : "bg-gray-500"}`}>
-          <span className="w-1 h-1 rounded-full bg-white" /> {ev.salesOpen ? "LIVE" : "CLOSED"}
-        </div>
+        {!ev.isApproved ? (
+          <div className="absolute top-2 right-2 flex items-center gap-1 px-1.5 py-0.5 rounded font-mono text-[8px] font-bold text-white bg-amber-500">
+            <Clock size={8} strokeWidth={2.5} /> PENDING
+          </div>
+        ) : (
+          <div className={`absolute top-2 right-2 flex items-center gap-1 px-1.5 py-0.5 rounded font-mono text-[8px] font-bold text-white ${ev.salesOpen ? "bg-fintech-green" : "bg-gray-500"}`}>
+            <span className="w-1 h-1 rounded-full bg-white" /> {ev.salesOpen ? "LIVE" : "CLOSED"}
+          </div>
+        )}
       </div>
       <div className="flex-1 p-4 flex flex-col justify-between min-w-0">
         <div>
@@ -373,6 +415,7 @@ export function OrganizerHome() {
   const sold    = paid.reduce((s,e) => s + e.ticketsSold, 0);
   const regs    = free.reduce((s,e) => s + (e.regs||e.ticketsSold), 0);
   const live    = orgEvents.filter(e => e.salesOpen).length;
+  const pendingReview = orgEvents.filter(e => !e.isApproved).length;
   const avgPrice = paid.length ? Math.round(paid.reduce((s,e)=>s+e.price,0)/paid.length) : 0;
 
   const revSpark  = Array.from({length:7}, (_,i) => Math.max(0, revenue*(0.4+Math.random()*0.7)*(i+1)/8));
@@ -410,6 +453,23 @@ export function OrganizerHome() {
             )}
           </div>
         </div>
+
+        {!loading && pendingReview > 0 && (
+          <motion.div initial={{ opacity:0, y:-6 }} animate={{ opacity:1, y:0 }}
+            className="flex items-center gap-3 bg-amber-50 border border-amber-200 rounded-2xl px-4 py-3.5 mb-5">
+            <div className="w-9 h-9 rounded-full bg-amber-100 flex items-center justify-center shrink-0">
+              <ShieldCheck size={16} strokeWidth={1.75} className="text-amber-700" />
+            </div>
+            <div>
+              <div className="text-[13px] font-bold text-amber-800">
+                {pendingReview} event{pendingReview > 1 ? "s" : ""} pending review
+              </div>
+              <div className="text-[11px] text-amber-700 mt-0.5">
+                New events are reviewed before going live to keep the platform safe for attendees. This usually doesn't take long.
+              </div>
+            </div>
+          </motion.div>
+        )}
 
         {loading ? (
           <div className="skeleton" style={{ height: "220px", borderRadius: "28px", marginBottom: "24px" }} />
@@ -614,8 +674,9 @@ export function OrganizerEvents() {
     return () => window.removeEventListener("resize", r);
   }, []);
 
-  const filtered = filter==="all" ? orgEvents : filter==="free" ? orgEvents.filter(e=>e.event_type==="free") : filter==="paid" ? orgEvents.filter(e=>e.event_type!=="free") : orgEvents.filter(e=>e.salesOpen);
+  const filtered = filter==="all" ? orgEvents : filter==="pending" ? orgEvents.filter(e=>!e.isApproved) : filter==="free" ? orgEvents.filter(e=>e.event_type==="free") : filter==="paid" ? orgEvents.filter(e=>e.event_type!=="free") : orgEvents.filter(e=>e.salesOpen);
   const PAD = isDesk ? "28px 40px 80px" : "16px 16px 100px";
+  const pendingCount = orgEvents.filter(e => !e.isApproved).length;
 
   return (
     <div className="bg-brand-canvas min-h-full font-sans">
@@ -626,7 +687,9 @@ export function OrganizerEvents() {
             <Plus size={14} strokeWidth={2.5} /> New Event
           </motion.button>} />
         <div className="flex gap-1 mb-5 bg-white p-1 rounded-xl border border-gray-100 w-fit">
-          {[["all","All"],["paid","Paid"],["free","Free"],["live","Live"]].map(([v,l]) => (
+          {[["all","All"],["paid","Paid"],["free","Free"],["live","Live"],
+            ...(pendingCount > 0 ? [["pending", `Pending (${pendingCount})`]] : [])
+          ].map(([v,l]) => (
             <button key={v} onClick={() => setFilter(v)}
               className={`px-4 py-1.5 rounded-lg text-xs font-semibold transition-colors ${filter===v ? "bg-brand-orange text-white" : "bg-transparent text-brand-muted hover:text-brand-text"}`}>
               {l}
@@ -693,12 +756,7 @@ export function OrganizerAlerts() {
 }
 
 // ═══════════════════════════════════════════════════════════════
-//  ADD EVENT — Ticket Tiers (VIP/VVIP/Regular) fully live on the
-//  backend. ticket_tiers is only ever attached for paid events,
-//  built via an explicit for-loop into a fresh array, then passed
-//  through JSON.parse(JSON.stringify(...)) as a final guarantee
-//  that only plain serializable data reaches the API — no
-//  possibility of a non-array making it through this function.
+//  ADD EVENT
 // ═══════════════════════════════════════════════════════════════
 export function AddEvent() {
   const addEventForm    = useStore(s => s.addEventForm);
@@ -716,7 +774,6 @@ export function AddEvent() {
   const [eventDates, setEventDates] = useState([]);
   const [newDate,    setNewDate]    = useState("");
 
-  // ── Ticket tiers state ──
   const [useTiers,    setUseTiers]    = useState(false);
   const [tiers,       setTiers]       = useState([]);
   const [newTierType, setNewTierType] = useState("regular");
@@ -737,7 +794,6 @@ export function AddEvent() {
   const removeDate = (date) => setEventDates(prev => prev.filter(d => d.date !== date));
   const updateDate = (date, field, value) => setEventDates(prev => prev.map(d => d.date===date?{...d,[field]:value}:d));
 
-  // ── Tier helpers ──
   const addTier = () => {
     const label = newTierType === "custom" ? (newTierName.trim() || "Custom") : TIER_PRESETS.find(t => t.key === newTierType)?.label || "Tier";
     if (!newTierPrice || !newTierCap) return;
@@ -773,7 +829,7 @@ export function AddEvent() {
     const form = {
       ...addEventForm,
       event_type: evType,
-      currency,           // always a real currency code, never "FREE"
+      currency,
       country,
       price: evType === "free" ? 0 : addEventForm.price,
     };
@@ -784,7 +840,6 @@ export function AddEvent() {
       form.date          = eventDates[0]?.date || "";
     }
 
-    // Tiers only ever apply to paid, non-multi-day events.
     if (evType === "paid" && !isMultiDay && useTiers && tiers.length) {
       const cleanTiers = [];
       for (let i = 0; i < tiers.length; i++) {
@@ -795,17 +850,11 @@ export function AddEvent() {
           capacity: parseInt(t.capacity) || 0,
         });
       }
-      // Final belt-and-suspenders guarantee: round-trip through JSON
-      // so absolutely nothing but a plain array of plain objects can
-      // reach handleAddEvent / the API, regardless of what shape
-      // anything upstream might otherwise carry.
       const safeTiers = JSON.parse(JSON.stringify(cleanTiers));
       form.ticket_tiers = safeTiers;
       form.totalTickets = tierTotalCapacity;
       form.price = Math.min(...safeTiers.map(t => t.price || Infinity));
     }
-    // Free events, or paid events without tiers, never get a
-    // ticket_tiers key at all — nothing for the backend to reject.
 
     setAddEventForm(form);
     handleAddEvent();
@@ -837,6 +886,13 @@ export function AddEvent() {
         <motion.div initial={{ opacity:0, y:16 }} animate={{ opacity:1, y:0 }} transition={{ duration:0.4 }}
           className="bg-white rounded-3xl border border-gray-100 shadow-sm" style={{ padding: isDesk ? "40px 44px" : "24px 20px" }}>
 
+          <div className="mb-6 flex items-start gap-2.5 bg-pastel-blue border border-fintech-blue/15 rounded-xl px-3.5 py-3">
+            <ShieldCheck size={15} strokeWidth={1.75} className="text-fintech-blue shrink-0 mt-0.5" />
+            <span className="text-[11px] text-fintech-blue leading-relaxed">
+              New events are reviewed before appearing publicly, to keep the platform safe for attendees. Your event will show as "Pending Review" until then.
+            </span>
+          </div>
+
           <div className="mb-7 pb-5 border-b border-gray-100">
             <h1 className="text-[22px] font-bold text-brand-text tracking-tight mb-1">Event Details</h1>
             <p className="text-[13px] text-brand-muted m-0">Fill in the details — NFT-verified tickets minted automatically on Polygon</p>
@@ -848,8 +904,6 @@ export function AddEvent() {
               {[{v:"paid",Icon:CreditCard,label:"Paid Event"},{v:"free",Icon:PartyPopper,label:"Free Event"}].map(item => (
                 <button key={item.v} onClick={() => {
                     setEvType(item.v);
-                    // Switching to Free clears any tier state left over
-                    // from when the form was set to Paid.
                     if (item.v === "free") { setUseTiers(false); setTiers([]); setErrors(p=>({...p,tiers:null})); }
                   }}
                   className={`px-5 py-2 rounded-lg text-[13px] font-semibold flex items-center gap-1.5 transition-colors ${evType===item.v ? "bg-brand-orange text-white" : "bg-transparent text-brand-muted"}`}>
@@ -974,7 +1028,6 @@ export function AddEvent() {
               </select>
             </div>
 
-            {/* ── Ticket Tiers toggle — paid, single-day events only ── */}
             {!isMultiDay && evType === "paid" && (
               <div className={isDesk ? "col-span-2" : ""}>
                 <div className="flex items-center justify-between px-4 py-3.5 bg-brand-canvas rounded-xl border border-gray-100">
@@ -993,7 +1046,6 @@ export function AddEvent() {
               </div>
             )}
 
-            {/* ── Ticket Tiers builder — mirrors the toggle's gating exactly ── */}
             {!isMultiDay && evType === "paid" && useTiers && (
               <div className={isDesk ? "col-span-2" : ""}>
                 <label className={labelClass}>Ticket Tiers {errors.tiers && <span className="text-red-600 font-normal normal-case">— {errors.tiers}</span>}</label>
@@ -1005,7 +1057,6 @@ export function AddEvent() {
                   </span>
                 </div>
 
-                {/* Add tier row */}
                 <div className="bg-brand-canvas border border-gray-100 rounded-xl p-3.5 mb-3">
                   <div className="flex gap-1.5 mb-2.5 flex-wrap">
                     {TIER_PRESETS.map(t => (
@@ -1035,7 +1086,6 @@ export function AddEvent() {
                   </button>
                 </div>
 
-                {/* Tier list */}
                 <AnimatePresence>
                   {tiers.map(t => {
                     const Icon = tierIcon(t.key);
@@ -1162,7 +1212,6 @@ export function AddEvent() {
             <span className="flex items-center gap-1.5 text-xs text-fintech-blue bg-pastel-blue px-3 py-1.5 rounded-lg font-medium"><Link2 size={12} strokeWidth={1.75} /> NFT on Polygon</span>
           </div>
 
-          {/* ── Button text simplified — "Create Event" always, no branching on type/multi-day ── */}
           <motion.button whileHover={{ scale:1.01 }} whileTap={{ scale:0.97 }} onClick={submit}
             className="w-full py-4 rounded-full bg-brand-orange hover:bg-brand-orange-hover text-white font-bold text-base transition-colors">
             Create Event
@@ -1227,7 +1276,6 @@ export function OrganizerEventDetail() {
   const pct     = ev.totalTickets > 0 ? Math.round((ev.ticketsSold/ev.totalTickets)*100) : 0;
   const cover   = ev.image || catImg[ev.category] || catImg.other;
   const evUrl   = ev.event_url || (ev.slug ? `https://masterevents.events/events/${ev.slug}` : "https://masterevents.events");
-  // Admitted count — computed from live ticket-holder statuses, not a local counter. Do not revert.
   const admittedCount = holders.filter(t => t.status === "redeemed").length;
 
   const onTab    = t => { setActiveTab(t); };
@@ -1356,8 +1404,27 @@ export function OrganizerEventDetail() {
           <div className="absolute bottom-3 left-3.5 flex gap-1.5">
             <span className="bg-brand-text text-white text-[8px] font-bold px-1.5 py-0.5 rounded font-mono">NFT</span>
             {isFree && <span className="bg-fintech-green text-white text-[8px] font-bold px-1.5 py-0.5 rounded font-mono">FREE</span>}
+            {!ev.isApproved && (
+              <span className="flex items-center gap-1 bg-amber-500 text-white text-[8px] font-bold px-1.5 py-0.5 rounded font-mono">
+                <Clock size={8} strokeWidth={2.5} /> PENDING REVIEW
+              </span>
+            )}
           </div>
         </div>
+
+        {!ev.isApproved && (
+          <div className="bg-amber-50 border-b border-amber-200 px-4 py-3.5" style={{ padding: isDesk ? "14px 40px" : "14px" }}>
+            <div className="flex items-start gap-2.5">
+              <ShieldCheck size={16} strokeWidth={1.75} className="text-amber-700 shrink-0 mt-0.5" />
+              <div>
+                <div className="text-[13px] font-bold text-amber-800">Pending Review</div>
+                <div className="text-[12px] text-amber-700 mt-0.5 leading-relaxed">
+                  This event isn't visible to attendees yet. Our team reviews new events before they go live to keep the platform safe. You'll be notified once it's approved.
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
 
         <div className="bg-white border-b border-gray-100" style={{ padding: isDesk ? "16px 40px" : "12px 14px" }}>
           <div className="text-[10px] font-medium text-brand-muted tracking-wide mb-1 font-mono">{(ev.category||"").toUpperCase()} · {ev.country||"GHANA"}</div>

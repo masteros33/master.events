@@ -248,9 +248,10 @@ function OrganizersTab({ token }) {
 
 // ── Events tab ────────────────────────────────────────────────
 function EventsTab({ token }) {
-  const [events,   setEvents]   = useState([]);
-  const [loading,  setLoading]  = useState(true);
-  const [toggling, setToggling] = useState(null);
+  const [events,    setEvents]    = useState([]);
+  const [loading,   setLoading]   = useState(true);
+  const [toggling,  setToggling]  = useState(null);
+  const [reviewing, setReviewing] = useState(null);
 
   useEffect(() => {
     adminFetch("/api/auth/admin/events/", token)
@@ -267,11 +268,26 @@ function EventsTab({ token }) {
     setToggling(null);
   };
 
+  // ── NEW: approve/reject an event pending review ──
+  const handleReview = async (eventId, action) => {
+    setReviewing(eventId);
+    try {
+      const res = await adminFetch(`/api/auth/admin/events/${eventId}/approve/`, token, {
+        method: "POST",
+        body: JSON.stringify({ action }),
+      });
+      setEvents(prev => prev.map(e => e.id === eventId ? { ...e, is_approved: res.is_approved } : e));
+    } catch {}
+    setReviewing(null);
+  };
+
   if (loading) return (
     <div className="p-7">
       {[1,2,3].map(i => <div key={i} className="skeleton" style={{ height: "72px", borderRadius: "16px", marginBottom: "10px" }} />)}
     </div>
   );
+
+  const pendingCount = events.filter(e => !e.is_approved).length;
 
   return (
     <div className="p-7 pb-14">
@@ -280,26 +296,44 @@ function EventsTab({ token }) {
           <div className="text-[11px] font-bold text-brand-muted tracking-widest font-mono mb-1">EVENT_REGISTRY</div>
           <h2 className="font-extrabold text-xl text-brand-text tracking-tight">All Events</h2>
         </div>
-        <div className="px-3.5 py-1.5 bg-pastel-orange rounded-full text-xs font-bold text-brand-orange font-mono">
-          {events.length} EVENTS
+        <div className="flex items-center gap-2">
+          {pendingCount > 0 && (
+            <div className="px-3.5 py-1.5 bg-amber-50 border border-amber-200 rounded-full text-xs font-bold text-amber-700 font-mono">
+              {pendingCount} PENDING REVIEW
+            </div>
+          )}
+          <div className="px-3.5 py-1.5 bg-pastel-orange rounded-full text-xs font-bold text-brand-orange font-mono">
+            {events.length} EVENTS
+          </div>
         </div>
       </div>
 
       <div className="flex flex-col gap-2">
         {events.map(ev => (
           <div key={ev.id}
-            className={`bg-white border rounded-xl shadow-sm px-4.5 py-4 flex items-center gap-4 ${!ev.is_active ? "border-red-100" : "border-gray-100"}`}>
+            className={`bg-white border rounded-xl shadow-sm px-4.5 py-4 flex items-center gap-4 ${
+              !ev.is_approved ? "border-amber-200" : !ev.is_active ? "border-red-100" : "border-gray-100"
+            }`}>
 
-            <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${ev.sales_open && ev.is_active ? "bg-pastel-green" : "bg-gray-100"}`}>
-              {ev.sales_open && ev.is_active
-                ? <span className="w-2 h-2 rounded-full bg-fintech-green" />
-                : <Pause size={14} strokeWidth={1.75} className="text-brand-muted" />}
+            <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${
+              !ev.is_approved ? "bg-amber-50" : ev.sales_open && ev.is_active ? "bg-pastel-green" : "bg-gray-100"
+            }`}>
+              {!ev.is_approved
+                ? <ShieldCheck size={14} strokeWidth={1.75} className="text-amber-600" />
+                : ev.sales_open && ev.is_active
+                  ? <span className="w-2 h-2 rounded-full bg-fintech-green" />
+                  : <Pause size={14} strokeWidth={1.75} className="text-brand-muted" />}
             </div>
 
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 mb-0.5">
                 <span className="font-bold text-sm text-brand-text truncate">{ev.name}</span>
-                {!ev.is_active && <span className="text-[9px] font-bold text-red-600 bg-red-50 px-2 py-0.5 rounded-full font-mono shrink-0">DISABLED</span>}
+                {!ev.is_approved && (
+                  <span className="text-[9px] font-bold text-amber-700 bg-amber-50 px-2 py-0.5 rounded-full font-mono shrink-0">PENDING REVIEW</span>
+                )}
+                {ev.is_approved && !ev.is_active && (
+                  <span className="text-[9px] font-bold text-red-600 bg-red-50 px-2 py-0.5 rounded-full font-mono shrink-0">DISABLED</span>
+                )}
               </div>
               <div className="text-[11px] text-brand-muted font-mono truncate">{ev.organizer} · {ev.date} · {ev.venue}</div>
             </div>
@@ -317,10 +351,25 @@ function EventsTab({ token }) {
               ))}
             </div>
 
-            <button onClick={() => handleToggle(ev.id)} disabled={toggling === ev.id}
-              className={`px-3.5 py-1.5 rounded-full border text-[11px] font-bold font-mono shrink-0 transition-colors ${toggling === ev.id ? "opacity-60" : ""} ${ev.is_active ? "border-red-200 bg-red-50 text-red-600" : "border-emerald-200 bg-emerald-50 text-emerald-700"}`}>
-              {toggling === ev.id ? "..." : ev.is_active ? "DISABLE" : "ENABLE"}
-            </button>
+            {/* ── Approve/Reject shown while pending; falls back to
+            the existing Enable/Disable toggle once reviewed ── */}
+            {!ev.is_approved ? (
+              <div className="flex gap-1.5 shrink-0">
+                <button onClick={() => handleReview(ev.id, "reject")} disabled={reviewing === ev.id}
+                  className={`px-3 py-1.5 rounded-full border text-[11px] font-bold font-mono transition-colors ${reviewing === ev.id ? "opacity-60" : ""} border-red-200 bg-red-50 text-red-600`}>
+                  {reviewing === ev.id ? "..." : "REJECT"}
+                </button>
+                <button onClick={() => handleReview(ev.id, "approve")} disabled={reviewing === ev.id}
+                  className={`px-3 py-1.5 rounded-full border text-[11px] font-bold font-mono transition-colors ${reviewing === ev.id ? "opacity-60" : ""} border-emerald-200 bg-emerald-50 text-emerald-700`}>
+                  {reviewing === ev.id ? "..." : "APPROVE"}
+                </button>
+              </div>
+            ) : (
+              <button onClick={() => handleToggle(ev.id)} disabled={toggling === ev.id}
+                className={`px-3.5 py-1.5 rounded-full border text-[11px] font-bold font-mono shrink-0 transition-colors ${toggling === ev.id ? "opacity-60" : ""} ${ev.is_active ? "border-red-200 bg-red-50 text-red-600" : "border-emerald-200 bg-emerald-50 text-emerald-700"}`}>
+                {toggling === ev.id ? "..." : ev.is_active ? "DISABLE" : "ENABLE"}
+              </button>
+            )}
           </div>
         ))}
       </div>

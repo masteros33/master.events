@@ -6,6 +6,9 @@ import Login from "./screens/auth/Login";
 import { Signup, RoleSelect } from "./screens/auth/Signup";
 import ResetPassword from "./screens/auth/ResetPassword";
 import AttendeeHome from "./screens/attendee/AttendeeHome";
+// ── NEW: public marketing site, previously unwired ──
+import LandingPage from "./screens/landing/LandingPage";
+import AboutPage from "./screens/landing/AboutPage";
 import ResaleMarketplace from "./screens/attendee/ResaleMarketplace";
 import CookieBanner from "./components/CookieBanner";
 import Settings from "./screens/attendee/Settings";
@@ -46,6 +49,19 @@ const APP_MODE_SCREENS = [
   "adminGateway", "adminDashboard",
   "doorStaffLogin", "doorStaffScan", "app",
 ];
+
+// ── NEW: translates LandingPage/AboutPage's onNavigate(target) calls
+// into real setScreen() calls. Keeps LandingPage/AboutPage decoupled
+// from the store's exact screen-name vocabulary — "home" means "go
+// back to the landing page", not the logged-in app's "home" tab. ──
+function publicNavigate(target) {
+  const setScreen = useStore.getState().setScreen;
+  if (target === "home")   { setScreen("landing"); return; }
+  if (target === "about")  { setScreen("about");   return; }
+  if (target === "signup") { setScreen("signup");  return; }
+  if (target === "login")  { setScreen("login");   return; }
+  // Unknown targets (e.g. "#" placeholders) — no-op rather than crash.
+}
 
 function MobileTopHeader({ onMenuOpen, title }) {
   const { theme, setTheme } = useTheme();
@@ -222,9 +238,11 @@ function MobileAppShell() {
   const isLoggedIn = useStore(s => s.isLoggedIn);
   const activeTab  = useStore(s => s.activeTab);
 
+  // ── CHANGED: logged-out visitors on the "home" state now see the
+  // real LandingPage instead of AttendeeHome's stripped-down view. ──
   if (!isLoggedIn && activeTab === "home" && screen === "app") return (
     <div className="app-shell">
-      <div className="tab-content"><AttendeeHome /></div>
+      <div className="tab-content"><LandingPage onNavigate={publicNavigate} /></div>
     </div>
   );
 
@@ -474,7 +492,6 @@ export default function App() {
     const verify = params.get("verify");
     const code   = params.get("code");
 
-    // ── Google OAuth redirect callback ─────────────────────
     if (code && window.location.pathname === "/auth/callback") {
       if (oauthHandled.current) return;
       oauthHandled.current = true;
@@ -553,16 +570,6 @@ export default function App() {
     }
   }, []);
 
-  // ── NEW: back button / mobile back gesture support ──────────
-  // Listens for the browser's popstate event (fired when the user
-  // presses the browser back button, or the mobile back gesture,
-  // or a hardware back button on Android). Restores whatever screen
-  // was stored in that history entry's state, set via the
-  // useStore.subscribe() call in useStore.js. The
-  // _setRestoringFromHistory flag tells that subscription not to
-  // push a NEW history entry for this restoration — otherwise every
-  // back-press would immediately get re-pushed forward, making the
-  // back button feel like it does nothing.
   React.useEffect(() => {
     const onPopState = (e) => {
       const prevScreen = e.state?.screen;
@@ -570,10 +577,6 @@ export default function App() {
       if (prevScreen) {
         useStore.setState({ screen: prevScreen });
       } else {
-        // No screen recorded in this history entry (e.g. the very
-        // first load, before any navigation happened) — fall back to
-        // the app's natural home screen rather than letting the
-        // browser navigate away from the app entirely.
         useStore.setState({ screen: useStore.getState().isLoggedIn ? "app" : "home" });
       }
       _setRestoringFromHistory(false);
@@ -594,6 +597,9 @@ export default function App() {
   if (screen === "doorStaffLogin") return <DoorStaffLogin />;
   if (screen === "doorStaffScan")  return <DoorStaffScan />;
   if (screen === "pendingEvent")   return <PhoneFrame><PublicEventPage /></PhoneFrame>;
+  // ── NEW: dedicated public routes, rendered full-page like admin/door-staff ──
+  if (screen === "landing")        return <LandingPage onNavigate={publicNavigate} />;
+  if (screen === "about")          return <AboutPage onNavigate={publicNavigate} />;
   if (desktop && isLoggedIn)       return <DesktopAppLayout />;
 
   return (

@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&family=Sora:wght@600;700;800&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -6,14 +6,15 @@
 
 /* ── Brand tokens ─────────────────────────────────────────── */
 :root {
-  --brand:         #F97316;
-  --brand-dark:    #EA6C0A;
-  --brand-deeper:  #C2540A;
-  --brand-glow:    rgba(249, 115, 22, 0.20);
-  --brand-light:   rgba(249, 115, 22, 0.08);
-  --brand-medium:  rgba(249, 115, 22, 0.14);
+  --brand:         #1c2e53;
+  --brand-dark:    #16233F;
+  --brand-deeper:  #101A2E;
+  --brand-glow:    rgba(28, 46, 83, 0.20);
+  --brand-light:   rgba(28, 46, 83, 0.08);
+  --brand-medium:  rgba(28, 46, 83, 0.14);
 
   --font-sans: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-display: 'Sora', -apple-system, BlinkMacSystemFont, sans-serif;
   --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
 
   --ease-smooth: cubic-bezier(0.16, 1, 0.3, 1);
@@ -22,7 +23,7 @@
   --shadow-sm:    0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
   --shadow-md:    0 4px 12px rgba(0,0,0,0.08), 0 2px 4px rgba(0,0,0,0.04);
   --shadow-lg:    0 16px 40px rgba(0,0,0,0.12), 0 4px 12px rgba(0,0,0,0.06);
-  --shadow-brand: 0 6px 20px rgba(249,115,22,0.38);
+  --shadow-brand: 0 6px 20px rgba(28,46,83,0.38);
 }
 
 /* ── Light mode ──────────────────────────────────────────── */
@@ -30,7 +31,7 @@
   --bg:              #faf9f7;
   --bg-card:         #ffffff;
   --bg-subtle:       #f4f3f0;
-  --bg-hover:        rgba(249,115,22,0.05);
+  --bg-hover:        rgba(28,46,83,0.05);
   --border:          #e8e5df;
   --border-strong:   #d1cec7;
   --text-primary:    #1a1714;
@@ -52,7 +53,7 @@
   --bg:              #0e0d0b;
   --bg-card:         #1a1916;
   --bg-subtle:       #242220;
-  --bg-hover:        rgba(249,115,22,0.07);
+  --bg-hover:        rgba(28,46,83,0.10);
   --border:          #2e2c29;
   --border-strong:   #3d3b37;
   --text-primary:    #f0ede8;
@@ -74,7 +75,7 @@
     --bg:              #0e0d0b;
     --bg-card:         #1a1916;
     --bg-subtle:       #242220;
-    --bg-hover:        rgba(249,115,22,0.07);
+    --bg-hover:        rgba(28,46,83,0.10);
     --border:          #2e2c29;
     --border-strong:   #3d3b37;
     --text-primary:    #f0ede8;
@@ -108,7 +109,6 @@ body {
   -moz-osx-font-smoothing: grayscale;
   font-size: 15px;
   line-height: 1.5;
-  /* overflow and height controlled by .app-shell and .landing-page */
 }
 
 #root {
@@ -118,7 +118,6 @@ body {
 }    
 
 /* ── Typography scale ────────────────────────────────────── */
-/* Minimum 11px for any label, 13px for body, 15px primary */
 h1 { font-size: clamp(22px, 4vw, 36px); font-weight: 900; letter-spacing: -0.04em; line-height: 1.1; }
 h2 { font-size: clamp(18px, 3vw, 28px); font-weight: 800; letter-spacing: -0.03em; line-height: 1.2; }
 h3 { font-size: clamp(15px, 2vw, 20px); font-weight: 700; letter-spacing: -0.02em; line-height: 1.3; }
@@ -146,6 +145,7 @@ input, button, select, textarea {
   overflow-x: hidden;
   -webkit-overflow-scrolling: touch;
   overscroll-behavior: contain;
+  padding-bottom: 0;
 }
 
 /* ── Page transition ─────────────────────────────────────── */
@@ -180,8 +180,6 @@ input, button, select, textarea {
 ::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 99px; }
 ::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
 
-
-
 /* ── Selection color ─────────────────────────────────────── */
 ::selection {
   background: var(--brand-glow);
@@ -209,18 +207,6 @@ input, button, select, textarea {
 
 /* ── Mobile safe area ────────────────────────────────────── */
 .safe-bottom { padding-bottom: env(safe-area-inset-bottom, 0px); }
-
-
-/* ── No bottom nav — remove legacy padding ── */
-.tab-content {
-  flex: 1;
-  min-height: 0;
-  overflow-y: auto;
-  overflow-x: hidden;
-  -webkit-overflow-scrolling: touch;
-  overscroll-behavior: contain;
-  padding-bottom: 0;  /* was relying on bottom nav height */
-}
 
 /* ── App shell needs overflow locked — landing page does not ── */
 body.app-mode {

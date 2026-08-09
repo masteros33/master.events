@@ -27,6 +27,44 @@ function SignatureCard({ children, className = "", noPad = false }) {
   );
 }
 
+// ── Muted data viz — JED-inspired: minimal, generous whitespace ──
+function MutedBarChart({ data, labels }) {
+  const max = Math.max(...data, 1);
+  return (
+    <div className="flex items-end justify-between gap-3 h-28 mt-5">
+      {data.map((v, i) => (
+        <div key={i} className="flex-1 flex flex-col items-center gap-2">
+          <motion.div
+            initial={{ height: 0 }}
+            animate={{ height: `${(v / max) * 100}%` }}
+            transition={{ duration: 0.8, delay: i * 0.06, ease: "easeOut" }}
+            className="w-full rounded-t-md"
+            style={{ background: "linear-gradient(180deg, #C7CDD9 0%, #E5E8EE 100%)", minHeight: v > 0 ? "6px" : "0" }}
+          />
+          <span className="text-[9px] font-mono text-gray-400 uppercase tracking-wide">{labels[i]}</span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function MutedRing({ pct, size = 84 }) {
+  const r = (size - 10) / 2;
+  const c = 2 * Math.PI * r;
+  return (
+    <svg width={size} height={size} style={{ transform: "rotate(-90deg)" }}>
+      <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="#EEF0F4" strokeWidth="8" />
+      <motion.circle
+        cx={size / 2} cy={size / 2} r={r} fill="none" stroke={NAVY} strokeWidth="8"
+        strokeLinecap="round" strokeDasharray={c}
+        initial={{ strokeDashoffset: c }}
+        animate={{ strokeDashoffset: c - (c * pct) / 100 }}
+        transition={{ duration: 1.1, ease: "easeOut" }}
+      />
+    </svg>
+  );
+}
+
 const FEATURES = [
   { Icon: Link2,     title: "NFT Tickets on Polygon",   body: "Every ticket is minted on the blockchain — impossible to fake, permanently yours." },
   { Icon: Wallet,    title: "95% Payout to Organizers", body: "We charge only 5%. The rest goes straight to your MoMo wallet — withdraw anytime." },
@@ -256,6 +294,46 @@ export default function LandingPage({ onNavigate }) {
               </SignatureCard>
             ))}
           </div>
+        </div>
+      </section>
+
+      {/* ── Revenue Tracker — JED-inspired muted data viz ── */}
+      <section className="bg-brand-canvas">
+        <div className="max-w-6xl mx-auto px-4 md:px-8 py-12 md:py-20 grid md:grid-cols-2 gap-10 md:gap-16 items-center">
+          <div>
+            <div className="text-[10px] font-bold tracking-widest mb-3 font-mono" style={{ color: NAVY }}>FOR ORGANIZERS</div>
+            <h2 className="text-2xl md:text-[38px] font-extrabold tracking-tight text-brand-text mb-4" style={SORA}>
+              Watch revenue move,<br />in real time.
+            </h2>
+            <p className="text-[15px] text-brand-muted leading-relaxed max-w-[420px]">
+              Every sale, every payout, every mint — tracked on one clean dashboard. No spreadsheets, no reconciliation, no guessing what's actually landed in your wallet.
+            </p>
+          </div>
+
+          <SignatureCard noPad>
+            <div className="p-6">
+              <div className="text-[10px] font-bold tracking-widest font-mono text-gray-400 mb-1">FINANCE</div>
+              <h3 className="font-extrabold text-[19px] mb-1" style={SORA}>Revenue Tracker</h3>
+              <p className="text-[12px] text-brand-muted mb-5">Monitor ticket revenue from one clean control surface.</p>
+
+              <div className="bg-brand-canvas rounded-2xl p-5">
+                <div className="flex justify-between items-center mb-1">
+                  <span className="text-[10px] font-mono text-gray-400 uppercase tracking-wide">This week</span>
+                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-600">+18.6%</span>
+                </div>
+                <div className="text-[26px] font-extrabold tracking-tight" style={SORA}>GHS 24.8K</div>
+                <MutedBarChart data={[40, 55, 48, 68, 82, 95]} labels={["MON","TUE","WED","THU","FRI","SAT"]} />
+              </div>
+
+              <div className="flex items-center gap-5 mt-5">
+                <MutedRing pct={94} />
+                <div>
+                  <div className="text-[22px] font-extrabold tracking-tight" style={SORA}>94%</div>
+                  <div className="text-[11px] text-brand-muted">Successful mint rate</div>
+                </div>
+              </div>
+            </div>
+          </SignatureCard>
         </div>
       </section>
 

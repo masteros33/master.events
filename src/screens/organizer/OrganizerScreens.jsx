@@ -225,15 +225,15 @@ function ActivityFeed({ events }) {
     return `${Math.floor(hrs / 24)}d ago`;
   };
 
-  const fetchActivity = () => {
-    const token = localStorage.getItem("access_token") || "";
-    fetch("https://master-events-backend.onrender.com/api/payments/organizer-activity/", {
-      headers: { Authorization: `Bearer ${token}` },
-    })
-      .then(r => r.json())
-      .then(data => { if (Array.isArray(data)) setFeed(data); setLoading(false); })
-      .catch(() => setLoading(false));
-  };
+ const fetchActivity = () => {
+  const token = localStorage.getItem("access_token") || "";
+  fetch("https://master-events-backend.onrender.com/api/payments/organizer-activity/", {
+    headers: { Authorization: `Bearer ${token}` },
+  })
+    .then(r => r.json())
+    .then(data => { if (Array.isArray(data.transactions)) setFeed(data.transactions); setLoading(false); })
+    .catch(() => setLoading(false));
+};
 
   useEffect(() => {
     fetchActivity();

@@ -2,6 +2,8 @@ import React from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Link2, Menu, X } from "lucide-react";
 
+const NAVY = "#1c2e53";
+
 const NAV_LINKS = [
   { label: "Events", target: "events" },
   { label: "About",  target: "about" },
@@ -20,7 +22,6 @@ export function NavBar({ onNavigate }) {
   const goTo = (target) => {
     setMenuOpen(false);
     if (target === "events") {
-      // Events lives on the Landing page — go there first, then scroll to the section.
       onNavigate("home");
       setTimeout(() => {
         document.querySelector("#events")?.scrollIntoView({ behavior: "smooth" });
@@ -34,10 +35,12 @@ export function NavBar({ onNavigate }) {
     <nav className="sticky top-0 z-50 bg-white border-b border-gray-100">
       <div className={`mx-auto flex items-center justify-between ${isMobile ? "px-4 h-14" : "max-w-6xl px-8 h-[68px]"}`}>
         <div onClick={() => onNavigate("home")} className="flex items-center gap-2.5 cursor-pointer">
-          <div className={`rounded-xl bg-brand-orange flex items-center justify-center shrink-0 ${isMobile ? "w-7 h-7" : "w-9 h-9"}`}>
+          <div className={`rounded-xl flex items-center justify-center shrink-0 ${isMobile ? "w-7 h-7" : "w-9 h-9"}`} style={{ background: NAVY }}>
             <Link2 size={isMobile ? 15 : 18} strokeWidth={2} color="#fff" />
           </div>
-          <span className={`font-extrabold text-brand-text tracking-tight whitespace-nowrap ${isMobile ? "text-[15px]" : "text-[17px]"}`}>Master Events</span>
+          <span className={`font-extrabold text-brand-text tracking-tight whitespace-nowrap ${isMobile ? "text-[15px]" : "text-[17px]"}`} style={{ fontFamily: "'Sora', sans-serif" }}>
+            Master Events
+          </span>
         </div>
 
         {!isMobile && (
@@ -58,7 +61,8 @@ export function NavBar({ onNavigate }) {
             </span>
           )}
           <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.96 }} onClick={() => onNavigate("signup")}
-            className={`rounded-full bg-brand-orange hover:bg-brand-orange-hover text-white font-bold whitespace-nowrap transition-colors ${isMobile ? "px-3.5 py-1.5 text-xs" : "px-5 py-2.5 text-sm"}`}>
+            className={`rounded-full text-white font-bold whitespace-nowrap transition-colors ${isMobile ? "px-3.5 py-1.5 text-xs" : "px-5 py-2.5 text-sm"}`}
+            style={{ background: NAVY }}>
             Sign up free
           </motion.button>
 
@@ -71,7 +75,6 @@ export function NavBar({ onNavigate }) {
         </div>
       </div>
 
-      {/* ── Mobile menu — previously missing entirely ── */}
       <AnimatePresence>
         {isMobile && menuOpen && (
           <>

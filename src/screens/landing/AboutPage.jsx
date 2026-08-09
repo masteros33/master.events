@@ -5,6 +5,20 @@ import {
 } from "lucide-react";
 import { NavBar } from "./shared";
 
+const NAVY = "#1c2e53";
+const NAVY_PASTEL = "#EBEEF5";
+const SORA = { fontFamily: "'Sora', sans-serif" };
+
+function SignatureCard({ children, className = "" }) {
+  return (
+    <div className={`relative bg-white border border-gray-100 shadow-sm p-6 overflow-hidden ${className}`}
+      style={{ borderTopLeftRadius: "32px", borderTopRightRadius: "8px", borderBottomLeftRadius: "8px", borderBottomRightRadius: "8px" }}>
+      <div className="absolute top-0 left-0 w-3 h-10 z-10" style={{ background: NAVY, borderTopLeftRadius: "32px", borderBottomRightRadius: "10px" }} />
+      {children}
+    </div>
+  );
+}
+
 const CATEGORY_SHOTS = [
   { key: "music",    label: "Music",    img: "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=500" },
   { key: "tech",     label: "Tech",     img: "https://images.unsplash.com/photo-1488229297570-58520851e868?w=500" },
@@ -42,12 +56,11 @@ export default function AboutPage({ onNavigate }) {
     <div className="min-h-screen bg-brand-canvas font-sans">
       <NavBar onNavigate={onNavigate} />
 
-      {/* ── Hero ── */}
       <section className="max-w-4xl mx-auto px-4 md:px-8 pt-14 pb-8 md:pt-20 md:pb-10 text-center">
-        <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-pastel-orange text-brand-orange text-[11px] font-bold tracking-wider mb-6">
+        <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-[11px] font-bold tracking-wider mb-6" style={{ background: NAVY_PASTEL, color: NAVY }}>
           OUR STORY
         </div>
-        <h1 className="text-[32px] md:text-5xl font-extrabold tracking-tight text-brand-text mb-4 leading-tight">
+        <h1 className="text-[32px] md:text-5xl font-extrabold tracking-tight text-brand-text mb-4 leading-tight" style={SORA}>
           Ticketing you don't<br className="hidden md:block" /> have to take on faith.
         </h1>
         <p className="text-[15px] md:text-lg text-brand-muted leading-relaxed max-w-xl mx-auto">
@@ -55,7 +68,6 @@ export default function AboutPage({ onNavigate }) {
         </p>
       </section>
 
-      {/* ── Photo collage strip ── */}
       <section className="max-w-5xl mx-auto px-4 md:px-8 pb-14 md:pb-20">
         <div className="grid grid-cols-3 md:grid-cols-6 gap-2.5">
           {CATEGORY_SHOTS.map(c => (
@@ -69,12 +81,11 @@ export default function AboutPage({ onNavigate }) {
         </div>
       </section>
 
-      {/* ── The problem we set out to solve ── */}
       <section className="bg-white border-y border-gray-100">
         <div className="max-w-5xl mx-auto px-4 md:px-8 py-12 md:py-20 grid md:grid-cols-2 gap-10 items-center">
           <div>
-            <div className="text-[10px] font-bold tracking-widest text-brand-orange mb-3 font-mono">WHY WE BUILT THIS</div>
-            <h2 className="text-2xl md:text-[32px] font-extrabold text-brand-text tracking-tight leading-tight mb-4">
+            <div className="text-[10px] font-bold tracking-widest mb-3 font-mono" style={{ color: NAVY }}>WHY WE BUILT THIS</div>
+            <h2 className="text-2xl md:text-[32px] font-extrabold text-brand-text tracking-tight leading-tight mb-4" style={SORA}>
               Fake tickets shouldn't get past the door.
             </h2>
             <p className="text-[15px] text-brand-muted leading-relaxed mb-4">
@@ -90,76 +101,72 @@ export default function AboutPage({ onNavigate }) {
         </div>
       </section>
 
-      {/* ── How verification works — genuinely sequential, numbers earn their place ── */}
       <section className="max-w-5xl mx-auto px-4 md:px-8 py-12 md:py-20">
         <div className="text-center mb-10">
-          <div className="text-[10px] font-bold tracking-widest text-brand-orange mb-3 font-mono">HOW IT WORKS</div>
-          <h2 className="text-xl md:text-[32px] font-extrabold text-brand-text tracking-tight">From purchase to proof</h2>
+          <div className="text-[10px] font-bold tracking-widest mb-3 font-mono" style={{ color: NAVY }}>HOW IT WORKS</div>
+          <h2 className="text-xl md:text-[32px] font-extrabold text-brand-text tracking-tight" style={SORA}>From purchase to proof</h2>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {STEPS.map(s => (
-            <div key={s.n} className="bg-white rounded-3xl border border-gray-100 shadow-sm p-6">
+            <SignatureCard key={s.n}>
               <div className="flex items-center justify-between mb-4">
-                <div className="w-11 h-11 rounded-full bg-pastel-orange flex items-center justify-center">
-                  <s.Icon size={19} strokeWidth={1.75} className="text-brand-orange" />
+                <div className="w-11 h-11 rounded-full flex items-center justify-center" style={{ background: NAVY_PASTEL }}>
+                  <s.Icon size={19} strokeWidth={1.75} style={{ color: NAVY }} />
                 </div>
-                <span className="text-2xl font-extrabold text-brand-orange/20 font-mono">{s.n}</span>
+                <span className="text-2xl font-extrabold font-mono" style={{ color: NAVY, opacity: 0.2 }}>{s.n}</span>
               </div>
-              <div className="font-bold text-[15px] text-brand-text mb-2">{s.title}</div>
+              <div className="font-bold text-[15px] text-brand-text mb-2" style={SORA}>{s.title}</div>
               <div className="text-[13px] text-brand-muted leading-relaxed">{s.body}</div>
-            </div>
+            </SignatureCard>
           ))}
         </div>
       </section>
 
-      {/* ── Two audiences ── */}
       <section className="bg-white border-y border-gray-100">
         <div className="max-w-5xl mx-auto px-4 md:px-8 py-12 md:py-20">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {AUDIENCES.map(a => (
-              <div key={a.title} className="bg-brand-canvas rounded-3xl border border-gray-100 p-7">
-                <div className="w-12 h-12 rounded-full bg-pastel-orange flex items-center justify-center mb-4">
-                  <a.Icon size={20} strokeWidth={1.75} className="text-brand-orange" />
+              <SignatureCard key={a.title} className="bg-brand-canvas">
+                <div className="w-12 h-12 rounded-full flex items-center justify-center mb-4" style={{ background: NAVY_PASTEL }}>
+                  <a.Icon size={20} strokeWidth={1.75} style={{ color: NAVY }} />
                 </div>
-                <div className="font-bold text-base text-brand-text mb-2">{a.title}</div>
+                <div className="font-bold text-base text-brand-text mb-2" style={SORA}>{a.title}</div>
                 <div className="text-sm text-brand-muted leading-relaxed">{a.body}</div>
-              </div>
+              </SignatureCard>
             ))}
           </div>
         </div>
       </section>
 
-      {/* ── Where we're headed ── */}
       <section className="max-w-5xl mx-auto px-4 md:px-8 py-12 md:py-20">
         <div className="text-center mb-10">
-          <div className="text-[10px] font-bold tracking-widest text-brand-orange mb-3 font-mono">WHAT'S NEXT</div>
-          <h2 className="text-xl md:text-[32px] font-extrabold text-brand-text tracking-tight">We're just getting started</h2>
+          <div className="text-[10px] font-bold tracking-widest mb-3 font-mono" style={{ color: NAVY }}>WHAT'S NEXT</div>
+          <h2 className="text-xl md:text-[32px] font-extrabold text-brand-text tracking-tight" style={SORA}>We're just getting started</h2>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {ROADMAP.map(r => (
-            <div key={r.title} className="bg-white rounded-3xl border border-gray-100 shadow-sm p-6">
-              <div className="w-12 h-12 rounded-full bg-pastel-blue flex items-center justify-center mb-4">
-                <r.Icon size={20} strokeWidth={1.75} className="text-brand-orange" />
+            <SignatureCard key={r.title}>
+              <div className="w-12 h-12 rounded-full flex items-center justify-center mb-4" style={{ background: NAVY_PASTEL }}>
+                <r.Icon size={20} strokeWidth={1.75} style={{ color: NAVY }} />
               </div>
-              <div className="font-bold text-[15px] text-brand-text mb-2">{r.title}</div>
+              <div className="font-bold text-[15px] text-brand-text mb-2" style={SORA}>{r.title}</div>
               <div className="text-[13px] text-brand-muted leading-relaxed">{r.body}</div>
-            </div>
+            </SignatureCard>
           ))}
         </div>
       </section>
 
-      {/* ── Team ── */}
       <section className="bg-white border-y border-gray-100">
         <div className="max-w-4xl mx-auto px-4 md:px-8 py-12 md:py-20 text-center">
-          <div className="text-[10px] font-bold tracking-widest text-brand-orange mb-3 font-mono">THE TEAM</div>
-          <h2 className="text-xl md:text-2xl font-extrabold text-brand-text tracking-tight mb-8">Built by students at GCTU</h2>
+          <div className="text-[10px] font-bold tracking-widest mb-3 font-mono" style={{ color: NAVY }}>THE TEAM</div>
+          <h2 className="text-xl md:text-2xl font-extrabold text-brand-text tracking-tight mb-8" style={SORA}>Built by students at GCTU</h2>
           <p className="text-sm text-brand-muted max-w-lg mx-auto mb-9 leading-relaxed">
             A final-year Computer Science project at Ghana Communication Technology University — combining blockchain, mobile, and payments in one system.
           </p>
           <div className="flex justify-center gap-8 flex-wrap">
             {TEAM.map(t => (
               <div key={t.name} className="flex flex-col items-center gap-2.5 w-32">
-                <div className="w-14 h-14 rounded-full bg-pastel-orange text-brand-orange flex items-center justify-center font-bold text-sm">
+                <div className="w-14 h-14 rounded-full flex items-center justify-center font-bold text-sm" style={{ background: NAVY_PASTEL, color: NAVY }}>
                   {t.initials}
                 </div>
                 <div>
@@ -172,12 +179,11 @@ export default function AboutPage({ onNavigate }) {
         </div>
       </section>
 
-      {/* ── CTA ── */}
       <section className="max-w-4xl mx-auto px-4 md:px-8 py-12 md:py-16 text-center">
-        <h2 className="text-xl md:text-2xl font-extrabold text-brand-text tracking-tight mb-4">Ready to see it for yourself?</h2>
+        <h2 className="text-xl md:text-2xl font-extrabold text-brand-text tracking-tight mb-4" style={SORA}>Ready to see it for yourself?</h2>
         <div className="flex justify-center gap-3 flex-wrap mb-14">
           <button onClick={() => onNavigate("signup")}
-            className="flex items-center gap-2 px-6 py-3 rounded-full bg-brand-orange hover:bg-brand-orange-hover text-white font-bold text-sm transition-colors">
+            className="flex items-center gap-2 px-6 py-3 rounded-full text-white font-bold text-sm transition-colors" style={{ background: NAVY }}>
             Get Started <ArrowRight size={16} strokeWidth={2} />
           </button>
           <button onClick={() => onNavigate("home")}
@@ -186,14 +192,13 @@ export default function AboutPage({ onNavigate }) {
           </button>
         </div>
 
-        {/* ── Contact ── */}
-        <div className="bg-white rounded-3xl border border-gray-100 shadow-sm p-8 md:p-10">
-          <div className="w-12 h-12 rounded-full bg-pastel-orange flex items-center justify-center mx-auto mb-4">
-            <Mail size={20} strokeWidth={1.75} className="text-brand-orange" />
+        <SignatureCard className="md:p-10 text-center">
+          <div className="w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-4" style={{ background: NAVY_PASTEL }}>
+            <Mail size={20} strokeWidth={1.75} style={{ color: NAVY }} />
           </div>
           <p className="text-brand-muted mb-2 text-sm">Have questions? We'd like to hear them.</p>
-          <a href="mailto:mastereventgh@gmail.com" className="text-brand-orange font-bold text-lg">mastereventgh@gmail.com</a>
-        </div>
+          <a href="mailto:mastereventgh@gmail.com" className="font-bold text-lg" style={{ color: NAVY }}>mastereventgh@gmail.com</a>
+        </SignatureCard>
       </section>
     </div>
   );

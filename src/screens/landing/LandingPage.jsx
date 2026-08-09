@@ -8,15 +8,32 @@ import { QRCodeSVG } from "qrcode.react";
 import { eventsAPI } from "../../api";
 import { NavBar } from "./shared";
 
+const NAVY = "#1c2e53";
+const NAVY_PASTEL = "#EBEEF5";
+const SORA = { fontFamily: "'Sora', sans-serif" };
+
 const HERO_TICKET_IMAGE = "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=600&q=90";
 
+// ── Signature card shell — asymmetric top-left corner + navy tab ──
+function SignatureCard({ children, className = "", noPad = false }) {
+  return (
+    <div
+      className={`relative bg-white border border-gray-100 shadow-sm overflow-hidden ${noPad ? "" : "p-6"} ${className}`}
+      style={{ borderTopLeftRadius: "32px", borderTopRightRadius: "8px", borderBottomLeftRadius: "8px", borderBottomRightRadius: "8px" }}
+    >
+      <div className="absolute top-0 left-0 w-3 h-10 z-10" style={{ background: NAVY, borderTopLeftRadius: "32px", borderBottomRightRadius: "10px" }} />
+      {children}
+    </div>
+  );
+}
+
 const FEATURES = [
-  { Icon: Link2,     badge: "bg-pastel-orange", title: "NFT Tickets on Polygon",   body: "Every ticket is minted on the blockchain — impossible to fake, permanently yours." },
-  { Icon: Wallet,    badge: "bg-pastel-green",  title: "95% Payout to Organizers", body: "We charge only 5%. The rest goes straight to your MoMo wallet — withdraw anytime." },
-  { Icon: Smartphone,badge: "bg-pastel-blue",   title: "MoMo & VISA Payments",     body: "Pay however suits you. Mobile money, cards, and more — fast and secure." },
-  { Icon: Lock,      badge: "bg-pastel-pink",   title: "HMAC-Secured QR Codes",    body: "Dynamic QR codes refresh every 10 seconds — screenshot-proof and forgery-resistant." },
-  { Icon: RefreshCw, badge: "bg-pastel-orange", title: "Ticket Resale Market",     body: "List your ticket for resale at any price. Only 2% fee — you keep 98%." },
-  { Icon: DoorOpen,  badge: "bg-pastel-blue",   title: "Smart Door Scanning",      body: "Generate invite codes for door staff. Scan QR tickets in seconds at the gate." },
+  { Icon: Link2,     title: "NFT Tickets on Polygon",   body: "Every ticket is minted on the blockchain — impossible to fake, permanently yours." },
+  { Icon: Wallet,    title: "95% Payout to Organizers", body: "We charge only 5%. The rest goes straight to your MoMo wallet — withdraw anytime." },
+  { Icon: Smartphone,title: "MoMo & VISA Payments",     body: "Pay however suits you. Mobile money, cards, and more — fast and secure." },
+  { Icon: Lock,      title: "HMAC-Secured QR Codes",    body: "Dynamic QR codes refresh every 10 seconds — screenshot-proof and forgery-resistant." },
+  { Icon: RefreshCw, title: "Ticket Resale Market",     body: "List your ticket for resale at any price. Only 2% fee — you keep 98%." },
+  { Icon: DoorOpen,  title: "Smart Door Scanning",      body: "Generate invite codes for door staff. Scan QR tickets in seconds at the gate." },
 ];
 
 const TESTIMONIALS = [
@@ -40,16 +57,15 @@ const ORG_FEATURES = [
 
 function TicketMock() {
   return (
-    <div className="rounded-3xl bg-white border border-gray-100 shadow-lg overflow-hidden">
+    <SignatureCard noPad className="shadow-lg">
       <div className="h-36 md:h-40 relative bg-gray-100">
         <img src={HERO_TICKET_IMAGE} alt="" className="w-full h-full object-cover" />
         <div className="absolute top-3 left-3 px-2.5 py-1 rounded-full bg-brand-text/90 text-white text-[10px] font-bold tracking-wide">MUSIC</div>
         <div className="absolute top-3 right-3 flex items-center gap-1 px-2.5 py-1 rounded-full bg-white/95 text-brand-text text-[10px] font-bold">
-          <Link2 size={10} strokeWidth={2} className="text-brand-orange" /> NFT
+          <Link2 size={10} strokeWidth={2} style={{ color: NAVY }} /> NFT
         </div>
       </div>
 
-      {/* perforated ticket-stub divider */}
       <div className="relative h-0">
         <div className="absolute -top-px left-3 right-3 border-t-2 border-dashed border-gray-200" />
         <div className="absolute -top-3 -left-3 w-6 h-6 rounded-full bg-brand-canvas" />
@@ -58,7 +74,7 @@ function TicketMock() {
 
       <div className="p-5 flex items-center justify-between gap-4">
         <div className="min-w-0">
-          <div className="font-bold text-brand-text text-[15px] mb-1 truncate">Afrobeats Night</div>
+          <div className="font-bold text-brand-text text-[15px] mb-1 truncate" style={SORA}>Afrobeats Night</div>
           <div className="text-xs text-brand-muted mb-3">Sat, Aug 22 · The Grand Arena</div>
           <div className="flex items-center gap-1.5">
             <ShieldCheck size={14} strokeWidth={2} className="text-emerald-600" />
@@ -71,51 +87,53 @@ function TicketMock() {
           <QRCodeSVG value="MASTER-EVENTS:demo:001" size={52} bgColor="#ffffff" fgColor="#121212" level="M" />
         </div>
       </div>
-    </div>
+    </SignatureCard>
   );
 }
 
 function EventCard({ ev, catImg, onSignup }) {
   return (
-    <div onClick={onSignup} className="bg-white rounded-3xl border border-gray-200 shadow-sm overflow-hidden cursor-pointer hover:shadow-md transition-shadow">
-      <div className="h-[170px] relative bg-gray-100">
-        {ev ? (
-          <>
-            <img src={ev.image || catImg[ev.category] || catImg.other} alt={ev.name} className="w-full h-full object-cover" onError={e => { e.target.src = catImg.other; }} />
-            <div className="absolute top-2.5 left-2.5 px-2.5 py-1 rounded-full bg-brand-orange text-white text-[10px] font-bold">{ev.category}</div>
-            {parseFloat(ev.price) === 0 && (
-              <div className="absolute top-2.5 right-2.5 px-2.5 py-1 rounded-full bg-white text-brand-text text-[10px] font-bold border border-gray-100">FREE</div>
-            )}
-            <div className="absolute bottom-2 left-2.5 flex items-center gap-1 bg-brand-text px-2 py-1 rounded-full">
-              <Link2 size={10} strokeWidth={2} color="#fff" />
-              <span className="text-[9px] font-bold text-white font-mono">NFT</span>
-            </div>
-          </>
-        ) : <div className="skeleton absolute inset-0 rounded-none" />}
-      </div>
-      <div className="p-4">
-        {ev ? (
-          <>
-            <div className="font-bold text-[15px] text-brand-text mb-1.5 leading-snug">{ev.name}</div>
-            <div className="flex items-center gap-1 text-xs text-brand-muted mb-3.5">
-              <Calendar size={12} strokeWidth={1.75} /> {ev.date} <span className="mx-0.5">·</span> <MapPin size={12} strokeWidth={1.75} /> {ev.venue}
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="font-extrabold text-base text-brand-orange">{parseFloat(ev.price) === 0 ? "FREE" : "GHS " + ev.price}</span>
-              <motion.button whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.96 }}
-                className="px-4 py-2 rounded-full bg-brand-orange hover:bg-brand-orange-hover text-white text-xs font-bold transition-colors">
-                Get Tickets
-              </motion.button>
-            </div>
-          </>
-        ) : (
-          <>
-            <div className="skeleton h-[15px] w-4/5 mb-2" />
-            <div className="skeleton h-3 w-3/5 mb-3.5" />
-            <div className="skeleton h-3.5 w-2/5" />
-          </>
-        )}
-      </div>
+    <div onClick={onSignup} className="cursor-pointer">
+      <SignatureCard noPad className="hover:shadow-md transition-shadow">
+        <div className="h-[170px] relative bg-gray-100">
+          {ev ? (
+            <>
+              <img src={ev.image || catImg[ev.category] || catImg.other} alt={ev.name} className="w-full h-full object-cover" onError={e => { e.target.src = catImg.other; }} />
+              <div className="absolute top-2.5 left-2.5 px-2.5 py-1 rounded-full text-white text-[10px] font-bold" style={{ background: NAVY }}>{ev.category}</div>
+              {parseFloat(ev.price) === 0 && (
+                <div className="absolute top-2.5 right-2.5 px-2.5 py-1 rounded-full bg-white text-brand-text text-[10px] font-bold border border-gray-100">FREE</div>
+              )}
+              <div className="absolute bottom-2 left-2.5 flex items-center gap-1 bg-brand-text px-2 py-1 rounded-full">
+                <Link2 size={10} strokeWidth={2} color="#fff" />
+                <span className="text-[9px] font-bold text-white font-mono">NFT</span>
+              </div>
+            </>
+          ) : <div className="skeleton absolute inset-0 rounded-none" />}
+        </div>
+        <div className="p-4">
+          {ev ? (
+            <>
+              <div className="font-bold text-[15px] text-brand-text mb-1.5 leading-snug" style={SORA}>{ev.name}</div>
+              <div className="flex items-center gap-1 text-xs text-brand-muted mb-3.5">
+                <Calendar size={12} strokeWidth={1.75} /> {ev.date} <span className="mx-0.5">·</span> <MapPin size={12} strokeWidth={1.75} /> {ev.venue}
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="font-extrabold text-base" style={{ color: NAVY }}>{parseFloat(ev.price) === 0 ? "FREE" : "GHS " + ev.price}</span>
+                <motion.span whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.96 }}
+                  className="px-4 py-2 rounded-full text-white text-xs font-bold transition-colors" style={{ background: NAVY }}>
+                  Get Tickets
+                </motion.span>
+              </div>
+            </>
+          ) : (
+            <>
+              <div className="skeleton h-[15px] w-4/5 mb-2" />
+              <div className="skeleton h-3 w-3/5 mb-3.5" />
+              <div className="skeleton h-3.5 w-2/5" />
+            </>
+          )}
+        </div>
+      </SignatureCard>
     </div>
   );
 }
@@ -150,14 +168,14 @@ export default function LandingPage({ onNavigate }) {
       <section className="bg-brand-canvas">
         <div className="max-w-6xl mx-auto px-4 md:px-8 pt-12 pb-16 md:pt-20 md:pb-24 grid md:grid-cols-2 gap-10 md:gap-14 items-center">
           <div>
-            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-pastel-green text-emerald-700 text-[11px] font-bold tracking-wider mb-6">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 pulse-dot" />
+            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-[11px] font-bold tracking-wider mb-6" style={{ background: NAVY_PASTEL, color: NAVY }}>
+              <span className="w-1.5 h-1.5 rounded-full pulse-dot" style={{ background: NAVY }} />
               LIVE BLOCKCHAIN VERIFICATION
             </div>
 
-            <h1 className="text-[40px] md:text-6xl font-extrabold leading-[1.02] tracking-tight text-brand-text mb-5">
-              Find events that<br />
-              <span className="text-brand-orange">move you.</span>
+            <h1 className="text-[40px] md:text-6xl font-extrabold leading-[1.02] tracking-tight text-brand-text mb-5" style={SORA}>
+              Every ticket,<br />
+              <span style={{ color: NAVY }}>provably yours.</span>
             </h1>
 
             <p className="text-[15px] md:text-lg text-brand-muted leading-relaxed mb-8 max-w-[480px]">
@@ -167,7 +185,7 @@ export default function LandingPage({ onNavigate }) {
             <div className="flex flex-wrap gap-3">
               <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}
                 onClick={() => document.querySelector("#events")?.scrollIntoView({ behavior: "smooth" })}
-                className="flex items-center gap-2 px-7 py-3.5 rounded-full bg-brand-orange hover:bg-brand-orange-hover text-white font-bold text-sm md:text-base transition-colors">
+                className="flex items-center gap-2 px-7 py-3.5 rounded-full text-white font-bold text-sm md:text-base transition-colors" style={{ background: NAVY }}>
                 Browse Events <ArrowRight size={16} strokeWidth={2} />
               </motion.button>
               <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }} onClick={() => onNavigate("signup")}
@@ -191,10 +209,10 @@ export default function LandingPage({ onNavigate }) {
         <div className="max-w-6xl mx-auto px-4 md:px-8 py-12 md:py-20">
           <div className="flex justify-between items-end mb-8 flex-wrap gap-3">
             <div>
-              <div className="text-[10px] font-bold tracking-widest text-brand-orange mb-2 font-mono">UPCOMING EVENTS</div>
-              <h2 className="text-2xl md:text-4xl font-extrabold tracking-tight text-brand-text">Happening near you</h2>
+              <div className="text-[10px] font-bold tracking-widest mb-2 font-mono" style={{ color: NAVY }}>UPCOMING EVENTS</div>
+              <h2 className="text-2xl md:text-4xl font-extrabold tracking-tight text-brand-text" style={SORA}>Happening near you</h2>
             </div>
-            <span onClick={() => onNavigate("signup")} className="text-sm font-bold text-brand-orange cursor-pointer flex items-center gap-1">
+            <span onClick={() => onNavigate("signup")} className="text-sm font-bold cursor-pointer flex items-center gap-1" style={{ color: NAVY }}>
               View all <ArrowRight size={14} strokeWidth={2} />
             </span>
           </div>
@@ -211,11 +229,11 @@ export default function LandingPage({ onNavigate }) {
               ))}
             </div>
           ) : (
-            <div className="bg-white rounded-3xl border border-gray-100 shadow-sm p-10 text-center">
+            <SignatureCard className="text-center">
               <p className="text-sm text-brand-muted">
                 {eventsFailed ? "Couldn't load events right now — please check back shortly." : "No upcoming events yet — check back soon."}
               </p>
-            </div>
+            </SignatureCard>
           )}
         </div>
       </section>
@@ -224,18 +242,18 @@ export default function LandingPage({ onNavigate }) {
       <section className="bg-brand-canvas border-y border-gray-100">
         <div className="max-w-6xl mx-auto px-4 md:px-8 py-12 md:py-20">
           <div className="text-center mb-10">
-            <div className="text-[10px] font-bold tracking-widest text-brand-orange mb-3 font-mono">WHY MASTER EVENTS</div>
-            <h2 className="text-2xl md:text-[38px] font-extrabold tracking-tight text-brand-text">Ticketing, rebuilt from the ground up.</h2>
+            <div className="text-[10px] font-bold tracking-widest mb-3 font-mono" style={{ color: NAVY }}>WHY MASTER EVENTS</div>
+            <h2 className="text-2xl md:text-[38px] font-extrabold tracking-tight text-brand-text" style={SORA}>Ticketing, rebuilt from the ground up.</h2>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {FEATURES.map(f => (
-              <div key={f.title} className="bg-white rounded-3xl border border-gray-100 shadow-sm p-6">
-                <div className={`w-12 h-12 rounded-full ${f.badge} flex items-center justify-center mb-4`}>
-                  <f.Icon size={20} strokeWidth={1.75} className="text-brand-orange" />
+              <SignatureCard key={f.title}>
+                <div className="w-12 h-12 rounded-full flex items-center justify-center mb-4" style={{ background: NAVY_PASTEL }}>
+                  <f.Icon size={20} strokeWidth={1.75} style={{ color: NAVY }} />
                 </div>
-                <div className="font-bold text-[15px] text-brand-text mb-2">{f.title}</div>
+                <div className="font-bold text-[15px] text-brand-text mb-2" style={SORA}>{f.title}</div>
                 <div className="text-[13px] text-brand-muted leading-relaxed">{f.body}</div>
-              </div>
+              </SignatureCard>
             ))}
           </div>
         </div>
@@ -244,14 +262,14 @@ export default function LandingPage({ onNavigate }) {
       {/* ── Organizer CTA ── */}
       <section className="bg-brand-canvas">
         <div className="max-w-6xl mx-auto px-4 md:px-8 py-12 md:py-20">
-          <div className="bg-white rounded-3xl border border-gray-100 shadow-sm p-6 md:p-14 flex justify-between items-center flex-wrap gap-8">
+          <SignatureCard className="md:p-14 flex justify-between items-center flex-wrap gap-8">
             <div className="max-w-[520px]">
-              <div className="text-[10px] font-bold tracking-widest text-brand-orange mb-3.5 font-mono">FOR EVENT ORGANIZERS</div>
-              <h2 className="text-2xl md:text-[38px] font-extrabold text-brand-text tracking-tight leading-tight mb-3.5">Ready to host<br />your next event?</h2>
+              <div className="text-[10px] font-bold tracking-widest mb-3.5 font-mono" style={{ color: NAVY }}>FOR EVENT ORGANIZERS</div>
+              <h2 className="text-2xl md:text-[38px] font-extrabold text-brand-text tracking-tight leading-tight mb-3.5" style={SORA}>Ready to host<br />your next event?</h2>
               <p className="text-[15px] text-brand-muted leading-relaxed mb-7">Create events, sell blockchain-verified tickets, manage door staff, and receive 95% directly to your MoMo wallet.</p>
               <div className="flex gap-3 flex-wrap">
                 <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }} onClick={() => onNavigate("signup")}
-                  className="px-6 py-3 rounded-full bg-brand-orange hover:bg-brand-orange-hover text-white font-bold text-sm transition-colors">
+                  className="px-6 py-3 rounded-full text-white font-bold text-sm transition-colors" style={{ background: NAVY }}>
                   Start Selling Tickets
                 </motion.button>
                 <button onClick={() => onNavigate("about")}
@@ -263,14 +281,14 @@ export default function LandingPage({ onNavigate }) {
             <div className="flex flex-col gap-2.5 shrink-0">
               {ORG_FEATURES.map(({ Icon, label }) => (
                 <div key={label} className="flex items-center gap-2.5 px-4 py-2.5 rounded-2xl bg-brand-canvas">
-                  <div className="w-8 h-8 rounded-full bg-pastel-orange flex items-center justify-center shrink-0">
-                    <Icon size={15} strokeWidth={1.75} className="text-brand-orange" />
+                  <div className="w-8 h-8 rounded-full flex items-center justify-center shrink-0" style={{ background: NAVY_PASTEL }}>
+                    <Icon size={15} strokeWidth={1.75} style={{ color: NAVY }} />
                   </div>
                   <span className="text-xs font-semibold text-brand-text whitespace-nowrap">{label}</span>
                 </div>
               ))}
             </div>
-          </div>
+          </SignatureCard>
         </div>
       </section>
 
@@ -278,16 +296,16 @@ export default function LandingPage({ onNavigate }) {
       <section className="bg-brand-canvas border-t border-gray-100">
         <div className="max-w-6xl mx-auto px-4 md:px-8 py-12 md:py-20">
           <div className="text-center mb-10">
-            <div className="text-[10px] font-bold tracking-widest text-brand-orange mb-3 font-mono">WHAT PEOPLE SAY</div>
-            <h2 className="text-xl md:text-[32px] font-extrabold tracking-tight text-brand-text">Loved by organizers and fans</h2>
+            <div className="text-[10px] font-bold tracking-widest mb-3 font-mono" style={{ color: NAVY }}>WHAT PEOPLE SAY</div>
+            <h2 className="text-xl md:text-[32px] font-extrabold tracking-tight text-brand-text" style={SORA}>Loved by organizers and fans</h2>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {TESTIMONIALS.map(t => (
-              <div key={t.name} className="bg-white rounded-3xl border border-gray-100 shadow-sm p-6">
-                <Quote size={26} strokeWidth={1.75} className="text-brand-orange mb-3.5" fill="currentColor" fillOpacity={0.12} />
+              <SignatureCard key={t.name}>
+                <Quote size={26} strokeWidth={1.75} className="mb-3.5" style={{ color: NAVY }} fill="currentColor" fillOpacity={0.12} />
                 <p className="text-sm text-brand-muted leading-relaxed mb-4.5">{t.quote}</p>
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-pastel-orange text-brand-orange flex items-center justify-center font-bold shrink-0">
+                  <div className="w-10 h-10 rounded-full flex items-center justify-center font-bold shrink-0" style={{ background: NAVY_PASTEL, color: NAVY }}>
                     <User size={18} strokeWidth={1.75} />
                   </div>
                   <div>
@@ -295,7 +313,7 @@ export default function LandingPage({ onNavigate }) {
                     <div className="text-[11px] text-brand-muted mt-0.5">{t.role}</div>
                   </div>
                 </div>
-              </div>
+              </SignatureCard>
             ))}
           </div>
         </div>
@@ -307,10 +325,10 @@ export default function LandingPage({ onNavigate }) {
           <div className="flex justify-between items-start flex-wrap gap-8 mb-9">
             <div className="max-w-[260px]">
               <div className="flex items-center gap-2 mb-3">
-                <div className="w-7 h-7 rounded-lg bg-brand-orange flex items-center justify-center">
+                <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: NAVY }}>
                   <Link2 size={14} strokeWidth={2} color="#fff" />
                 </div>
-                <span className="font-extrabold text-[15px] text-brand-text tracking-tight">Master Events</span>
+                <span className="font-extrabold text-[15px] text-brand-text tracking-tight" style={SORA}>Master Events</span>
               </div>
               <p className="text-[13px] text-brand-muted leading-relaxed">Blockchain-powered event ticketing — proudly built in Ghana.</p>
             </div>

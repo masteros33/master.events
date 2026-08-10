@@ -5,8 +5,10 @@ import { Link2, Menu, X } from "lucide-react";
 const NAVY = "#1c2e53";
 
 const NAV_LINKS = [
-  { label: "Events", target: "events" },
-  { label: "About",  target: "about" },
+  { label: "Events",         target: "events" },
+  { label: "For organizers", target: "organizers" },
+  { label: "How it works",   target: "how" },
+  { label: "FAQ",            target: "faq" },
 ];
 
 export function NavBar({ onNavigate }) {
@@ -19,12 +21,16 @@ export function NavBar({ onNavigate }) {
     return () => window.removeEventListener("resize", onResize);
   }, []);
 
+  // ── Section-anchor links (events/organizers/how/faq) all live on
+  // the Landing page — navigate there first if we're elsewhere
+  // (e.g. on the About page), then scroll to the section. ──
   const goTo = (target) => {
     setMenuOpen(false);
-    if (target === "events") {
+    const sectionTargets = ["events", "organizers", "how", "faq"];
+    if (sectionTargets.includes(target)) {
       onNavigate("home");
       setTimeout(() => {
-        document.querySelector("#events")?.scrollIntoView({ behavior: "smooth" });
+        document.querySelector(`#${target}`)?.scrollIntoView({ behavior: "smooth" });
       }, 60);
     } else {
       onNavigate(target);
@@ -47,7 +53,7 @@ export function NavBar({ onNavigate }) {
           <div className="flex items-center gap-7">
             {NAV_LINKS.map(({ label, target }) => (
               <span key={label} onClick={() => goTo(target)}
-                className="text-sm font-medium text-brand-muted hover:text-brand-text cursor-pointer transition-colors">
+                className="text-sm font-medium text-brand-muted hover:text-brand-text cursor-pointer transition-colors whitespace-nowrap">
                 {label}
               </span>
             ))}

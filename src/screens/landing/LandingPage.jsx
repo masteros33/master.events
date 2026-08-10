@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import {
   Link2, Lock, RefreshCw, DoorOpen, ArrowRight, Wallet,
   Smartphone, MapPin, Calendar, Quote, User, ShieldCheck,
+  Search, ScanLine, ChevronDown,
 } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
 import { eventsAPI } from "../../api";
@@ -14,7 +15,6 @@ const SORA = { fontFamily: "'Sora', sans-serif" };
 
 const HERO_TICKET_IMAGE = "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=600&q=90";
 
-// ── Signature card shell — asymmetric top-left corner + navy tab ──
 function SignatureCard({ children, className = "", noPad = false }) {
   return (
     <div
@@ -27,7 +27,6 @@ function SignatureCard({ children, className = "", noPad = false }) {
   );
 }
 
-// ── Muted data viz — JED-inspired: minimal, generous whitespace ──
 function MutedBarChart({ data, labels }) {
   const max = Math.max(...data, 1);
   return (
@@ -74,6 +73,23 @@ const FEATURES = [
   { Icon: DoorOpen,  title: "Smart Door Scanning",      body: "Generate invite codes for door staff. Scan QR tickets in seconds at the gate." },
 ];
 
+// ── How It Works — 3-step sequence, distinct from the Revenue
+// Tracker's organizer-finance framing further down the page ──
+const STEPS = [
+  { Icon: Search,    n: "01", title: "Choose an event",    body: "Browse verified listings and select the ticket type that works for you." },
+  { Icon: Wallet,    n: "02", title: "Buy your ticket",    body: "Complete checkout and your ticket mints straight to your account." },
+  { Icon: ScanLine,  n: "03", title: "Show up and scan",   body: "Your ticket is checked at entry, with blockchain verification behind the scenes." },
+];
+
+// ── Real FAQ content — distinct from the earlier prototype sample ──
+const FAQS = [
+  { q: "What makes a ticket blockchain-verified?", a: "Every ticket is minted as an NFT on Polygon — a permanent, tamper-proof record of who owns it, checkable independently of Master Events itself." },
+  { q: "Do I need to understand blockchain to use this?", a: "No. Buying, holding, and using a ticket feels exactly like any other app — the blockchain layer runs quietly in the background." },
+  { q: "How do organizers receive payouts?", a: "Revenue goes straight to Mobile Money — organizers keep 95% of every sale, with instant visibility into what's landed in their wallet." },
+  { q: "Can door staff verify tickets without a full account?", a: "Yes. Organizers generate single-use door staff codes with scan-only access — no full account or app download required for door staff." },
+  { q: "Can I resell or transfer a ticket I bought?", a: "Yes. List it on the built-in resale market (2% fee, you keep 98%), or transfer it directly to a friend for free — ownership updates on-chain instantly either way." },
+];
+
 const TESTIMONIALS = [
   { name: "Kwame Asante", role: "Event Organizer · Accra",   quote: "Master Events gave us one place to manage tickets, door staff, and payments. We received 95% of revenue directly to MoMo — no delays." },
   { name: "Ama Owusu",    role: "Concert Attendee · Kumasi", quote: "I love that my ticket is an NFT — I can transfer it to my friend and it just works. No more fake tickets at the gate." },
@@ -81,7 +97,7 @@ const TESTIMONIALS = [
 ];
 
 const FOOTER_COLS = [
-  { title: "Platform", links: [["Browse Events", "#events"], ["Create Event", "signup"], ["Resale Market", "#"]] },
+  { title: "Platform", links: [["Browse Events", "events"], ["Create Event", "signup"], ["Resale Market", "#"]] },
   { title: "Company",  links: [["About", "about"], ["Contact", "mailto:mastereventgh@gmail.com"]] },
   { title: "Legal",    links: [["Privacy", "#"], ["Terms", "#"], ["Security", "#"]] },
 ];
@@ -176,10 +192,30 @@ function EventCard({ ev, catImg, onSignup }) {
   );
 }
 
+function FAQItem({ q, a, open, onClick }) {
+  return (
+    <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
+      <button onClick={onClick} className="w-full flex items-center justify-between px-5 py-4 text-left">
+        <span className="font-bold text-[14px] text-brand-text pr-4">{q}</span>
+        <motion.span animate={{ rotate: open ? 180 : 0 }} className="shrink-0">
+          <ChevronDown size={16} strokeWidth={2} className="text-gray-400" />
+        </motion.span>
+      </button>
+      {open && (
+        <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }}
+          className="px-5 pb-4 text-[13px] text-brand-muted leading-relaxed">
+          {a}
+        </motion.div>
+      )}
+    </div>
+  );
+}
+
 export default function LandingPage({ onNavigate }) {
   const [events, setEvents] = React.useState([]);
   const [eventsLoading, setEventsLoading] = React.useState(true);
   const [eventsFailed, setEventsFailed] = React.useState(false);
+  const [openFaq, setOpenFaq] = React.useState(0);
 
   React.useEffect(() => {
     eventsAPI.list()
@@ -297,8 +333,35 @@ export default function LandingPage({ onNavigate }) {
         </div>
       </section>
 
+      {/* ── How It Works — proper 3-step sequence, distinct from
+      the finance-framed Revenue Tracker below ── */}
+      <section id="how" className="bg-brand-canvas">
+        <div className="max-w-6xl mx-auto px-4 md:px-8 py-12 md:py-20">
+          <div className="text-center mb-10">
+            <div className="text-[10px] font-bold tracking-widest mb-3 font-mono" style={{ color: NAVY }}>HOW IT WORKS</div>
+            <h2 className="text-2xl md:text-[38px] font-extrabold tracking-tight text-brand-text" style={SORA}>
+              Simple on the surface. Secure underneath.
+            </h2>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {STEPS.map(s => (
+              <SignatureCard key={s.n}>
+                <div className="flex items-center justify-between mb-4">
+                  <div className="w-11 h-11 rounded-full flex items-center justify-center" style={{ background: NAVY_PASTEL }}>
+                    <s.Icon size={19} strokeWidth={1.75} style={{ color: NAVY }} />
+                  </div>
+                  <span className="text-2xl font-extrabold font-mono" style={{ color: NAVY, opacity: 0.2 }}>{s.n}</span>
+                </div>
+                <div className="font-bold text-[15px] text-brand-text mb-2" style={SORA}>{s.title}</div>
+                <div className="text-[13px] text-brand-muted leading-relaxed">{s.body}</div>
+              </SignatureCard>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* ── Revenue Tracker — JED-inspired muted data viz ── */}
-      <section className="bg-brand-canvas">
+      <section className="bg-brand-canvas border-t border-gray-100">
         <div className="max-w-6xl mx-auto px-4 md:px-8 py-12 md:py-20 grid md:grid-cols-2 gap-10 md:gap-16 items-center">
           <div>
             <div className="text-[10px] font-bold tracking-widest mb-3 font-mono" style={{ color: NAVY }}>FOR ORGANIZERS</div>
@@ -338,7 +401,7 @@ export default function LandingPage({ onNavigate }) {
       </section>
 
       {/* ── Organizer CTA ── */}
-      <section className="bg-brand-canvas">
+      <section id="organizers" className="bg-brand-canvas">
         <div className="max-w-6xl mx-auto px-4 md:px-8 py-12 md:py-20">
           <SignatureCard className="md:p-14 flex justify-between items-center flex-wrap gap-8">
             <div className="max-w-[520px]">
@@ -397,6 +460,23 @@ export default function LandingPage({ onNavigate }) {
         </div>
       </section>
 
+      {/* ── FAQ ── */}
+      <section id="faq" className="bg-brand-canvas border-t border-gray-100">
+        <div className="max-w-6xl mx-auto px-4 md:px-8 py-12 md:py-20 grid md:grid-cols-[0.8fr_1.2fr] gap-14">
+          <div>
+            <div className="text-[10px] font-bold tracking-widest mb-3 font-mono" style={{ color: NAVY }}>FAQ</div>
+            <h2 className="text-2xl md:text-[32px] font-extrabold tracking-tight text-brand-text" style={SORA}>
+              Clear answers before checkout.
+            </h2>
+          </div>
+          <div className="flex flex-col gap-2.5">
+            {FAQS.map((f, i) => (
+              <FAQItem key={f.q} q={f.q} a={f.a} open={openFaq === i} onClick={() => setOpenFaq(openFaq === i ? -1 : i)} />
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* ── Footer ── */}
       <footer className="bg-white border-t border-gray-100">
         <div className="max-w-6xl mx-auto px-4 md:px-8 pt-9 pb-6 md:pt-14 md:pb-9">
@@ -416,7 +496,16 @@ export default function LandingPage({ onNavigate }) {
                   <div className="font-bold text-[11px] tracking-wider text-brand-muted mb-3 uppercase font-mono">{col.title}</div>
                   {col.links.map(([label, href]) => (
                     <div key={label} className="mb-2.5">
-                      <span onClick={() => (href.startsWith("#") || href.startsWith("mailto")) ? null : onNavigate(href)}
+                      <span
+                        onClick={() => {
+                          if (href.startsWith("#") || href.startsWith("mailto")) return;
+                          if (["events"].includes(href)) {
+                            onNavigate("home");
+                            setTimeout(() => document.querySelector(`#${href}`)?.scrollIntoView({ behavior: "smooth" }), 60);
+                          } else {
+                            onNavigate(href);
+                          }
+                        }}
                         className="text-[13px] text-brand-muted hover:text-brand-text cursor-pointer transition-colors">
                         {label}
                       </span>

@@ -6,9 +6,10 @@ import Login from "./screens/auth/Login";
 import { Signup, RoleSelect } from "./screens/auth/Signup";
 import ResetPassword from "./screens/auth/ResetPassword";
 import AttendeeHome from "./screens/attendee/AttendeeHome";
-// ── NEW: public marketing site, previously unwired ──
 import LandingPage from "./screens/landing/LandingPage";
 import AboutPage from "./screens/landing/AboutPage";
+// ── NEW: public ticket verification page ──
+import VerifyTicket from "./screens/attendee/VerifyTicket";
 import ResaleMarketplace from "./screens/attendee/ResaleMarketplace";
 import CookieBanner from "./components/CookieBanner";
 import Settings from "./screens/attendee/Settings";
@@ -50,17 +51,12 @@ const APP_MODE_SCREENS = [
   "doorStaffLogin", "doorStaffScan", "app",
 ];
 
-// ── NEW: translates LandingPage/AboutPage's onNavigate(target) calls
-// into real setScreen() calls. Keeps LandingPage/AboutPage decoupled
-// from the store's exact screen-name vocabulary — "home" means "go
-// back to the landing page", not the logged-in app's "home" tab. ──
 function publicNavigate(target) {
   const setScreen = useStore.getState().setScreen;
   if (target === "home")   { setScreen("landing"); return; }
   if (target === "about")  { setScreen("about");   return; }
   if (target === "signup") { setScreen("signup");  return; }
   if (target === "login")  { setScreen("login");   return; }
-  // Unknown targets (e.g. "#" placeholders) — no-op rather than crash.
 }
 
 function MobileTopHeader({ onMenuOpen, title }) {
@@ -238,8 +234,6 @@ function MobileAppShell() {
   const isLoggedIn = useStore(s => s.isLoggedIn);
   const activeTab  = useStore(s => s.activeTab);
 
-  // ── CHANGED: logged-out visitors on the "home" state now see the
-  // real LandingPage instead of AttendeeHome's stripped-down view. ──
   if (!isLoggedIn && activeTab === "home" && screen === "app") return (
     <div className="app-shell">
       <div className="tab-content"><LandingPage onNavigate={publicNavigate} /></div>
@@ -477,6 +471,9 @@ export default function App() {
   const screen     = useStore(s => s.screen);
   const [desktop, setDesktop] = React.useState(window.innerWidth > 768);
   const oauthHandled = React.useRef(false);
+  // ── NEW: holds the ticket ID extracted from /verify/:ticketId, so
+  // VerifyTicket can be rendered with it directly ──
+  const [verifyingTicketId, setVerifyingTicketId] = React.useState(null);
   useTheme();
 
   React.useEffect(() => {
@@ -492,6 +489,7 @@ export default function App() {
     const verify = params.get("verify");
     const code   = params.get("code");
 
+    // ── Google OAuth redirect callback ─────────────────────
     if (code && window.location.pathname === "/auth/callback") {
       if (oauthHandled.current) return;
       oauthHandled.current = true;
@@ -540,6 +538,18 @@ export default function App() {
     }
     if (params.get("admin") === "1") { useStore.getState().setScreen("adminGateway"); return; }
     if (params.get("door")  === "1") { useStore.getState().setScreen("doorStaffLogin"); return; }
+
+    // ── NEW: public ticket verification — /verify/:ticketId ──
+    // Matches the exact URL every NFT's external_url metadata field
+    // already points to (build_ticket_metadata in utils/blockchain.py).
+    // No auth, no redirect-and-lose-the-param dance needed — this is
+    // meant to be openly shareable/scannable.
+    const verifyMatch = window.location.pathname.match(/^\/verify\/(.+)$/);
+    if (verifyMatch) {
+      setVerifyingTicketId(decodeURIComponent(verifyMatch[1]));
+      useStore.getState().setScreen("verifyTicket");
+      return;
+    }
 
     const eventSlug = params.get("event") || (window.location.pathname.match(/^\/events\/(.+)/) || [])[1];
     if (eventSlug) {
@@ -597,7 +607,11 @@ export default function App() {
   if (screen === "doorStaffLogin") return <DoorStaffLogin />;
   if (screen === "doorStaffScan")  return <DoorStaffScan />;
   if (screen === "pendingEvent")   return <PhoneFrame><PublicEventPage /></PhoneFrame>;
-  // ── NEW: dedicated public routes, rendered full-page like admin/door-staff ──
+  // ── NEW: renders full-page, no PhoneFrame wrap — this needs to
+  // work well as a real standalone web page for anyone clicking a
+  // link from Polygonscan/an NFT viewer/a shared link, not just
+  // inside the app's mobile-mockup frame ──
+  if (screen === "verifyTicket")   return <VerifyTicket ticketId={verifyingTicketId} />;
   if (screen === "landing")        return <LandingPage onNavigate={publicNavigate} />;
   if (screen === "about")          return <AboutPage onNavigate={publicNavigate} />;
   if (desktop && isLoggedIn)       return <DesktopAppLayout />;

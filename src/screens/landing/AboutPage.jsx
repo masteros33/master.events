@@ -13,7 +13,6 @@ function SignatureCard({ children, className = "" }) {
   return (
     <div className={`relative bg-white border border-gray-100 shadow-sm p-6 overflow-hidden ${className}`}
       style={{ borderTopLeftRadius: "32px", borderTopRightRadius: "8px", borderBottomLeftRadius: "8px", borderBottomRightRadius: "8px" }}>
-      <div className="absolute top-0 left-0 w-3 h-10 z-10" style={{ background: NAVY, borderTopLeftRadius: "32px", borderBottomRightRadius: "10px" }} />
       {children}
     </div>
   );

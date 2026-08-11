@@ -98,25 +98,6 @@ const bootState = saved && token ? {
   activeTab:   "home",
 };
 
-// ── Back button / history support ───────────────────────────
-// Rather than requiring every screen-change call site in this file
-// (there are dozens — handleLogin, handleLogout, handleBuyTicket,
-// handleAddEvent, etc.) to be individually rewritten to push browser
-// history, the store instead SUBSCRIBES to its own `screen` field and
-// pushes a real history entry automatically whenever it changes, no
-// matter how the change happened (setScreen, direct set(), or
-// useStore.setState() from App.jsx). This is what makes the browser
-// back button and mobile back gesture actually go to the previous
-// screen instead of exiting the app entirely — previously `screen`
-// was purely in-memory Zustand state with nothing in the real
-// browser history stack for "back" to go to.
-//
-// _isRestoringFromHistory is a plain module-level flag (not Zustand
-// state, so it never triggers a re-render) that App.jsx's popstate
-// listener sets to true right before restoring a screen FROM history
-// — this stops the subscription below from re-pushing that same
-// entry back onto the stack, which would otherwise create an
-// infinite forward-loop every time the user pressed back.
 let _isRestoringFromHistory = false;
 export function _setRestoringFromHistory(v) { _isRestoringFromHistory = v; }
 
@@ -302,6 +283,9 @@ const useStore = create((set, get) => ({
   payMethod:        "momo",
   viewingTicket:    null,
   selectedTier:     null,
+  // ── NEW: holds the full batch from a multi-ticket purchase, so
+  // PaymentSuccess can show "You got 3 tickets" instead of just one ──
+  lastPurchaseBatch: null,
   setCheckoutEvent: (v) => set({ checkoutEvent: v }),
   setTicketQty:     (v) => set({ ticketQty: v }),
   setPayMethod:     (v) => set({ payMethod: v }),
@@ -357,6 +341,7 @@ const useStore = create((set, get) => ({
           activeTab:          "tickets",
           screen:             "paymentSuccess",
           viewingTicket:      registration,
+          lastPurchaseBatch:  [registration],
           newTicketCount:     (get().newTicketCount || 0) + 1,
           successToastTicket: registration,
           showSuccessToast:   true,
@@ -374,74 +359,95 @@ const useStore = create((set, get) => ({
     }
   },
 
+  // ── handleBuyTicket — rewritten for the new purchase_ticket
+  // response shape: { tickets: [...], count, message } instead of a
+  // single ticket object. Each unit purchased is now its own real
+  // Ticket row (own QR, own NFT, own identity) — so a qty-3 purchase
+  // returns 3 separate ticket objects, all added to myTickets, with
+  // the FIRST one shown on PaymentSuccess/viewingTicket and the full
+  // batch stored in lastPurchaseBatch for a "you got N tickets"
+  // summary view if PaymentSuccess wants to show one. ──
   handleBuyTicket: async (paymentReference) => {
     const { ticketsAPI } = await import("../api");
     const { checkoutEvent, ticketQty, payMethod, myTickets, selectedTier } = get();
     const loadingToast = toast.loading("Verifying payment...");
 
-    const buildTicket = (found) => ({
-      id:           found.ticket_id || found.id,
-      ticket_id:    found.ticket_id || found.id,
+    const buildTicketFrom = (raw) => ({
+      id:           raw.ticket_id || raw.id,
+      ticket_id:    raw.ticket_id || raw.id,
       event: {
-        ...(found.event || {}),
-        id:       found.event?.id       || checkoutEvent?.id,
-        name:     found.event?.name     || checkoutEvent?.name,
-        date:     found.event?.date     || checkoutEvent?.date,
-        time:     found.event?.time     || checkoutEvent?.time,
-        venue:    found.event?.venue    || checkoutEvent?.venue,
-        city:     found.event?.city     || checkoutEvent?.city,
-        category: found.event?.category || checkoutEvent?.category,
-        price:    found.event?.price    || checkoutEvent?.price,
-        image:    found.event?.image    || checkoutEvent?.image,
+        ...(raw.event || {}),
+        id:       raw.event?.id       || checkoutEvent?.id,
+        name:     raw.event?.name     || checkoutEvent?.name,
+        date:     raw.event?.date     || checkoutEvent?.date,
+        time:     raw.event?.time     || checkoutEvent?.time,
+        venue:    raw.event?.venue    || checkoutEvent?.venue,
+        city:     raw.event?.city     || checkoutEvent?.city,
+        category: raw.event?.category || checkoutEvent?.category,
+        price:    raw.event?.price    || checkoutEvent?.price,
+        image:    raw.event?.image    || checkoutEvent?.image,
       },
-      tierName:     found.tier?.name    || selectedTier?.name || null,
-      qty:          found.quantity || ticketQty,
-      quantity:     found.quantity || ticketQty,
+      tierName:     raw.tier?.name    || selectedTier?.name || null,
+      // ── Each row is now individually quantity=1 from the backend —
+      // qty/quantity here reflect that single unit, not the original
+      // basket size. ──
+      qty:          raw.quantity || 1,
+      quantity:     raw.quantity || 1,
       payMethod,
       purchasedAt:  new Date().toLocaleDateString(),
-      owner:        typeof found.owner === "object"
-        ? ((found.owner?.first_name || "") + " " + (found.owner?.last_name || "")).trim()
-        : (found.owner || ""),
-      ownerEmail:   found.owner?.email || null,
-      status:       found.status       || "active",
-      qr_data:      found.qr_data      || null,
-      dynamic_qr:   found.dynamic_qr   || null,
-      qr_base64:    found.dynamic_qr   || null,
-      qr_image_url: found.qr_image_url || null,
-      qr_image:     found.qr_image
-        ? (found.qr_image.startsWith("http") ? found.qr_image : BACKEND + found.qr_image)
+      owner:        typeof raw.owner === "object"
+        ? ((raw.owner?.first_name || "") + " " + (raw.owner?.last_name || "")).trim()
+        : (raw.owner || ""),
+      ownerEmail:   raw.owner?.email || null,
+      status:       raw.status       || "active",
+      qr_data:      raw.qr_data      || null,
+      dynamic_qr:   raw.dynamic_qr   || null,
+      qr_base64:    raw.dynamic_qr   || raw.qr_base64 || null,
+      qr_image_url: raw.qr_image_url || null,
+      qr_image:     raw.qr_image
+        ? (raw.qr_image.startsWith("http") ? raw.qr_image : BACKEND + raw.qr_image)
         : null,
-      nft_tx_hash:  found.nft_tx_hash  || null,
-      nft_token_id: found.nft_token_id || null,
+      nft_tx_hash:  raw.nft_tx_hash  || null,
+      nft_token_id: raw.nft_token_id || null,
       nft_minting:  true,
     });
 
-    const showSuccess = (ticket) => {
+    const showBatchSuccess = (rawTickets) => {
+      const built = rawTickets.map(buildTicketFrom);
       toast.dismiss();
       set({
-        myTickets:          [...get().myTickets, ticket],
+        myTickets:          [...get().myTickets, ...built],
         checkoutEvent:      null,
         selectedTier:       null,
         overlayEvent:       null,
         activeTab:          "tickets",
         screen:             "paymentSuccess",
-        viewingTicket:      ticket,
-        newTicketCount:     (get().newTicketCount || 0) + 1,
-        successToastTicket: ticket,
+        viewingTicket:      built[0],
+        lastPurchaseBatch:  built,
+        newTicketCount:     (get().newTicketCount || 0) + built.length,
+        successToastTicket: built[0],
         showSuccessToast:   true,
       });
-      toast.success("🎉 Payment confirmed! Ticket is yours.");
+      toast.success(
+        built.length > 1
+          ? `🎉 ${built.length} tickets confirmed! Each one is yours to keep or gift.`
+          : "🎉 Payment confirmed! Ticket is yours."
+      );
     };
 
     const fetchAndShow = async () => {
       await new Promise(r => setTimeout(r, 2000));
       const tickets = await ticketsAPI.myTickets();
       if (Array.isArray(tickets) && tickets.length > 0) {
-        const found = tickets.find(t =>
+        // Match every ticket from this purchase by event, not just one —
+        // a fallback fetch after a slow/timed-out request should still
+        // surface the whole batch, not just the first match.
+        const matches = tickets.filter(t =>
           t.event?.id   === checkoutEvent?.id ||
           t.event?.name === checkoutEvent?.name
-        ) || tickets[0];
-        showSuccess(buildTicket(found));
+        );
+        const toShow = matches.length > 0 ? matches.slice(0, ticketQty) : [tickets[0]];
+        showBatchSuccess(toShow);
         return true;
       }
       return false;
@@ -510,63 +516,13 @@ const useStore = create((set, get) => ({
         return;
       }
 
-      const ticketId  = data.ticket_id || data.id || data.pk;
-      const isSuccess = data._status === 201 || data._status === 200 || !!ticketId;
+      // ── NEW shape: { tickets: [...], count, message } ──
+      const rawTickets = Array.isArray(data.tickets) ? data.tickets : null;
+      const isSuccess  = data._status === 201 && rawTickets && rawTickets.length > 0;
 
-      if (isSuccess && ticketId) {
-        const eventData = data.event || checkoutEvent;
-        const ticket = {
-          id:           ticketId,
-          ticket_id:    ticketId,
-          event: {
-            id:          eventData.id          || checkoutEvent.id,
-            name:        eventData.name        || checkoutEvent.name,
-            description: eventData.description || checkoutEvent.description || "",
-            category:    eventData.category    || checkoutEvent.category,
-            venue:       eventData.venue       || checkoutEvent.venue,
-            city:        eventData.city        || checkoutEvent.city,
-            date:        eventData.date        || checkoutEvent.date,
-            time:        eventData.time        || checkoutEvent.time,
-            price:       eventData.price       || checkoutEvent.price,
-            image:       eventData.image       || checkoutEvent.image,
-          },
-          tierName:     data.tier?.name        || selectedTier?.name || null,
-          qty:          ticketQty,
-          quantity:     data.quantity          || ticketQty,
-          payMethod,
-          purchasedAt:  new Date().toLocaleDateString(),
-          owner:        typeof data.owner === "object"
-            ? ((data.owner?.first_name || "") + " " + (data.owner?.last_name || "")).trim()
-            : (data.owner || ""),
-          ownerEmail:   data.owner?.email      || null,
-          status:       data.status            || "active",
-          qr_data:      data.qr_data           || null,
-          dynamic_qr:   data.dynamic_qr        || null,
-          qr_base64:    data.dynamic_qr        || data.qr_base64 || null,
-          qr_image_url: data.qr_image_url      || null,
-          qr_image:     data.qr_image
-            ? (data.qr_image.startsWith("http") ? data.qr_image : BACKEND + data.qr_image)
-            : null,
-          nft_tx_hash:  data.nft_tx_hash       || null,
-          nft_token_id: data.nft_token_id      || null,
-          nft_minting:  data.nft_minting       || true,
-        };
-
-        set({
-          myTickets:          [...myTickets, ticket],
-          checkoutEvent:      null,
-          selectedTier:       null,
-          overlayEvent:       null,
-          activeTab:          "tickets",
-          screen:             "paymentSuccess",
-          viewingTicket:      ticket,
-          newTicketCount:     (get().newTicketCount || 0) + 1,
-          successToastTicket: ticket,
-          showSuccessToast:   true,
-        });
+      if (isSuccess) {
+        showBatchSuccess(rawTickets);
         toast.dismiss(loadingToast);
-        toast.success("🎉 Payment successful! NFT minting on Polygon...");
-
       } else {
         toast.dismiss(loadingToast);
         const errMsg = data.error || data.detail || data.message ||
@@ -884,19 +840,6 @@ const useStore = create((set, get) => ({
 
 }));
 
-// ── History subscription — see comment block above the store for
-// full explanation. This must be set up AFTER the store is created,
-// and it initializes the browser's history state to match the boot
-// screen so the very first popstate has something valid to read.
-//
-// FIX: both calls below now preserve window.location.search and
-// .hash, not just .pathname. The original version dropped the query
-// string entirely — which silently deleted Google's ?code=... on the
-// OAuth callback, ?verify=... on email verification links, ?uid=&
-// token= on password reset, ?event=... on shared event links, and
-// ?admin=1/?door=1 — before App.jsx's effect ever got a chance to
-// read them. This is what caused "Google sign-in loads then does
-// nothing." ──
 if (typeof window !== "undefined") {
   window.history.replaceState(
     { screen: bootState.screen },

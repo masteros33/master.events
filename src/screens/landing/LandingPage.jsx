@@ -12,16 +12,21 @@ import { NavBar } from "./shared";
 const NAVY = "#1c2e53";
 const NAVY_PASTEL = "#EBEEF5";
 const SORA = { fontFamily: "'Sora', sans-serif" };
+const BACKEND = "https://master-events-backend.onrender.com";
 
 const HERO_TICKET_IMAGE = "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=600&q=90";
 
+// ── Signature card shell — asymmetric corner shape only now.
+// The navy corner tab was removed per feedback: repeated across many
+// cards on one page it read as a decorative sticker rather than a
+// considered design element. The 32px/8px asymmetric radius alone is
+// distinctive enough to carry the "signature" identity. ──
 function SignatureCard({ children, className = "", noPad = false }) {
   return (
     <div
       className={`relative bg-white border border-gray-100 shadow-sm overflow-hidden ${noPad ? "" : "p-6"} ${className}`}
       style={{ borderTopLeftRadius: "32px", borderTopRightRadius: "8px", borderBottomLeftRadius: "8px", borderBottomRightRadius: "8px" }}
     >
-      <div className="absolute top-0 left-0 w-3 h-10 z-10" style={{ background: NAVY, borderTopLeftRadius: "32px", borderBottomRightRadius: "10px" }} />
       {children}
     </div>
   );
@@ -73,15 +78,12 @@ const FEATURES = [
   { Icon: DoorOpen,  title: "Smart Door Scanning",      body: "Generate invite codes for door staff. Scan QR tickets in seconds at the gate." },
 ];
 
-// ── How It Works — 3-step sequence, distinct from the Revenue
-// Tracker's organizer-finance framing further down the page ──
 const STEPS = [
   { Icon: Search,    n: "01", title: "Choose an event",    body: "Browse verified listings and select the ticket type that works for you." },
   { Icon: Wallet,    n: "02", title: "Buy your ticket",    body: "Complete checkout and your ticket mints straight to your account." },
   { Icon: ScanLine,  n: "03", title: "Show up and scan",   body: "Your ticket is checked at entry, with blockchain verification behind the scenes." },
 ];
 
-// ── Real FAQ content — distinct from the earlier prototype sample ──
 const FAQS = [
   { q: "What makes a ticket blockchain-verified?", a: "Every ticket is minted as an NFT on Polygon — a permanent, tamper-proof record of who owns it, checkable independently of Master Events itself." },
   { q: "Do I need to understand blockchain to use this?", a: "No. Buying, holding, and using a ticket feels exactly like any other app — the blockchain layer runs quietly in the background." },
@@ -216,12 +218,22 @@ export default function LandingPage({ onNavigate }) {
   const [eventsLoading, setEventsLoading] = React.useState(true);
   const [eventsFailed, setEventsFailed] = React.useState(false);
   const [openFaq, setOpenFaq] = React.useState(0);
+  // ── NEW: real platform stats, replacing the previous hardcoded
+  // "GHS 24.8K" / "+18.6%" / "94%" placeholder numbers on the Revenue
+  // Tracker. Falls back gracefully to a loading/empty state rather
+  // than ever showing fake numbers if the fetch fails. ──
+  const [stats, setStats] = React.useState(null);
 
   React.useEffect(() => {
     eventsAPI.list()
       .then(data => setEvents(Array.isArray(data) ? data.slice(0, 8) : []))
       .catch(() => setEventsFailed(true))
       .finally(() => setEventsLoading(false));
+
+    fetch(`${BACKEND}/api/tickets/platform-stats/`)
+      .then(r => r.json())
+      .then(data => { if (data && !data.error) setStats(data); })
+      .catch(() => {});
   }, []);
 
   const catImg = {
@@ -233,6 +245,10 @@ export default function LandingPage({ onNavigate }) {
     business: "https://images.unsplash.com/photo-1515187029135-18ee286d815b?w=600",
     other:    "https://images.unsplash.com/photo-1492684223066-81342ee5ff30?w=600",
   };
+
+  const mintPct = stats && stats.total_tickets > 0
+    ? Math.round((stats.total_minted / stats.total_tickets) * 100)
+    : null;
 
   return (
     <div className="min-h-screen bg-brand-canvas font-sans">
@@ -333,8 +349,7 @@ export default function LandingPage({ onNavigate }) {
         </div>
       </section>
 
-      {/* ── How It Works — proper 3-step sequence, distinct from
-      the finance-framed Revenue Tracker below ── */}
+      {/* ── How It Works ── */}
       <section id="how" className="bg-brand-canvas">
         <div className="max-w-6xl mx-auto px-4 md:px-8 py-12 md:py-20">
           <div className="text-center mb-10">
@@ -360,38 +375,54 @@ export default function LandingPage({ onNavigate }) {
         </div>
       </section>
 
-      {/* ── Revenue Tracker — JED-inspired muted data viz ── */}
+      {/* ── Revenue Tracker — now real, seeded platform stats instead
+      of hardcoded placeholder numbers ── */}
       <section className="bg-brand-canvas border-t border-gray-100">
         <div className="max-w-6xl mx-auto px-4 md:px-8 py-12 md:py-20 grid md:grid-cols-2 gap-10 md:gap-16 items-center">
           <div>
-            <div className="text-[10px] font-bold tracking-widest mb-3 font-mono" style={{ color: NAVY }}>FOR ORGANIZERS</div>
+            <div className="text-[10px] font-bold tracking-widest mb-3 font-mono" style={{ color: NAVY }}>ON-CHAIN, VERIFIABLE</div>
             <h2 className="text-2xl md:text-[38px] font-extrabold tracking-tight text-brand-text mb-4" style={SORA}>
-              Watch revenue move,<br />in real time.
+              Every ticket, tracked<br />on Polygon.
             </h2>
-            <p className="text-[15px] text-brand-muted leading-relaxed max-w-[420px]">
-              Every sale, every payout, every mint — tracked on one clean dashboard. No spreadsheets, no reconciliation, no guessing what's actually landed in your wallet.
+            <p className="text-[15px] text-brand-muted leading-relaxed max-w-[420px] mb-5">
+              Real numbers, not marketing copy. This is our actual mint activity on the Polygon Amoy network — check it yourself.
             </p>
+            {stats?.contract_address && (
+              <a href={`https://amoy.polygonscan.com/address/${stats.contract_address}`} target="_blank" rel="noreferrer"
+                className="inline-flex items-center gap-2 px-4 py-2.5 rounded-full text-[12px] font-bold font-mono transition-colors"
+                style={{ background: NAVY_PASTEL, color: NAVY }}>
+                <Link2 size={13} strokeWidth={2} />
+                {stats.contract_address.slice(0, 6)}…{stats.contract_address.slice(-4)}
+                <ArrowRight size={12} strokeWidth={2} />
+              </a>
+            )}
           </div>
 
           <SignatureCard noPad>
             <div className="p-6">
-              <div className="text-[10px] font-bold tracking-widest font-mono text-gray-400 mb-1">FINANCE</div>
-              <h3 className="font-extrabold text-[19px] mb-1" style={SORA}>Revenue Tracker</h3>
-              <p className="text-[12px] text-brand-muted mb-5">Monitor ticket revenue from one clean control surface.</p>
+              <div className="text-[10px] font-bold tracking-widest font-mono text-gray-400 mb-1">LIVE PLATFORM STATS</div>
+              <h3 className="font-extrabold text-[19px] mb-1" style={SORA}>Mint Activity</h3>
+              <p className="text-[12px] text-brand-muted mb-5">Pulled directly from our backend — updates as tickets sell.</p>
 
               <div className="bg-brand-canvas rounded-2xl p-5">
                 <div className="flex justify-between items-center mb-1">
-                  <span className="text-[10px] font-mono text-gray-400 uppercase tracking-wide">This week</span>
-                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-600">+18.6%</span>
+                  <span className="text-[10px] font-mono text-gray-400 uppercase tracking-wide">Tickets Minted</span>
+                  {stats?.total_events != null && (
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-600">{stats.total_events} events</span>
+                  )}
                 </div>
-                <div className="text-[26px] font-extrabold tracking-tight" style={SORA}>GHS 24.8K</div>
-                <MutedBarChart data={[40, 55, 48, 68, 82, 95]} labels={["MON","TUE","WED","THU","FRI","SAT"]} />
+                <div className="text-[26px] font-extrabold tracking-tight" style={SORA}>
+                  {stats ? stats.total_minted.toLocaleString() : "—"}
+                </div>
+                {stats?.recent_daily && (
+                  <MutedBarChart data={stats.recent_daily.map(d => d.count)} labels={stats.recent_daily.map(d => d.label)} />
+                )}
               </div>
 
               <div className="flex items-center gap-5 mt-5">
-                <MutedRing pct={94} />
+                <MutedRing pct={mintPct ?? 0} />
                 <div>
-                  <div className="text-[22px] font-extrabold tracking-tight" style={SORA}>94%</div>
+                  <div className="text-[22px] font-extrabold tracking-tight" style={SORA}>{mintPct != null ? `${mintPct}%` : "—"}</div>
                   <div className="text-[11px] text-brand-muted">Successful mint rate</div>
                 </div>
               </div>

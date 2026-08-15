@@ -10,8 +10,6 @@ import {
 import useStore from "../../store/useStore";
 import { eventsAPI } from "../../api";
 
-// SVG paint (stroke/fill) can't take Tailwind classes — these mirror the
-// brand/fintech tokens in tailwind.config.js for the charts below only.
 const CHART = { orange: "#FF5A1F", green: "#10B981", blue: "#2563EB", red: "#DC2626" };
 
 const CURRENCIES = [
@@ -25,7 +23,6 @@ const COUNTRIES = [
 ];
 const CATEGORIES = ["music","tech","food","arts","sports","business","other"];
 
-// ── Ticket tier presets — quick-select for common naming ────────
 const TIER_PRESETS = [
   { key:"regular", label:"Regular", Icon:Ticket },
   { key:"vip",     label:"VIP",     Icon:Star },
@@ -69,14 +66,13 @@ const mapEvent = e => ({
   isApproved:   e.is_approved !== undefined ? e.is_approved : true,
 });
 
-// pct-based capacity color: red past 80%, brand orange mid, green low
 const pctColorClass = pct => pct > 80 ? "text-red-600" : "text-brand-orange";
 const pctBarClass   = pct => pct > 80 ? "bg-red-600" : "bg-brand-orange";
 
-// ── FIX: bg-white was missing, causing native dark-mode form styling
-// to render inputs black/dark regardless of text-brand-text ────────
+// ── FIX: bg-white → bg-brand-card so form inputs render as real dark
+// cards in dark mode instead of staying hardcoded light ──
 const inputClass = (err) =>
-  `w-full px-3.5 py-2.5 rounded-xl border bg-white text-sm text-brand-text outline-none transition-colors ${
+  `w-full px-3.5 py-2.5 rounded-xl border bg-brand-card text-sm text-brand-text outline-none transition-colors ${
     err ? "border-red-300" : "border-gray-200 focus:border-brand-orange"
   } focus:ring-2 focus:ring-orange-100`;
 const labelClass = "text-[11px] font-semibold text-brand-muted mb-1.5 block uppercase tracking-wide";
@@ -99,7 +95,6 @@ function dlCSV(events) {
   a.click();
 }
 
-// ── Sparkline ─────────────────────────────────────────────────
 function Sparkline({ data = [], color = CHART.orange, height = 32, width = 80 }) {
   if (data.length < 2) return null;
   const max = Math.max(...data, 1);
@@ -125,7 +120,6 @@ function Sparkline({ data = [], color = CHART.orange, height = 32, width = 80 })
   );
 }
 
-// ── Circular progress ─────────────────────────────────────────
 function Ring({ pct = 0, size = 44, color = CHART.orange, bg = "#E5E7EB" }) {
   const r  = (size - 5) / 2;
   const cx = size / 2;
@@ -142,7 +136,7 @@ function Ring({ pct = 0, size = 44, color = CHART.orange, bg = "#E5E7EB" }) {
   );
 }
 
-// ── Event card (image-first) ───────────────────────────────────
+// ── FIX: bg-white → bg-brand-card ──
 function EventCard({ ev, onClick }) {
   const isFree = ev.event_type === "free";
   const pct    = ev.totalTickets > 0 ? Math.round((ev.ticketsSold/ev.totalTickets)*100) : 0;
@@ -151,7 +145,7 @@ function EventCard({ ev, onClick }) {
 
   return (
     <motion.div whileHover={{ y: -3 }} whileTap={{ scale: 0.98 }} onClick={onClick}
-      className="bg-white rounded-3xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow overflow-hidden cursor-pointer min-w-[220px] w-full">
+      className="bg-brand-card rounded-3xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow overflow-hidden cursor-pointer min-w-[220px] w-full">
       <div className="h-[140px] relative overflow-hidden">
         <img src={ev.image} alt={ev.name} onError={e => { e.target.src = catImg.other; }} className="w-full h-full object-cover object-top block" />
 
@@ -198,11 +192,6 @@ function EventCard({ ev, onClick }) {
   );
 }
 
-// ── Activity feed — now pulls real transactions from the backend
-// instead of generating fake Math.random() events. Polls every 15s
-// while mounted so it still feels "live" without needing websockets.
-// Shows an honest empty state when there's genuinely no activity yet
-// instead of ever fabricating data. ──
 function ActivityFeed({ events }) {
   const [feed,    setFeed]    = useState([]);
   const [loading, setLoading] = useState(true);
@@ -284,7 +273,6 @@ function ActivityFeed({ events }) {
   );
 }
 
-// ── Fill chart ────────────────────────────────────────────────
 function FillChart({ events }) {
   if (!events.length) return null;
   return (
@@ -315,12 +303,11 @@ function FillChart({ events }) {
   );
 }
 
-// ── Panel shell ───────────────────────────────────────────────
+// ── FIX: bg-white → bg-brand-card ──
 function Panel({ children, className = "" }) {
-  return <div className={`bg-white border border-gray-100 rounded-3xl p-5 shadow-sm ${className}`}>{children}</div>;
+  return <div className={`bg-brand-card border border-gray-100 rounded-3xl p-5 shadow-sm ${className}`}>{children}</div>;
 }
 
-// ── Section head ──────────────────────────────────────────────
 function SectionHead({ label, title, action }) {
   return (
     <div className="flex justify-between items-end mb-4.5 mb-5">
@@ -333,13 +320,13 @@ function SectionHead({ label, title, action }) {
   );
 }
 
-// ── EventRow (list view for Events tab) ──────────────────────
+// ── FIX: bg-white → bg-brand-card ──
 function EventRow({ ev, onClick }) {
   const pct    = ev.totalTickets > 0 ? Math.round((ev.ticketsSold/ev.totalTickets)*100) : 0;
   const isFree = ev.event_type === "free";
   return (
     <motion.div whileHover={{ y: -1 }} whileTap={{ scale: 0.99 }} onClick={onClick}
-      className={`bg-white border rounded-2xl shadow-sm overflow-hidden cursor-pointer transition-shadow hover:shadow-md flex ${tab() ? "flex-row" : "flex-col"} ${!ev.isApproved ? "border-amber-200" : "border-gray-100"}`}>
+      className={`bg-brand-card border rounded-2xl shadow-sm overflow-hidden cursor-pointer transition-shadow hover:shadow-md flex ${tab() ? "flex-row" : "flex-col"} ${!ev.isApproved ? "border-amber-200" : "border-gray-100"}`}>
       <div className={`relative shrink-0 ${tab() ? "w-40 h-auto min-h-[80px]" : "w-full h-[120px]"}`}>
         <img src={ev.image} alt={ev.name} onError={e=>{e.target.src=catImg.other}} className="w-full h-full object-cover object-top block" />
         <div className="absolute top-2 left-2 flex gap-1">
@@ -381,9 +368,6 @@ function EventRow({ ev, onClick }) {
   );
 }
 
-// ═══════════════════════════════════════════════════════════════
-//  ORGANIZER HOME — fintech dashboard, width-constrained
-// ═══════════════════════════════════════════════════════════════
 export function OrganizerHome() {
   const orgEvents          = useStore(s => s.orgEvents);
   const setOrgEvents       = useStore(s => s.setOrgEvents);
@@ -429,7 +413,6 @@ export function OrganizerHome() {
     <div className="bg-brand-canvas min-h-full font-sans" onClick={() => setDropOpen(false)}>
       <div className="max-w-[1000px] mx-auto" style={{ padding: isDesk ? "28px 40px 80px" : "16px 16px 100px" }}>
 
-        {/* ── Header ── */}
         <div className="flex justify-between items-start mb-6 flex-wrap gap-3">
           <div>
             <p className="text-xs text-brand-muted mb-1 font-mono tracking-wide">ORGANIZER DASHBOARD</p>
@@ -475,12 +458,11 @@ export function OrganizerHome() {
           <div className="skeleton" style={{ height: "220px", borderRadius: "28px", marginBottom: "24px" }} />
         ) : (
           <>
-            {/* ── Stats toggle dropdown ── */}
             <div className="mb-4 flex items-center gap-2.5 flex-wrap">
               <div className="text-[11px] font-semibold text-brand-muted font-mono">VIEWING STATS FOR:</div>
               <div className="relative" onClick={e => e.stopPropagation()}>
                 <motion.button whileTap={{ scale:0.97 }} onClick={() => setDropOpen(!dropOpen)}
-                  className={`flex items-center gap-2 px-3.5 py-1.5 bg-white border rounded-xl cursor-pointer text-[13px] font-semibold text-brand-text shadow-sm transition-colors ${dropOpen ? "border-brand-orange" : "border-gray-200"}`}>
+                  className={`flex items-center gap-2 px-3.5 py-1.5 bg-brand-card border rounded-xl cursor-pointer text-[13px] font-semibold text-brand-text shadow-sm transition-colors ${dropOpen ? "border-brand-orange" : "border-gray-200"}`}>
                   <span className={`w-2 h-2 rounded-full ${statsView === "all" ? "bg-brand-orange" : "bg-fintech-green"}`} />
                   {statsView === "all" ? "All Events" : selectedEvent?.name || "Select event"}
                   {dropOpen ? <ChevronUp size={13} className="text-brand-muted" /> : <ChevronDown size={13} className="text-brand-muted" />}
@@ -488,7 +470,7 @@ export function OrganizerHome() {
                 <AnimatePresence>
                   {dropOpen && (
                     <motion.div initial={{ opacity:0, y:-8 }} animate={{ opacity:1, y:0 }} exit={{ opacity:0, y:-8 }}
-                      className="absolute top-[calc(100%+6px)] left-0 min-w-[220px] bg-white border border-gray-100 rounded-2xl shadow-sm z-[100] overflow-hidden">
+                      className="absolute top-[calc(100%+6px)] left-0 min-w-[220px] bg-brand-card border border-gray-100 rounded-2xl shadow-sm z-[100] overflow-hidden">
                       {[{ id:"all", name:"All Events" }, ...orgEvents].map(e => (
                         <div key={e.id} onClick={() => { setStatsView(String(e.id)); setDropOpen(false); }}
                           className={`flex items-center gap-2 px-3.5 py-2.5 cursor-pointer transition-colors hover:bg-pastel-orange ${String(statsView)===String(e.id) ? "bg-pastel-orange" : ""}`}>
@@ -502,7 +484,6 @@ export function OrganizerHome() {
               </div>
             </div>
 
-            {/* ── Dark balance hero — same treatment as Wallet ── */}
             <div className="bg-fintech-slate rounded-3xl p-6 md:p-7 mb-4">
               <div className="flex justify-between items-start flex-wrap gap-4 mb-5">
                 <div>
@@ -535,7 +516,6 @@ export function OrganizerHome() {
               </div>
             </div>
 
-            {/* ── Event cards carousel / grid ── */}
             {orgEvents.length > 0 && (
               <div className="mb-5">
                 <div className="flex justify-between items-center mb-3.5">
@@ -572,7 +552,6 @@ export function OrganizerHome() {
               </div>
             )}
 
-            {/* ── Analytics panels ── */}
             {isDesk && orgEvents.length > 0 && (
               <div className="grid grid-cols-2 gap-4 mb-4">
                 <Panel>
@@ -636,7 +615,7 @@ export function OrganizerHome() {
 
             {orgEvents.length === 0 && (
               <motion.div initial={{ opacity:0 }} animate={{ opacity:1 }}
-                className="text-center py-16 px-8 bg-white rounded-3xl border border-gray-100 shadow-sm">
+                className="text-center py-16 px-8 bg-brand-card rounded-3xl border border-gray-100 shadow-sm">
                 <div className="w-14 h-14 rounded-full bg-pastel-orange flex items-center justify-center mx-auto mb-4">
                   <Ticket size={26} strokeWidth={1.75} className="text-brand-orange" />
                 </div>
@@ -655,9 +634,6 @@ export function OrganizerHome() {
   );
 }
 
-// ═══════════════════════════════════════════════════════════════
-//  ORGANIZER EVENTS LIST
-// ═══════════════════════════════════════════════════════════════
 export function OrganizerEvents() {
   const orgEvents          = useStore(s => s.orgEvents);
   const setOrgEvents       = useStore(s => s.setOrgEvents);
@@ -686,7 +662,7 @@ export function OrganizerEvents() {
             className="flex items-center gap-1.5 px-4 py-2.5 bg-brand-orange hover:bg-brand-orange-hover text-white rounded-full text-[13px] font-bold transition-colors">
             <Plus size={14} strokeWidth={2.5} /> New Event
           </motion.button>} />
-        <div className="flex gap-1 mb-5 bg-white p-1 rounded-xl border border-gray-100 w-fit">
+        <div className="flex gap-1 mb-5 bg-brand-card p-1 rounded-xl border border-gray-100 w-fit">
           {[["all","All"],["paid","Paid"],["free","Free"],["live","Live"],
             ...(pendingCount > 0 ? [["pending", `Pending (${pendingCount})`]] : [])
           ].map(([v,l]) => (
@@ -716,9 +692,6 @@ export function OrganizerEvents() {
   );
 }
 
-// ═══════════════════════════════════════════════════════════════
-//  ORGANIZER ALERTS
-// ═══════════════════════════════════════════════════════════════
 export function OrganizerAlerts() {
   const orgEvents = useStore(s => s.orgEvents);
   const [isDesk, setIsDesk] = useState(desk());
@@ -738,7 +711,7 @@ export function OrganizerAlerts() {
         <div className={`flex flex-col gap-2 ${isDesk ? "max-w-[600px]" : "w-full"}`}>
           {alerts.map((a,i) => (
             <motion.div key={i} initial={{ opacity:0, y:8 }} animate={{ opacity:1, y:0 }} transition={{ delay:i*0.05 }} whileHover={{ y:-1 }}
-              className="bg-white rounded-2xl p-4 flex gap-3.5 items-start border border-gray-100 shadow-sm transition-shadow hover:shadow-md">
+              className="bg-brand-card rounded-2xl p-4 flex gap-3.5 items-start border border-gray-100 shadow-sm transition-shadow hover:shadow-md">
               <div className={`w-9 h-9 rounded-xl ${a.bg} flex items-center justify-center shrink-0`}>
                 <a.Icon size={16} strokeWidth={1.75} className={a.color} />
               </div>
@@ -755,9 +728,6 @@ export function OrganizerAlerts() {
   );
 }
 
-// ═══════════════════════════════════════════════════════════════
-//  ADD EVENT
-// ═══════════════════════════════════════════════════════════════
 export function AddEvent() {
   const addEventForm    = useStore(s => s.addEventForm);
   const setAddEventForm = useStore(s => s.setAddEventForm);
@@ -869,7 +839,7 @@ export function AddEvent() {
 
   return (
     <div className="min-h-screen bg-brand-canvas font-sans">
-      <div className="flex items-center justify-between px-6 py-3.5 bg-white border-b border-gray-100 sticky top-0 z-20">
+      <div className="flex items-center justify-between px-6 py-3.5 bg-brand-card border-b border-gray-100 sticky top-0 z-20">
         <div className="flex items-center gap-2.5">
           <div className="w-8 h-8 rounded-lg bg-brand-orange flex items-center justify-center">
             <Ticket size={15} strokeWidth={2} color="#fff" />
@@ -884,7 +854,7 @@ export function AddEvent() {
 
       <div className="max-w-[800px] mx-auto" style={{ padding: isDesk ? "36px 40px 80px" : "20px 16px 80px" }}>
         <motion.div initial={{ opacity:0, y:16 }} animate={{ opacity:1, y:0 }} transition={{ duration:0.4 }}
-          className="bg-white rounded-3xl border border-gray-100 shadow-sm" style={{ padding: isDesk ? "40px 44px" : "24px 20px" }}>
+          className="bg-brand-card rounded-3xl border border-gray-100 shadow-sm" style={{ padding: isDesk ? "40px 44px" : "24px 20px" }}>
 
           <div className="mb-6 flex items-start gap-2.5 bg-pastel-blue border border-fintech-blue/15 rounded-xl px-3.5 py-3">
             <ShieldCheck size={15} strokeWidth={1.75} className="text-fintech-blue shrink-0 mt-0.5" />
@@ -953,12 +923,12 @@ export function AddEvent() {
                   <label className={labelClass}>Date {errors.date && <span className="text-red-600 font-normal normal-case">— {errors.date}</span>}</label>
                   <input type="date" value={addEventForm.date||""}
                     onChange={e => { setAddEventForm({...addEventForm, date:e.target.value}); setErrors(p=>({...p,date:null})); }}
-                    className={inputClass(errors.date)} style={{ colorScheme: "light" }} />
+                    className={inputClass(errors.date)} />
                 </div>
                 <div>
                   <label className={labelClass}>Time (optional)</label>
                   <input type="time" value={addEventForm.time||""} onChange={e => setAddEventForm({...addEventForm, time:e.target.value})}
-                    className={inputClass(false)} style={{ colorScheme: "light" }} />
+                    className={inputClass(false)} />
                 </div>
               </>
             )}
@@ -967,7 +937,7 @@ export function AddEvent() {
               <div className={isDesk ? "col-span-2" : ""}>
                 <label className={labelClass}>Event Dates {errors.dates && <span className="text-red-600 font-normal normal-case">— {errors.dates}</span>}</label>
                 <div className="flex gap-2 mb-3">
-                  <input type="date" value={newDate} onChange={e => setNewDate(e.target.value)} className={`${inputClass(false)} flex-1`} style={{ colorScheme: "light" }} />
+                  <input type="date" value={newDate} onChange={e => setNewDate(e.target.value)} className={`${inputClass(false)} flex-1`} />
                   <button onClick={addDate}
                     className="px-5 bg-brand-orange hover:bg-brand-orange-hover text-white rounded-xl shrink-0 flex items-center justify-center transition-colors">
                     <Plus size={18} strokeWidth={2.5} />
@@ -1061,7 +1031,7 @@ export function AddEvent() {
                   <div className="flex gap-1.5 mb-2.5 flex-wrap">
                     {TIER_PRESETS.map(t => (
                       <button key={t.key} onClick={() => setNewTierType(t.key)}
-                        className={`flex items-center gap-1 px-3 py-1.5 rounded-full text-[12px] font-semibold border transition-colors ${newTierType===t.key ? "border-brand-orange bg-pastel-orange text-brand-orange" : "border-gray-200 bg-white text-brand-muted"}`}>
+                        className={`flex items-center gap-1 px-3 py-1.5 rounded-full text-[12px] font-semibold border transition-colors ${newTierType===t.key ? "border-brand-orange bg-pastel-orange text-brand-orange" : "border-gray-200 bg-brand-card text-brand-muted"}`}>
                         <t.Icon size={12} strokeWidth={1.75} /> {t.label}
                       </button>
                     ))}
@@ -1091,7 +1061,7 @@ export function AddEvent() {
                     const Icon = tierIcon(t.key);
                     return (
                       <motion.div key={t.id} initial={{ opacity:0, y:-8 }} animate={{ opacity:1, y:0 }} exit={{ opacity:0, height:0 }}
-                        className="flex items-center justify-between bg-white border border-gray-100 rounded-xl px-3.5 py-2.5 mb-2 shadow-sm">
+                        className="flex items-center justify-between bg-brand-card border border-gray-100 rounded-xl px-3.5 py-2.5 mb-2 shadow-sm">
                         <div className="flex items-center gap-2.5 min-w-0">
                           <span className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${tierBadgeColor(t.key)}`}>
                             <Icon size={15} strokeWidth={1.75} />
@@ -1222,9 +1192,6 @@ export function AddEvent() {
   );
 }
 
-// ═══════════════════════════════════════════════════════════════
-//  ORGANIZER EVENT DETAIL — width-constrained
-// ═══════════════════════════════════════════════════════════════
 export function OrganizerEventDetail() {
   const viewingOrgEvent    = useStore(s => s.viewingOrgEvent);
   const setViewingOrgEvent = useStore(s => s.setViewingOrgEvent);
@@ -1298,7 +1265,7 @@ export function OrganizerEventDetail() {
 
   if (editing) return (
     <div className="bg-brand-canvas h-full flex flex-col overflow-hidden font-sans">
-      <div className="shrink-0 flex items-center px-4.5 px-4 py-3 gap-3 bg-white border-b border-gray-100">
+      <div className="shrink-0 flex items-center px-4.5 px-4 py-3 gap-3 bg-brand-card border-b border-gray-100">
         <button onClick={() => setEditing(false)}
           className="w-8 h-8 rounded-lg bg-transparent border border-gray-200 flex items-center justify-center text-brand-text hover:border-gray-300 transition-colors">
           <ArrowLeft size={15} strokeWidth={2} />
@@ -1344,7 +1311,7 @@ export function OrganizerEventDetail() {
               <>
                 <input type="file" accept="image/jpeg,image/png,image/webp" id="edit-img" className="hidden"
                   onChange={e => { const f=e.target.files[0]; if(!f) return; const cv=document.createElement("canvas"); const im=new Image(); const u=URL.createObjectURL(f); im.onload=()=>{const M=1200;let w=im.width,h=im.height;if(w>M){h=Math.round(h*M/w);w=M;}cv.width=w;cv.height=h;cv.getContext("2d").drawImage(im,0,0,w,h);setEditForm(p=>({...p,image:cv.toDataURL("image/jpeg",0.82)}));URL.revokeObjectURL(u);};im.src=u; }} />
-                <label htmlFor="edit-img" className="block p-4 bg-white border-2 border-dashed border-brand-orange/30 rounded-xl text-center cursor-pointer">
+                <label htmlFor="edit-img" className="block p-4 bg-brand-card border-2 border-dashed border-brand-orange/30 rounded-xl text-center cursor-pointer">
                   {editForm.image ? (
                     <>
                       <img src={editForm.image} alt="p" className="w-full h-28 object-cover object-top rounded-lg mb-1.5" />
@@ -1366,11 +1333,11 @@ export function OrganizerEventDetail() {
             {[["name","Event Name","text",true],["subtitle","Subtitle","text",false],["date","Date","date",true],["time","Time","time",false],["venue","Venue","text",true],["city","City","text",false],["price","Ticket Price","number",true],["totalTickets","Total Tickets","number",false],["description","Description","text",false]].map(([k,l,t,req]) => (
               <div key={k} className="mb-3.5">
                 <label className="block text-xs font-medium text-brand-muted mb-1">{l}{req && <span className="text-red-600"> *</span>}</label>
-                <input type={t} value={editForm[k]??""} onChange={e=>setEditForm(p=>({...p,[k]:e.target.value}))} className={inputClass(false)} style={{ colorScheme:"light" }} />
+                <input type={t} value={editForm[k]??""} onChange={e=>setEditForm(p=>({...p,[k]:e.target.value}))} className={inputClass(false)} />
               </div>
             ))}
           </div>
-          <div className="flex items-center justify-between px-3.5 py-3 bg-white border border-gray-100 rounded-xl mb-4">
+          <div className="flex items-center justify-between px-3.5 py-3 bg-brand-card border border-gray-100 rounded-xl mb-4">
             <div>
               <div className="text-[13px] font-medium text-brand-text">Ticket Sales</div>
               <div className="text-[11px] text-brand-muted">Currently {ev.salesOpen?"open":"paused"}</div>
@@ -1396,11 +1363,11 @@ export function OrganizerEventDetail() {
         <div className={`relative ${isDesk ? "h-[220px]" : "h-[170px]"}`}>
           <img src={cover} alt={ev.name} className="w-full h-full object-cover object-top" onError={e=>{e.target.src=catImg.other}} />
           <button onClick={() => setScreen("app")}
-            className="absolute top-3 left-3.5 w-8 h-8 rounded-full bg-white shadow-sm flex items-center justify-center text-brand-text">
+            className="absolute top-3 left-3.5 w-8 h-8 rounded-full bg-brand-card shadow-sm flex items-center justify-center text-brand-text">
             <ArrowLeft size={15} strokeWidth={2} />
           </button>
           <button onClick={startEdit}
-            className="absolute top-3 right-3.5 px-3 py-1.5 bg-white shadow-sm rounded-full text-brand-text text-[11px] font-semibold">Edit</button>
+            className="absolute top-3 right-3.5 px-3 py-1.5 bg-brand-card shadow-sm rounded-full text-brand-text text-[11px] font-semibold">Edit</button>
           <div className="absolute bottom-3 left-3.5 flex gap-1.5">
             <span className="bg-brand-text text-white text-[8px] font-bold px-1.5 py-0.5 rounded font-mono">NFT</span>
             {isFree && <span className="bg-fintech-green text-white text-[8px] font-bold px-1.5 py-0.5 rounded font-mono">FREE</span>}
@@ -1426,7 +1393,7 @@ export function OrganizerEventDetail() {
           </div>
         )}
 
-        <div className="bg-white border-b border-gray-100" style={{ padding: isDesk ? "16px 40px" : "12px 14px" }}>
+        <div className="bg-brand-card border-b border-gray-100" style={{ padding: isDesk ? "16px 40px" : "12px 14px" }}>
           <div className="text-[10px] font-medium text-brand-muted tracking-wide mb-1 font-mono">{(ev.category||"").toUpperCase()} · {ev.country||"GHANA"}</div>
           <div className={`font-bold text-brand-text tracking-tight mb-0.5 ${isDesk ? "text-[22px]" : "text-lg"}`}>{ev.name}</div>
           <div className="flex items-center gap-1 text-xs text-brand-muted font-mono">
@@ -1434,7 +1401,7 @@ export function OrganizerEventDetail() {
           </div>
         </div>
 
-        <div className="sticky top-0 z-20 bg-white border-b border-gray-100 flex" style={{ padding: `0 ${isDesk?"40px":"14px"}` }}>
+        <div className="sticky top-0 z-20 bg-brand-card border-b border-gray-100 flex" style={{ padding: `0 ${isDesk?"40px":"14px"}` }}>
           {[{id:"overview",label:"Overview",Icon:LayoutDashboard},{id:"holders",label:"Ticket Holders",Icon:Users,count:ev.ticketsSold}].map(t => (
             <button key={t.id} onClick={() => onTab(t.id)}
               className={`px-3.5 py-3 bg-transparent border-0 border-b-2 flex items-center gap-1.5 text-[13px] transition-colors ${activeTab===t.id ? "border-brand-orange text-brand-orange font-semibold" : "border-transparent text-brand-muted font-normal"}`}>
@@ -1459,7 +1426,7 @@ export function OrganizerEventDetail() {
                   [Ticket,"Sold",`${ev.ticketsSold}/${ev.totalTickets}`,"text-fintech-blue"],
                   [DoorOpen,"Admitted",admittedCount+" ppl","text-brand-orange"],
                 ]).map(([Icon,label,value,color]) => (
-                  <motion.div key={label} whileHover={{ y:-1 }} className="bg-white border border-gray-100 rounded-2xl p-3.5 shadow-sm">
+                  <motion.div key={label} whileHover={{ y:-1 }} className="bg-brand-card border border-gray-100 rounded-2xl p-3.5 shadow-sm">
                     <Icon size={15} strokeWidth={1.75} className={`${color} mb-1.5`} />
                     <div className={`text-lg font-bold mb-0.5 tracking-tight ${color}`}>{value}</div>
                     <div className="text-[11px] text-brand-muted">{label}</div>
@@ -1514,7 +1481,7 @@ export function OrganizerEventDetail() {
                   {ev.salesOpen ? <><Pause size={14} strokeWidth={2} /> Pause {isFree?"Registrations":"Sales"}</> : <><Play size={14} strokeWidth={2} /> Resume {isFree?"Registrations":"Sales"}</>}
                 </motion.button>
                 <motion.button whileHover={{ scale:1.01 }} whileTap={{ scale:0.97 }} onClick={() => setScreen("scanTicket")}
-                  className="py-3 bg-white text-brand-text border border-gray-200 rounded-xl text-[13px] font-medium flex items-center justify-center gap-1.5 hover:border-gray-300 transition-colors">
+                  className="py-3 bg-brand-card text-brand-text border border-gray-200 rounded-xl text-[13px] font-medium flex items-center justify-center gap-1.5 hover:border-gray-300 transition-colors">
                   <ScanLine size={14} strokeWidth={1.75} /> Scan at Door
                 </motion.button>
               </div>
@@ -1598,7 +1565,7 @@ export function OrganizerEventDetail() {
                     const lbl   = sLabel[t.status]||t.status;
                     return (
                       <motion.div key={t.ticket_id||i} initial={{ opacity:0, y:5 }} animate={{ opacity:1, y:0 }} transition={{ delay:i*0.02 }}
-                        className={`bg-white rounded-xl px-3.5 py-2.5 border border-gray-100 items-center gap-2.5 hover:border-gray-200 transition-colors ${isDesk ? "grid" : "flex"}`}
+                        className={`bg-brand-card rounded-xl px-3.5 py-2.5 border border-gray-100 items-center gap-2.5 hover:border-gray-200 transition-colors ${isDesk ? "grid" : "flex"}`}
                         style={isDesk ? { gridTemplateColumns:"1fr 1fr 80px 100px" } : undefined}>
                         <div className={`min-w-0 ${isDesk ? "" : "flex-1"}`}>
                           <div className="text-xs font-semibold text-brand-text truncate mb-0.5">

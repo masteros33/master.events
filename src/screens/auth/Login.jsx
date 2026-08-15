@@ -51,7 +51,7 @@ function ForgotPassword({ onBack }) {
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 p-4">
       <motion.div initial={{ opacity: 0, scale: 0.96 }} animate={{ opacity: 1, scale: 1 }}
-        className="max-w-[420px] w-full bg-white rounded-3xl border border-gray-100 shadow-sm p-8">
+        className="max-w-[420px] w-full bg-brand-card rounded-3xl border border-gray-100 shadow-sm p-8">
         {sent ? (
           <div className="text-center">
             <div className="w-14 h-14 rounded-full bg-pastel-green flex items-center justify-center mx-auto mb-4">
@@ -82,7 +82,7 @@ function ForgotPassword({ onBack }) {
               <input placeholder="you@email.com" value={email}
                 onChange={e => setEmail(e.target.value)}
                 onKeyDown={e => e.key === "Enter" && handleSend()}
-                className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 bg-white text-sm text-brand-text outline-none focus:border-brand-orange focus:ring-2 focus:ring-orange-100 transition-colors" />
+                className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 bg-brand-card text-sm text-brand-text outline-none focus:border-brand-orange focus:ring-2 focus:ring-orange-100 transition-colors" />
             </div>
             {error && (
               <div className="flex items-center gap-1.5 text-red-600 text-xs mb-3">
@@ -153,7 +153,7 @@ export default function Login() {
   return (
     <div className="h-full bg-brand-canvas overflow-y-auto flex justify-center items-start px-6 py-10 font-sans">
       <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}
-        className="max-w-[420px] w-full bg-white rounded-3xl border border-gray-100 shadow-sm p-8">
+        className="max-w-[420px] w-full bg-brand-card rounded-3xl border border-gray-100 shadow-sm p-8">
 
         <div className="flex flex-col items-center mb-7">
           <div className="w-12 h-12 rounded-full bg-brand-orange flex items-center justify-center mb-3">
@@ -193,7 +193,7 @@ export default function Login() {
           <div className="relative">
             <Mail size={16} strokeWidth={1.75} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-brand-muted" />
             <input placeholder="you@email.com" value={email} onChange={e => setEmail(e.target.value)} type="email" autoComplete="email"
-              className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 bg-white text-sm text-brand-text outline-none focus:border-brand-orange focus:ring-2 focus:ring-orange-100 transition-colors" />
+              className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 bg-brand-card text-sm text-brand-text outline-none focus:border-brand-orange focus:ring-2 focus:ring-orange-100 transition-colors" />
           </div>
         </div>
 
@@ -208,7 +208,7 @@ export default function Login() {
               onChange={e => setPassword(e.target.value)}
               onKeyDown={e => e.key === "Enter" && !loading && !rateLock && onLogin()}
               autoComplete="current-password"
-              className="w-full pl-10 pr-11 py-3 rounded-xl border border-gray-200 bg-white text-sm text-brand-text outline-none focus:border-brand-orange focus:ring-2 focus:ring-orange-100 transition-colors" />
+              className="w-full pl-10 pr-11 py-3 rounded-xl border border-gray-200 bg-brand-card text-sm text-brand-text outline-none focus:border-brand-orange focus:ring-2 focus:ring-orange-100 transition-colors" />
             <button onClick={() => setShowPw(!showPw)} type="button"
               className="absolute right-3.5 top-1/2 -translate-y-1/2 text-brand-muted hover:text-brand-text transition-colors">
               {showPw ? <EyeOff size={16} strokeWidth={1.75} /> : <Eye size={16} strokeWidth={1.75} />}

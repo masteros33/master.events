@@ -21,13 +21,13 @@ const RESULT_META = {
 
 // ── Panel shell — matches OrganizerScreens.jsx Panel ───────────
 function Panel({ children, className = "" }) {
-  return <div className={`bg-white border border-gray-100 rounded-3xl shadow-sm ${className}`}>{children}</div>;
+  return <div className={`bg-brand-card border border-gray-100 rounded-3xl shadow-sm ${className}`}>{children}</div>;
 }
 
 // ── Stat tile — matches OrganizerHome's stat-tile pattern ──────
 function StatTile({ label, value, color = "text-brand-text", sub }) {
   return (
-    <div className="flex-1 bg-white border border-gray-100 rounded-2xl px-3.5 py-3 shadow-sm min-w-[90px]">
+    <div className="flex-1 bg-brand-card border border-gray-100 rounded-2xl px-3.5 py-3 shadow-sm min-w-[90px]">
       <div className="text-[9px] font-semibold text-brand-muted font-mono tracking-wide mb-1">{label}</div>
       <div className={`text-xl font-extrabold tracking-tight ${color}`}>{value}</div>
       {sub && <div className="text-[10px] text-brand-muted mt-0.5">{sub}</div>}
@@ -53,7 +53,7 @@ function ChainStrip({ txHash, tokenId }) {
       </div>
       {url && (
         <a href={url} target="_blank" rel="noreferrer"
-          className="flex items-center gap-1 text-[11px] font-semibold text-fintech-blue bg-white px-3 py-1.5 rounded-full whitespace-nowrap shrink-0">
+          className="flex items-center gap-1 text-[11px] font-semibold text-fintech-blue bg-brand-card px-3 py-1.5 rounded-full whitespace-nowrap shrink-0">
           Verify <ExternalLink size={11} strokeWidth={2} />
         </a>
       )}
@@ -114,7 +114,7 @@ function QRScanner({ onScan }) {
 // ── Mode toggle ───────────────────────────────────────────────
 function TabToggle({ cameraMode, setCameraMode }) {
   return (
-    <div className="flex gap-1.5 mb-4 bg-white border border-gray-100 rounded-2xl p-1 shadow-sm">
+    <div className="flex gap-1.5 mb-4 bg-brand-card border border-gray-100 rounded-2xl p-1 shadow-sm">
       {[[Camera, "Camera", true], [Keyboard, "Manual", false]].map(([Icon, label, mode]) => (
         <button key={label} onClick={() => setCameraMode(mode)}
           className={`flex-1 py-2.5 rounded-xl font-bold text-[13px] flex items-center justify-center gap-1.5 transition-colors ${cameraMode === mode ? "bg-brand-orange text-white" : "bg-transparent text-brand-muted"}`}>
@@ -278,7 +278,7 @@ export function DoorStaffScan() {
     <div className="bg-brand-canvas min-h-screen pb-8 font-sans">
 
       {/* Header — full width */}
-      <div className="bg-white px-4.5 py-3.5 flex justify-between items-center border-b border-gray-100 sticky top-0 z-10">
+      <div className="bg-brand-card px-4.5 py-3.5 flex justify-between items-center border-b border-gray-100 sticky top-0 z-10">
         <div className="max-w-[560px] mx-auto w-full flex justify-between items-center">
           <div className="flex items-center gap-2.5 min-w-0">
             <div className="w-9 h-9 rounded-full bg-brand-orange flex items-center justify-center shrink-0">
@@ -424,7 +424,7 @@ export function OrganizerScan() {
   return (
     <div className="bg-brand-canvas min-h-full pb-10 font-sans">
       {/* Header — full width */}
-      <div className="bg-white border-b border-gray-100 sticky top-0 z-10">
+      <div className="bg-brand-card border-b border-gray-100 sticky top-0 z-10">
         <div className="max-w-[560px] mx-auto flex items-center px-5 py-4 gap-3.5">
           <button onClick={() => setScreen("orgEventDetail")}
             className="w-9 h-9 rounded-xl bg-brand-canvas border border-gray-100 flex items-center justify-center shrink-0">

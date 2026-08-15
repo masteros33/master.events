@@ -24,7 +24,7 @@ const HERO_TICKET_IMAGE = "https://images.unsplash.com/photo-1493225457124-a3eb1
 function SignatureCard({ children, className = "", noPad = false }) {
   return (
     <div
-      className={`relative bg-white border border-gray-100 shadow-sm overflow-hidden ${noPad ? "" : "p-6"} ${className}`}
+      className={`relative bg-brand-card border border-gray-100 shadow-sm overflow-hidden ${noPad ? "" : "p-6"} ${className}`}
       style={{ borderTopLeftRadius: "32px", borderTopRightRadius: "8px", borderBottomLeftRadius: "8px", borderBottomRightRadius: "8px" }}
     >
       {children}
@@ -117,7 +117,7 @@ function TicketMock() {
       <div className="h-36 md:h-40 relative bg-gray-100">
         <img src={HERO_TICKET_IMAGE} alt="" className="w-full h-full object-cover" />
         <div className="absolute top-3 left-3 px-2.5 py-1 rounded-full bg-brand-text/90 text-white text-[10px] font-bold tracking-wide">MUSIC</div>
-        <div className="absolute top-3 right-3 flex items-center gap-1 px-2.5 py-1 rounded-full bg-white/95 text-brand-text text-[10px] font-bold">
+        <div className="absolute top-3 right-3 flex items-center gap-1 px-2.5 py-1 rounded-full bg-brand-card/95 text-brand-text text-[10px] font-bold">
           <Link2 size={10} strokeWidth={2} style={{ color: NAVY }} /> NFT
         </div>
       </div>
@@ -157,7 +157,7 @@ function EventCard({ ev, catImg, onSignup }) {
               <img src={ev.image || catImg[ev.category] || catImg.other} alt={ev.name} className="w-full h-full object-cover" onError={e => { e.target.src = catImg.other; }} />
               <div className="absolute top-2.5 left-2.5 px-2.5 py-1 rounded-full text-white text-[10px] font-bold" style={{ background: NAVY }}>{ev.category}</div>
               {parseFloat(ev.price) === 0 && (
-                <div className="absolute top-2.5 right-2.5 px-2.5 py-1 rounded-full bg-white text-brand-text text-[10px] font-bold border border-gray-100">FREE</div>
+                <div className="absolute top-2.5 right-2.5 px-2.5 py-1 rounded-full bg-brand-card text-brand-text text-[10px] font-bold border border-gray-100">FREE</div>
               )}
               <div className="absolute bottom-2 left-2.5 flex items-center gap-1 bg-brand-text px-2 py-1 rounded-full">
                 <Link2 size={10} strokeWidth={2} color="#fff" />
@@ -196,7 +196,7 @@ function EventCard({ ev, catImg, onSignup }) {
 
 function FAQItem({ q, a, open, onClick }) {
   return (
-    <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
+    <div className="bg-brand-card rounded-2xl border border-gray-100 overflow-hidden">
       <button onClick={onClick} className="w-full flex items-center justify-between px-5 py-4 text-left">
         <span className="font-bold text-[14px] text-brand-text pr-4">{q}</span>
         <motion.span animate={{ rotate: open ? 180 : 0 }} className="shrink-0">
@@ -279,14 +279,14 @@ export default function LandingPage({ onNavigate }) {
                 Browse Events <ArrowRight size={16} strokeWidth={2} />
               </motion.button>
               <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }} onClick={() => onNavigate("signup")}
-                className="px-7 py-3.5 rounded-full bg-white border border-gray-200 text-brand-text font-bold text-sm md:text-base hover:border-gray-300 transition-colors">
+                className="px-7 py-3.5 rounded-full bg-brand-card border border-gray-200 text-brand-text font-bold text-sm md:text-base hover:border-gray-300 transition-colors">
                 Create Event
               </motion.button>
             </div>
           </div>
 
           <div className="relative">
-            <div className="hidden md:block absolute inset-0 rounded-3xl bg-white border border-gray-100 rotate-6 translate-x-4 translate-y-3" />
+            <div className="hidden md:block absolute inset-0 rounded-3xl bg-brand-card border border-gray-100 rotate-6 translate-x-4 translate-y-3" />
             <div className="relative">
               <TicketMock />
             </div>
@@ -445,7 +445,7 @@ export default function LandingPage({ onNavigate }) {
                   Start Selling Tickets
                 </motion.button>
                 <button onClick={() => onNavigate("about")}
-                  className="px-6 py-3 rounded-full bg-white border border-gray-200 text-brand-text font-semibold text-sm hover:border-gray-300 transition-colors">
+                  className="px-6 py-3 rounded-full bg-brand-card border border-gray-200 text-brand-text font-semibold text-sm hover:border-gray-300 transition-colors">
                   Learn More
                 </button>
               </div>
@@ -509,7 +509,7 @@ export default function LandingPage({ onNavigate }) {
       </section>
 
       {/* ── Footer ── */}
-      <footer className="bg-white border-t border-gray-100">
+      <footer className="bg-brand-card border-t border-gray-100">
         <div className="max-w-6xl mx-auto px-4 md:px-8 pt-9 pb-6 md:pt-14 md:pb-9">
           <div className="flex justify-between items-start flex-wrap gap-8 mb-9">
             <div className="max-w-[260px]">

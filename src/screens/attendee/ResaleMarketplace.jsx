@@ -146,7 +146,7 @@ export default function ResaleMarket() {
     return (
       <div className="bg-fintech-gray min-h-full flex items-center justify-center p-6">
         <motion.div initial={{ opacity: 0, scale: 0.96 }} animate={{ opacity: 1, scale: 1 }}
-          className={`bg-white rounded-3xl border border-gray-100 shadow-sm max-w-[440px] w-full text-center ${desktop ? "px-9 py-10" : "px-5 py-7"}`}>
+          className={`bg-brand-card rounded-3xl border border-gray-100 shadow-sm max-w-[440px] w-full text-center ${desktop ? "px-9 py-10" : "px-5 py-7"}`}>
           <div className="w-[72px] h-[72px] rounded-full bg-pastel-green flex items-center justify-center mx-auto mb-5">
             <CheckCircle2 size={32} strokeWidth={1.75} className="text-fintech-green" />
           </div>
@@ -180,7 +180,7 @@ export default function ResaleMarket() {
       {/* ── Header — icon-only back button ── */}
       <div className={desktop ? "px-10 pt-7" : "px-4 pt-4"}>
         <button onClick={() => setScreen("app")}
-          className="w-9 h-9 rounded-full bg-white border border-gray-100 flex items-center justify-center mb-4">
+          className="w-9 h-9 rounded-full bg-brand-card border border-gray-100 flex items-center justify-center mb-4">
           <ArrowLeft size={16} strokeWidth={2} className="text-brand-text" />
         </button>
 
@@ -200,7 +200,7 @@ export default function ResaleMarket() {
             [Link2, "NFT transfers on-chain automatically"],
             [Wallet, "Seller keeps 98% of sale"],
           ].map(([Icon, text]) => (
-            <div key={text} className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white border border-gray-100">
+            <div key={text} className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-brand-card border border-gray-100">
               <Icon size={12} strokeWidth={1.75} className="text-brand-muted" />
               <span className="text-[10px] text-brand-text font-semibold">{text}</span>
             </div>
@@ -224,7 +224,7 @@ export default function ResaleMarket() {
         {loading ? (
           <div className={`grid gap-4 ${desktop ? "grid-cols-3" : "grid-cols-1"}`}>
             {[1,2,3].map(i => (
-              <div key={i} className="bg-white rounded-2xl overflow-hidden border border-gray-100">
+              <div key={i} className="bg-brand-card rounded-2xl overflow-hidden border border-gray-100">
                 <div className="skeleton" style={{ height: "160px" }} />
                 <div className="p-3.5">
                   <div className="skeleton" style={{ height: "14px", width: "70%", marginBottom: "10px" }} />
@@ -234,7 +234,7 @@ export default function ResaleMarket() {
             ))}
           </div>
         ) : listings.length === 0 ? (
-          <div className="text-center py-20 px-6 bg-white rounded-2xl border border-gray-100 shadow-sm mt-2">
+          <div className="text-center py-20 px-6 bg-brand-card rounded-2xl border border-gray-100 shadow-sm mt-2">
             <div className="w-14 h-14 rounded-full bg-pastel-blue flex items-center justify-center mx-auto mb-3.5">
               <Tag size={24} strokeWidth={1.75} className="text-fintech-blue" />
             </div>
@@ -251,7 +251,7 @@ export default function ResaleMarket() {
               const savingsPct  = Math.round(((listing.original_price - listing.resale_price) / listing.original_price) * 100);
 
               return (
-                <div key={listing.ticket_id} className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+                <div key={listing.ticket_id} className="bg-brand-card rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
 
                   <div className="h-40 relative">
                     <img src={img} alt={ev.name} className="w-full h-full object-cover"

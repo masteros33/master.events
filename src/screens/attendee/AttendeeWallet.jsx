@@ -84,7 +84,7 @@ export default function AttendeeWallet() {
       {/* ── Header — icon-only back button, no "Back" text label.
       The browser back button now works correctly (history fix), so
       the in-app text label was pure duplication. ── */}
-      <div className={`sticky top-0 z-20 bg-white border-b border-gray-100 h-15 flex items-center justify-between ${desktop ? "px-10" : "px-4"}`}>
+      <div className={`sticky top-0 z-20 bg-brand-card border-b border-gray-100 h-15 flex items-center justify-between ${desktop ? "px-10" : "px-4"}`}>
         <button onClick={() => setScreen("app")}
           className="w-9 h-9 rounded-full bg-brand-canvas border border-gray-100 flex items-center justify-center shrink-0">
           <ArrowLeft size={16} strokeWidth={2} className="text-brand-text" />
@@ -137,7 +137,7 @@ export default function AttendeeWallet() {
             </div>
 
             {(wallet?.transactions || []).length === 0 ? (
-              <div className="text-center py-12 px-5 bg-white rounded-2xl border border-gray-100 shadow-sm">
+              <div className="text-center py-12 px-5 bg-brand-card rounded-2xl border border-gray-100 shadow-sm">
                 <div className="w-14 h-14 rounded-full bg-pastel-green flex items-center justify-center mx-auto mb-3">
                   <Wallet size={24} strokeWidth={1.75} className="text-fintech-green" />
                 </div>
@@ -150,7 +150,7 @@ export default function AttendeeWallet() {
                   const { Icon, badgeBg, iconClass, label } = txMeta(t.type);
                   const isCredit = t.type !== "withdrawal";
                   return (
-                    <div key={i} className="bg-white rounded-xl border border-gray-100 shadow-sm px-4 py-3.5 flex items-center gap-3">
+                    <div key={i} className="bg-brand-card rounded-xl border border-gray-100 shadow-sm px-4 py-3.5 flex items-center gap-3">
                       <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${badgeBg}`}>
                         <Icon size={17} strokeWidth={1.75} className={iconClass} />
                       </div>
@@ -185,7 +185,7 @@ export default function AttendeeWallet() {
               onClick={() => setShowWithdraw(false)} className="fixed inset-0 z-[300] bg-black/40" />
             <motion.div initial={{ opacity: 0, y: 40 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 40 }}
               transition={{ type: "spring", stiffness: 340, damping: 30 }}
-              className="fixed bottom-0 left-0 right-0 mx-auto max-w-[480px] z-[301] bg-white rounded-t-3xl border border-gray-100 p-6"
+              className="fixed bottom-0 left-0 right-0 mx-auto max-w-[480px] z-[301] bg-brand-card rounded-t-3xl border border-gray-100 p-6"
               style={{ paddingBottom: "calc(24px + env(safe-area-inset-bottom, 0px))" }}>
               <div className="w-10 h-1 rounded-full bg-gray-200 mx-auto mb-5" />
               <div className="font-extrabold text-lg text-brand-text mb-1">Withdraw to MoMo</div>
@@ -196,13 +196,13 @@ export default function AttendeeWallet() {
               <div className="mb-3">
                 <div className="text-xs font-semibold text-brand-muted mb-1.5">Amount (GHS)</div>
                 <input type="number" value={amount} onChange={e => setAmount(e.target.value)} placeholder="e.g. 50"
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 bg-white text-sm text-brand-text outline-none focus:border-brand-orange focus:ring-2 focus:ring-orange-100 transition-colors font-mono" />
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 bg-brand-card text-sm text-brand-text outline-none focus:border-brand-orange focus:ring-2 focus:ring-orange-100 transition-colors font-mono" />
               </div>
 
               <div className="mb-5">
                 <div className="text-xs font-semibold text-brand-muted mb-1.5">MoMo Number</div>
                 <input type="tel" value={momoNumber} onChange={e => setMomoNumber(e.target.value)} placeholder="e.g. 0241234567"
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 bg-white text-sm text-brand-text outline-none focus:border-brand-orange focus:ring-2 focus:ring-orange-100 transition-colors font-mono" />
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 bg-brand-card text-sm text-brand-text outline-none focus:border-brand-orange focus:ring-2 focus:ring-orange-100 transition-colors font-mono" />
               </div>
 
               <div className="flex items-start gap-2 bg-pastel-blue rounded-xl px-3.5 py-3 mb-4.5">

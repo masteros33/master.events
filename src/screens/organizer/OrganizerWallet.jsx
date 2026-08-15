@@ -19,18 +19,13 @@ const STATUS_CLASS = {
   pending:   "text-amber-700 bg-amber-50",
 };
 
-// ── MoMo networks — previously the backend always assumed MTN
-// regardless of which network the account actually belonged to,
-// silently breaking withdrawals for Telecel/AirtelTigo users. This
-// selector lets the user say which network their number is on, and
-// that value gets sent through to the withdraw API as `network`. ──
 const MOMO_NETWORKS = [
   { id: "mtn",        label: "MTN" },
   { id: "telecel",    label: "Telecel" },
   { id: "airteltigo", label: "AirtelTigo" },
 ];
 
-const fieldClass = "w-full px-3.5 py-3 mb-3.5 rounded-xl border border-gray-200 bg-white text-sm text-brand-text outline-none focus:border-brand-orange focus:ring-2 focus:ring-orange-100 transition-colors font-mono";
+const fieldClass = "w-full px-3.5 py-3 mb-3.5 rounded-xl border border-gray-200 bg-brand-card text-sm text-brand-text outline-none focus:border-brand-orange focus:ring-2 focus:ring-orange-100 transition-colors font-mono";
 const primaryBtnClass = "w-full py-3.5 rounded-full bg-brand-orange hover:bg-brand-orange-hover text-white font-bold text-[15px] transition-colors";
 
 export default function OrganizerWallet() {
@@ -79,8 +74,6 @@ export default function OrganizerWallet() {
 
   const handleWithdraw = async () => {
     try {
-      // ── NEW: network sent alongside method/account — only meaningful
-      // for MoMo; bank transfers ignore it server-side ──
       const data = await paymentsAPI.withdraw({
         amount: parseFloat(amount),
         method,
@@ -108,8 +101,6 @@ export default function OrganizerWallet() {
 
   const closeModal = () => { setShowModal(false); setStep(1); setAmount(""); setMomoNumber(""); setNetwork("mtn"); setAmountError(""); };
 
-  // ── Modal body — shared between the mobile bottom-sheet and the
-  // desktop centered dialog, so step logic only lives in one place ──
   const modalBody = (
     <>
       <div className="shrink-0 px-6 pt-2">
@@ -131,7 +122,7 @@ export default function OrganizerWallet() {
             <div className="flex gap-2 -mt-1.5 mb-4.5">
               {[50, 100, 200, 500].map(q => (
                 <button key={q} onClick={() => { setAmount(String(q)); setAmountError(""); }}
-                  className={`flex-1 py-2 rounded-xl border text-center text-[13px] font-bold transition-colors ${amount === String(q) ? "border-brand-orange bg-pastel-orange text-brand-orange" : "border-gray-200 bg-white text-brand-muted"}`}>
+                  className={`flex-1 py-2 rounded-xl border text-center text-[13px] font-bold transition-colors ${amount === String(q) ? "border-brand-orange bg-pastel-orange text-brand-orange" : "border-gray-200 bg-brand-card text-brand-muted"}`}>
                   {q}
                 </button>
               ))}
@@ -141,24 +132,20 @@ export default function OrganizerWallet() {
             <div className="flex gap-2.5 mb-4">
               {[["momo", Smartphone, "Mobile Money"], ["bank", Landmark, "Bank Transfer"]].map(([id, Icon, label]) => (
                 <button key={id} onClick={() => setMethod(id)}
-                  className={`flex-1 py-3 rounded-xl border-2 flex flex-col items-center gap-1.5 transition-colors ${method === id ? "border-brand-orange bg-orange-50/20" : "border-gray-200 bg-white"}`}>
+                  className={`flex-1 py-3 rounded-xl border-2 flex flex-col items-center gap-1.5 transition-colors ${method === id ? "border-brand-orange bg-orange-50/20" : "border-gray-200 bg-brand-card"}`}>
                   <Icon size={17} strokeWidth={1.75} className={method === id ? "text-brand-orange" : "text-brand-muted"} />
                   <span className={`text-[13px] font-bold ${method === id ? "text-brand-orange" : "text-brand-muted"}`}>{label}</span>
                 </button>
               ))}
             </div>
 
-            {/* ── NEW: network selector — only shown for MoMo, since
-            bank transfer doesn't need a network. This is the actual
-            fix for the hardcoded-MTN bug: whichever chip is selected
-            gets sent through as `network` in handleWithdraw. ── */}
             {method === "momo" && (
               <>
                 <div className="text-xs font-semibold text-brand-muted mb-2.5">Network</div>
                 <div className="flex gap-2 mb-4">
                   {MOMO_NETWORKS.map(n => (
                     <button key={n.id} onClick={() => setNetwork(n.id)}
-                      className={`flex-1 py-2.5 rounded-xl border text-center text-[12px] font-bold transition-colors ${network === n.id ? "border-brand-orange bg-pastel-orange text-brand-orange" : "border-gray-200 bg-white text-brand-muted"}`}>
+                      className={`flex-1 py-2.5 rounded-xl border text-center text-[12px] font-bold transition-colors ${network === n.id ? "border-brand-orange bg-pastel-orange text-brand-orange" : "border-gray-200 bg-brand-card text-brand-muted"}`}>
                       {n.label}
                     </button>
                   ))}
@@ -245,7 +232,6 @@ export default function OrganizerWallet() {
     <div className={`bg-fintech-gray min-h-full font-sans ${desktop ? "p-10" : "px-4 pt-5 pb-24"}`}>
       <div className={`mx-auto ${desktop ? "max-w-[900px]" : ""}`}>
 
-        {/* Header */}
         <div className="mb-7">
           <div className="text-[11px] text-brand-orange font-bold tracking-widest font-mono mb-1.5">WALLET</div>
           <h1 className={`font-extrabold text-brand-text tracking-tight mb-1 ${desktop ? "text-3xl" : "text-2xl"}`}>Your Earnings</h1>
@@ -257,7 +243,6 @@ export default function OrganizerWallet() {
         ) : (
           <div className={`grid gap-6 ${desktop ? "grid-cols-2" : "grid-cols-1"}`}>
 
-            {/* ── Left — balance card ── */}
             <div>
               <div className="bg-fintech-slate rounded-3xl p-7 mb-4">
                 <div className="text-[11px] font-bold text-slate-400 tracking-widest font-mono mb-2">AVAILABLE_BALANCE</div>
@@ -297,7 +282,7 @@ export default function OrganizerWallet() {
 
               <div className={`grid grid-cols-2 gap-2.5 ${desktop ? "" : "mb-6"}`}>
                 {miniStats.map(s => (
-                  <div key={s.label} className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4">
+                  <div key={s.label} className="bg-brand-card rounded-2xl border border-gray-100 shadow-sm p-4">
                     <div className={`w-9 h-9 rounded-full ${s.badgeBg} flex items-center justify-center mb-2.5`}>
                       <s.Icon size={16} strokeWidth={1.75} className={s.iconClass} />
                     </div>
@@ -308,11 +293,10 @@ export default function OrganizerWallet() {
               </div>
             </div>
 
-            {/* ── Right — transactions ── */}
             <div>
               <div className="font-extrabold text-base text-brand-text tracking-tight mb-4">Transaction History</div>
               {transactions.length === 0 ? (
-                <div className="text-center py-12 px-5 bg-white rounded-2xl border border-gray-100 shadow-sm">
+                <div className="text-center py-12 px-5 bg-brand-card rounded-2xl border border-gray-100 shadow-sm">
                   <div className="w-14 h-14 rounded-full bg-pastel-green flex items-center justify-center mx-auto mb-3">
                     <Wallet size={24} strokeWidth={1.75} className="text-fintech-green" />
                   </div>
@@ -323,13 +307,14 @@ export default function OrganizerWallet() {
                 const meta = TX_META[t.type] || { badgeBg: "bg-gray-100", iconClass: "text-brand-muted", Icon: Wallet };
                 const isDebit = t.type === "withdrawal" || t.type === "fee";
                 return (
-                  <div key={i} className="bg-white rounded-xl border border-gray-100 shadow-sm px-4 py-3.5 mb-2 flex items-center gap-3">
+                  <div key={i} className="bg-brand-card rounded-xl border border-gray-100 shadow-sm px-4 py-3.5 mb-2 flex items-center gap-3">
                     <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${meta.badgeBg}`}>
                       <meta.Icon size={17} strokeWidth={1.75} className={meta.iconClass} />
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="font-bold text-sm text-brand-text truncate">{t.description}</div>
-                      <div className="text-[11px] text-brand-muted font-mono mt-0.5">
+                      <div className="text-[11px] text-brand-muted truncate">{t.description}</div>
+                      <div className="text-[10px] text-brand-muted font-mono mt-0.5">
                         {new Date(t.created_at).toLocaleDateString("en-GH", { day: "numeric", month: "short", year: "numeric" })}
                       </div>
                     </div>
@@ -349,13 +334,6 @@ export default function OrganizerWallet() {
         )}
       </div>
 
-      {/* ── Withdraw Modal — mobile bottom sheet vs. desktop centered
-      dialog. Previously this was ALWAYS a bottom sheet (fixed bottom-0),
-      even on desktop — just centered horizontally. On a tall browser
-      window that put the whole modal pinned to the bottom edge,
-      looking like it was "hiding" far below the visible content.
-      Desktop now gets a proper vertically-centered dialog with a
-      scale/fade entrance instead of a slide-up. ── */}
       <AnimatePresence>
         {showModal && (
           <>
@@ -369,7 +347,7 @@ export default function OrganizerWallet() {
                   animate={{ opacity: 1, scale: 1, y: 0 }}
                   exit={{ opacity: 0, scale: 0.95, y: 12 }}
                   transition={{ type: "spring", stiffness: 320, damping: 28 }}
-                  className="pointer-events-auto bg-white rounded-3xl border border-gray-100 shadow-2xl flex flex-col w-[480px]"
+                  className="pointer-events-auto bg-brand-card rounded-3xl border border-gray-100 shadow-2xl flex flex-col w-[480px]"
                   style={{ maxHeight: "min(85dvh, 720px)" }}>
                   <div className="shrink-0 flex justify-end px-5 pt-4">
                     <button onClick={closeModal} className="text-brand-muted hover:text-brand-text text-xs font-semibold">
@@ -383,7 +361,7 @@ export default function OrganizerWallet() {
               <motion.div
                 initial={{ y: "100%" }} animate={{ y: 0 }} exit={{ y: "100%" }}
                 transition={{ type: "spring", stiffness: 300, damping: 30 }}
-                className="fixed bottom-0 left-0 right-0 z-[201] bg-white rounded-t-3xl border border-gray-100 flex flex-col w-full"
+                className="fixed bottom-0 left-0 right-0 z-[201] bg-brand-card rounded-t-3xl border border-gray-100 flex flex-col w-full"
                 style={{ maxHeight: "85dvh", paddingBottom: "env(safe-area-inset-bottom, 0px)" }}>
                 <div className="shrink-0 flex flex-col items-center pt-3 pb-1">
                   <div className="w-10 h-1 rounded-full bg-gray-200" />

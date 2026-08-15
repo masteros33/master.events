@@ -26,7 +26,7 @@ function SectionHeader({ title }) {
 function SettingRow({ icon: Icon, label, value, action, danger, onClick, toggle, checked, onToggle, badgeBg = "bg-pastel-blue", iconClass = "text-fintech-blue" }) {
   return (
     <div onClick={onClick}
-      className={`flex items-center gap-3.5 px-4 py-3.5 bg-white rounded-2xl border border-gray-100 shadow-sm mb-1.5 transition-colors ${onClick ? "cursor-pointer hover:border-gray-200" : ""}`}>
+      className={`flex items-center gap-3.5 px-4 py-3.5 bg-brand-card rounded-2xl border border-gray-100 shadow-sm mb-1.5 transition-colors ${onClick ? "cursor-pointer hover:border-gray-200" : ""}`}>
       <div className={`w-9 h-9 rounded-full flex items-center justify-center shrink-0 ${danger ? "bg-red-50" : badgeBg}`}>
         <Icon size={16} strokeWidth={1.75} className={danger ? "text-red-600" : iconClass} />
       </div>
@@ -56,7 +56,7 @@ function SheetShell({ onClose, children, maxWidth = "480px" }) {
         onClick={onClose} className="fixed inset-0 z-[300] bg-black/40" />
       <motion.div initial={{ opacity: 0, y: 40 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 40 }}
         transition={{ type: "spring", stiffness: 340, damping: 30 }}
-        className="fixed bottom-0 left-0 right-0 mx-auto z-[301] bg-white rounded-t-3xl border border-gray-100 p-6"
+        className="fixed bottom-0 left-0 right-0 mx-auto z-[301] bg-brand-card rounded-t-3xl border border-gray-100 p-6"
         style={{ maxWidth, paddingBottom: "calc(24px + env(safe-area-inset-bottom, 0px))", maxHeight: "85vh", display: "flex", flexDirection: "column" }}>
         <div className="w-10 h-1 rounded-full bg-gray-200 mx-auto mb-5 shrink-0" />
         {children}
@@ -65,7 +65,7 @@ function SheetShell({ onClose, children, maxWidth = "480px" }) {
   );
 }
 
-const fieldClass = "w-full px-3.5 py-2.5 rounded-xl border border-gray-200 bg-white text-sm text-brand-text outline-none focus:border-brand-orange focus:ring-2 focus:ring-orange-100 transition-colors";
+const fieldClass = "w-full px-3.5 py-2.5 rounded-xl border border-gray-200 bg-brand-card text-sm text-brand-text outline-none focus:border-brand-orange focus:ring-2 focus:ring-orange-100 transition-colors";
 
 function AvatarPickerModal({ currentSeed, onSelect, onClose }) {
   const [selected, setSelected] = useState(currentSeed);
@@ -241,7 +241,7 @@ function DeleteModal({ onClose, handleLogout }) {
         <div className="relative">
           <input type={showPass ? "text" : "password"} value={password} onChange={e => setPassword(e.target.value)}
             placeholder="Enter your password"
-            className="w-full px-3.5 py-2.5 rounded-xl border border-red-200 bg-white text-sm text-brand-text outline-none focus:border-red-400 focus:ring-2 focus:ring-red-100 transition-colors" />
+            className="w-full px-3.5 py-2.5 rounded-xl border border-red-200 bg-brand-card text-sm text-brand-text outline-none focus:border-red-400 focus:ring-2 focus:ring-red-100 transition-colors" />
           <button onClick={() => setShowPass(!showPass)} type="button" className="absolute right-3.5 top-1/2 -translate-y-1/2 text-brand-muted">
             {showPass ? <EyeOff size={15} strokeWidth={1.75} /> : <Eye size={15} strokeWidth={1.75} />}
           </button>
@@ -328,7 +328,7 @@ export default function Settings() {
     <div className="bg-brand-canvas min-h-full pb-14 font-sans">
 
       {/* ── Header — icon-only back button ── */}
-      <div className={`sticky top-0 z-20 bg-white border-b border-gray-100 h-15 flex items-center justify-between ${desktop ? "px-10" : "px-4"}`}>
+      <div className={`sticky top-0 z-20 bg-brand-card border-b border-gray-100 h-15 flex items-center justify-between ${desktop ? "px-10" : "px-4"}`}>
         <button onClick={() => { setScreen("app"); setActiveTab(undefined); }}
           className="w-9 h-9 rounded-full bg-brand-canvas border border-gray-100 flex items-center justify-center shrink-0">
           <ArrowLeft size={16} strokeWidth={2} className="text-brand-text" />
@@ -340,7 +340,7 @@ export default function Settings() {
       <div className={`mx-auto ${desktop ? "max-w-[640px] px-10 py-6" : "px-4 py-4"}`}>
 
         {/* ── Profile card ── */}
-        <div className="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden mb-2">
+        <div className="bg-brand-card rounded-3xl border border-gray-100 shadow-sm overflow-hidden mb-2">
           <div className="p-6 border-b border-gray-100">
             <div className="flex items-center gap-4">
               <button onClick={() => setShowPicker(true)} className="relative shrink-0">
@@ -367,7 +367,7 @@ export default function Settings() {
                   <Avatar key={seed} seed={seed} size={20}
                     style={{ borderRadius: "50%", border: seed === avatarSeed ? "2px solid #FF5A1F" : "2px solid transparent" }} />
                 ))}
-                <div className="w-5 h-5 rounded-full bg-white border border-gray-200 flex items-center justify-center text-[9px] font-bold text-brand-muted">
+                <div className="w-5 h-5 rounded-full bg-brand-card border border-gray-200 flex items-center justify-center text-[9px] font-bold text-brand-muted">
                   +{AVATAR_PRESETS.length - 5}
                 </div>
               </div>
@@ -431,7 +431,7 @@ export default function Settings() {
           toggle checked={notifs} onToggle={() => setNotifs(!notifs)} />
 
         <SectionHeader title="Blockchain" />
-        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 mb-1.5">
+        <div className="bg-brand-card rounded-2xl border border-gray-100 shadow-sm p-4 mb-1.5">
           <div className="flex items-center gap-3 mb-3">
             <div className="w-9 h-9 rounded-full bg-pastel-blue flex items-center justify-center shrink-0">
               <Link2 size={16} strokeWidth={1.75} className="text-fintech-blue" />

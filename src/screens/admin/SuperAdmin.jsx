@@ -34,7 +34,7 @@ const STATUS_CLASS = {
 function StatCard({ Icon, label, value, sub, badgeBg = "bg-pastel-blue", iconClass = "text-fintech-blue" }) {
   return (
     <motion.div whileHover={{ y: -2 }} transition={{ duration: 0.15 }}
-      className="bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow p-5">
+      className="bg-brand-card rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow p-5">
       <div className={`w-9 h-9 rounded-full ${badgeBg} flex items-center justify-center mb-3`}>
         <Icon size={16} strokeWidth={1.75} className={iconClass} />
       </div>
@@ -74,7 +74,7 @@ function OverviewTab({ data }) {
       </div>
 
       <div className="grid grid-cols-[2fr_1fr] gap-3.5 mb-6">
-        <div className="bg-white border border-gray-100 rounded-2xl shadow-sm p-5">
+        <div className="bg-brand-card border border-gray-100 rounded-2xl shadow-sm p-5">
           <div className="text-[11px] font-bold text-brand-muted tracking-widest font-mono mb-1">REVENUE_FLOW</div>
           <div className="text-base font-bold text-brand-text mb-5">Organizer Payouts vs Platform Fees</div>
           <div className="flex flex-col gap-3.5">
@@ -122,7 +122,7 @@ function OverviewTab({ data }) {
         </div>
       </div>
 
-      <div className="bg-white border border-gray-100 rounded-2xl shadow-sm p-5">
+      <div className="bg-brand-card border border-gray-100 rounded-2xl shadow-sm p-5">
         <div className="text-[11px] font-bold text-brand-muted tracking-widest font-mono mb-1">PLATFORM_HEALTH</div>
         <div className="text-base font-bold text-brand-text mb-5">Key Metrics at a Glance</div>
         <div className="grid grid-cols-4 gap-3">
@@ -187,7 +187,7 @@ function OrganizersTab({ token }) {
 
       <div className="grid grid-cols-3 gap-3 mb-5">
         {summary.map(s => (
-          <div key={s.label} className="bg-white border border-gray-100 rounded-xl shadow-sm p-4 flex items-center gap-3">
+          <div key={s.label} className="bg-brand-card border border-gray-100 rounded-xl shadow-sm p-4 flex items-center gap-3">
             <div className={`w-9 h-9 rounded-full ${s.badgeBg} flex items-center justify-center shrink-0`}>
               <s.Icon size={16} strokeWidth={1.75} className={s.iconClass} />
             </div>
@@ -202,7 +202,7 @@ function OrganizersTab({ token }) {
       <div className="flex flex-col gap-2">
         {organizers.map(org => (
           <div key={org.id}
-            className={`bg-white border rounded-xl shadow-sm px-4.5 py-4 flex items-center gap-4 ${org.is_suspended ? "border-red-100" : "border-gray-100"}`}>
+            className={`bg-brand-card border rounded-xl shadow-sm px-4.5 py-4 flex items-center gap-4 ${org.is_suspended ? "border-red-100" : "border-gray-100"}`}>
 
             <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${org.is_suspended ? "bg-red-50" : "bg-pastel-orange"}`}>
               {org.is_suspended
@@ -306,7 +306,7 @@ function EventsTab({ token }) {
       <div className="flex flex-col gap-2">
         {events.map(ev => (
           <div key={ev.id}
-            className={`bg-white border rounded-xl shadow-sm px-4.5 py-4 flex items-center gap-4 ${
+            className={`bg-brand-card border rounded-xl shadow-sm px-4.5 py-4 flex items-center gap-4 ${
               !ev.is_approved ? "border-amber-200" : !ev.is_active ? "border-red-100" : "border-gray-100"
             }`}>
 
@@ -404,7 +404,7 @@ function TransactionsTab({ token }) {
       <div className="flex gap-1.5 mb-4 flex-wrap">
         {["all","sale","resale_sale","withdrawal","fee"].map(f => (
           <button key={f} onClick={() => setFilter(f)}
-            className={`px-3.5 py-1.5 rounded-full border text-[10px] font-bold font-mono transition-colors ${filter === f ? "border-brand-orange bg-pastel-orange text-brand-orange" : "border-gray-200 bg-white text-brand-muted"}`}>
+            className={`px-3.5 py-1.5 rounded-full border text-[10px] font-bold font-mono transition-colors ${filter === f ? "border-brand-orange bg-pastel-orange text-brand-orange" : "border-gray-200 bg-brand-card text-brand-muted"}`}>
             {f.toUpperCase().replace("_"," ")}
           </button>
         ))}
@@ -413,7 +413,7 @@ function TransactionsTab({ token }) {
       <div className="flex flex-col gap-1.5">
         {filtered.slice(0, 50).map((t, i) => (
           <div key={t.id || i}
-            className="bg-white border border-gray-100 rounded-xl shadow-sm px-4 py-3 flex items-center gap-3.5">
+            className="bg-brand-card border border-gray-100 rounded-xl shadow-sm px-4 py-3 flex items-center gap-3.5">
             <span className={`w-2 h-2 rounded-full shrink-0 ${TYPE_COLOR[t.type] || "bg-gray-300"}`} />
             <div className="flex-1 min-w-0">
               <div className="font-semibold text-sm text-brand-text truncate">{t.description}</div>
@@ -477,17 +477,17 @@ function TicketHoldersTab({ token }) {
         <Search size={14} strokeWidth={1.75} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-brand-muted" />
         <input value={search} onChange={e => setSearch(e.target.value)}
           placeholder="Search by name, email, event, or ticket ID..."
-          className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-gray-200 bg-white text-sm text-brand-text outline-none focus:border-brand-orange focus:ring-2 focus:ring-orange-100 transition-colors" />
+          className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-gray-200 bg-brand-card text-sm text-brand-text outline-none focus:border-brand-orange focus:ring-2 focus:ring-orange-100 transition-colors" />
       </div>
 
       {filtered.length === 0 ? (
-        <div className="text-center py-12 bg-white rounded-2xl border border-gray-100 shadow-sm">
+        <div className="text-center py-12 bg-brand-card rounded-2xl border border-gray-100 shadow-sm">
           <div className="text-sm text-brand-muted">No ticket holders found</div>
         </div>
       ) : (
         <div className="flex flex-col gap-1.5">
           {filtered.slice(0, 150).map((h, i) => (
-            <div key={h.id + i} className="bg-white border border-gray-100 rounded-xl shadow-sm px-4 py-3 flex items-center gap-3.5">
+            <div key={h.id + i} className="bg-brand-card border border-gray-100 rounded-xl shadow-sm px-4 py-3 flex items-center gap-3.5">
               <div className={`w-9 h-9 rounded-full flex items-center justify-center shrink-0 ${h.is_free ? "bg-pastel-green" : "bg-pastel-blue"}`}>
                 <User size={15} strokeWidth={1.75} className={h.is_free ? "text-fintech-green" : "text-fintech-blue"} />
               </div>
@@ -556,13 +556,13 @@ function LiveActivityTab({ token }) {
       </div>
 
       {feed.length === 0 ? (
-        <div className="text-center py-12 bg-white rounded-2xl border border-gray-100 shadow-sm">
+        <div className="text-center py-12 bg-brand-card rounded-2xl border border-gray-100 shadow-sm">
           <div className="text-sm text-brand-muted">No activity yet — real transactions will appear here as they happen</div>
         </div>
       ) : (
         <div className="flex flex-col gap-1.5">
           {feed.map((t, i) => (
-            <div key={t.id || i} className="bg-white border border-gray-100 rounded-xl shadow-sm px-4 py-3 flex items-center gap-3.5">
+            <div key={t.id || i} className="bg-brand-card border border-gray-100 rounded-xl shadow-sm px-4 py-3 flex items-center gap-3.5">
               <span className={`w-2 h-2 rounded-full shrink-0 ${TYPE_COLOR[t.type] || "bg-gray-300"}`} />
               <div className="flex-1 min-w-0">
                 <div className="font-semibold text-sm text-brand-text truncate">{t.description}</div>
@@ -618,7 +618,7 @@ export function AdminLogin() {
   return (
     <div className="h-full bg-fintech-gray overflow-y-auto flex justify-center items-start px-6 py-10 font-sans">
       <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}
-        className="max-w-[420px] w-full bg-white rounded-3xl border border-gray-100 shadow-sm p-8">
+        className="max-w-[420px] w-full bg-brand-card rounded-3xl border border-gray-100 shadow-sm p-8">
 
         <div className="flex flex-col items-center mb-7">
           <div className="w-12 h-12 rounded-full bg-fintech-slate flex items-center justify-center mb-3">
@@ -640,7 +640,7 @@ export function AdminLogin() {
             <input type="email" value={email} onChange={e => setEmail(e.target.value)}
               placeholder="admin@masterevents.com"
               onKeyDown={e => e.key === "Enter" && handleLogin()}
-              className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 bg-white text-sm text-brand-text outline-none focus:border-brand-orange focus:ring-2 focus:ring-orange-100 transition-colors" />
+              className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 bg-brand-card text-sm text-brand-text outline-none focus:border-brand-orange focus:ring-2 focus:ring-orange-100 transition-colors" />
           </div>
         </div>
 
@@ -651,7 +651,7 @@ export function AdminLogin() {
             <input type="password" value={password} onChange={e => setPassword(e.target.value)}
               placeholder="••••••••••••"
               onKeyDown={e => e.key === "Enter" && handleLogin()}
-              className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 bg-white text-sm text-brand-text outline-none focus:border-brand-orange focus:ring-2 focus:ring-orange-100 transition-colors" />
+              className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 bg-brand-card text-sm text-brand-text outline-none focus:border-brand-orange focus:ring-2 focus:ring-orange-100 transition-colors" />
           </div>
         </div>
 
@@ -770,7 +770,7 @@ export function AdminDashboard() {
 
       <main className="flex-1 flex flex-col min-w-0 overflow-hidden">
 
-        <div className="bg-white border-b border-gray-100 px-7 h-15 flex items-center justify-between shrink-0">
+        <div className="bg-brand-card border-b border-gray-100 px-7 h-15 flex items-center justify-between shrink-0">
           <div>
             <h1 className="font-extrabold text-base text-brand-text tracking-tight">{activeMeta?.label}</h1>
             <p className="text-[10px] text-brand-muted font-mono mt-0.5">

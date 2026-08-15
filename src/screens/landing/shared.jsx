@@ -38,7 +38,7 @@ export function NavBar({ onNavigate }) {
   };
 
   return (
-    <nav className="sticky top-0 z-50 bg-white border-b border-gray-100">
+    <nav className="sticky top-0 z-50 bg-brand-card border-b border-gray-100">
       <div className={`mx-auto flex items-center justify-between ${isMobile ? "px-4 h-14" : "max-w-6xl px-8 h-[68px]"}`}>
         <div onClick={() => onNavigate("home")} className="flex items-center gap-2.5 cursor-pointer">
           <div className={`rounded-xl flex items-center justify-center shrink-0 ${isMobile ? "w-7 h-7" : "w-9 h-9"}`} style={{ background: NAVY }}>
@@ -87,7 +87,7 @@ export function NavBar({ onNavigate }) {
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
               onClick={() => setMenuOpen(false)} className="fixed inset-0 bg-black/40 z-[100]" />
             <motion.div initial={{ y: "-100%" }} animate={{ y: 0 }} exit={{ y: "-100%" }} transition={{ duration: 0.18 }}
-              className="fixed top-0 left-0 right-0 bg-white z-[101] border-b border-gray-100 shadow-lg">
+              className="fixed top-0 left-0 right-0 bg-brand-card z-[101] border-b border-gray-100 shadow-lg">
               <div className="flex items-center justify-between px-4 h-14 border-b border-gray-100">
                 <span className="font-extrabold text-[15px] text-brand-text">Menu</span>
                 <button onClick={() => setMenuOpen(false)} className="w-8 h-8 rounded-lg bg-brand-canvas border border-gray-200 flex items-center justify-center">

@@ -8,7 +8,6 @@ import ResetPassword from "./screens/auth/ResetPassword";
 import AttendeeHome from "./screens/attendee/AttendeeHome";
 import LandingPage from "./screens/landing/LandingPage";
 import AboutPage from "./screens/landing/AboutPage";
-// ── NEW: public ticket verification page ──
 import VerifyTicket from "./screens/attendee/VerifyTicket";
 import ResaleMarketplace from "./screens/attendee/ResaleMarketplace";
 import CookieBanner from "./components/CookieBanner";
@@ -59,6 +58,10 @@ function publicNavigate(target) {
   if (target === "login")  { setScreen("login");   return; }
 }
 
+// ── FIX: bg-white → bg-brand-card. This header wraps every mobile
+// content screen — it was the reason dark mode looked "half done" on
+// mobile: Discover/Checkout/Ticket View content went dark correctly,
+// but the header sitting above them stayed hardcoded light. ──
 function MobileTopHeader({ onMenuOpen, title }) {
   const { theme, setTheme } = useTheme();
   const themeOrder = ["light", "dark", "system"];
@@ -66,7 +69,7 @@ function MobileTopHeader({ onMenuOpen, title }) {
   const nextTheme  = themeOrder[(themeOrder.indexOf(theme) + 1) % 3];
   const ThemeIcon  = ThemeIcons[theme];
   return (
-    <div className="sticky top-0 z-50 bg-white border-b border-gray-100 h-14 flex items-center justify-between px-4 shrink-0">
+    <div className="sticky top-0 z-50 bg-brand-card border-b border-gray-100 h-14 flex items-center justify-between px-4 shrink-0">
       <div className="flex items-center gap-2">
         <div className="w-8 h-8 rounded-xl bg-brand-orange flex items-center justify-center shrink-0">
           <Ticket size={15} strokeWidth={2} color="#fff" />
@@ -87,6 +90,7 @@ function MobileTopHeader({ onMenuOpen, title }) {
   );
 }
 
+// ── FIX: bg-white → bg-brand-card on the slide-out drawer panel ──
 function MobileDrawer({ open, onClose }) {
   const role         = useStore(s => s.role);
   const activeTab    = useStore(s => s.activeTab);
@@ -120,7 +124,7 @@ function MobileDrawer({ open, onClose }) {
           <motion.div initial={{ opacity:0 }} animate={{ opacity:1 }} exit={{ opacity:0 }} onClick={onClose}
             className="fixed inset-0 bg-black/50 z-[200]" />
           <motion.div initial={{ x:"100%" }} animate={{ x:0 }} exit={{ x:"100%" }} transition={{ duration:0.15 }}
-            className="fixed top-0 right-0 bottom-0 w-[82%] max-w-[320px] bg-white z-[201] flex flex-col shadow-xl border-l border-gray-100">
+            className="fixed top-0 right-0 bottom-0 w-[82%] max-w-[320px] bg-brand-card z-[201] flex flex-col shadow-xl border-l border-gray-100">
             <div className="p-5 border-b border-gray-100 flex items-center justify-between shrink-0">
               <div className="flex items-center gap-2.5">
                 <Avatar seed={currentUser?.email} name={currentUser?.first_name} size={38} className="rounded-full border-2 border-pastel-orange" />
@@ -265,6 +269,9 @@ function NavItem({ icon: Icon, label, active, collapsed, onClick, title }) {
   );
 }
 
+// ── FIX: bg-white → bg-brand-card on the desktop topbar — this is
+// the exact bar sitting above Discover/My Tickets on desktop that
+// stayed light while the content below it went dark. ──
 function DesktopTopbar({ navItems, activeTab, isFullScreen, screen, screenTitles, role, setScreen, setActiveTab, theme, setTheme, currentUser }) {
   const searchQ    = useStore(s => s.searchQ);
   const setSearchQ = useStore(s => s.setSearchQ);
@@ -273,7 +280,7 @@ function DesktopTopbar({ navItems, activeTab, isFullScreen, screen, screenTitles
   const pageTitle  = isFullScreen ? screenTitles[screen] || "Master Events" : navItems.find(n => n.id === activeTab)?.label || "Master Events";
 
   return (
-    <div className="sticky top-0 z-40 bg-white border-b border-gray-100 h-[60px] px-7 flex items-center justify-between gap-5 shrink-0">
+    <div className="sticky top-0 z-40 bg-brand-card border-b border-gray-100 h-[60px] px-7 flex items-center justify-between gap-5 shrink-0">
       <div className="shrink-0 min-w-[120px]">
         <h1 className="font-extrabold text-[16px] text-brand-text tracking-tight leading-tight">{pageTitle}</h1>
         <p className="text-[10px] text-brand-muted mt-0.5 font-mono">{new Date().toLocaleDateString("en-GH", { weekday:"short", month:"short", day:"numeric" })}</p>
@@ -283,7 +290,7 @@ function DesktopTopbar({ navItems, activeTab, isFullScreen, screen, screenTitles
         <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-brand-muted pointer-events-none" />
         <input value={searchQ} onChange={e => { setSearchQ(e.target.value); if (activeTab !== "home" && role === "attendee") { setActiveTab("home"); setScreen("app"); } }}
           placeholder="Search events, venues..."
-          className="w-full pl-9 pr-3.5 py-2 bg-brand-canvas border border-gray-200 rounded-xl text-[13px] text-brand-text outline-none focus:border-brand-orange focus:bg-white transition-colors" />
+          className="w-full pl-9 pr-3.5 py-2 bg-brand-canvas border border-gray-200 rounded-xl text-[13px] text-brand-text outline-none focus:border-brand-orange focus:bg-brand-card transition-colors" />
         {searchQ && (
           <button onClick={() => setSearchQ("")} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-brand-muted">
             <X size={13} />
@@ -310,6 +317,8 @@ function DesktopTopbar({ navItems, activeTab, isFullScreen, screen, screenTitles
   );
 }
 
+// ── FIX: bg-white → bg-brand-card on the desktop sidebar — the
+// other half of the "navbar stays light" report on desktop. ──
 function DesktopAppLayout() {
   const screen       = useStore(s => s.screen);
   const role         = useStore(s => s.role);
@@ -373,7 +382,7 @@ function DesktopAppLayout() {
   return (
     <div className="flex h-screen bg-brand-canvas font-sans overflow-hidden">
       <motion.aside animate={{ width: collapsed ? 64 : 220 }} transition={{ duration:0.22, ease:[0.16,1,0.3,1] }}
-        className="shrink-0 bg-white border-r border-gray-100 flex flex-col h-screen overflow-hidden relative z-10">
+        className="shrink-0 bg-brand-card border-r border-gray-100 flex flex-col h-screen overflow-hidden relative z-10">
         <div className={`border-b border-gray-100 h-[60px] flex items-center gap-2 shrink-0 ${collapsed ? "justify-center px-0" : "justify-between px-3"}`}>
           <AnimatePresence>
             {!collapsed && (
@@ -471,8 +480,6 @@ export default function App() {
   const screen     = useStore(s => s.screen);
   const [desktop, setDesktop] = React.useState(window.innerWidth > 768);
   const oauthHandled = React.useRef(false);
-  // ── NEW: holds the ticket ID extracted from /verify/:ticketId, so
-  // VerifyTicket can be rendered with it directly ──
   const [verifyingTicketId, setVerifyingTicketId] = React.useState(null);
   useTheme();
 
@@ -489,7 +496,6 @@ export default function App() {
     const verify = params.get("verify");
     const code   = params.get("code");
 
-    // ── Google OAuth redirect callback ─────────────────────
     if (code && window.location.pathname === "/auth/callback") {
       if (oauthHandled.current) return;
       oauthHandled.current = true;
@@ -539,11 +545,6 @@ export default function App() {
     if (params.get("admin") === "1") { useStore.getState().setScreen("adminGateway"); return; }
     if (params.get("door")  === "1") { useStore.getState().setScreen("doorStaffLogin"); return; }
 
-    // ── NEW: public ticket verification — /verify/:ticketId ──
-    // Matches the exact URL every NFT's external_url metadata field
-    // already points to (build_ticket_metadata in utils/blockchain.py).
-    // No auth, no redirect-and-lose-the-param dance needed — this is
-    // meant to be openly shareable/scannable.
     const verifyMatch = window.location.pathname.match(/^\/verify\/(.+)$/);
     if (verifyMatch) {
       setVerifyingTicketId(decodeURIComponent(verifyMatch[1]));
@@ -607,10 +608,6 @@ export default function App() {
   if (screen === "doorStaffLogin") return <DoorStaffLogin />;
   if (screen === "doorStaffScan")  return <DoorStaffScan />;
   if (screen === "pendingEvent")   return <PhoneFrame><PublicEventPage /></PhoneFrame>;
-  // ── NEW: renders full-page, no PhoneFrame wrap — this needs to
-  // work well as a real standalone web page for anyone clicking a
-  // link from Polygonscan/an NFT viewer/a shared link, not just
-  // inside the app's mobile-mockup frame ──
   if (screen === "verifyTicket")   return <VerifyTicket ticketId={verifyingTicketId} />;
   if (screen === "landing")        return <LandingPage onNavigate={publicNavigate} />;
   if (screen === "about")          return <AboutPage onNavigate={publicNavigate} />;

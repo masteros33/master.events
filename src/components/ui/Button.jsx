@@ -10,11 +10,11 @@ const VARIANTS = {
   primary:
     "bg-brand-orange hover:bg-brand-orange-hover text-white disabled:bg-gray-100 disabled:text-brand-muted",
   secondary:
-    "bg-white border border-gray-200 hover:border-gray-300 text-brand-text disabled:text-brand-muted disabled:border-gray-100",
+    "bg-brand-card border border-gray-200 hover:border-gray-300 text-brand-text disabled:text-brand-muted disabled:border-gray-100",
   ghost:
     "bg-transparent text-brand-muted hover:text-brand-text disabled:text-gray-300",
   danger:
-    "bg-white border border-red-200 hover:border-red-300 text-red-600 disabled:text-brand-muted disabled:border-gray-100",
+    "bg-brand-card border border-red-200 hover:border-red-300 text-red-600 disabled:text-brand-muted disabled:border-gray-100",
 };
 
 export default function Button({

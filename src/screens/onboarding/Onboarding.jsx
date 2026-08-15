@@ -18,7 +18,7 @@ export default function Onboarding() {
     <div className="h-full flex flex-col bg-brand-canvas relative overflow-hidden">
       {!isLast && (
         <button onClick={() => setScreen("login")}
-          className="absolute top-5 right-5 z-10 bg-white shadow-sm px-4 py-1.5 rounded-full text-brand-muted text-[13px] font-semibold">
+          className="absolute top-5 right-5 z-10 bg-brand-card shadow-sm px-4 py-1.5 rounded-full text-brand-muted text-[13px] font-semibold">
           Skip
         </button>
       )}
@@ -32,7 +32,7 @@ export default function Onboarding() {
       </div>
 
       {/* Bottom card */}
-      <div className="bg-white rounded-t-[28px] px-7 pt-10 pb-9 shadow-sm text-center">
+      <div className="bg-brand-card rounded-t-[28px] px-7 pt-10 pb-9 shadow-sm text-center">
         <div className="text-2xl font-extrabold text-brand-text mb-2.5 leading-tight tracking-tight">{slide.title}</div>
         <div className="text-sm text-brand-muted leading-relaxed mb-7">{slide.subtitle}</div>
 
@@ -57,7 +57,7 @@ export default function Onboarding() {
           </div>
         ) : (
           <button onClick={() => setOnboardSlide(onboardSlide + 1)}
-            className="w-full py-4 bg-white border-2 border-brand-orange text-brand-orange rounded-full font-bold text-[15px]">
+            className="w-full py-4 bg-brand-card border-2 border-brand-orange text-brand-orange rounded-full font-bold text-[15px]">
             Next →
           </button>
         )}

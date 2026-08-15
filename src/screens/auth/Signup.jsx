@@ -120,7 +120,7 @@ export function Signup() {
     window.location.href = `https://accounts.google.com/o/oauth2/v2/auth?${params.toString()}`;
   };
 
-  const inputClass = "w-full pl-10 pr-4 py-2.5 rounded-xl border border-gray-200 bg-white text-sm text-brand-text outline-none focus:border-brand-orange focus:ring-2 focus:ring-orange-100 transition-colors";
+  const inputClass = "w-full pl-10 pr-4 py-2.5 rounded-xl border border-gray-200 bg-brand-card text-sm text-brand-text outline-none focus:border-brand-orange focus:ring-2 focus:ring-orange-100 transition-colors";
   const labelClass = "text-[11px] font-semibold text-brand-muted mb-1.5 block";
 
   return (
@@ -135,7 +135,7 @@ export function Signup() {
         )}
 
         <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}
-          className="bg-white rounded-3xl border border-gray-100 shadow-sm p-8">
+          className="bg-brand-card rounded-3xl border border-gray-100 shadow-sm p-8">
 
           <div className="flex flex-col items-center mb-6">
             <div className="w-12 h-12 rounded-full bg-brand-orange flex items-center justify-center mb-3">
@@ -204,7 +204,7 @@ export function Signup() {
               <div className="mb-3">
                 <label className={labelClass}>Phone Number</label>
                 <input placeholder="e.g. 0241234567" value={phone} onChange={e => setPhone(e.target.value)} type="tel"
-                  className="w-full px-4 py-2.5 rounded-xl border border-gray-200 bg-white text-sm text-brand-text outline-none focus:border-brand-orange focus:ring-2 focus:ring-orange-100 transition-colors" />
+                  className="w-full px-4 py-2.5 rounded-xl border border-gray-200 bg-brand-card text-sm text-brand-text outline-none focus:border-brand-orange focus:ring-2 focus:ring-orange-100 transition-colors" />
               </div>
               <div className="mb-3">
                 <label className={labelClass}>Email</label>
@@ -222,20 +222,20 @@ export function Signup() {
                   <input placeholder="Kwame"
                     value={fullName.split(" ")[0] || ""}
                     onChange={e => setFullName(e.target.value + " " + (fullName.split(" ").slice(1).join(" ") || ""))}
-                    type="text" className="w-full px-4 py-2.5 rounded-xl border border-gray-200 bg-white text-sm text-brand-text outline-none focus:border-brand-orange focus:ring-2 focus:ring-orange-100 transition-colors" />
+                    type="text" className="w-full px-4 py-2.5 rounded-xl border border-gray-200 bg-brand-card text-sm text-brand-text outline-none focus:border-brand-orange focus:ring-2 focus:ring-orange-100 transition-colors" />
                 </div>
                 <div className="flex-1">
                   <label className={labelClass}>Last Name</label>
                   <input placeholder="Mensah"
                     value={fullName.split(" ").slice(1).join(" ") || ""}
                     onChange={e => setFullName((fullName.split(" ")[0] || "") + " " + e.target.value)}
-                    type="text" className="w-full px-4 py-2.5 rounded-xl border border-gray-200 bg-white text-sm text-brand-text outline-none focus:border-brand-orange focus:ring-2 focus:ring-orange-100 transition-colors" />
+                    type="text" className="w-full px-4 py-2.5 rounded-xl border border-gray-200 bg-brand-card text-sm text-brand-text outline-none focus:border-brand-orange focus:ring-2 focus:ring-orange-100 transition-colors" />
                 </div>
               </div>
               <div className="mb-3">
                 <label className={labelClass}>Phone Number</label>
                 <input placeholder="e.g. 0241234567" value={phone} onChange={e => setPhone(e.target.value)} type="tel"
-                  className="w-full px-4 py-2.5 rounded-xl border border-gray-200 bg-white text-sm text-brand-text outline-none focus:border-brand-orange focus:ring-2 focus:ring-orange-100 transition-colors" />
+                  className="w-full px-4 py-2.5 rounded-xl border border-gray-200 bg-brand-card text-sm text-brand-text outline-none focus:border-brand-orange focus:ring-2 focus:ring-orange-100 transition-colors" />
               </div>
               <div className="mb-3">
                 <label className={labelClass}>Email</label>
@@ -257,7 +257,7 @@ export function Signup() {
                 value={signupPassword}
                 onChange={e => setSignupPassword(e.target.value)}
                 onKeyDown={e => e.key === "Enter" && handleCreate()}
-                className={`w-full pl-10 pr-11 py-2.5 rounded-xl border bg-white text-sm text-brand-text outline-none focus:ring-2 focus:ring-orange-100 transition-colors ${
+                className={`w-full pl-10 pr-11 py-2.5 rounded-xl border bg-brand-card text-sm text-brand-text outline-none focus:ring-2 focus:ring-orange-100 transition-colors ${
                   signupPassword && !allPwMet ? "border-red-200" : "border-gray-200 focus:border-brand-orange"
                 }`}
               />
@@ -286,7 +286,7 @@ export function Signup() {
           <div className="flex items-start gap-2.5 mb-4 mt-1">
             <div onClick={() => setAgreed(!agreed)}
               className={`w-[18px] h-[18px] rounded-md border flex items-center justify-center cursor-pointer shrink-0 mt-0.5 transition-colors ${
-                agreed ? "bg-brand-orange border-brand-orange" : "bg-white border-gray-300"
+                agreed ? "bg-brand-orange border-brand-orange" : "bg-brand-card border-gray-300"
               }`}>
               {agreed && <Check size={12} strokeWidth={3} color="#fff" />}
             </div>

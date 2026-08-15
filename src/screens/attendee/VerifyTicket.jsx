@@ -13,7 +13,7 @@ const BACKEND = "https://master-events-backend.onrender.com";
 function SignatureCard({ children, className = "" }) {
   return (
     <div
-      className={`relative bg-white border border-gray-100 shadow-sm overflow-hidden p-6 ${className}`}
+      className={`relative bg-brand-card border border-gray-100 shadow-sm overflow-hidden p-6 ${className}`}
       style={{ borderTopLeftRadius: "32px", borderTopRightRadius: "8px", borderBottomLeftRadius: "8px", borderBottomRightRadius: "8px" }}
     >
       <div className="absolute top-0 left-0 w-3 h-10 z-10" style={{ background: NAVY, borderTopLeftRadius: "32px", borderBottomRightRadius: "10px" }} />
@@ -52,7 +52,7 @@ export default function VerifyTicket({ ticketId, onDone }) {
   return (
     <div className="min-h-screen bg-brand-canvas font-sans flex flex-col">
       {/* ── Header ── */}
-      <div className="bg-white border-b border-gray-100 px-5 h-[68px] flex items-center gap-2.5">
+      <div className="bg-brand-card border-b border-gray-100 px-5 h-[68px] flex items-center gap-2.5">
         <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0" style={{ background: NAVY }}>
           <Ticket size={17} strokeWidth={2} color="#fff" />
         </div>

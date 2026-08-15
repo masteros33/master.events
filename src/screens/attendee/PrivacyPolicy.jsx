@@ -55,7 +55,7 @@ export default function PrivacyPolicy() {
     <div className="bg-brand-canvas min-h-full pb-14 font-sans">
 
       {/* Header */}
-      <div className={`sticky top-0 z-20 bg-white border-b border-gray-100 h-15 flex items-center justify-between ${desktop ? "px-10" : "px-4"}`}>
+      <div className={`sticky top-0 z-20 bg-brand-card border-b border-gray-100 h-15 flex items-center justify-between ${desktop ? "px-10" : "px-4"}`}>
         <button onClick={() => setScreen("settings")}
           className="flex items-center gap-1.5 text-brand-muted text-sm font-medium hover:text-brand-text transition-colors">
           <ArrowLeft size={15} strokeWidth={2} /> Back
@@ -81,7 +81,7 @@ export default function PrivacyPolicy() {
 
         {/* Sections */}
         {sections.map((s, i) => (
-          <div key={i} className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 mb-2.5">
+          <div key={i} className="bg-brand-card rounded-2xl border border-gray-100 shadow-sm p-5 mb-2.5">
             <div className="text-sm font-bold text-brand-text mb-2.5 tracking-tight">
               {s.title}
             </div>

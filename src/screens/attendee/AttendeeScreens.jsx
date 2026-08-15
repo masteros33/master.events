@@ -25,13 +25,12 @@ function StatusPill({ status }) {
   );
 }
 
-// ── Compact NFT Ticket Card ───────────────────────────────────
+// ── FIX: bg-white → bg-brand-card ──
 function TicketCard({ t, onView, onResell, onSend, onCancel }) {
   return (
     <motion.div whileHover={{ y: -3 }}
-      className="bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow overflow-hidden">
+      className="bg-brand-card rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow overflow-hidden">
 
-      {/* Event image — 16:9 */}
       <div className="relative pt-[56.25%] overflow-hidden">
         <img
           src={t.event.image}
@@ -52,7 +51,6 @@ function TicketCard({ t, onView, onResell, onSend, onCancel }) {
         </div>
       </div>
 
-      {/* Card body */}
       <div className="px-3 pt-2.5 pb-3">
         <div className="font-bold text-[13px] text-brand-text mb-1.5 leading-snug line-clamp-2">{t.event.name}</div>
 
@@ -174,7 +172,6 @@ export function AttendeeTickets() {
   return (
     <div className={`bg-brand-canvas min-h-full ${desktop ? "px-10 pt-8 pb-24" : "px-4 pt-4 pb-24"}`}>
 
-      {/* Header */}
       <div className="mb-5">
         <div className={`font-extrabold text-brand-text tracking-tight mb-2 ${desktop ? "text-3xl" : "text-2xl"}`}>My Tickets</div>
         <span className="inline-flex items-center gap-2 px-3 py-2 rounded-xl bg-pastel-blue w-fit">
@@ -185,7 +182,6 @@ export function AttendeeTickets() {
         </span>
       </div>
 
-      {/* ── Desktop: 3-column grid ── Mobile: 1-column ── */}
       <div className={`grid gap-3.5 ${desktop ? "grid-cols-3" : "grid-cols-1"}`}>
         {myTickets.map(t => (
           <TicketCard
@@ -239,7 +235,7 @@ export function AttendeeAlerts() {
       <div className={desktop ? "max-w-[640px]" : ""}>
         {alerts.map((a, i) => (
           <motion.div key={i} whileHover={{ y: -2 }}
-            className="bg-white rounded-2xl border border-gray-100 shadow-sm px-4 py-3.5 mb-2.5 flex gap-3 items-start transition-shadow hover:shadow-md">
+            className="bg-brand-card rounded-2xl border border-gray-100 shadow-sm px-4 py-3.5 mb-2.5 flex gap-3 items-start transition-shadow hover:shadow-md">
             <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${a.badgeBg}`}>
               <a.Icon size={18} strokeWidth={1.75} className={a.iconClass} />
             </div>
@@ -266,7 +262,7 @@ export function AttendeeAlerts() {
         ))}
       </div>
       <div className={`mt-6 px-4 py-3.5 rounded-2xl bg-pastel-blue flex items-center gap-3 ${desktop ? "max-w-[640px]" : ""}`}>
-        <div className="w-9 h-9 rounded-full bg-white flex items-center justify-center shrink-0">
+        <div className="w-9 h-9 rounded-full bg-brand-card flex items-center justify-center shrink-0">
           <Link2 size={16} strokeWidth={1.75} className="text-fintech-blue" />
         </div>
         <div>

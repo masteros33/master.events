@@ -30,7 +30,7 @@ export default function CookieBanner() {
           animate={{ y: 0,   opacity: 1 }}
           exit={{   y: 100, opacity: 0 }}
           transition={{ type: "spring", stiffness: 380, damping: 36 }}
-          className="fixed bottom-4 left-4 right-4 mx-auto max-w-[480px] w-auto bg-white border border-gray-100 rounded-2xl shadow-sm p-4 z-[9999] flex items-center gap-3.5 box-border font-sans">
+          className="fixed bottom-4 left-4 right-4 mx-auto max-w-[480px] w-auto bg-brand-card border border-gray-100 rounded-2xl shadow-sm p-4 z-[9999] flex items-center gap-3.5 box-border font-sans">
 
           <div className="w-9 h-9 rounded-full bg-pastel-orange flex items-center justify-center shrink-0">
             <Cookie size={17} strokeWidth={1.75} className="text-brand-orange" />

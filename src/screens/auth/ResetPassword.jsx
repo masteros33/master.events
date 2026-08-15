@@ -63,7 +63,7 @@ export default function ResetPassword() {
   if (done) return (
     <div className="h-full bg-brand-canvas overflow-y-auto flex justify-center items-start px-6 py-10 font-sans">
       <motion.div initial={{ opacity: 0, scale: 0.96 }} animate={{ opacity: 1, scale: 1 }}
-        className="max-w-[420px] w-full bg-white rounded-3xl border border-gray-100 shadow-sm p-10 text-center">
+        className="max-w-[420px] w-full bg-brand-card rounded-3xl border border-gray-100 shadow-sm p-10 text-center">
         <div className="w-16 h-16 rounded-full bg-pastel-green flex items-center justify-center mx-auto mb-6">
           <CheckCircle2 size={30} strokeWidth={1.75} className="text-fintech-green" />
         </div>
@@ -83,7 +83,7 @@ export default function ResetPassword() {
   return (
     <div className="h-full bg-brand-canvas overflow-y-auto flex justify-center items-start px-6 py-10 font-sans">
       <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}
-        className="max-w-[420px] w-full bg-white rounded-3xl border border-gray-100 shadow-sm p-8">
+        className="max-w-[420px] w-full bg-brand-card rounded-3xl border border-gray-100 shadow-sm p-8">
 
         <div className="flex flex-col items-center mb-6">
           <div className="w-12 h-12 rounded-full bg-brand-orange flex items-center justify-center mb-3">
@@ -112,7 +112,7 @@ export default function ResetPassword() {
               onChange={e => setPassword(e.target.value)}
               placeholder="Min 8 chars, uppercase, number, special"
               autoComplete="new-password"
-              className={`w-full pl-10 pr-11 py-3 rounded-xl border bg-white text-sm text-brand-text outline-none focus:ring-2 focus:ring-orange-100 transition-colors ${
+              className={`w-full pl-10 pr-11 py-3 rounded-xl border bg-brand-card text-sm text-brand-text outline-none focus:ring-2 focus:ring-orange-100 transition-colors ${
                 password && !allPwMet ? "border-red-200" : "border-gray-200 focus:border-brand-orange"
               }`}
             />
@@ -151,7 +151,7 @@ export default function ResetPassword() {
               onKeyDown={e => e.key === "Enter" && handleReset()}
               placeholder="Repeat your password"
               autoComplete="new-password"
-              className={`w-full pl-10 pr-4 py-3 rounded-xl border bg-white text-sm text-brand-text outline-none focus:ring-2 focus:ring-orange-100 transition-colors ${
+              className={`w-full pl-10 pr-4 py-3 rounded-xl border bg-brand-card text-sm text-brand-text outline-none focus:ring-2 focus:ring-orange-100 transition-colors ${
                 confirm && !pwsMatch ? "border-red-200" : confirm && pwsMatch ? "border-fintech-green/40" : "border-gray-200 focus:border-brand-orange"
               }`}
             />

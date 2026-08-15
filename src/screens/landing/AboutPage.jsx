@@ -11,7 +11,7 @@ const SORA = { fontFamily: "'Sora', sans-serif" };
 
 function SignatureCard({ children, className = "" }) {
   return (
-    <div className={`relative bg-white border border-gray-100 shadow-sm p-6 overflow-hidden ${className}`}
+    <div className={`relative bg-brand-card border border-gray-100 shadow-sm p-6 overflow-hidden ${className}`}
       style={{ borderTopLeftRadius: "32px", borderTopRightRadius: "8px", borderBottomLeftRadius: "8px", borderBottomRightRadius: "8px" }}>
       {children}
     </div>
@@ -80,7 +80,7 @@ export default function AboutPage({ onNavigate }) {
         </div>
       </section>
 
-      <section className="bg-white border-y border-gray-100">
+      <section className="bg-brand-card border-y border-gray-100">
         <div className="max-w-5xl mx-auto px-4 md:px-8 py-12 md:py-20 grid md:grid-cols-2 gap-10 items-center">
           <div>
             <div className="text-[10px] font-bold tracking-widest mb-3 font-mono" style={{ color: NAVY }}>WHY WE BUILT THIS</div>
@@ -121,7 +121,7 @@ export default function AboutPage({ onNavigate }) {
         </div>
       </section>
 
-      <section className="bg-white border-y border-gray-100">
+      <section className="bg-brand-card border-y border-gray-100">
         <div className="max-w-5xl mx-auto px-4 md:px-8 py-12 md:py-20">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {AUDIENCES.map(a => (
@@ -155,7 +155,7 @@ export default function AboutPage({ onNavigate }) {
         </div>
       </section>
 
-      <section className="bg-white border-y border-gray-100">
+      <section className="bg-brand-card border-y border-gray-100">
         <div className="max-w-4xl mx-auto px-4 md:px-8 py-12 md:py-20 text-center">
           <div className="text-[10px] font-bold tracking-widest mb-3 font-mono" style={{ color: NAVY }}>THE TEAM</div>
           <h2 className="text-xl md:text-2xl font-extrabold text-brand-text tracking-tight mb-8" style={SORA}>Built by students at GCTU</h2>
@@ -186,7 +186,7 @@ export default function AboutPage({ onNavigate }) {
             Get Started <ArrowRight size={16} strokeWidth={2} />
           </button>
           <button onClick={() => onNavigate("home")}
-            className="px-6 py-3 rounded-full bg-white border border-gray-200 text-brand-text font-semibold text-sm hover:border-gray-300 transition-colors">
+            className="px-6 py-3 rounded-full bg-brand-card border border-gray-200 text-brand-text font-semibold text-sm hover:border-gray-300 transition-colors">
             Browse Events
           </button>
         </div>

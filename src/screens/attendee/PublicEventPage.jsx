@@ -56,11 +56,10 @@ function DetailRow({ Icon, label, value }) {
   );
 }
 
-// ── Location & Directions — placeholder until Maps Embed API key is set up ──
 function LocationCard({ venue, city }) {
   const address = [venue, city].filter(Boolean).join(", ") || "Venue TBA";
   return (
-    <div className="bg-white border border-gray-100 rounded-2xl shadow-sm p-5 mb-6">
+    <div className="bg-brand-card border border-gray-100 rounded-2xl shadow-sm p-5 mb-6">
       <div className="flex items-center justify-between mb-3.5">
         <div className="flex items-center gap-2.5">
           <div className="w-9 h-9 rounded-lg bg-brand-canvas border border-gray-100 flex items-center justify-center shrink-0">
@@ -89,7 +88,6 @@ function LocationCard({ venue, city }) {
   );
 }
 
-// ── Tier picker — VIP/VVIP/Regular selection cards ──────────────
 function TierPicker({ tiers, curr, selectedId, onSelect }) {
   return (
     <div className="mb-4">
@@ -103,7 +101,7 @@ function TierPicker({ tiers, curr, selectedId, onSelect }) {
             <button key={t.id} disabled={soldOut} onClick={() => onSelect(t)}
               className={`flex items-center justify-between text-left px-4 py-3.5 rounded-xl border-2 transition-colors ${
                 soldOut ? "border-gray-100 bg-gray-50 cursor-not-allowed opacity-60"
-                : active ? "border-brand-orange bg-orange-50/30" : "border-gray-200 bg-white hover:border-gray-300"
+                : active ? "border-brand-orange bg-orange-50/30" : "border-gray-200 bg-brand-card hover:border-gray-300"
               }`}>
               <div className="flex items-center gap-3 min-w-0">
                 <div className={`w-9 h-9 rounded-lg flex items-center justify-center shrink-0 ${active ? "bg-brand-orange" : "bg-pastel-orange"}`}>
@@ -149,7 +147,7 @@ function TicketCard({ event, tiers, isFree, curr, isLoggedIn, onAction, actionLo
   const needsSelection = hasTiers && !selectedTierObj;
 
   return (
-    <div className={`bg-white rounded-2xl border border-gray-100 shadow-sm ${isDesk ? "p-6 sticky top-6" : "p-5"}`}>
+    <div className={`bg-brand-card rounded-2xl border border-gray-100 shadow-sm ${isDesk ? "p-6 sticky top-6" : "p-5"}`}>
 
       {hasTiers && (
         <TierPicker tiers={tiers} curr={curr} selectedId={selectedTierObj?.id} onSelect={onSelectTier} />
@@ -289,7 +287,7 @@ export default function PublicEventPage() {
       return;
     }
     const tiers = event.tiers || [];
-    if (tiers.length > 0 && !pickedTier) return; // guarded by disabled button too
+    if (tiers.length > 0 && !pickedTier) return;
 
     setSelectedTier(pickedTier ? { id: pickedTier.id, name: pickedTier.name, price: parseFloat(pickedTier.price) } : null);
     setCheckoutEvent({
@@ -351,8 +349,7 @@ export default function PublicEventPage() {
   return (
     <div className="h-full overflow-y-auto bg-brand-canvas" style={{ WebkitOverflowScrolling: "touch" }}>
 
-      {/* Real nav bar with working search */}
-      <div className={`sticky top-0 z-30 bg-white border-b border-gray-100 h-[58px] flex items-center justify-between gap-5 ${isDesk ? "px-10" : "px-4"}`}>
+      <div className={`sticky top-0 z-30 bg-brand-card border-b border-gray-100 h-[58px] flex items-center justify-between gap-5 ${isDesk ? "px-10" : "px-4"}`}>
         <button onClick={() => { localStorage.removeItem("pending_event_slug"); setScreen("home"); }}
           className="flex items-center gap-2 shrink-0">
           <div className="w-7 h-7 rounded-lg bg-brand-orange flex items-center justify-center">
@@ -381,9 +378,8 @@ export default function PublicEventPage() {
         )}
       </div>
 
-      {/* Mobile search row */}
       {!isDesk && (
-        <div className="px-4 py-2.5 border-b border-gray-100 bg-white">
+        <div className="px-4 py-2.5 border-b border-gray-100 bg-brand-card">
           <div className="relative">
             <Search size={14} strokeWidth={1.75} className="absolute left-3 top-1/2 -translate-y-1/2 text-brand-muted" />
             <input
@@ -396,10 +392,8 @@ export default function PublicEventPage() {
         </div>
       )}
 
-      {/* Contained content */}
       <div className={`max-w-[1100px] mx-auto ${isDesk ? "px-10 pt-7 pb-14" : "px-4 pt-4 pb-10"}`}>
 
-        {/* Image banner */}
         <div className={`rounded-2xl overflow-hidden border border-gray-100 mb-6 relative ${isDesk ? "h-[360px]" : "h-[200px]"}`}>
           <img src={cover} alt={event.name} className="w-full h-full object-cover object-top block"
             onError={e => { e.target.src = catImg.other; }} />
@@ -411,7 +405,7 @@ export default function PublicEventPage() {
               <span className="bg-fintech-green text-white text-[9px] font-bold px-2.5 py-1 rounded-full font-mono">FREE</span>
             )}
             {tiers.length > 0 && (
-              <span className="flex items-center gap-1 bg-white text-brand-text text-[9px] font-bold px-2.5 py-1 rounded-full">
+              <span className="flex items-center gap-1 bg-brand-card text-brand-text text-[9px] font-bold px-2.5 py-1 rounded-full">
                 <Crown size={9} strokeWidth={2.5} className="text-brand-orange" /> {tiers.length} TIERS
               </span>
             )}
@@ -421,7 +415,6 @@ export default function PublicEventPage() {
           </div>
         </div>
 
-        {/* Body — title, organizer, then two columns */}
         <div className={`flex gap-10 items-start ${isDesk ? "flex-row" : "flex-col"}`}>
 
           <div className="flex-1 min-w-0 w-full">
@@ -461,21 +454,20 @@ export default function PublicEventPage() {
                   {event.description}
                 </p>
               ) : (
-                <div className="flex items-center gap-2.5 bg-white border border-gray-100 rounded-xl px-3.5 py-3">
+                <div className="flex items-center gap-2.5 bg-brand-card border border-gray-100 rounded-xl px-3.5 py-3">
                   <FileText size={15} strokeWidth={1.75} className="text-brand-muted shrink-0" />
                   <span className="text-[13px] text-brand-muted">No description yet — check back closer to the event.</span>
                 </div>
               )}
             </div>
 
-            <div className="bg-white border border-gray-100 rounded-2xl shadow-sm overflow-hidden mb-6 px-4">
+            <div className="bg-brand-card border border-gray-100 rounded-2xl shadow-sm overflow-hidden mb-6 px-4">
               <DetailRow Icon={Calendar} label="DATE" value={event.date || "TBA"} />
               <DetailRow Icon={Clock} label="TIME" value={event.time ? event.time.substring(0,5) : "TBA"} />
               <DetailRow Icon={MapPin} label="VENUE" value={`${event.venue || "TBA"}${event.city ? `, ${event.city}` : ""}`} />
               <DetailRow Icon={Ticket} label="CAPACITY" value={`${event.total_tickets || 0} spots total`} />
             </div>
 
-            {/* Location & Directions — placeholder, wire in once Maps API key is set up */}
             <LocationCard venue={event.venue} city={event.city} />
 
             <div className="flex items-center gap-3 bg-pastel-blue rounded-xl px-4 py-3.5">

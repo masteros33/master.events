@@ -67,7 +67,6 @@ function SheetShell({ onClose, children, maxWidth = "480px" }) {
 
 const fieldClass = "w-full px-3.5 py-2.5 rounded-xl border border-gray-200 bg-white text-sm text-brand-text outline-none focus:border-brand-orange focus:ring-2 focus:ring-orange-100 transition-colors";
 
-// ── Avatar Picker Modal ───────────────────────────────────────
 function AvatarPickerModal({ currentSeed, onSelect, onClose }) {
   const [selected, setSelected] = useState(currentSeed);
 
@@ -114,7 +113,6 @@ function AvatarPickerModal({ currentSeed, onSelect, onClose }) {
   );
 }
 
-// ── Password Change Modal ─────────────────────────────────────
 function PasswordModal({ onClose }) {
   const [current, setCurrent] = useState("");
   const [newPass, setNewPass] = useState("");
@@ -191,7 +189,6 @@ function PasswordModal({ onClose }) {
   );
 }
 
-// ── Delete Account Modal ──────────────────────────────────────
 function DeleteModal({ onClose, handleLogout }) {
   const [password,  setPassword]  = useState("");
   const [deleting,  setDeleting]  = useState(false);
@@ -264,7 +261,6 @@ function DeleteModal({ onClose, handleLogout }) {
   );
 }
 
-// ── Main Settings ─────────────────────────────────────────────
 export default function Settings() {
   const setScreen    = useStore(s => s.setScreen);
   const setActiveTab = useStore(s => s.setActiveTab);
@@ -331,14 +327,14 @@ export default function Settings() {
   return (
     <div className="bg-brand-canvas min-h-full pb-14 font-sans">
 
-      {/* Header */}
+      {/* ── Header — icon-only back button ── */}
       <div className={`sticky top-0 z-20 bg-white border-b border-gray-100 h-15 flex items-center justify-between ${desktop ? "px-10" : "px-4"}`}>
         <button onClick={() => { setScreen("app"); setActiveTab(undefined); }}
-          className="flex items-center gap-1.5 text-brand-muted text-sm font-medium hover:text-brand-text transition-colors">
-          <ArrowLeft size={15} strokeWidth={2} /> Back
+          className="w-9 h-9 rounded-full bg-brand-canvas border border-gray-100 flex items-center justify-center shrink-0">
+          <ArrowLeft size={16} strokeWidth={2} className="text-brand-text" />
         </button>
         <div className="font-extrabold text-base text-brand-text tracking-tight">Settings</div>
-        <div className="w-14" />
+        <div className="w-9" />
       </div>
 
       <div className={`mx-auto ${desktop ? "max-w-[640px] px-10 py-6" : "px-4 py-4"}`}>
@@ -380,7 +376,6 @@ export default function Settings() {
             </button>
           </div>
 
-          {/* Edit form */}
           <AnimatePresence>
             {editing && (
               <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} style={{ overflow: "hidden" }}>
@@ -423,18 +418,18 @@ export default function Settings() {
           </div>
         </div>
 
-        {/* Account */}
+        {/* ── Account — FIX: the "Full Name" row below duplicated the
+        name already shown in the profile card above. That row is
+        removed; email stays since it's genuinely not shown elsewhere
+        with an edit affordance. ── */}
         <SectionHeader title="Account" />
         <SettingRow icon={Mail} label="Email Address" value={currentUser?.email} badgeBg="bg-pastel-blue" iconClass="text-fintech-blue" />
-        <SettingRow icon={User} label="Full Name" value={`${displayFirst} ${displayLast}`.trim() || "Not set"} badgeBg="bg-pastel-orange" iconClass="text-brand-orange" onClick={() => setEditing(true)} action="Edit" />
         <SettingRow icon={Lock} label="Password" value="Change your account password" badgeBg="bg-pastel-blue" iconClass="text-fintech-blue" onClick={() => setShowPassword(true)} />
 
-        {/* Notifications */}
         <SectionHeader title="Notifications" />
         <SettingRow icon={Bell} label="Email Notifications" value="Ticket activity, NFT confirmations, sales" badgeBg="bg-pastel-orange" iconClass="text-brand-orange"
           toggle checked={notifs} onToggle={() => setNotifs(!notifs)} />
 
-        {/* Blockchain info */}
         <SectionHeader title="Blockchain" />
         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 mb-1.5">
           <div className="flex items-center gap-3 mb-3">
@@ -463,7 +458,6 @@ export default function Settings() {
           </div>
         </div>
 
-        {/* Legal */}
         <SectionHeader title="Legal & Privacy" />
         <SettingRow icon={FileText} label="Privacy Policy"     badgeBg="bg-gray-100" iconClass="text-brand-muted" onClick={() => setScreen("privacy")} />
         <SettingRow icon={Shield}   label="Terms of Service"   badgeBg="bg-gray-100" iconClass="text-brand-muted" onClick={() => setScreen("privacy")} />
@@ -472,16 +466,13 @@ export default function Settings() {
           window.location.reload();
         }} />
 
-        {/* About */}
         <SectionHeader title="About" />
         <SettingRow icon={Globe} label="Version" value="Master Events v1.0 · Built on Polygon" badgeBg="bg-pastel-blue" iconClass="text-fintech-blue" />
 
-        {/* Account Actions */}
         <SectionHeader title="Account Actions" />
         <SettingRow icon={LogOut} label="Log Out" danger onClick={() => setShowLogout(true)} />
         <SettingRow icon={Trash2} label="Delete Account" value="Permanently delete your account and all data" danger onClick={() => setShowDelete(true)} />
 
-        {/* Logout modal */}
         <AnimatePresence>
           {showLogout && (
             <SheetShell onClose={() => setShowLogout(false)}>
@@ -501,19 +492,16 @@ export default function Settings() {
           )}
         </AnimatePresence>
 
-        {/* Avatar picker */}
         <AnimatePresence>
           {showPicker && (
             <AvatarPickerModal currentSeed={avatarSeed} onSelect={handleAvatarSelect} onClose={() => setShowPicker(false)} />
           )}
         </AnimatePresence>
 
-        {/* Password modal */}
         <AnimatePresence>
           {showPassword && <PasswordModal onClose={() => setShowPassword(false)} />}
         </AnimatePresence>
 
-        {/* Delete account modal */}
         <AnimatePresence>
           {showDelete && <DeleteModal onClose={() => setShowDelete(false)} handleLogout={handleLogout} />}
         </AnimatePresence>

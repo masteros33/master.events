@@ -4,12 +4,12 @@ import {
   ShieldCheck, Mail, Lock, AlertCircle, ArrowRight, LogOut,
   LayoutDashboard, Users, CalendarDays, Receipt, Landmark, Ticket,
   TrendingUp, BarChart3, UserCheck, Zap, Link2, User, Pause, Play,
+  Search, Radio, ExternalLink,
 } from "lucide-react";
 import useStore from "../../store/useStore";
 
 const BACKEND = "https://master-events-backend.onrender.com";
 
-// ── API helpers ───────────────────────────────────────────────
 async function adminFetch(path, token, opts = {}) {
   const res = await fetch(BACKEND + path, {
     ...opts,
@@ -31,7 +31,6 @@ const STATUS_CLASS = {
   pending:   "text-amber-700 bg-amber-50",
 };
 
-// ── Stat card ─────────────────────────────────────────────────
 function StatCard({ Icon, label, value, sub, badgeBg = "bg-pastel-blue", iconClass = "text-fintech-blue" }) {
   return (
     <motion.div whileHover={{ y: -2 }} transition={{ duration: 0.15 }}
@@ -46,7 +45,6 @@ function StatCard({ Icon, label, value, sub, badgeBg = "bg-pastel-blue", iconCla
   );
 }
 
-// ── Overview tab ──────────────────────────────────────────────
 function OverviewTab({ data }) {
   if (!data) return <div className="p-10 text-center text-brand-muted text-sm">Loading...</div>;
 
@@ -143,7 +141,6 @@ function OverviewTab({ data }) {
   );
 }
 
-// ── Organizers tab ────────────────────────────────────────────
 function OrganizersTab({ token }) {
   const [organizers, setOrganizers] = useState([]);
   const [loading,    setLoading]    = useState(true);
@@ -246,7 +243,6 @@ function OrganizersTab({ token }) {
   );
 }
 
-// ── Events tab ────────────────────────────────────────────────
 function EventsTab({ token }) {
   const [events,    setEvents]    = useState([]);
   const [loading,   setLoading]   = useState(true);
@@ -268,7 +264,6 @@ function EventsTab({ token }) {
     setToggling(null);
   };
 
-  // ── NEW: approve/reject an event pending review ──
   const handleReview = async (eventId, action) => {
     setReviewing(eventId);
     try {
@@ -351,8 +346,6 @@ function EventsTab({ token }) {
               ))}
             </div>
 
-            {/* ── Approve/Reject shown while pending; falls back to
-            the existing Enable/Disable toggle once reviewed ── */}
             {!ev.is_approved ? (
               <div className="flex gap-1.5 shrink-0">
                 <button onClick={() => handleReview(ev.id, "reject")} disabled={reviewing === ev.id}
@@ -377,7 +370,6 @@ function EventsTab({ token }) {
   );
 }
 
-// ── Transactions tab ──────────────────────────────────────────
 function TransactionsTab({ token }) {
   const [txns,    setTxns]    = useState([]);
   const [loading, setLoading] = useState(true);
@@ -442,7 +434,156 @@ function TransactionsTab({ token }) {
   );
 }
 
-// ── Admin Login ───────────────────────────────────────────────
+// ── NEW: platform-wide ticket holder lookup ──────────────────
+function TicketHoldersTab({ token }) {
+  const [holders, setHolders] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [search,  setSearch]  = useState("");
+
+  useEffect(() => {
+    adminFetch("/api/auth/admin/ticket-holders/", token)
+      .then(data => { if (Array.isArray(data)) setHolders(data); setLoading(false); })
+      .catch(() => setLoading(false));
+  }, [token]);
+
+  const filtered = search
+    ? holders.filter(h =>
+        h.holder_name.toLowerCase().includes(search.toLowerCase()) ||
+        h.holder_email.toLowerCase().includes(search.toLowerCase()) ||
+        h.event_name.toLowerCase().includes(search.toLowerCase()) ||
+        h.id.toLowerCase().includes(search.toLowerCase())
+      )
+    : holders;
+
+  if (loading) return (
+    <div className="p-7">
+      {[1,2,3,4,5].map(i => <div key={i} className="skeleton" style={{ height: "56px", borderRadius: "12px", marginBottom: "8px" }} />)}
+    </div>
+  );
+
+  return (
+    <div className="p-7 pb-14">
+      <div className="flex justify-between items-center mb-4">
+        <div>
+          <div className="text-[11px] font-bold text-brand-muted tracking-widest font-mono mb-1">TICKET_HOLDERS</div>
+          <h2 className="font-extrabold text-xl text-brand-text tracking-tight">All Ticket Holders</h2>
+        </div>
+        <div className="px-3.5 py-1.5 bg-pastel-blue rounded-full text-xs font-bold text-fintech-blue font-mono">
+          {filtered.length} SHOWN
+        </div>
+      </div>
+
+      <div className="relative mb-4">
+        <Search size={14} strokeWidth={1.75} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-brand-muted" />
+        <input value={search} onChange={e => setSearch(e.target.value)}
+          placeholder="Search by name, email, event, or ticket ID..."
+          className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-gray-200 bg-white text-sm text-brand-text outline-none focus:border-brand-orange focus:ring-2 focus:ring-orange-100 transition-colors" />
+      </div>
+
+      {filtered.length === 0 ? (
+        <div className="text-center py-12 bg-white rounded-2xl border border-gray-100 shadow-sm">
+          <div className="text-sm text-brand-muted">No ticket holders found</div>
+        </div>
+      ) : (
+        <div className="flex flex-col gap-1.5">
+          {filtered.slice(0, 150).map((h, i) => (
+            <div key={h.id + i} className="bg-white border border-gray-100 rounded-xl shadow-sm px-4 py-3 flex items-center gap-3.5">
+              <div className={`w-9 h-9 rounded-full flex items-center justify-center shrink-0 ${h.is_free ? "bg-pastel-green" : "bg-pastel-blue"}`}>
+                <User size={15} strokeWidth={1.75} className={h.is_free ? "text-fintech-green" : "text-fintech-blue"} />
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 mb-0.5">
+                  <span className="font-semibold text-sm text-brand-text truncate">{h.holder_name}</span>
+                  {h.is_free && <span className="text-[8px] font-bold text-fintech-green bg-pastel-green px-1.5 py-0.5 rounded-full font-mono shrink-0">FREE</span>}
+                  {h.nft_minted && <span className="text-[8px] font-bold text-fintech-blue bg-pastel-blue px-1.5 py-0.5 rounded-full font-mono shrink-0">NFT</span>}
+                </div>
+                <div className="text-[11px] text-brand-muted truncate">{h.event_name} · {h.event_date}</div>
+              </div>
+              <div className="text-right shrink-0">
+                <div className="text-[13px] font-extrabold text-fintech-slate font-mono">
+                  {h.is_free ? "FREE" : "GHS " + h.price_paid.toLocaleString()}
+                </div>
+                <div className={`text-[9px] font-bold font-mono mt-0.5 px-1.5 py-0.5 rounded-full inline-block ${
+                  h.status === "redeemed" ? "text-gray-600 bg-gray-100" :
+                  h.status === "resale" ? "text-red-600 bg-red-50" :
+                  "text-emerald-700 bg-emerald-50"
+                }`}>
+                  {h.status.toUpperCase()}
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── NEW: platform-wide live activity feed ────────────────────
+function LiveActivityTab({ token }) {
+  const [feed,    setFeed]    = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  const fetchFeed = () => {
+    adminFetch("/api/auth/admin/live-activity/", token)
+      .then(data => { if (Array.isArray(data)) setFeed(data); setLoading(false); })
+      .catch(() => setLoading(false));
+  };
+
+  useEffect(() => {
+    fetchFeed();
+    const interval = setInterval(fetchFeed, 15000);
+    return () => clearInterval(interval);
+  }, [token]);
+
+  if (loading) return (
+    <div className="p-7">
+      {[1,2,3,4,5].map(i => <div key={i} className="skeleton" style={{ height: "56px", borderRadius: "12px", marginBottom: "8px" }} />)}
+    </div>
+  );
+
+  return (
+    <div className="p-7 pb-14">
+      <div className="flex justify-between items-center mb-4">
+        <div>
+          <div className="text-[11px] font-bold text-brand-muted tracking-widest font-mono mb-1">LIVE_ACTIVITY</div>
+          <h2 className="font-extrabold text-xl text-brand-text tracking-tight">Platform-Wide Activity</h2>
+        </div>
+        <div className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-emerald-50">
+          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 pulse-dot" />
+          <span className="text-[10px] font-bold text-emerald-700 font-mono">LIVE · UPDATES EVERY 15S</span>
+        </div>
+      </div>
+
+      {feed.length === 0 ? (
+        <div className="text-center py-12 bg-white rounded-2xl border border-gray-100 shadow-sm">
+          <div className="text-sm text-brand-muted">No activity yet — real transactions will appear here as they happen</div>
+        </div>
+      ) : (
+        <div className="flex flex-col gap-1.5">
+          {feed.map((t, i) => (
+            <div key={t.id || i} className="bg-white border border-gray-100 rounded-xl shadow-sm px-4 py-3 flex items-center gap-3.5">
+              <span className={`w-2 h-2 rounded-full shrink-0 ${TYPE_COLOR[t.type] || "bg-gray-300"}`} />
+              <div className="flex-1 min-w-0">
+                <div className="font-semibold text-sm text-brand-text truncate">{t.description}</div>
+                <div className="text-[10px] text-brand-muted font-mono mt-0.5">{t.user_name} · {t.reference}</div>
+              </div>
+              <div className="text-right shrink-0">
+                <div className="font-extrabold text-sm text-fintech-slate font-mono">
+                  {t.type === "withdrawal" ? "-" : "+"}GHS {parseFloat(t.amount).toLocaleString()}
+                </div>
+                <div className="text-[9px] text-brand-muted font-mono mt-0.5">
+                  {new Date(t.created_at).toLocaleTimeString()}
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export function AdminLogin() {
   const setScreen = useStore(s => s.setScreen);
   const [email,    setEmail]    = useState("");
@@ -536,7 +677,6 @@ export function AdminLogin() {
   );
 }
 
-// ── Admin Dashboard ───────────────────────────────────────────
 export function AdminDashboard() {
   const setScreen = useStore(s => s.setScreen);
   const [activeTab,  setActiveTab]  = useState("overview");
@@ -571,18 +711,20 @@ export function AdminDashboard() {
     return null;
   }
 
+  // ── NEW: two tabs appended — existing four unchanged ──
   const tabs = [
-    { id: "overview",     Icon: LayoutDashboard, label: "Overview" },
-    { id: "organizers",   Icon: Users,           label: "Organizers" },
-    { id: "events",       Icon: CalendarDays,    label: "Events" },
-    { id: "transactions", Icon: Receipt,         label: "Transactions" },
+    { id: "overview",       Icon: LayoutDashboard, label: "Overview" },
+    { id: "organizers",     Icon: Users,           label: "Organizers" },
+    { id: "events",         Icon: CalendarDays,    label: "Events" },
+    { id: "transactions",   Icon: Receipt,         label: "Transactions" },
+    { id: "ticketHolders",  Icon: Ticket,          label: "Ticket Holders" },
+    { id: "liveActivity",   Icon: Radio,           label: "Live Activity" },
   ];
   const activeMeta = tabs.find(t => t.id === activeTab);
 
   return (
     <div className="flex h-screen bg-fintech-gray font-sans overflow-hidden">
 
-      {/* ── Admin Sidebar ── */}
       <div className="w-60 shrink-0 bg-fintech-slate flex flex-col h-screen">
 
         <div className="px-4 py-4 border-b border-slate-800 shrink-0">
@@ -626,7 +768,6 @@ export function AdminDashboard() {
         </div>
       </div>
 
-      {/* ── Main content ── */}
       <main className="flex-1 flex flex-col min-w-0 overflow-hidden">
 
         <div className="bg-white border-b border-gray-100 px-7 h-15 flex items-center justify-between shrink-0">
@@ -661,10 +802,12 @@ export function AdminDashboard() {
         </div>
 
         <div className="flex-1 overflow-y-auto overflow-x-hidden" style={{ WebkitOverflowScrolling: "touch" }}>
-          {activeTab === "overview"     && <OverviewTab data={overview} />}
-          {activeTab === "organizers"   && <OrganizersTab token={token} />}
-          {activeTab === "events"       && <EventsTab token={token} />}
-          {activeTab === "transactions" && <TransactionsTab token={token} />}
+          {activeTab === "overview"      && <OverviewTab data={overview} />}
+          {activeTab === "organizers"    && <OrganizersTab token={token} />}
+          {activeTab === "events"        && <EventsTab token={token} />}
+          {activeTab === "transactions"  && <TransactionsTab token={token} />}
+          {activeTab === "ticketHolders" && <TicketHoldersTab token={token} />}
+          {activeTab === "liveActivity"  && <LiveActivityTab token={token} />}
         </div>
       </main>
     </div>

@@ -27,7 +27,7 @@ export default function ResaleMarket() {
 
   const [listings,  setListings]  = useState([]);
   const [loading,   setLoading]   = useState(true);
-  const [selected,  setSelected]  = useState(null);  // ticket being bought
+  const [selected,  setSelected]  = useState(null);
   const [paying,    setPaying]    = useState(false);
   const [payError,  setPayError]  = useState("");
   const [payDone,   setPayDone]   = useState(false);
@@ -49,7 +49,6 @@ export default function ResaleMarket() {
     const total = Math.round(listing.resale_price * 100) / 100;
     const totalPesewas = Math.round(total * 100);
 
-    // Load Paystack
     try {
       await new Promise((resolve, reject) => {
         if (window.PaystackPop) { resolve(); return; }
@@ -63,7 +62,6 @@ export default function ResaleMarket() {
       setPaying(false); return;
     }
 
-    // Initialize payment
     let accessCode, payRef;
     try {
       const token = localStorage.getItem("access_token") || "";
@@ -89,7 +87,6 @@ export default function ResaleMarket() {
       setPaying(false); return;
     }
 
-    // doHandle — prevents double fire
     const doHandle = (() => {
       let called = false;
       return async (ref) => {
@@ -145,7 +142,6 @@ export default function ResaleMarket() {
     }
   };
 
-  // ── Payment success screen ──
   if (payDone && newTicket) {
     return (
       <div className="bg-fintech-gray min-h-full flex items-center justify-center p-6">
@@ -181,11 +177,11 @@ export default function ResaleMarket() {
   return (
     <div className={`bg-fintech-gray min-h-full ${desktop ? "pb-16" : "pb-24"}`}>
 
-      {/* Header */}
+      {/* ── Header — icon-only back button ── */}
       <div className={desktop ? "px-10 pt-7" : "px-4 pt-4"}>
         <button onClick={() => setScreen("app")}
-          className="flex items-center gap-1.5 text-brand-muted text-sm font-medium hover:text-brand-text transition-colors mb-4">
-          <ArrowLeft size={15} strokeWidth={2} /> Back
+          className="w-9 h-9 rounded-full bg-white border border-gray-100 flex items-center justify-center mb-4">
+          <ArrowLeft size={16} strokeWidth={2} className="text-brand-text" />
         </button>
 
         <div className="flex items-center gap-3.5 mb-1.5">
@@ -198,7 +194,6 @@ export default function ResaleMarket() {
           </div>
         </div>
 
-        {/* Info strip */}
         <div className="flex gap-2 mt-4 mb-1 flex-wrap">
           {[
             [Lock, "Secure checkout via Paystack"],
@@ -213,7 +208,6 @@ export default function ResaleMarket() {
         </div>
       </div>
 
-      {/* Error banner */}
       <AnimatePresence>
         {payError && (
           <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
@@ -226,7 +220,6 @@ export default function ResaleMarket() {
         )}
       </AnimatePresence>
 
-      {/* Listings */}
       <div className={desktop ? "px-10 pt-4" : "px-4 pt-3.5"}>
         {loading ? (
           <div className={`grid gap-4 ${desktop ? "grid-cols-3" : "grid-cols-1"}`}>
@@ -260,7 +253,6 @@ export default function ResaleMarket() {
               return (
                 <div key={listing.ticket_id} className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
 
-                  {/* Event image */}
                   <div className="h-40 relative">
                     <img src={img} alt={ev.name} className="w-full h-full object-cover"
                       onError={e => { e.target.src = categoryImages.other; }} />
@@ -276,14 +268,12 @@ export default function ResaleMarket() {
                     )}
                   </div>
 
-                  {/* Card body */}
                   <div className="p-4">
                     <div className="font-bold text-sm text-brand-text mb-1 leading-snug">{ev.name}</div>
                     <div className="flex items-center gap-1 text-[11px] text-brand-muted font-mono mb-3">
                       <MapPin size={10} strokeWidth={1.75} /> {ev.venue} · {ev.date}
                     </div>
 
-                    {/* Price row */}
                     <div className="flex justify-between items-end mb-3">
                       <div>
                         <div className="text-3xl font-bold text-fintech-slate tracking-tight font-mono leading-none">
@@ -299,7 +289,6 @@ export default function ResaleMarket() {
                       </div>
                     </div>
 
-                    {/* Ticket meta */}
                     <div className="flex gap-1.5 mb-3.5 flex-wrap">
                       {[
                         [Ticket, listing.quantity + "x ticket"],
@@ -312,7 +301,6 @@ export default function ResaleMarket() {
                       ))}
                     </div>
 
-                    {/* Buy button */}
                     {isOwn ? (
                       <div className="text-center py-2.5 bg-brand-canvas rounded-full text-xs text-brand-muted font-semibold">
                         Your listing

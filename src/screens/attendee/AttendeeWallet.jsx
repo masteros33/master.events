@@ -81,14 +81,16 @@ export default function AttendeeWallet() {
   return (
     <div className="bg-fintech-gray min-h-full pb-20 font-sans">
 
-      {/* Header */}
+      {/* ── Header — icon-only back button, no "Back" text label.
+      The browser back button now works correctly (history fix), so
+      the in-app text label was pure duplication. ── */}
       <div className={`sticky top-0 z-20 bg-white border-b border-gray-100 h-15 flex items-center justify-between ${desktop ? "px-10" : "px-4"}`}>
         <button onClick={() => setScreen("app")}
-          className="flex items-center gap-1.5 text-brand-muted text-sm font-medium hover:text-brand-text transition-colors">
-          <ArrowLeft size={15} strokeWidth={2} /> Back
+          className="w-9 h-9 rounded-full bg-brand-canvas border border-gray-100 flex items-center justify-center shrink-0">
+          <ArrowLeft size={16} strokeWidth={2} className="text-brand-text" />
         </button>
         <div className="font-extrabold text-base text-brand-text tracking-tight">My Wallet</div>
-        <div className="w-14" />
+        <div className="w-9" />
       </div>
 
       <div className={`mx-auto ${desktop ? "max-w-[600px] px-10 py-7" : "px-4 py-4"}`}>
@@ -99,7 +101,6 @@ export default function AttendeeWallet() {
           </div>
         ) : (
           <>
-            {/* Balance card */}
             <div className="bg-fintech-slate rounded-2xl p-6 mb-4">
               <div className="text-[11px] font-bold text-slate-400 tracking-widest font-mono mb-2">
                 AVAILABLE BALANCE
@@ -119,7 +120,6 @@ export default function AttendeeWallet() {
               </div>
             </div>
 
-            {/* Info card */}
             <div className="flex items-center gap-2.5 bg-pastel-blue rounded-xl px-4 py-3 mb-4">
               <Info size={16} strokeWidth={1.75} className="text-fintech-blue shrink-0" />
               <div className="text-xs text-brand-text leading-relaxed">
@@ -127,13 +127,11 @@ export default function AttendeeWallet() {
               </div>
             </div>
 
-            {/* Withdraw button */}
             <button onClick={() => setShowWithdraw(true)} disabled={!canWithdraw}
               className={`w-full py-4 rounded-full font-bold text-[15px] flex items-center justify-center gap-2 mb-6 transition-colors ${canWithdraw ? "bg-brand-orange hover:bg-brand-orange-hover text-white" : "bg-gray-100 text-brand-muted cursor-not-allowed"}`}>
               {canWithdraw ? <><Smartphone size={16} strokeWidth={1.75} /> Withdraw to MoMo</> : "Minimum GHS 10 to withdraw"}
             </button>
 
-            {/* Transaction history */}
             <div className="font-extrabold text-base text-brand-text tracking-tight mb-3.5">
               Transaction History
             </div>
@@ -180,7 +178,6 @@ export default function AttendeeWallet() {
         )}
       </div>
 
-      {/* ── Withdraw modal ── */}
       <AnimatePresence>
         {showWithdraw && (
           <>

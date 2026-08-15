@@ -35,8 +35,6 @@ const ITEMS_PER_PAGE_DESKTOP = 9;
 const ITEMS_PER_PAGE_MOBILE  = 6;
 const isDesktop = () => window.innerWidth > 768;
 
-// A description only counts as "real" if it exists, isn't just a restatement
-// of the event's own name, and has enough content to be useful.
 function hasRealDescription(desc, name) {
   const d = (desc || "").trim();
   if (!d) return false;
@@ -44,8 +42,6 @@ function hasRealDescription(desc, name) {
   return d.length >= 12;
 }
 
-// ── Tier icon — inferred from tier name text since the backend only
-// stores a plain name string, not a type key ──
 function tierIconFor(name) {
   const n = (name || "").toLowerCase();
   if (n.includes("vvip")) return Crown;
@@ -53,13 +49,6 @@ function tierIconFor(name) {
   return Ticket;
 }
 
-// ── DescriptionBlock — now matches PublicEventPage's "Overview"
-// section exactly: same heading text/size, same text-sm body at every
-// breakpoint (no larger text-[15px] variant on desktop), same
-// whitespace-pre-line handling, same bg-white empty-state card. Kept
-// as its own component here (rather than sharing one file) since
-// AttendeeHome and PublicEventPage are separate screens, but the
-// rendering is now identical between the two entry points. ──
 function DescriptionBlock({ desc, name, compact }) {
   const real = hasRealDescription(desc, name);
   return (
@@ -70,7 +59,7 @@ function DescriptionBlock({ desc, name, compact }) {
           {desc.trim()}
         </p>
       ) : (
-        <div className="flex items-center gap-2.5 bg-white border border-gray-100 rounded-xl px-3.5 py-3">
+        <div className="flex items-center gap-2.5 bg-brand-card border border-gray-100 rounded-xl px-3.5 py-3">
           <FileText size={15} strokeWidth={1.75} className="text-brand-muted shrink-0" />
           <span className="text-[13px] text-brand-muted">No description yet — check back closer to the event.</span>
         </div>
@@ -79,8 +68,6 @@ function DescriptionBlock({ desc, name, compact }) {
   );
 }
 
-// ── Tier picker — shown whenever the event has tiers. Mirrors the
-// picker on the public slug page so both entry points behave the same. ──
 function TierPicker({ tiers, selectedId, onSelect, compact }) {
   return (
     <div className={compact ? "mb-5" : "mb-6"}>
@@ -97,7 +84,7 @@ function TierPicker({ tiers, selectedId, onSelect, compact }) {
               className={`flex items-center justify-between px-4 py-3 rounded-xl border-2 text-left transition-colors ${
                 soldOut ? "border-gray-100 bg-gray-50 opacity-50 cursor-not-allowed"
                 : active ? "border-brand-orange bg-orange-50/30"
-                : "border-gray-200 bg-white"
+                : "border-gray-200 bg-brand-card"
               }`}>
               <div className="flex items-center gap-3 min-w-0">
                 <span className={`w-9 h-9 rounded-lg flex items-center justify-center shrink-0 ${active ? "bg-brand-orange text-white" : "bg-brand-canvas text-brand-muted"}`}>
@@ -137,7 +124,7 @@ function CategoryChip({ cat, active, onClick }) {
 function ResaleBanner({ onClick }) {
   return (
     <button onClick={onClick}
-      className="w-full bg-white border border-gray-100 rounded-2xl shadow-sm px-4 py-3.5 flex items-center justify-between text-left transition-shadow hover:shadow-md">
+      className="w-full bg-brand-card border border-gray-100 rounded-2xl shadow-sm px-4 py-3.5 flex items-center justify-between text-left transition-shadow hover:shadow-md">
       <div className="flex items-center gap-3 min-w-0">
         <div className="w-10 h-10 rounded-full bg-pastel-orange flex items-center justify-center shrink-0">
           <Tag size={18} strokeWidth={1.75} className="text-brand-orange" />
@@ -160,7 +147,7 @@ function MobileNavbar({ scrolled }) {
   const isLoggedIn = useStore(s => s.isLoggedIn);
 
   return (
-    <div className="flex items-center justify-between px-4 h-14 bg-white border-b border-gray-100">
+    <div className="flex items-center justify-between px-4 h-14 bg-brand-card border-b border-gray-100">
       <motion.div animate={{ justifyContent: scrolled ? "center" : "flex-start" }}
         className={`flex items-center gap-2 transition-all ${scrolled ? "flex-1 justify-center" : ""}`}>
         <div className="w-7 h-7 rounded-lg bg-brand-orange flex items-center justify-center shrink-0">
@@ -188,14 +175,13 @@ function MobileNavbar({ scrolled }) {
   );
 }
 
-// ── Redesigned event card ─────────────────────────────────────
 function EventCard({ ev, onClick }) {
   const hasTiers   = Array.isArray(ev.tiers) && ev.tiers.length > 0;
   const fromPrice  = hasTiers ? Math.min(...ev.tiers.map(t => parseFloat(t.price) || 0)) : ev.price;
 
   return (
     <motion.div whileHover={{ y: -3 }} whileTap={{ scale: 0.98 }} onClick={onClick}
-      className="bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow overflow-hidden cursor-pointer">
+      className="bg-brand-card rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow overflow-hidden cursor-pointer">
 
       <div className="relative overflow-hidden h-[190px] md:h-[220px]">
         <img src={ev.image} alt={ev.name} onError={e => { e.target.src = categoryImages.other; }}
@@ -255,17 +241,17 @@ function Pagination({ current, total, onChange }) {
   return (
     <div className="flex justify-center items-center gap-1.5 pt-8 pb-2">
       <button onClick={() => onChange(current - 1)} disabled={current === 1}
-        className="px-3.5 py-1.5 rounded-lg border border-gray-200 bg-white text-brand-text text-xs font-semibold font-mono disabled:opacity-40 disabled:cursor-not-allowed">
+        className="px-3.5 py-1.5 rounded-lg border border-gray-200 bg-brand-card text-brand-text text-xs font-semibold font-mono disabled:opacity-40 disabled:cursor-not-allowed">
         ← Prev
       </button>
       {Array.from({ length: total }, (_, i) => i + 1).map(p => (
         <button key={p} onClick={() => onChange(p)}
-          className={`w-8 h-8 rounded-lg text-xs font-mono font-semibold transition-colors ${p === current ? "bg-brand-orange text-white" : "border border-gray-200 bg-white text-brand-muted"}`}>
+          className={`w-8 h-8 rounded-lg text-xs font-mono font-semibold transition-colors ${p === current ? "bg-brand-orange text-white" : "border border-gray-200 bg-brand-card text-brand-muted"}`}>
           {p}
         </button>
       ))}
       <button onClick={() => onChange(current + 1)} disabled={current === total}
-        className="px-3.5 py-1.5 rounded-lg border border-gray-200 bg-white text-brand-text text-xs font-semibold font-mono disabled:opacity-40 disabled:cursor-not-allowed">
+        className="px-3.5 py-1.5 rounded-lg border border-gray-200 bg-brand-card text-brand-text text-xs font-semibold font-mono disabled:opacity-40 disabled:cursor-not-allowed">
         Next →
       </button>
     </div>
@@ -282,17 +268,12 @@ function InfoTile({ Icon, label, value }) {
   );
 }
 
-// ── EventDetailOverlay — tier-aware. When ev.tiers has entries, a
-// TierPicker renders above the buy button, the button is disabled
-// until a tier is chosen, and onCheckout receives the selected tier
-// so Checkout shows the right price. ──
 function EventDetailOverlay({ ev, onBack, onCheckout }) {
   const desktop   = isDesktop();
   const hasTiers  = Array.isArray(ev.tiers) && ev.tiers.length > 0;
   const remaining = ev.totalTickets - ev.ticketsSold;
   const soldPct   = Math.max(5, Math.min(100, ((ev.ticketsSold || 0) / (ev.totalTickets || 1)) * 100));
 
-  // Auto-select when there's only one tier — no real choice to make.
   const [selectedTier, setSelectedTier] = useState(hasTiers && ev.tiers.length === 1 ? ev.tiers[0] : null);
 
   const displayPrice = hasTiers ? (selectedTier ? selectedTier.price : null) : ev.price;
@@ -322,7 +303,7 @@ function EventDetailOverlay({ ev, onBack, onCheckout }) {
             <img src={ev.image} alt={ev.name} onError={e => { e.target.src = categoryImages.other; }}
               className="w-full h-full object-cover block" />
             <button onClick={onBack}
-              className="absolute top-3.5 left-3.5 w-9 h-9 rounded-full bg-white shadow-sm flex items-center justify-center text-brand-text">
+              className="absolute top-3.5 left-3.5 w-9 h-9 rounded-full bg-brand-card shadow-sm flex items-center justify-center text-brand-text">
               <ArrowLeft size={16} strokeWidth={2} />
             </button>
             <span className="absolute top-3.5 right-3.5 flex items-center gap-1 bg-brand-text text-white text-[9px] font-bold px-2.5 py-1 rounded-full">
@@ -333,7 +314,7 @@ function EventDetailOverlay({ ev, onBack, onCheckout }) {
             </span>
           </div>
 
-          <div className="bg-white px-4 py-4 border-b border-gray-100">
+          <div className="bg-brand-card px-4 py-4 border-b border-gray-100">
             <div className="font-extrabold text-lg text-brand-text leading-snug mb-1">{ev.name}</div>
             <div className="flex items-center gap-1 text-xs text-brand-muted">
               <MapPin size={12} strokeWidth={1.75} /> {ev.venue}{ev.city ? " · " + ev.city : ""}
@@ -432,7 +413,7 @@ function EventDetailOverlay({ ev, onBack, onCheckout }) {
             </div>
           )}
 
-          <div className="bg-white border border-gray-100 rounded-2xl shadow-sm overflow-hidden mb-6">
+          <div className="bg-brand-card border border-gray-100 rounded-2xl shadow-sm overflow-hidden mb-6">
             {[
               { Icon: Calendar, label: "WHEN",      value: ev.date || "TBA" },
               { Icon: Clock,    label: "TIME",      value: ev.time ? ev.time.substring(0, 5) : "TBA" },
@@ -469,7 +450,7 @@ function EventDetailOverlay({ ev, onBack, onCheckout }) {
             <TierPicker tiers={ev.tiers} selectedId={selectedTier?.id} onSelect={setSelectedTier} />
           )}
 
-          <div className="bg-white border border-gray-100 rounded-2xl shadow-sm p-5">
+          <div className="bg-brand-card border border-gray-100 rounded-2xl shadow-sm p-5">
             <div className="flex items-baseline gap-2 mb-4">
               <div className="text-[34px] font-extrabold text-brand-orange tracking-tight leading-none">
                 {hasTiers
@@ -493,7 +474,7 @@ function EventDetailOverlay({ ev, onBack, onCheckout }) {
   );
 }
 
-function EmptyState({ code, desktop }) {
+function EmptyState({ code }) {
   return (
     <div className="text-center py-20 px-5">
       <div className="text-[10px] font-bold text-brand-muted tracking-widest font-mono mb-4">{code}</div>
@@ -605,7 +586,7 @@ export default function AttendeeHome() {
   };
 
   const skeletonCard = (h) => (
-    <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
+    <div className="bg-brand-card rounded-2xl border border-gray-100 overflow-hidden">
       <div className="skeleton" style={{ height: h }} />
       <div className="p-4">
         <div className="skeleton" style={{ height: "14px", width: "70%", marginBottom: "8px", borderRadius: "6px" }} />
@@ -628,7 +609,7 @@ export default function AttendeeHome() {
         <div className="shrink-0 sticky top-0 z-40">
           {!isLoggedIn && <MobileNavbar scrolled={scrolled} />}
 
-          <div className="bg-white border-b border-gray-100 px-4">
+          <div className="bg-brand-card border-b border-gray-100 px-4">
             <div className="py-2.5">
               <div className="relative">
                 <Search size={14} strokeWidth={1.75} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-brand-muted" />
@@ -638,7 +619,7 @@ export default function AttendeeHome() {
                   onFocus={() => setSearchFocused(true)}
                   onBlur={() => setSearchFocused(false)}
                   placeholder="Search events..."
-                  className={`w-full pl-10 pr-10 py-2.5 rounded-xl border text-sm text-brand-text outline-none transition-colors ${searchFocused ? "border-brand-orange bg-white ring-2 ring-orange-100" : "border-gray-200 bg-brand-canvas"}`}
+                  className={`w-full pl-10 pr-10 py-2.5 rounded-xl border text-sm text-brand-text outline-none transition-colors ${searchFocused ? "border-brand-orange bg-brand-card ring-2 ring-orange-100" : "border-gray-200 bg-brand-canvas"}`}
                 />
                 {searchQ && (
                   <button onClick={() => setSearchQ("")}
@@ -684,7 +665,7 @@ export default function AttendeeHome() {
 
   return (
     <div className="bg-brand-canvas min-h-full pb-14">
-      <div className="sticky top-0 z-30 bg-white border-b border-gray-100">
+      <div className="sticky top-0 z-30 bg-brand-card border-b border-gray-100">
         <div className="px-10">
           <div className="flex gap-1.5 overflow-x-auto py-2.5" style={{ scrollbarWidth: "none" }}>
             {CATEGORIES.map(cat => (

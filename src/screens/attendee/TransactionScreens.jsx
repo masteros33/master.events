@@ -13,7 +13,7 @@ import {
 const API = "https://master-events-backend.onrender.com";
 const isDesktop = () => window.innerWidth > 768;
 
-const fieldClass = "w-full px-4 py-3.5 rounded-xl border border-gray-200 bg-white text-brand-text outline-none focus:border-brand-orange focus:ring-2 focus:ring-orange-100 transition-colors";
+const fieldClass = "w-full px-4 py-3.5 rounded-xl border border-gray-200 bg-brand-card text-brand-text outline-none focus:border-brand-orange focus:ring-2 focus:ring-orange-100 transition-colors";
 
 function tierIcon(name) {
   const n = (name || "").toLowerCase();
@@ -22,9 +22,6 @@ function tierIcon(name) {
   return Ticket;
 }
 
-// ── NEW: badge color scheme by tier — Regular stays neutral so it
-// doesn't compete visually, VIP gets blue, VVIP gets the brand orange
-// treatment so it reads as the premium tier at a glance ──
 function tierBadgeColor(name) {
   const n = (name || "").toLowerCase();
   if (n.includes("vvip")) return "bg-pastel-orange text-brand-orange border-brand-orange/20";
@@ -32,7 +29,6 @@ function tierBadgeColor(name) {
   return "bg-gray-100 text-gray-600 border-gray-200";
 }
 
-// ── Fintech primary button ────────────────────────────────────
 function PrimaryBtn({ children, onClick, disabled, loading }) {
   return (
     <button onClick={onClick} disabled={disabled || loading}
@@ -43,7 +39,6 @@ function PrimaryBtn({ children, onClick, disabled, loading }) {
   );
 }
 
-// ── Ghost button ──────────────────────────────────────────────
 function GhostBtn({ children, onClick }) {
   return (
     <button onClick={onClick}
@@ -53,10 +48,9 @@ function GhostBtn({ children, onClick }) {
   );
 }
 
-// ── Screen header (checkout / resale / transfer) ───────────────
 function ScreenHeader({ title, subtitle, onBack, badge }) {
   return (
-    <div className="flex items-center px-5 py-4 gap-3.5 border-b border-gray-100 bg-white shrink-0">
+    <div className="flex items-center px-5 py-4 gap-3.5 border-b border-gray-100 bg-brand-card shrink-0">
       <button onClick={onBack} className="w-9 h-9 rounded-xl bg-brand-canvas border border-gray-100 flex items-center justify-center shrink-0">
         <ArrowLeft size={16} strokeWidth={1.75} className="text-brand-text" />
       </button>
@@ -69,7 +63,6 @@ function ScreenHeader({ title, subtitle, onBack, badge }) {
   );
 }
 
-// ── Stat chip ─────────────────────────────────────────────────
 function StatChip({ Icon, label, value }) {
   return (
     <div className="flex-1 min-w-[70px] bg-fintech-gray rounded-xl px-2.5 py-3 text-center border border-gray-100">
@@ -80,13 +73,12 @@ function StatChip({ Icon, label, value }) {
   );
 }
 
-// ── Blockchain strip ──────────────────────────────────────────
 function ChainStrip({ txHash, tokenId }) {
   const url = txHash ? `https://amoy.polygonscan.com/tx/${txHash}` : null;
   return (
     <div className="flex items-center justify-between gap-2.5 bg-pastel-blue rounded-xl px-4 py-3">
       <div className="flex items-center gap-2.5">
-        <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center shrink-0">
+        <div className="w-8 h-8 rounded-full bg-brand-card flex items-center justify-center shrink-0">
           <Link2 size={15} strokeWidth={1.75} className="text-fintech-blue" />
         </div>
         <div>
@@ -98,11 +90,11 @@ function ChainStrip({ txHash, tokenId }) {
       </div>
       {url ? (
         <a href={url} target="_blank" rel="noreferrer"
-          className="flex items-center gap-1 text-[11px] font-semibold text-fintech-blue bg-white px-3 py-1.5 rounded-full whitespace-nowrap">
+          className="flex items-center gap-1 text-[11px] font-semibold text-fintech-blue bg-brand-card px-3 py-1.5 rounded-full whitespace-nowrap">
           Verify <ExternalLink size={11} strokeWidth={2} />
         </a>
       ) : (
-        <span className="text-[11px] font-semibold text-fintech-blue bg-white px-3 py-1.5 rounded-full whitespace-nowrap">
+        <span className="text-[11px] font-semibold text-fintech-blue bg-brand-card px-3 py-1.5 rounded-full whitespace-nowrap">
           Minting...
         </span>
       )}
@@ -110,7 +102,6 @@ function ChainStrip({ txHash, tokenId }) {
   );
 }
 
-// ── Security features grid ────────────────────────────────────
 function SecurityFeatures() {
   const items = [
     [ShieldCheck, "HMAC Secured", "Rotates every 10s"],
@@ -131,20 +122,18 @@ function SecurityFeatures() {
   );
 }
 
-// ── Perforated divider ────────────────────────────────────────
 function PerforatedLine() {
   return (
-    <div className="relative h-[26px] bg-white">
+    <div className="relative h-[26px] bg-brand-card">
       <span className="absolute -left-2.5 top-1/2 -translate-y-1/2 w-5 h-5 rounded-full bg-fintech-gray z-10" />
       <span className="absolute -right-2.5 top-1/2 -translate-y-1/2 w-5 h-5 rounded-full bg-fintech-gray z-10" />
       <svg width="100%" height="26" className="absolute top-0 left-0">
-        <line x1="20" y1="13" x2="99%" y2="13" stroke="#E5E7EB" strokeWidth="1.5" strokeDasharray="5 5" />
+        <line x1="20" y1="13" x2="99%" y2="13" stroke="var(--border)" strokeWidth="1.5" strokeDasharray="5 5" />
       </svg>
     </div>
   );
 }
 
-// ── Premium Ticket ────────────────────────────────────────────
 function PremiumTicket({ ev, ownerName, qrSrc, qrLoaded, qrError, refreshing, setQrLoaded, setQrError, timeLeft, isExpiringSoon, progressColor, ticketId, txHash, tokenId, status, quantity, tierName }) {
   const desktop  = isDesktop();
   const [showId, setShowId] = useState(false);
@@ -154,9 +143,8 @@ function PremiumTicket({ ev, ownerName, qrSrc, qrLoaded, qrError, refreshing, se
   const idMask = idStr.length > 8 ? idStr.slice(0, 8) + "••••••••" : "••••••••";
 
   return (
-    <div className="w-full mx-auto bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden" style={{ maxWidth: desktop ? "420px" : "100%" }}>
+    <div className="w-full mx-auto bg-brand-card rounded-3xl border border-gray-100 shadow-sm overflow-hidden" style={{ maxWidth: desktop ? "420px" : "100%" }}>
 
-      {/* Event image */}
       <div className="h-[160px] relative">
         {ev?.image
           ? <img src={ev.image} alt="" className="w-full h-full object-cover" />
@@ -166,7 +154,7 @@ function PremiumTicket({ ev, ownerName, qrSrc, qrLoaded, qrError, refreshing, se
           <Link2 size={9} strokeWidth={2.5} /> NFT · POLYGON
         </span>
         {ev?.category && (
-          <span className="absolute top-3 right-3 bg-white text-brand-text text-[9px] font-bold px-2.5 py-1 rounded-full uppercase">
+          <span className="absolute top-3 right-3 bg-brand-card text-brand-text text-[9px] font-bold px-2.5 py-1 rounded-full uppercase">
             {ev.category}
           </span>
         )}
@@ -175,9 +163,6 @@ function PremiumTicket({ ev, ownerName, qrSrc, qrLoaded, qrError, refreshing, se
       <div className="px-4 pt-3.5 pb-3">
         <div className="flex items-center justify-between gap-2 mb-1">
           <div className="text-[9px] font-bold text-brand-muted tracking-widest font-mono">YOUR TICKET</div>
-          {/* ── NEW: tier badge — only rendered when the ticket has a
-          tierName (tiered events). Non-tiered events show nothing
-          here, keeping the header the same as before for them. ── */}
           {tierName && (
             <span className={`flex items-center gap-1 text-[9px] font-bold px-2 py-1 rounded-full border ${tierBadgeColor(tierName)}`}>
               <TierIcon size={10} strokeWidth={2.5} /> {tierName.toUpperCase()}
@@ -201,9 +186,7 @@ function PremiumTicket({ ev, ownerName, qrSrc, qrLoaded, qrError, refreshing, se
 
       <PerforatedLine />
 
-      {/* Bottom half */}
       <div className="px-4 pt-1 pb-5 flex flex-col items-center gap-3.5">
-        {/* Owner */}
         <div className="w-full bg-pastel-green rounded-xl px-3.5 py-2.5 flex items-center gap-2.5">
           <Avatar seed={ownerName} name={ownerName} size={26} style={{ flexShrink: 0, borderRadius: "50%" }} />
           <div className="min-w-0 flex-1">
@@ -213,7 +196,6 @@ function PremiumTicket({ ev, ownerName, qrSrc, qrLoaded, qrError, refreshing, se
           <CheckCircle2 size={16} strokeWidth={2} className="text-fintech-green shrink-0" />
         </div>
 
-        {/* QR */}
         {qrSrc ? (
           <div className="relative">
             {(!qrLoaded && !qrError) && (
@@ -222,7 +204,7 @@ function PremiumTicket({ ev, ownerName, qrSrc, qrLoaded, qrError, refreshing, se
             <AnimatePresence>
               {refreshing && (
                 <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-                  className="absolute inset-0 bg-white/95 rounded-2xl flex flex-col items-center justify-center gap-1.5 z-10">
+                  className="absolute inset-0 bg-brand-card/95 rounded-2xl flex flex-col items-center justify-center gap-1.5 z-10">
                   <Loader2 size={20} className="text-brand-muted animate-spin" />
                   <span className="text-[10px] text-brand-muted">Refreshing...</span>
                 </motion.div>
@@ -247,7 +229,6 @@ function PremiumTicket({ ev, ownerName, qrSrc, qrLoaded, qrError, refreshing, se
           </div>
         )}
 
-        {/* QR countdown */}
         {status === "active" && (
           <div className="w-40">
             <div className="h-1 bg-gray-100 rounded-full overflow-hidden mb-1.5">
@@ -261,7 +242,6 @@ function PremiumTicket({ ev, ownerName, qrSrc, qrLoaded, qrError, refreshing, se
           </div>
         )}
 
-        {/* Ticket ID */}
         <div className="text-center">
           <button onClick={() => setShowId(s => !s)}
             className="bg-gray-100 px-3.5 py-1.5 rounded-full inline-flex items-center gap-1.5">
@@ -271,7 +251,6 @@ function PremiumTicket({ ev, ownerName, qrSrc, qrLoaded, qrError, refreshing, se
           {showId && <div className="text-[9px] text-amber-700 mt-1.5">Only share with door staff if QR unavailable</div>}
         </div>
 
-        {/* Blockchain */}
         <ChainStrip txHash={txHash} tokenId={tokenId} />
 
         {status === "active" && (
@@ -296,9 +275,6 @@ function PremiumTicket({ ev, ownerName, qrSrc, qrLoaded, qrError, refreshing, se
   );
 }
 
-// ═══════════════════════════════════════════════════════════════
-//  PAYMENT SUCCESS — fintech confirmation screen
-// ═══════════════════════════════════════════════════════════════
 export function PaymentSuccess() {
   const setScreen     = useStore(s => s.setScreen);
   const setActiveTab  = useStore(s => s.setActiveTab);
@@ -312,8 +288,7 @@ export function PaymentSuccess() {
       <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}
         className="w-full max-w-[460px]">
 
-        {/* Success card */}
-        <div className={`bg-white rounded-3xl border border-gray-100 shadow-sm mb-3 ${desktop ? "px-10 py-11" : "px-6 py-8"}`}>
+        <div className={`bg-brand-card rounded-3xl border border-gray-100 shadow-sm mb-3 ${desktop ? "px-10 py-11" : "px-6 py-8"}`}>
 
           <div className="text-center mb-7">
             <div className="w-[72px] h-[72px] rounded-full bg-pastel-green flex items-center justify-center mx-auto mb-5">
@@ -323,7 +298,6 @@ export function PaymentSuccess() {
             <p className="text-brand-muted text-sm leading-relaxed">Your NFT ticket is being minted on Polygon</p>
           </div>
 
-          {/* Amount */}
           <div className="bg-fintech-gray rounded-2xl px-5 py-4 mb-5 text-center border border-gray-100">
             <div className="text-[11px] font-semibold text-brand-muted tracking-wide font-mono mb-1.5">AMOUNT PAID</div>
             <div className="text-3xl font-bold text-brand-text tracking-tight font-mono">
@@ -334,7 +308,6 @@ export function PaymentSuccess() {
             )}
           </div>
 
-          {/* Event info */}
           {event && (
             <div className="bg-fintech-gray rounded-2xl p-4 mb-5 border border-gray-100">
               <div className="text-[9px] font-bold text-brand-muted tracking-widest font-mono mb-2">EVENT</div>
@@ -345,12 +318,10 @@ export function PaymentSuccess() {
             </div>
           )}
 
-          {/* Chain strip */}
           <div className="mb-6">
             <ChainStrip txHash={viewingTicket?.nft_tx_hash} tokenId={viewingTicket?.nft_token_id} />
           </div>
 
-          {/* Trust badges */}
           <div className="flex justify-center gap-4 mb-6 flex-wrap">
             {[[Lock,"Secured"],[Link2,"On-chain"],[Smartphone,"Instant"]].map(([Icon,label]) => (
               <span key={label} className="flex items-center gap-1.5 text-[11px] text-brand-muted">
@@ -368,9 +339,6 @@ export function PaymentSuccess() {
   );
 }
 
-// ═══════════════════════════════════════════════════════════════
-//  CHECKOUT — fintech payment screen, tier-aware, correct fee math
-// ═══════════════════════════════════════════════════════════════
 export function Checkout() {
   const checkoutEvent      = useStore(s => s.checkoutEvent);
   const selectedTier       = useStore(s => s.selectedTier);
@@ -393,7 +361,8 @@ export function Checkout() {
   const qty       = Math.max(1, parseInt(ticketQty) || 1);
   const subtotal  = unitPrice * qty;
   const total     = subtotal;
-  const isFree    = unitPrice === 0;
+  const effectivePrice = selectedTier ? parseFloat(selectedTier.price) : unitPrice;
+  const isFree    = effectivePrice === 0;
   const TierIcon  = tierIcon(selectedTier?.name);
 
   const onPay = async () => {
@@ -484,12 +453,12 @@ export function Checkout() {
                 : <div className="w-full h-full bg-brand-orange" />
               }
               {selectedTier?.name && (
-                <span className="absolute top-3 right-3 flex items-center gap-1 bg-white text-brand-text text-[10px] font-bold px-2.5 py-1.5 rounded-full">
+                <span className="absolute top-3 right-3 flex items-center gap-1 bg-brand-card text-brand-text text-[10px] font-bold px-2.5 py-1.5 rounded-full">
                   <TierIcon size={11} strokeWidth={2} className="text-brand-orange" /> {selectedTier.name}
                 </span>
               )}
             </div>
-            <div className="bg-white px-4 py-3.5">
+            <div className="bg-brand-card px-4 py-3.5">
               <div className="font-bold text-brand-text text-[15px] mb-1">{checkoutEvent.name}</div>
               <div className="flex items-center gap-1.5 text-brand-muted text-[11px] font-mono">
                 <Calendar size={11} strokeWidth={1.75} /> {checkoutEvent.date} · <MapPin size={11} strokeWidth={1.75} /> {checkoutEvent.venue}
@@ -498,7 +467,7 @@ export function Checkout() {
           </div>
 
           {!isFree && (
-            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm px-5 py-4.5 mb-4">
+            <div className="bg-brand-card rounded-2xl border border-gray-100 shadow-sm px-5 py-4.5 mb-4">
               <div className="text-[10px] font-bold text-brand-muted tracking-widest font-mono mb-3.5">QUANTITY</div>
               <div className="flex items-center gap-4">
                 <button onClick={() => setTicketQty(Math.max(1, qty - 1))}
@@ -511,7 +480,7 @@ export function Checkout() {
                     × GHS {unitPrice.toLocaleString()} each{selectedTier?.name ? ` (${selectedTier.name})` : ""}
                   </div>
                 </div>
-                <button onClick={() => setTicketQty(Math.min(10, qty + 1))}
+                <button onClick={() => setTicketQty(Math.min(5, qty + 1))}
                   className="w-11 h-11 rounded-xl bg-fintech-gray border border-gray-200 text-brand-text flex items-center justify-center">
                   <Plus size={18} strokeWidth={2} />
                 </button>
@@ -520,12 +489,12 @@ export function Checkout() {
           )}
 
           {!isFree && (
-            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm px-5 py-4.5 mb-4">
+            <div className="bg-brand-card rounded-2xl border border-gray-100 shadow-sm px-5 py-4.5 mb-4">
               <div className="text-[10px] font-bold text-brand-muted tracking-widest font-mono mb-3.5">PAYMENT METHOD</div>
               <div className="flex gap-2.5">
                 {[["momo", Smartphone, "Mobile Money"], ["card", CreditCard, "Card"]].map(([id, Icon, label]) => (
                   <button key={id} onClick={() => setPayMethod(id)}
-                    className={`flex-1 py-3.5 rounded-xl border-2 flex flex-col items-center gap-1.5 transition-colors ${payMethod === id ? "border-brand-orange bg-orange-50/20" : "border-gray-200 bg-white"}`}>
+                    className={`flex-1 py-3.5 rounded-xl border-2 flex flex-col items-center gap-1.5 transition-colors ${payMethod === id ? "border-brand-orange bg-orange-50/20" : "border-gray-200 bg-brand-card"}`}>
                     <Icon size={19} strokeWidth={1.75} className={payMethod === id ? "text-brand-orange" : "text-brand-muted"} />
                     <span className={`text-[13px] font-semibold ${payMethod === id ? "text-brand-orange" : "text-brand-muted"}`}>{label}</span>
                   </button>
@@ -589,9 +558,6 @@ export function Checkout() {
   );
 }
 
-// ═══════════════════════════════════════════════════════════════
-//  TICKET VIEW
-// ═══════════════════════════════════════════════════════════════
 export function TicketView() {
   const viewingTicket     = useStore(s => s.viewingTicket);
   const setScreen         = useStore(s => s.setScreen);
@@ -667,10 +633,9 @@ export function TicketView() {
           tierName={viewingTicket.tierName} />
       </div>
 
-      {/* Security accordion */}
       <div className={`mx-auto px-4 pb-2.5 ${desktop ? "max-w-[520px]" : ""}`}>
         <button onClick={() => setShowSecurity(!showSecurity)}
-          className="w-full flex items-center justify-between px-4 py-3 rounded-xl bg-white border border-gray-100 shadow-sm mb-2.5">
+          className="w-full flex items-center justify-between px-4 py-3 rounded-xl bg-brand-card border border-gray-100 shadow-sm mb-2.5">
           <span className="flex items-center gap-2">
             <ShieldCheck size={15} strokeWidth={1.75} className="text-brand-muted" />
             <span className="text-[13px] font-semibold text-brand-text">Security & Verification</span>
@@ -688,7 +653,6 @@ export function TicketView() {
         </AnimatePresence>
       </div>
 
-      {/* Action buttons */}
       {viewingTicket.status === "active" && (
         <div className={`mx-auto px-4 pb-2.5 flex gap-2.5 ${desktop ? "max-w-[520px]" : ""}`}>
           <button onClick={() => { setResaleTicket(viewingTicket); setResalePrice(""); setResaleError(""); setScreen("resale"); }}
@@ -709,9 +673,6 @@ export function TicketView() {
   );
 }
 
-// ═══════════════════════════════════════════════════════════════
-//  RESALE
-// ═══════════════════════════════════════════════════════════════
 export function Resale() {
   const resaleTicket        = useStore(s => s.resaleTicket);
   const resalePrice         = useStore(s => s.resalePrice);
@@ -734,13 +695,11 @@ export function Resale() {
       <div className="flex-1 overflow-y-auto" style={{ WebkitOverflowScrolling: "touch" }}>
         <div className={`mx-auto ${desktop ? "max-w-[480px] px-10 py-7" : "px-4 py-5"}`} style={{ paddingBottom: desktop ? "80px" : "80px" }}>
 
-          {/* Event info */}
-          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm px-4.5 py-4 mb-4">
+          <div className="bg-brand-card rounded-2xl border border-gray-100 shadow-sm px-4.5 py-4 mb-4">
             <div className="font-bold text-[15px] text-brand-text mb-1">{ev.name}</div>
-            <div className="text-xs text-brand-muted font-mono">Original: GHS {ev.price} · Max resale: GHS {ev.price - 1}</div>
+            <div className="text-xs text-brand-muted font-mono">Original: GHS {ev.price} · Max resale: GHS {ev.price}</div>
           </div>
 
-          {/* Fee info */}
           <div className="flex items-center gap-2.5 bg-pastel-orange rounded-xl px-4 py-3 mb-5">
             <Tag size={16} strokeWidth={1.75} className="text-brand-orange shrink-0" />
             <div>
@@ -749,11 +708,10 @@ export function Resale() {
             </div>
           </div>
 
-          {/* Price input */}
           <div className="mb-4">
             <div className="text-[11px] font-bold text-brand-muted tracking-wide font-mono mb-2">RESALE PRICE (GHS)</div>
             <input value={resalePrice} onChange={e => setResalePrice(e.target.value)} type="number"
-              placeholder={`Max GHS ${ev.price - 1}`}
+              placeholder={`Max GHS ${ev.price}`}
               className={`${fieldClass} text-xl font-bold tracking-tight font-mono ${resaleError ? "border-red-300" : ""}`} />
             <AnimatePresence>
               {resaleError && (
@@ -763,7 +721,6 @@ export function Resale() {
             </AnimatePresence>
           </div>
 
-          {/* Payout breakdown */}
           {price > 0 && (
             <div className="bg-fintech-gray rounded-2xl p-4 mb-5 border border-gray-100">
               <div className="text-[10px] font-bold text-brand-muted tracking-wide font-mono mb-3">PAYOUT BREAKDOWN</div>
@@ -787,9 +744,6 @@ export function Resale() {
   );
 }
 
-// ═══════════════════════════════════════════════════════════════
-//  RESALE SUCCESS
-// ═══════════════════════════════════════════════════════════════
 export function ResaleSuccess() {
   const setScreen    = useStore(s => s.setScreen);
   const setActiveTab = useStore(s => s.setActiveTab);
@@ -798,7 +752,7 @@ export function ResaleSuccess() {
   return (
     <div className={`bg-fintech-gray min-h-full flex items-center justify-center ${desktop ? "p-10" : "p-5"}`}>
       <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }} className="w-full max-w-[420px]">
-        <div className={`bg-white rounded-3xl border border-gray-100 shadow-sm mb-3 text-center ${desktop ? "px-10 py-11" : "px-6 py-8"}`}>
+        <div className={`bg-brand-card rounded-3xl border border-gray-100 shadow-sm mb-3 text-center ${desktop ? "px-10 py-11" : "px-6 py-8"}`}>
           <div className="w-[68px] h-[68px] rounded-2xl bg-pastel-orange flex items-center justify-center mx-auto mb-5">
             <Tag size={28} strokeWidth={1.75} className="text-brand-orange" />
           </div>
@@ -814,9 +768,6 @@ export function ResaleSuccess() {
   );
 }
 
-// ═══════════════════════════════════════════════════════════════
-//  TRANSFER
-// ═══════════════════════════════════════════════════════════════
 export function Transfer() {
   const transferTicket   = useStore(s => s.transferTicket);
   const transferEmail    = useStore(s => s.transferEmail);
@@ -838,7 +789,7 @@ export function Transfer() {
   if (transferDone) return (
     <div className={`bg-fintech-gray min-h-full flex items-center justify-center ${desktop ? "p-10" : "p-5"}`}>
       <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }} className="w-full max-w-[420px]">
-        <div className={`bg-white rounded-3xl border border-gray-100 shadow-sm mb-3 text-center ${desktop ? "px-10 py-11" : "px-6 py-8"}`}>
+        <div className={`bg-brand-card rounded-3xl border border-gray-100 shadow-sm mb-3 text-center ${desktop ? "px-10 py-11" : "px-6 py-8"}`}>
           <div className="w-[68px] h-[68px] rounded-full bg-pastel-green flex items-center justify-center mx-auto mb-5">
             <CheckCircle2 size={30} strokeWidth={1.75} className="text-fintech-green" />
           </div>
@@ -861,8 +812,7 @@ export function Transfer() {
       <div className="flex-1 overflow-y-auto" style={{ WebkitOverflowScrolling: "touch" }}>
         <div className={`mx-auto ${desktop ? "max-w-[480px] px-10 py-7" : "px-4 py-5"}`} style={{ paddingBottom: "80px" }}>
 
-          {/* Notes */}
-          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm px-4.5 py-4 mb-5">
+          <div className="bg-brand-card rounded-2xl border border-gray-100 shadow-sm px-4.5 py-4 mb-5">
             <div className="text-[10px] font-bold text-brand-muted tracking-wide font-mono mb-3">BEFORE YOU TRANSFER</div>
             {[
               [Link2, "NFT ownership moves to recipient on Polygon"],
@@ -877,7 +827,6 @@ export function Transfer() {
             ))}
           </div>
 
-          {/* Recipient fields */}
           <div className="mb-4">
             <div className="text-[11px] font-bold text-brand-muted tracking-wide font-mono mb-2">RECIPIENT NAME</div>
             <input placeholder="e.g. Kwame Mensah" value={transferName} onChange={e => setTransferName(e.target.value)} className={fieldClass} />
@@ -887,7 +836,6 @@ export function Transfer() {
             <input placeholder="e.g. kwame@email.com" value={transferEmail} onChange={e => setTransferEmail(e.target.value)} className={fieldClass} />
           </div>
 
-          {/* Warning */}
           <div className="flex items-center gap-2.5 bg-red-50 border border-red-100 rounded-xl px-4 py-3 mb-6">
             <AlertTriangle size={16} strokeWidth={1.75} className="text-red-600 shrink-0" />
             <span className="text-xs text-red-600 font-medium">Double-check the email — this cannot be undone.</span>

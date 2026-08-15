@@ -10,27 +10,60 @@ export default {
         brand: {
           orange: '#1c2e53',
           'orange-hover': '#16233F',
-          // ── FIX: these four were hardcoded light-mode-only hex
-          // values, so bg-brand-canvas / bg-brand-card / text-brand-text
-          // / text-brand-muted never responded to dark mode toggling —
-          // that's the root cause of the dark mode bug. index.css
-          // already defines proper light AND dark variants of these via
-          // --bg / --bg-card / --text-primary / --text-muted (switched
-          // by the [data-theme="dark"] selector) — pointing these
-          // tokens at those variables instead of fixed hex means every
-          // component using these classes now actually follows theme
-          // state automatically, with zero changes needed in any
-          // individual component file. ──
           canvas: 'var(--bg)',
           card:   'var(--bg-card)',
           text:   'var(--text-primary)',
           muted:  'var(--text-muted)',
+          // ── NEW: previously missing entirely, so every
+          // "border-gray-100" etc across the app fell back to
+          // Tailwind's hardcoded default gray scale below instead.
+          border:        'var(--border)',
+          'border-strong': 'var(--border-strong)',
+          subtle:        'var(--bg-subtle)',
+        },
+        // ── NEW: this is the real fix. Tailwind's DEFAULT gray scale
+        // (gray-50, gray-100, gray-200, gray-400, gray-600) is used
+        // hardcoded, unthemed, throughout nearly every screen in this
+        // app — for card borders, subtle backgrounds, and secondary
+        // text. Overriding these specific shades to point at the same
+        // CSS variables index.css already defines light/dark values
+        // for means every existing "bg-gray-100", "border-gray-200",
+        // "text-gray-400" etc across the ENTIRE codebase becomes
+        // theme-aware automatically — no component files need
+        // touching for this alone. Shades not listed here (500, 700,
+        // 800, 900) fall through to Tailwind's real defaults, since
+        // they're rarely used for backgrounds/borders in this app. ──
+        gray: {
+          50:  'var(--bg-subtle)',
+          100: 'var(--border)',
+          200: 'var(--border-strong)',
+          300: 'var(--border-strong)',
+          400: 'var(--text-muted)',
+          600: 'var(--text-secondary)',
+        },
+        // ── NEW: status colors (error/success backgrounds) also
+        // hardcoded — a light pink/green card looks genuinely wrong
+        // floating on a dark background. Mapping the light "-50"
+        // background shades to the real error/success bg variables
+        // fixes the worst of it; the darker text shades (red-600,
+        // emerald-700) stay Tailwind's real saturated defaults since
+        // those already read fine against a dark background. ──
+        red: {
+          50: 'var(--error-bg)',
+        },
+        emerald: {
+          50: 'var(--success-bg)',
         },
         fintech: {
           slate: '#0F172A',
           green: '#10B981',
           blue: '#2563EB',
-          gray: '#F8FAFC',
+          // ── FIX: was a hardcoded light hex, used across Checkout,
+          // TicketView, PaymentSuccess, Resale, Transfer, and
+          // OrganizerWallet as a page-background layer distinct from
+          // brand-canvas. Now points at the same --bg-subtle variable
+          // that already has correct light/dark values defined. ──
+          gray: 'var(--bg-subtle)',
         },
         pastel: {
           orange: '#FFEADF',

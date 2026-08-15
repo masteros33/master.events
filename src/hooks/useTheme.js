@@ -3,7 +3,7 @@ import { useEffect, useState, useCallback } from "react";
 const STORAGE_KEY = "me_theme";
 
 function getSystemTheme() {
-  if (typeof window === "undefined") return "dark";
+  if (typeof window === "undefined") return "light";
   return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
 }
 
@@ -18,7 +18,6 @@ function applyTheme(resolved) {
   root.style.colorScheme = resolved;
 }
 
-// ── Inject blocking script — prevents flash on first load ──
 const THEME_SCRIPT = `
 (function(){
   try {
@@ -40,12 +39,10 @@ export function useTheme() {
 
   const resolved = getResolvedTheme(preference);
 
-  // Apply on mount + preference change
   useEffect(() => {
     applyTheme(resolved);
   }, [resolved]);
 
-  // Listen for OS theme changes when pref is "system"
   useEffect(() => {
     if (preference !== "system") return;
     const mq = window.matchMedia("(prefers-color-scheme: dark)");

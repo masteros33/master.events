@@ -1,16 +1,16 @@
 import React, { useEffect, useState, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  Link2, Calendar, MapPin, CheckCircle2, Wallet, CreditCard, PartyPopper,
-  Camera, Lock, Search, DoorOpen, Ticket, Landmark, Globe, Bell, Pause, Play,
-  X, Users, Tag, LayoutDashboard, ArrowLeft, Plus, ChevronDown, ChevronUp,
-  RefreshCw, Download, Copy, Check, ScanLine, Crown, Star, Sparkles,
+  Link, Calendar, MapPin, CheckCircle, Wallet, CreditCard, Confetti,
+  Camera, Lock, MagnifyingGlass, DoorOpen, Ticket, Bank, Globe, Bell, Pause, Play,
+  X, Users, Tag, SquaresFour, ArrowLeft, Plus, CaretDown, CaretUp,
+  ArrowsClockwise, DownloadSimple, Copy, Check, Scan, Crown, Star, Sparkle,
   ShieldCheck, Clock,
-} from "lucide-react";
+} from "@phosphor-icons/react";
 import useStore from "../../store/useStore";
 import { eventsAPI } from "../../api";
 
-const CHART = { orange: "#FF5A1F", green: "#10B981", blue: "#2563EB", red: "#DC2626" };
+const CHART = { orange: "#1c2e53", green: "#10B981", blue: "#2563EB", red: "#DC2626" };
 
 const CURRENCIES = [
   { code:"GHS", symbol:"₵" }, { code:"USD", symbol:"$" },
@@ -27,7 +27,7 @@ const TIER_PRESETS = [
   { key:"regular", label:"Regular", Icon:Ticket },
   { key:"vip",     label:"VIP",     Icon:Star },
   { key:"vvip",    label:"VVIP",    Icon:Crown },
-  { key:"custom",  label:"Custom",  Icon:Sparkles },
+  { key:"custom",  label:"Custom",  Icon:Sparkle },
 ];
 
 const catImg = {
@@ -66,16 +66,14 @@ const mapEvent = e => ({
   isApproved:   e.is_approved !== undefined ? e.is_approved : true,
 });
 
-const pctColorClass = pct => pct > 80 ? "text-red-600" : "text-brand-orange";
-const pctBarClass   = pct => pct > 80 ? "bg-red-600" : "bg-brand-orange";
+const pctColorClass = pct => pct > 80 ? "text-red-600" : "text-brand-accent";
+const pctBarClass   = pct => pct > 80 ? "bg-red-600" : "bg-brand-accent";
 
-// ── FIX: bg-white → bg-brand-card so form inputs render as real dark
-// cards in dark mode instead of staying hardcoded light ──
 const inputClass = (err) =>
   `w-full px-3.5 py-2.5 rounded-xl border bg-brand-card text-sm text-brand-text outline-none transition-colors ${
-    err ? "border-red-300" : "border-gray-200 focus:border-brand-orange"
-  } focus:ring-2 focus:ring-orange-100`;
-const labelClass = "text-[11px] font-semibold text-brand-muted mb-1.5 block uppercase tracking-wide";
+    err ? "border-red-300" : "border-brand-hairline focus:border-brand-accent"
+  } focus:ring-2 focus:ring-brand-accent/20`;
+const labelClass = "text-xs font-semibold text-brand-muted mb-1.5 block uppercase tracking-wide";
 
 function dlCSV(events) {
   if (!events.length) return;
@@ -136,7 +134,6 @@ function Ring({ pct = 0, size = 44, color = CHART.orange, bg = "#E5E7EB" }) {
   );
 }
 
-// ── FIX: bg-white → bg-brand-card ──
 function EventCard({ ev, onClick }) {
   const isFree = ev.event_type === "free";
   const pct    = ev.totalTickets > 0 ? Math.round((ev.ticketsSold/ev.totalTickets)*100) : 0;
@@ -145,46 +142,44 @@ function EventCard({ ev, onClick }) {
 
   return (
     <motion.div whileHover={{ y: -3 }} whileTap={{ scale: 0.98 }} onClick={onClick}
-      className="bg-brand-card rounded-3xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow overflow-hidden cursor-pointer min-w-[220px] w-full">
+      className="bg-brand-card rounded-2xl border border-brand-hairline hover:shadow-[0_1px_2px_rgba(15,23,42,0.04)] transition-shadow overflow-hidden cursor-pointer min-w-[220px] w-full">
       <div className="h-[140px] relative overflow-hidden">
         <img src={ev.image} alt={ev.name} onError={e => { e.target.src = catImg.other; }} className="w-full h-full object-cover object-top block" />
 
-        <div className="absolute inset-x-0 top-0 h-12 bg-gradient-to-b from-black/30 to-transparent pointer-events-none" />
-
         <div className="absolute top-2.5 left-2.5 flex gap-1.5">
-          <span className="bg-brand-text text-white text-[8px] font-bold px-2 py-1 rounded-full font-mono">{ev.category.toUpperCase()}</span>
-          {isFree && <span className="bg-fintech-green text-white text-[8px] font-bold px-2 py-1 rounded-full font-mono">FREE</span>}
+          <span className="bg-brand-text text-white text-xs font-medium px-2 py-1 rounded-full">{ev.category.toUpperCase()}</span>
+          {isFree && <span className="bg-emerald-600 text-white text-xs font-medium px-2 py-1 rounded-full">FREE</span>}
         </div>
 
         {!ev.isApproved ? (
           <div className="absolute top-2.5 right-2.5 flex items-center gap-1.5 px-2 py-1 rounded-full bg-amber-500">
-            <Clock size={9} strokeWidth={2.5} className="text-white" />
-            <span className="text-[8px] font-bold text-white font-mono">PENDING</span>
+            <Clock size={9} weight="light" className="text-white" />
+            <span className="text-xs font-medium text-white">PENDING</span>
           </div>
         ) : (
-          <div className={`absolute top-2.5 right-2.5 flex items-center gap-1.5 px-2 py-1 rounded-full ${ev.salesOpen ? "bg-fintech-green" : "bg-gray-500"}`}>
+          <div className={`absolute top-2.5 right-2.5 flex items-center gap-1.5 px-2 py-1 rounded-full ${ev.salesOpen ? "bg-emerald-600" : "bg-gray-500"}`}>
             <span className="w-1.5 h-1.5 rounded-full bg-white" />
-            <span className="text-[8px] font-bold text-white font-mono">{ev.salesOpen ? "LIVE" : "CLOSED"}</span>
+            <span className="text-xs font-medium text-white">{ev.salesOpen ? "LIVE" : "CLOSED"}</span>
           </div>
         )}
       </div>
 
       <div className="p-3.5 pb-4">
-        <div className="font-bold text-[13px] text-brand-text mb-0.5 truncate">{ev.name}</div>
-        <div className="flex items-center gap-1 text-[11px] text-brand-muted mb-3 font-mono truncate">
-          <Calendar size={10} strokeWidth={1.75} /> {ev.date} · <MapPin size={10} strokeWidth={1.75} /> {ev.city}
+        <div className="font-medium text-[13px] text-brand-text mb-0.5 truncate">{ev.name}</div>
+        <div className="flex items-center gap-1 text-xs text-brand-muted mb-3 truncate">
+          <Calendar size={10} weight="light" /> {ev.date} · <MapPin size={10} weight="light" /> {ev.city}
         </div>
 
         <div className="flex items-center justify-between">
           <div>
-            <div className={`text-base font-extrabold tracking-tight leading-none ${isFree ? "text-fintech-green" : "text-brand-orange"}`}>
+            <div className={`text-[17px] font-semibold tracking-tight tabular-nums leading-none ${isFree ? "text-emerald-700" : "text-brand-accent"}`}>
               {isFree ? `${(ev.regs||ev.ticketsSold).toLocaleString()} reg` : `${ev.currency} ${rev.toLocaleString()}`}
             </div>
-            <div className="text-[10px] text-brand-muted mt-1 font-mono">{ev.ticketsSold}/{ev.totalTickets} · {pct}% full</div>
+            <div className="text-xs text-brand-muted mt-1 tabular-nums">{ev.ticketsSold}/{ev.totalTickets} · {pct}% full</div>
           </div>
           <div className="relative flex items-center justify-center">
             <Ring pct={pct} size={44} color={ringColor} />
-            <span className={`absolute text-[9px] font-bold font-mono ${pctColorClass(pct)}`}>{pct}%</span>
+            <span className={`absolute text-xs font-medium tabular-nums ${pctColorClass(pct)}`}>{pct}%</span>
           </div>
         </div>
       </div>
@@ -197,11 +192,11 @@ function ActivityFeed({ events }) {
   const [loading, setLoading] = useState(true);
 
   const typeConfig = {
-    sale:        { Icon: Ticket,    color: "text-fintech-green", bg: "bg-pastel-green", label: "Ticket purchased" },
-    resale_sale: { Icon: RefreshCw, color: "text-fintech-blue",  bg: "bg-pastel-blue",  label: "Resale sale" },
-    withdrawal:  { Icon: Wallet,    color: "text-brand-orange",  bg: "bg-pastel-orange", label: "Withdrawal" },
-    refund:      { Icon: RefreshCw, color: "text-red-600",       bg: "bg-red-50",        label: "Refund" },
-    fee:         { Icon: Landmark,  color: "text-brand-muted",   bg: "bg-gray-100",      label: "Platform fee" },
+    sale:        { Icon: Ticket,    color: "text-emerald-700", bg: "bg-emerald-50", label: "Ticket purchased" },
+    resale_sale: { Icon: ArrowsClockwise, color: "text-blue-700",  bg: "bg-blue-50",  label: "Resale sale" },
+    withdrawal:  { Icon: Wallet,    color: "text-brand-accent",  bg: "bg-[var(--brand-light)]", label: "Withdrawal" },
+    refund:      { Icon: ArrowsClockwise, color: "text-red-600",       bg: "bg-red-50",        label: "Refund" },
+    fee:         { Icon: Bank,  color: "text-brand-muted",   bg: "bg-brand-hairline",      label: "Platform fee" },
   };
 
   const timeAgo = (iso) => {
@@ -233,8 +228,8 @@ function ActivityFeed({ events }) {
   return (
     <div className="flex flex-col">
       <div className="flex items-center gap-2 mb-3">
-        <span className="w-1.5 h-1.5 rounded-full bg-fintech-green" />
-        <span className="text-[10px] font-bold text-fintech-green font-mono tracking-widest">LIVE ACTIVITY</span>
+        <span className="w-1.5 h-1.5 rounded-full bg-emerald-600" />
+        <span className="text-xs font-medium text-emerald-700 tracking-widest">LIVE ACTIVITY</span>
       </div>
 
       {loading ? (
@@ -250,19 +245,19 @@ function ActivityFeed({ events }) {
             return (
               <motion.div key={item.id}
                 initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, height: 0 }} transition={{ duration: 0.22 }}
-                className="flex items-center gap-2.5 py-2.5 border-b border-gray-50 last:border-b-0">
-                <div className={`w-8 h-8 rounded-lg ${cfg.bg} flex items-center justify-center shrink-0`}>
-                  <cfg.Icon size={14} strokeWidth={2} className={cfg.color} />
+                className="flex items-center gap-2.5 py-2.5 border-b border-brand-hairline last:border-b-0">
+                <div className={`w-8 h-8 rounded-xl ${cfg.bg} flex items-center justify-center shrink-0`}>
+                  <cfg.Icon size={14} weight="light" className={cfg.color} />
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="text-[13px] font-semibold text-brand-text truncate">{cfg.label}</div>
-                  <div className="text-[10px] text-brand-muted truncate">{item.description}</div>
+                  <div className="text-xs text-brand-muted truncate">{item.description}</div>
                 </div>
                 <div className="text-right shrink-0">
-                  <div className="text-[12px] font-bold text-fintech-slate font-mono">
+                  <div className="text-xs font-medium text-brand-text tabular-nums">
                     {item.type === "withdrawal" ? "-" : "+"}GHS {item.amount.toLocaleString()}
                   </div>
-                  <div className="text-[9px] text-brand-muted font-mono mt-0.5">{timeAgo(item.created_at)}</div>
+                  <div className="text-xs text-brand-muted mt-0.5">{timeAgo(item.created_at)}</div>
                 </div>
               </motion.div>
             );
@@ -279,20 +274,20 @@ function FillChart({ events }) {
     <div className="flex flex-col gap-3">
       {events.map(e => {
         const pct = e.totalTickets > 0 ? Math.round((e.ticketsSold/e.totalTickets)*100) : 0;
-        const barClass  = pct >= 85 ? "bg-red-600" : pct >= 55 ? "bg-brand-orange" : "bg-fintech-green";
-        const textClass = pct >= 85 ? "text-red-600" : pct >= 55 ? "text-brand-orange" : "text-fintech-green";
+        const barClass  = pct >= 85 ? "bg-red-600" : pct >= 55 ? "bg-brand-accent" : "bg-emerald-600";
+        const textClass = pct >= 85 ? "text-red-600" : pct >= 55 ? "text-brand-accent" : "text-emerald-700";
         return (
           <div key={e.id}>
             <div className="flex justify-between mb-1.5">
               <div className="flex items-center gap-1.5 min-w-0">
-                <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded font-mono shrink-0 ${e.event_type==="free" ? "text-fintech-green bg-pastel-green" : "text-brand-orange bg-pastel-orange"}`}>
+                <span className={`text-xs font-medium px-1.5 py-0.5 rounded shrink-0 ${e.event_type==="free" ? "text-emerald-700 bg-emerald-50" : "text-brand-accent bg-[var(--brand-light)]"}`}>
                   {e.event_type==="free" ? "FREE" : e.currency}
                 </span>
                 <span className="text-xs font-medium text-brand-text truncate">{e.name}</span>
               </div>
-              <span className={`text-xs font-bold font-mono shrink-0 ml-2 ${textClass}`}>{pct}%</span>
+              <span className={`text-xs font-medium tabular-nums shrink-0 ml-2 ${textClass}`}>{pct}%</span>
             </div>
-            <div className="h-[5px] bg-gray-100 rounded-full overflow-hidden">
+            <div className="h-[5px] bg-brand-hairline rounded-full overflow-hidden">
               <motion.div initial={{ width:0 }} animate={{ width:`${Math.max(1,pct)}%` }} transition={{ duration:0.7, ease:"easeOut" }}
                 className={`h-full rounded-full ${barClass}`} />
             </div>
@@ -303,62 +298,60 @@ function FillChart({ events }) {
   );
 }
 
-// ── FIX: bg-white → bg-brand-card ──
 function Panel({ children, className = "" }) {
-  return <div className={`bg-brand-card border border-gray-100 rounded-3xl p-5 shadow-sm ${className}`}>{children}</div>;
+  return <div className={`bg-brand-card border border-brand-hairline rounded-2xl p-5 ${className}`}>{children}</div>;
 }
 
 function SectionHead({ label, title, action }) {
   return (
     <div className="flex justify-between items-end mb-4.5 mb-5">
       <div>
-        {label && <div className="text-[10px] font-bold text-brand-orange tracking-widest mb-1 font-mono">{label}</div>}
-        <h2 className="text-lg font-bold text-brand-text tracking-tight m-0">{title}</h2>
+        {label && <div className="text-xs font-medium text-brand-accent tracking-widest mb-1">{label}</div>}
+        <h2 className="text-xl font-semibold tracking-[-0.02em] text-brand-text m-0">{title}</h2>
       </div>
       {action}
     </div>
   );
 }
 
-// ── FIX: bg-white → bg-brand-card ──
 function EventRow({ ev, onClick }) {
   const pct    = ev.totalTickets > 0 ? Math.round((ev.ticketsSold/ev.totalTickets)*100) : 0;
   const isFree = ev.event_type === "free";
   return (
     <motion.div whileHover={{ y: -1 }} whileTap={{ scale: 0.99 }} onClick={onClick}
-      className={`bg-brand-card border rounded-2xl shadow-sm overflow-hidden cursor-pointer transition-shadow hover:shadow-md flex ${tab() ? "flex-row" : "flex-col"} ${!ev.isApproved ? "border-amber-200" : "border-gray-100"}`}>
+      className={`bg-brand-card border rounded-2xl overflow-hidden cursor-pointer transition-shadow hover:shadow-[0_1px_2px_rgba(15,23,42,0.04)] flex ${tab() ? "flex-row" : "flex-col"} ${!ev.isApproved ? "border-amber-200" : "border-brand-hairline"}`}>
       <div className={`relative shrink-0 ${tab() ? "w-40 h-auto min-h-[80px]" : "w-full h-[120px]"}`}>
         <img src={ev.image} alt={ev.name} onError={e=>{e.target.src=catImg.other}} className="w-full h-full object-cover object-top block" />
         <div className="absolute top-2 left-2 flex gap-1">
-          <span className="bg-brand-text text-white text-[8px] font-bold px-1.5 py-0.5 rounded font-mono">NFT</span>
-          {isFree && <span className="bg-fintech-green text-white text-[8px] font-bold px-1.5 py-0.5 rounded font-mono">FREE</span>}
+          <span className="bg-brand-text text-white text-xs font-medium px-1.5 py-0.5 rounded">NFT</span>
+          {isFree && <span className="bg-emerald-600 text-white text-xs font-medium px-1.5 py-0.5 rounded">FREE</span>}
         </div>
         {!ev.isApproved ? (
-          <div className="absolute top-2 right-2 flex items-center gap-1 px-1.5 py-0.5 rounded font-mono text-[8px] font-bold text-white bg-amber-500">
-            <Clock size={8} strokeWidth={2.5} /> PENDING
+          <div className="absolute top-2 right-2 flex items-center gap-1 px-1.5 py-0.5 rounded text-xs font-medium text-white bg-amber-500">
+            <Clock size={8} weight="light" /> PENDING
           </div>
         ) : (
-          <div className={`absolute top-2 right-2 flex items-center gap-1 px-1.5 py-0.5 rounded font-mono text-[8px] font-bold text-white ${ev.salesOpen ? "bg-fintech-green" : "bg-gray-500"}`}>
+          <div className={`absolute top-2 right-2 flex items-center gap-1 px-1.5 py-0.5 rounded text-xs font-medium text-white ${ev.salesOpen ? "bg-emerald-600" : "bg-gray-500"}`}>
             <span className="w-1 h-1 rounded-full bg-white" /> {ev.salesOpen ? "LIVE" : "CLOSED"}
           </div>
         )}
       </div>
       <div className="flex-1 p-4 flex flex-col justify-between min-w-0">
         <div>
-          <div className="text-[10px] font-medium text-brand-muted uppercase tracking-wide mb-1 font-mono">{ev.category} · {ev.country}</div>
-          <div className="text-[15px] font-bold text-brand-text tracking-tight mb-1 truncate">{ev.name}</div>
+          <div className="text-xs font-medium text-brand-muted uppercase tracking-wide mb-1">{ev.category} · {ev.country}</div>
+          <div className="text-[15px] font-medium text-brand-text tracking-tight mb-1 truncate">{ev.name}</div>
           <div className="flex items-center gap-1 text-xs text-brand-muted mb-3">
-            <MapPin size={11} strokeWidth={1.75} /> {ev.venue} · <Calendar size={11} strokeWidth={1.75} /> {ev.date}
+            <MapPin size={11} weight="light" /> {ev.venue} · <Calendar size={11} weight="light" /> {ev.date}
           </div>
         </div>
         <div>
           <div className="flex justify-between items-center mb-1.5">
-            <span className="text-[13px] font-bold text-fintech-green font-mono">
+            <span className="text-[13px] font-medium text-emerald-700 tabular-nums">
               {isFree ? `${(ev.regs||ev.ticketsSold).toLocaleString()} registered` : `${ev.currency} ${Math.round(ev.ticketsSold*ev.price*0.95).toLocaleString()}`}
             </span>
-            <span className="text-[10px] text-brand-muted font-mono">{ev.ticketsSold}/{ev.totalTickets} · {pct}%</span>
+            <span className="text-xs text-brand-muted tabular-nums">{ev.ticketsSold}/{ev.totalTickets} · {pct}%</span>
           </div>
-          <div className="h-1 bg-gray-100 rounded-full overflow-hidden">
+          <div className="h-1 bg-brand-hairline rounded-full overflow-hidden">
             <motion.div initial={{ width:0 }} animate={{ width:`${pct}%` }} transition={{ duration:0.7, ease:"easeOut" }}
               className={`h-full rounded-full ${pctBarClass(pct)}`} />
           </div>
@@ -415,23 +408,23 @@ export function OrganizerHome() {
 
         <div className="flex justify-between items-start mb-6 flex-wrap gap-3">
           <div>
-            <p className="text-xs text-brand-muted mb-1 font-mono tracking-wide">ORGANIZER DASHBOARD</p>
-            <h1 className={`font-extrabold text-brand-text tracking-tight mb-0.5 ${isDesk ? "text-2xl" : "text-xl"}`}>
+            <p className="text-xs text-brand-muted mb-1 tracking-wide">ORGANIZER DASHBOARD</p>
+            <h1 className={`font-semibold text-brand-text tracking-tight mb-0.5 ${isDesk ? "text-2xl" : "text-xl"}`}>
               {isDesk ? `${greeting}, ${currentUser?.first_name}` : `Hi ${currentUser?.first_name}`}
             </h1>
-            <p className="text-[13px] text-brand-muted m-0">
+            <p className="text-[13px] text-brand-muted m-0 tabular-nums">
               {orgEvents.length} event{orgEvents.length!==1?"s":""} · {live} live · {orgEvents.reduce((s,e)=>s+e.ticketsSold,0).toLocaleString()} tickets sold
             </p>
           </div>
           <div className="flex gap-2 items-center shrink-0">
-            <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-fintech-slate/5 border border-fintech-slate/15">
-              <span className="w-1.5 h-1.5 rounded-full bg-fintech-slate" />
-              <span className="text-[10px] font-semibold text-fintech-slate font-mono">POLYGON</span>
+            <div className="flex items-center gap-1.5 h-7 px-3 rounded-full border border-brand-hairline text-brand-accent" style={{ background: "var(--brand-light)" }}>
+              <span className="w-1.5 h-1.5 rounded-full bg-brand-accent" />
+              <span className="text-xs font-medium">POLYGON</span>
             </div>
             {isDesk && (
               <motion.button whileHover={{ scale:1.02 }} whileTap={{ scale:0.97 }} onClick={() => setScreen("addEvent")}
-                className="flex items-center gap-1.5 px-4 py-2.5 bg-brand-orange hover:bg-brand-orange-hover text-white rounded-full text-[13px] font-bold transition-colors">
-                <Plus size={14} strokeWidth={2.5} /> Create Event
+                className="flex items-center gap-1.5 px-4 h-11 rounded-xl bg-brand-accent hover:bg-brand-accent-hover text-white text-sm font-medium transition-colors">
+                <Plus size={14} weight="light" /> Create Event
               </motion.button>
             )}
           </div>
@@ -441,13 +434,13 @@ export function OrganizerHome() {
           <motion.div initial={{ opacity:0, y:-6 }} animate={{ opacity:1, y:0 }}
             className="flex items-center gap-3 bg-amber-50 border border-amber-200 rounded-2xl px-4 py-3.5 mb-5">
             <div className="w-9 h-9 rounded-full bg-amber-100 flex items-center justify-center shrink-0">
-              <ShieldCheck size={16} strokeWidth={1.75} className="text-amber-700" />
+              <ShieldCheck size={16} weight="light" className="text-amber-700" />
             </div>
             <div>
-              <div className="text-[13px] font-bold text-amber-800">
+              <div className="text-[13px] font-medium text-amber-800">
                 {pendingReview} event{pendingReview > 1 ? "s" : ""} pending review
               </div>
-              <div className="text-[11px] text-amber-700 mt-0.5">
+              <div className="text-xs text-amber-700 mt-0.5">
                 New events are reviewed before going live to keep the platform safe for attendees. This usually doesn't take long.
               </div>
             </div>
@@ -459,22 +452,22 @@ export function OrganizerHome() {
         ) : (
           <>
             <div className="mb-4 flex items-center gap-2.5 flex-wrap">
-              <div className="text-[11px] font-semibold text-brand-muted font-mono">VIEWING STATS FOR:</div>
+              <div className="text-xs font-semibold text-brand-muted">VIEWING STATS FOR:</div>
               <div className="relative" onClick={e => e.stopPropagation()}>
                 <motion.button whileTap={{ scale:0.97 }} onClick={() => setDropOpen(!dropOpen)}
-                  className={`flex items-center gap-2 px-3.5 py-1.5 bg-brand-card border rounded-xl cursor-pointer text-[13px] font-semibold text-brand-text shadow-sm transition-colors ${dropOpen ? "border-brand-orange" : "border-gray-200"}`}>
-                  <span className={`w-2 h-2 rounded-full ${statsView === "all" ? "bg-brand-orange" : "bg-fintech-green"}`} />
+                  className={`flex items-center gap-2 px-3.5 py-1.5 bg-brand-card border rounded-xl cursor-pointer text-[13px] font-semibold text-brand-text transition-colors ${dropOpen ? "border-brand-accent" : "border-brand-hairline"}`}>
+                  <span className={`w-2 h-2 rounded-full ${statsView === "all" ? "bg-brand-accent" : "bg-emerald-600"}`} />
                   {statsView === "all" ? "All Events" : selectedEvent?.name || "Select event"}
-                  {dropOpen ? <ChevronUp size={13} className="text-brand-muted" /> : <ChevronDown size={13} className="text-brand-muted" />}
+                  {dropOpen ? <CaretUp size={13} className="text-brand-muted" /> : <CaretDown size={13} className="text-brand-muted" />}
                 </motion.button>
                 <AnimatePresence>
                   {dropOpen && (
                     <motion.div initial={{ opacity:0, y:-8 }} animate={{ opacity:1, y:0 }} exit={{ opacity:0, y:-8 }}
-                      className="absolute top-[calc(100%+6px)] left-0 min-w-[220px] bg-brand-card border border-gray-100 rounded-2xl shadow-sm z-[100] overflow-hidden">
+                      className="absolute top-[calc(100%+6px)] left-0 min-w-[220px] bg-brand-card border border-brand-hairline rounded-2xl z-[100] overflow-hidden">
                       {[{ id:"all", name:"All Events" }, ...orgEvents].map(e => (
                         <div key={e.id} onClick={() => { setStatsView(String(e.id)); setDropOpen(false); }}
-                          className={`flex items-center gap-2 px-3.5 py-2.5 cursor-pointer transition-colors hover:bg-pastel-orange ${String(statsView)===String(e.id) ? "bg-pastel-orange" : ""}`}>
-                          <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${String(statsView)===String(e.id) ? "bg-brand-orange" : "bg-gray-200"}`} />
+                          className={`flex items-center gap-2 px-3.5 py-2.5 cursor-pointer transition-colors hover:bg-[var(--brand-light)] ${String(statsView)===String(e.id) ? "bg-[var(--brand-light)]" : ""}`}>
+                          <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${String(statsView)===String(e.id) ? "bg-brand-accent" : "bg-gray-200"}`} />
                           <span className={`text-[13px] text-brand-text truncate ${String(statsView)===String(e.id) ? "font-semibold" : "font-normal"}`}>{e.name}</span>
                         </div>
                       ))}
@@ -484,20 +477,20 @@ export function OrganizerHome() {
               </div>
             </div>
 
-            <div className="bg-fintech-slate rounded-3xl p-6 md:p-7 mb-4">
+            <div className="bg-brand-accent rounded-2xl p-6 md:p-7 mb-4">
               <div className="flex justify-between items-start flex-wrap gap-4 mb-5">
                 <div>
-                  <div className="text-[11px] font-bold text-slate-400 tracking-widest font-mono mb-2">TOTAL REVENUE · 95% PAYOUT</div>
-                  <div className={`font-extrabold text-white tracking-tight font-mono leading-none ${isDesk ? "text-[42px]" : "text-[32px]"}`}>
+                  <div className="text-xs font-medium text-white/60 tracking-widest mb-2">TOTAL REVENUE · 95% PAYOUT</div>
+                  <div className="text-3xl font-semibold text-white tracking-tight tabular-nums leading-none">
                     GHS {Math.round(revenue).toLocaleString()}
                   </div>
-                  <div className="text-[13px] text-slate-400 mt-2">
+                  <div className="text-[13px] text-white/60 mt-2 tabular-nums">
                     {sold.toLocaleString()} paid tickets · {regs.toLocaleString()} free registrations
                   </div>
                 </div>
                 <div className="flex flex-col items-end gap-1.5">
-                  <Sparkline data={revSpark} color="#34d399" height={40} width={100} />
-                  <div className="text-[10px] text-slate-500 font-mono">7-day trend</div>
+                  <Sparkline data={revSpark} color="#ffffff" height={40} width={100} />
+                  <div className="text-xs text-white/50">7-day trend</div>
                 </div>
               </div>
 
@@ -508,9 +501,9 @@ export function OrganizerHome() {
                   { label:"LIVE NOW",         value: live,                               sub:`of ${orgEvents.length} total` },
                 ].map(m => (
                   <div key={m.label}>
-                    <div className="text-[9px] font-semibold text-slate-400 font-mono tracking-wide mb-1">{m.label}</div>
-                    <div className="text-lg font-extrabold text-white tracking-tight">{m.value}</div>
-                    <div className="text-[10px] text-slate-500 mt-0.5">{m.sub}</div>
+                    <div className="text-xs font-medium text-white/60 tracking-wide mb-1">{m.label}</div>
+                    <div className="text-xl font-semibold text-white tracking-tight tabular-nums">{m.value}</div>
+                    <div className="text-xs text-white/50 mt-0.5">{m.sub}</div>
                   </div>
                 ))}
               </div>
@@ -520,13 +513,13 @@ export function OrganizerHome() {
               <div className="mb-5">
                 <div className="flex justify-between items-center mb-3.5">
                   <div>
-                    <div className="text-[10px] font-bold text-brand-orange tracking-widest font-mono mb-0.5">YOUR EVENTS</div>
-                    <div className="text-[15px] font-bold text-brand-text tracking-tight">Event Portfolio</div>
+                    <div className="text-xs font-medium text-brand-accent tracking-widest mb-0.5">YOUR EVENTS</div>
+                    <div className="text-[15px] font-medium text-brand-text tracking-tight">Event Portfolio</div>
                   </div>
                   {!isDesk && (
                     <motion.button whileTap={{ scale:0.96 }} onClick={() => setScreen("addEvent")}
-                      className="flex items-center gap-1 px-3.5 py-1.5 bg-brand-orange hover:bg-brand-orange-hover text-white rounded-full text-xs font-bold transition-colors">
-                      <Plus size={12} strokeWidth={2.5} /> New
+                      className="flex items-center gap-1 px-3.5 h-8 rounded-xl bg-brand-accent hover:bg-brand-accent-hover text-white text-xs font-medium transition-colors">
+                      <Plus size={12} weight="light" /> New
                     </motion.button>
                   )}
                 </div>
@@ -557,36 +550,36 @@ export function OrganizerHome() {
                 <Panel>
                   <div className="flex justify-between items-center mb-4">
                     <div>
-                      <div className="text-[9px] font-semibold text-brand-muted tracking-widest font-mono mb-0.5">CAPACITY FILL RATE</div>
-                      <div className="text-[15px] font-bold text-brand-text">Ticket Progress</div>
+                      <div className="text-xs font-semibold text-brand-muted tracking-widest mb-0.5">CAPACITY FILL RATE</div>
+                      <div className="text-[15px] font-medium text-brand-text">Ticket Progress</div>
                     </div>
                     <button onClick={() => dlCSV(orgEvents)}
-                      className="flex items-center gap-1.5 px-2.5 py-1.5 bg-transparent border border-gray-200 rounded-lg text-brand-muted text-[11px] hover:border-gray-300 transition-colors">
-                      <Download size={11} strokeWidth={2} /> Export CSV
+                      className="flex items-center gap-1.5 px-2.5 py-1.5 bg-transparent border border-brand-hairline rounded-xl text-brand-muted text-xs hover:border-gray-300 transition-colors">
+                      <DownloadSimple size={11} weight="light" /> Export CSV
                     </button>
                   </div>
                   <FillChart events={src} />
                 </Panel>
                 <Panel>
-                  <div className="text-[9px] font-semibold text-brand-muted tracking-widest font-mono mb-0.5">PAYOUT SPLIT</div>
-                  <div className="text-[15px] font-bold text-brand-text mb-4">Earnings Breakdown</div>
+                  <div className="text-xs font-semibold text-brand-muted tracking-widest mb-0.5">PAYOUT SPLIT</div>
+                  <div className="text-[15px] font-medium text-brand-text mb-4">Earnings Breakdown</div>
                   {[
-                    { label:"You (95%)",     val:Math.round(revenue),        color:"text-fintech-green", bar:"bg-fintech-green", w:"95%" },
+                    { label:"You (95%)",     val:Math.round(revenue),        color:"text-emerald-700", bar:"bg-emerald-600", w:"95%" },
                     { label:"Platform (5%)", val:Math.round(revenue*0.053),  color:"text-red-600",       bar:"bg-red-600",       w:"5%"  },
                   ].map(r => (
                     <div key={r.label} className="mb-3.5">
                       <div className="flex justify-between mb-1.5">
                         <span className={`text-xs font-medium ${r.color}`}>{r.label}</span>
-                        <span className={`text-xs font-bold font-mono ${r.color}`}>GHS {r.val.toLocaleString()}</span>
+                        <span className={`text-xs font-medium tabular-nums ${r.color}`}>GHS {r.val.toLocaleString()}</span>
                       </div>
-                      <div className="h-[5px] bg-gray-100 rounded-full overflow-hidden">
+                      <div className="h-[5px] bg-brand-hairline rounded-full overflow-hidden">
                         <motion.div initial={{ width:0 }} animate={{ width:r.w }} transition={{ duration:1 }} className={`h-full rounded-full ${r.bar}`} />
                       </div>
                     </div>
                   ))}
                   <motion.button whileHover={{ scale:1.01 }} whileTap={{ scale:0.97 }} onClick={() => { setActiveTab("wallet"); setScreen("app"); }}
-                    className="w-full py-2.5 mt-2 bg-brand-orange hover:bg-brand-orange-hover text-white rounded-full text-[13px] font-bold flex items-center justify-center gap-1.5 transition-colors">
-                    <Wallet size={14} strokeWidth={2} /> Withdraw Earnings
+                    className="w-full h-11 mt-2 rounded-xl bg-brand-accent hover:bg-brand-accent-hover text-white text-sm font-medium flex items-center justify-center gap-1.5 transition-colors">
+                    <Wallet size={14} weight="light" /> Withdraw Earnings
                   </motion.button>
                 </Panel>
               </div>
@@ -594,8 +587,8 @@ export function OrganizerHome() {
 
             {isDesk && orgEvents.length > 0 && (
               <Panel className="mb-4">
-                <div className="text-[9px] font-semibold text-brand-muted tracking-widest font-mono mb-0.5">TRANSACTIONS</div>
-                <div className="text-[15px] font-bold text-brand-text mb-1">Live Activity</div>
+                <div className="text-xs font-semibold text-brand-muted tracking-widest mb-0.5">TRANSACTIONS</div>
+                <div className="text-[15px] font-medium text-brand-text mb-1">Live Activity</div>
                 <ActivityFeed events={orgEvents} />
               </Panel>
             )}
@@ -603,11 +596,11 @@ export function OrganizerHome() {
             {!isDesk && orgEvents.length > 0 && (
               <div className="flex flex-col gap-3.5 mb-4">
                 <Panel>
-                  <div className="text-[9px] font-semibold text-brand-muted tracking-widest font-mono mb-3">FILL RATE</div>
+                  <div className="text-xs font-semibold text-brand-muted tracking-widest mb-3">FILL RATE</div>
                   <FillChart events={src} />
                 </Panel>
                 <Panel>
-                  <div className="text-[9px] font-semibold text-brand-muted tracking-widest font-mono mb-1">LIVE ACTIVITY</div>
+                  <div className="text-xs font-semibold text-brand-muted tracking-widest mb-1">LIVE ACTIVITY</div>
                   <ActivityFeed events={orgEvents} />
                 </Panel>
               </div>
@@ -615,15 +608,15 @@ export function OrganizerHome() {
 
             {orgEvents.length === 0 && (
               <motion.div initial={{ opacity:0 }} animate={{ opacity:1 }}
-                className="text-center py-16 px-8 bg-brand-card rounded-3xl border border-gray-100 shadow-sm">
-                <div className="w-14 h-14 rounded-full bg-pastel-orange flex items-center justify-center mx-auto mb-4">
-                  <Ticket size={26} strokeWidth={1.75} className="text-brand-orange" />
+                className="text-center py-16 px-8 bg-brand-card rounded-2xl border border-brand-hairline">
+                <div className="w-14 h-14 rounded-full bg-[var(--brand-light)] flex items-center justify-center mx-auto mb-4">
+                  <Ticket size={26} weight="light" className="text-brand-accent" />
                 </div>
-                <div className="text-[17px] font-bold text-brand-text mb-2">No events yet</div>
+                <div className="text-[17px] font-medium text-brand-text mb-2">No events yet</div>
                 <div className="text-[13px] text-brand-muted mb-5">Create your first event to start selling NFT-verified tickets on Polygon</div>
                 <motion.button whileHover={{ scale:1.02 }} whileTap={{ scale:0.97 }} onClick={() => setScreen("addEvent")}
-                  className="inline-flex items-center gap-1.5 px-6 py-3 bg-brand-orange hover:bg-brand-orange-hover text-white rounded-full text-sm font-bold transition-colors">
-                  <Plus size={14} strokeWidth={2.5} /> Create Your First Event
+                  className="inline-flex items-center justify-center gap-1.5 px-6 h-12 md:h-11 rounded-xl bg-brand-accent hover:bg-brand-accent-hover text-white text-sm font-medium transition-colors">
+                  <Plus size={14} weight="light" /> Create Your First Event
                 </motion.button>
               </motion.div>
             )}
@@ -659,15 +652,15 @@ export function OrganizerEvents() {
       <div className="max-w-[900px] mx-auto" style={{ padding: PAD }}>
         <SectionHead label="MY EVENTS" title="Events"
           action={<motion.button whileHover={{ scale:1.02 }} whileTap={{ scale:0.97 }} onClick={() => setScreen("addEvent")}
-            className="flex items-center gap-1.5 px-4 py-2.5 bg-brand-orange hover:bg-brand-orange-hover text-white rounded-full text-[13px] font-bold transition-colors">
-            <Plus size={14} strokeWidth={2.5} /> New Event
+            className="flex items-center justify-center gap-1.5 px-4 h-11 rounded-xl bg-brand-accent hover:bg-brand-accent-hover text-white text-sm font-medium transition-colors">
+            <Plus size={14} weight="light" /> New Event
           </motion.button>} />
-        <div className="flex gap-1 mb-5 bg-brand-card p-1 rounded-xl border border-gray-100 w-fit">
+        <div className="flex gap-1 mb-5 bg-brand-card p-1 rounded-xl border border-brand-hairline w-fit">
           {[["all","All"],["paid","Paid"],["free","Free"],["live","Live"],
             ...(pendingCount > 0 ? [["pending", `Pending (${pendingCount})`]] : [])
           ].map(([v,l]) => (
             <button key={v} onClick={() => setFilter(v)}
-              className={`px-4 py-1.5 rounded-lg text-xs font-semibold transition-colors ${filter===v ? "bg-brand-orange text-white" : "bg-transparent text-brand-muted hover:text-brand-text"}`}>
+              className={`px-4 py-1.5 rounded-xl text-xs font-semibold transition-colors ${filter===v ? "bg-brand-accent text-white" : "bg-transparent text-brand-muted hover:text-brand-text"}`}>
               {l}
             </button>
           ))}
@@ -676,8 +669,8 @@ export function OrganizerEvents() {
           <div className="flex flex-col gap-2.5">{[1,2,3].map(i=><div key={i} className="skeleton" style={{ height:"100px", borderRadius:"16px" }} />)}</div>
         ) : filtered.length===0 ? (
           <Panel className="text-center py-14">
-            <div className="w-12 h-12 rounded-full bg-pastel-orange flex items-center justify-center mx-auto mb-3">
-              <Ticket size={22} strokeWidth={1.75} className="text-brand-orange" />
+            <div className="w-12 h-12 rounded-full bg-[var(--brand-light)] flex items-center justify-center mx-auto mb-3">
+              <Ticket size={22} weight="light" className="text-brand-accent" />
             </div>
             <div className="text-[15px] font-semibold text-brand-text mb-1.5">No events found</div>
             <div className="text-[13px] text-brand-muted">Try a different filter</div>
@@ -699,11 +692,11 @@ export function OrganizerAlerts() {
   const revenue = orgEvents.reduce((s,e)=>s+e.ticketsSold*e.price*0.95,0);
   const sold    = orgEvents.reduce((s,e)=>s+e.ticketsSold,0);
   const alerts  = orgEvents.length > 0 ? [
-    { Icon: Link2,  color:"text-fintech-slate", bg:"bg-gray-100",     title:"NFT Tickets Active on Polygon", body:`${sold} NFT tickets minted across ${orgEvents.length} event${orgEvents.length>1?"s":""}. Immutable on-chain.`, time:"LIVE" },
-    { Icon: Wallet, color:"text-fintech-green", bg:"bg-pastel-green", title:"Revenue Summary", body:`GHS ${Math.round(revenue).toLocaleString()} generated at 95% payout. Withdrawable to MoMo anytime.`, time:"NOW" },
-    { Icon: Globe,  color:"text-fintech-blue",  bg:"bg-pastel-blue",  title:"Global Payments Active", body:"MTN MoMo, Paystack, and international card payments are live on all your events.", time:"ACTIVE" },
-    { Icon: Lock,   color:"text-brand-orange",  bg:"bg-pastel-orange", title:"HMAC QR Security", body:"All tickets use rotating HMAC-SHA256 QR codes refreshing every 10 seconds. Screenshot-proof.", time:"ALWAYS" },
-  ] : [{ Icon: Bell, color:"text-brand-orange", bg:"bg-pastel-orange", title:"No alerts yet", body:"Create an event and sell tickets to see real-time alerts here.", time:"NOW" }];
+    { Icon: Link,  color:"text-brand-text", bg:"bg-brand-hairline",     title:"NFT Tickets Active on Polygon", body:`${sold} NFT tickets minted across ${orgEvents.length} event${orgEvents.length>1?"s":""}. Immutable on-chain.`, time:"LIVE" },
+    { Icon: Wallet, color:"text-emerald-700", bg:"bg-emerald-50", title:"Revenue Summary", body:`GHS ${Math.round(revenue).toLocaleString()} generated at 95% payout. Withdrawable to MoMo anytime.`, time:"NOW" },
+    { Icon: Globe,  color:"text-blue-700",  bg:"bg-blue-50",  title:"Global Payments Active", body:"MTN MoMo, Paystack, and international card payments are live on all your events.", time:"ACTIVE" },
+    { Icon: Lock,   color:"text-brand-accent",  bg:"bg-[var(--brand-light)]", title:"HMAC QR Security", body:"All tickets use rotating HMAC-SHA256 QR codes refreshing every 10 seconds. Screenshot-proof.", time:"ALWAYS" },
+  ] : [{ Icon: Bell, color:"text-brand-accent", bg:"bg-[var(--brand-light)]", title:"No alerts yet", body:"Create an event and sell tickets to see real-time alerts here.", time:"NOW" }];
   return (
     <div className="bg-brand-canvas min-h-full font-sans">
       <div className="max-w-[900px] mx-auto" style={{ padding: isDesk ? "28px 40px 80px" : "16px 16px 100px" }}>
@@ -711,14 +704,14 @@ export function OrganizerAlerts() {
         <div className={`flex flex-col gap-2 ${isDesk ? "max-w-[600px]" : "w-full"}`}>
           {alerts.map((a,i) => (
             <motion.div key={i} initial={{ opacity:0, y:8 }} animate={{ opacity:1, y:0 }} transition={{ delay:i*0.05 }} whileHover={{ y:-1 }}
-              className="bg-brand-card rounded-2xl p-4 flex gap-3.5 items-start border border-gray-100 shadow-sm transition-shadow hover:shadow-md">
+              className="bg-brand-card rounded-2xl p-4 flex gap-3.5 items-start border border-brand-hairline transition-shadow hover:shadow-[0_1px_2px_rgba(15,23,42,0.04)]">
               <div className={`w-9 h-9 rounded-xl ${a.bg} flex items-center justify-center shrink-0`}>
-                <a.Icon size={16} strokeWidth={1.75} className={a.color} />
+                <a.Icon size={16} weight="light" className={a.color} />
               </div>
               <div className="flex-1">
                 <div className="text-[13px] font-semibold text-brand-text mb-1">{a.title}</div>
                 <div className="text-xs text-brand-muted leading-relaxed mb-2">{a.body}</div>
-                <span className={`text-[9px] font-bold px-2 py-0.5 rounded font-mono ${a.color} ${a.bg}`}>{a.time}</span>
+                <span className={`text-xs font-medium px-2 py-0.5 rounded ${a.color} ${a.bg}`}>{a.time}</span>
               </div>
             </motion.div>
           ))}
@@ -831,53 +824,53 @@ export function AddEvent() {
   };
 
   const chip = (active) => `px-4 py-1.5 rounded-full cursor-pointer text-[13px] font-medium border transition-colors ${
-    active ? "border-brand-orange bg-pastel-orange text-brand-orange" : "border-gray-200 bg-transparent text-brand-muted"
+    active ? "border-brand-accent bg-[var(--brand-light)] text-brand-accent" : "border-brand-hairline bg-transparent text-brand-muted"
   }`;
 
-  const tierBadgeColor = key => key === "vvip" ? "bg-pastel-orange text-brand-orange" : key === "vip" ? "bg-pastel-blue text-fintech-blue" : "bg-gray-100 text-brand-muted";
+  const tierBadgeColor = key => key === "vvip" ? "bg-[var(--brand-light)] text-brand-accent" : key === "vip" ? "bg-blue-50 text-blue-700" : "bg-brand-hairline text-brand-muted";
   const tierIcon = key => TIER_PRESETS.find(t => t.key === key)?.Icon || Ticket;
 
   return (
     <div className="min-h-screen bg-brand-canvas font-sans">
-      <div className="flex items-center justify-between px-6 py-3.5 bg-brand-card border-b border-gray-100 sticky top-0 z-20">
+      <div className="flex items-center justify-between px-6 py-3.5 bg-brand-card border-b border-brand-hairline sticky top-0 z-20">
         <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-lg bg-brand-orange flex items-center justify-center">
-            <Ticket size={15} strokeWidth={2} color="#fff" />
+          <div className="w-8 h-8 rounded-xl bg-brand-accent flex items-center justify-center">
+            <Ticket size={15} weight="light" color="#fff" />
           </div>
-          <span className="font-bold text-[15px] text-brand-text tracking-tight">Create Event</span>
+          <span className="font-medium text-[15px] text-brand-text tracking-tight">Create Event</span>
         </div>
         <button onClick={() => setScreen("app")}
-          className="flex items-center gap-1.5 border border-gray-200 rounded-lg px-3.5 py-1.5 text-brand-muted text-[13px] font-medium hover:border-gray-300 transition-colors">
-          <ArrowLeft size={13} strokeWidth={2} /> Back
+          className="flex items-center gap-1.5 border border-brand-hairline rounded-xl px-3.5 py-1.5 text-brand-muted text-[13px] font-medium hover:border-gray-300 transition-colors">
+          <ArrowLeft size={13} weight="light" /> Back
         </button>
       </div>
 
       <div className="max-w-[800px] mx-auto" style={{ padding: isDesk ? "36px 40px 80px" : "20px 16px 80px" }}>
         <motion.div initial={{ opacity:0, y:16 }} animate={{ opacity:1, y:0 }} transition={{ duration:0.4 }}
-          className="bg-brand-card rounded-3xl border border-gray-100 shadow-sm" style={{ padding: isDesk ? "40px 44px" : "24px 20px" }}>
+          className="bg-brand-card rounded-2xl border border-brand-hairline" style={{ padding: isDesk ? "40px 44px" : "24px 20px" }}>
 
-          <div className="mb-6 flex items-start gap-2.5 bg-pastel-blue border border-fintech-blue/15 rounded-xl px-3.5 py-3">
-            <ShieldCheck size={15} strokeWidth={1.75} className="text-fintech-blue shrink-0 mt-0.5" />
-            <span className="text-[11px] text-fintech-blue leading-relaxed">
+          <div className="mb-6 flex items-start gap-2.5 bg-blue-50 border border-blue-100 rounded-xl px-3.5 py-3">
+            <ShieldCheck size={15} weight="light" className="text-blue-700 shrink-0 mt-0.5" />
+            <span className="text-xs text-blue-700 leading-relaxed">
               New events are reviewed before appearing publicly, to keep the platform safe for attendees. Your event will show as "Pending Review" until then.
             </span>
           </div>
 
-          <div className="mb-7 pb-5 border-b border-gray-100">
-            <h1 className="text-[22px] font-bold text-brand-text tracking-tight mb-1">Event Details</h1>
+          <div className="mb-7 pb-5 border-b border-brand-hairline">
+            <h1 className="text-2xl font-semibold tracking-[-0.02em] text-brand-text mb-1">Event Details</h1>
             <p className="text-[13px] text-brand-muted m-0">Fill in the details — NFT-verified tickets minted automatically on Polygon</p>
           </div>
 
           <div className="mb-6">
             <label className={labelClass}>Event Type</label>
-            <div className="flex gap-1 bg-brand-canvas rounded-xl p-1 border border-gray-100 w-fit">
-              {[{v:"paid",Icon:CreditCard,label:"Paid Event"},{v:"free",Icon:PartyPopper,label:"Free Event"}].map(item => (
+            <div className="flex gap-1 bg-brand-canvas rounded-xl p-1 border border-brand-hairline w-fit">
+              {[{v:"paid",Icon:CreditCard,label:"Paid Event"},{v:"free",Icon:Confetti,label:"Free Event"}].map(item => (
                 <button key={item.v} onClick={() => {
                     setEvType(item.v);
                     if (item.v === "free") { setUseTiers(false); setTiers([]); setErrors(p=>({...p,tiers:null})); }
                   }}
-                  className={`px-5 py-2 rounded-lg text-[13px] font-semibold flex items-center gap-1.5 transition-colors ${evType===item.v ? "bg-brand-orange text-white" : "bg-transparent text-brand-muted"}`}>
-                  <item.Icon size={14} strokeWidth={1.75} /> {item.label}
+                  className={`px-5 py-2 rounded-xl text-[13px] font-semibold flex items-center gap-1.5 transition-colors ${evType===item.v ? "bg-brand-accent text-white" : "bg-transparent text-brand-muted"}`}>
+                  <item.Icon size={14} weight="light" /> {item.label}
                 </button>
               ))}
             </div>
@@ -904,13 +897,13 @@ export function AddEvent() {
             </div>
 
             <div className={isDesk ? "col-span-2" : ""}>
-              <div className="flex items-center justify-between px-4 py-3.5 bg-brand-canvas rounded-xl border border-gray-100">
+              <div className="flex items-center justify-between px-4 py-3.5 bg-brand-canvas rounded-xl border border-brand-hairline">
                 <div>
                   <div className="text-sm font-semibold text-brand-text">Multi-day event</div>
                   <div className="text-xs text-brand-muted mt-0.5">Add multiple dates with per-day capacity and price</div>
                 </div>
                 <div onClick={() => { setIsMultiDay(!isMultiDay); setErrors(p=>({...p,date:null,dates:null})); }}
-                  className={`w-[46px] h-[26px] rounded-full relative cursor-pointer transition-colors shrink-0 ${isMultiDay ? "bg-brand-orange" : "bg-gray-200"}`}>
+                  className={`w-[46px] h-[26px] rounded-full relative cursor-pointer transition-colors shrink-0 ${isMultiDay ? "bg-brand-accent" : "bg-gray-200"}`}>
                   <motion.div animate={{ x: isMultiDay?21:2 }} transition={{ duration:0.2 }}
                     className="absolute top-[3px] w-5 h-5 rounded-full bg-white shadow" />
                 </div>
@@ -939,28 +932,28 @@ export function AddEvent() {
                 <div className="flex gap-2 mb-3">
                   <input type="date" value={newDate} onChange={e => setNewDate(e.target.value)} className={`${inputClass(false)} flex-1`} />
                   <button onClick={addDate}
-                    className="px-5 bg-brand-orange hover:bg-brand-orange-hover text-white rounded-xl shrink-0 flex items-center justify-center transition-colors">
-                    <Plus size={18} strokeWidth={2.5} />
+                    className="px-5 bg-brand-accent hover:bg-brand-accent-hover text-white rounded-xl shrink-0 flex items-center justify-center transition-colors">
+                    <Plus size={18} weight="light" />
                   </button>
                 </div>
                 <AnimatePresence>
                   {eventDates.map((d,i) => (
                     <motion.div key={d.date} initial={{ opacity:0, y:-8 }} animate={{ opacity:1, y:0 }} exit={{ opacity:0, height:0 }}
-                      className="bg-pastel-orange border border-brand-orange/25 rounded-xl p-3.5 mb-2">
+                      className="bg-[var(--brand-light)] border border-brand-accent/25 rounded-xl p-3.5 mb-2">
                       <div className="flex items-center justify-between mb-3">
-                        <div className="flex items-center gap-1.5 text-[13px] font-bold text-brand-text">
-                          <Calendar size={13} strokeWidth={1.75} /> Day {i+1} — {new Date(d.date+"T00:00:00").toLocaleDateString("en-GH",{weekday:"short",month:"short",day:"numeric"})}
+                        <div className="flex items-center gap-1.5 text-[13px] font-medium text-brand-text">
+                          <Calendar size={13} weight="light" /> Day {i+1} — {new Date(d.date+"T00:00:00").toLocaleDateString("en-GH",{weekday:"short",month:"short",day:"numeric"})}
                         </div>
-                        <button onClick={() => removeDate(d.date)} className="bg-red-50 text-red-600 rounded-md px-2.5 py-1 text-[11px] font-semibold">Remove</button>
+                        <button onClick={() => removeDate(d.date)} className="bg-red-50 text-red-600 rounded-xl px-2.5 py-1 text-xs font-semibold">Remove</button>
                       </div>
                       <div className={`grid gap-2.5 ${evType==="paid" ? "grid-cols-2" : "grid-cols-1"}`}>
                         <div>
-                          <label className="text-[10px] font-semibold text-brand-muted block mb-1 uppercase">Tickets / Spots</label>
+                          <label className="text-xs font-semibold text-brand-muted block mb-1 uppercase">Tickets / Spots</label>
                           <input type="number" placeholder="e.g. 200" value={d.capacity} onChange={e => updateDate(d.date,"capacity",e.target.value)} className={inputClass(false)} />
                         </div>
                         {evType==="paid" && (
                           <div>
-                            <label className="text-[10px] font-semibold text-brand-muted block mb-1 uppercase">Price ({currency})</label>
+                            <label className="text-xs font-semibold text-brand-muted block mb-1 uppercase">Price ({currency})</label>
                             <input type="number" placeholder="e.g. 150" value={d.price} onChange={e => updateDate(d.date,"price",e.target.value)} className={inputClass(false)} />
                           </div>
                         )}
@@ -969,11 +962,11 @@ export function AddEvent() {
                   ))}
                 </AnimatePresence>
                 {eventDates.length===0 && (
-                  <div className="text-center py-5 text-brand-muted text-[13px] border-2 border-dashed border-gray-200 rounded-xl">Pick a date above and tap + to add it</div>
+                  <div className="text-center py-5 text-brand-muted text-[13px] border-2 border-dashed border-brand-hairline rounded-xl">Pick a date above and tap + to add it</div>
                 )}
                 {eventDates.length>=2 && (
-                  <div className="flex items-center gap-1.5 text-xs text-fintech-green bg-pastel-green px-3.5 py-2.5 rounded-lg mt-1.5">
-                    <CheckCircle2 size={13} strokeWidth={2} /> {eventDates.length} days added — attendees will choose which day(s) to attend
+                  <div className="flex items-center gap-1.5 text-xs text-emerald-700 bg-emerald-50 px-3.5 py-2.5 rounded-xl mt-1.5">
+                    <CheckCircle size={13} weight="light" /> {eventDates.length} days added — attendees will choose which day(s) to attend
                   </div>
                 )}
               </div>
@@ -1000,15 +993,15 @@ export function AddEvent() {
 
             {!isMultiDay && evType === "paid" && (
               <div className={isDesk ? "col-span-2" : ""}>
-                <div className="flex items-center justify-between px-4 py-3.5 bg-brand-canvas rounded-xl border border-gray-100">
+                <div className="flex items-center justify-between px-4 py-3.5 bg-brand-canvas rounded-xl border border-brand-hairline">
                   <div>
                     <div className="text-sm font-semibold text-brand-text flex items-center gap-1.5">
-                      <Crown size={14} strokeWidth={1.75} className="text-brand-orange" /> Multiple ticket types
+                      <Crown size={14} weight="light" className="text-brand-accent" /> Multiple ticket types
                     </div>
                     <div className="text-xs text-brand-muted mt-0.5">VIP, VVIP, Regular — each with its own price and capacity</div>
                   </div>
                   <div onClick={() => { setUseTiers(!useTiers); setErrors(p=>({...p,total:null,price:null,tiers:null})); }}
-                    className={`w-[46px] h-[26px] rounded-full relative cursor-pointer transition-colors shrink-0 ${useTiers ? "bg-brand-orange" : "bg-gray-200"}`}>
+                    className={`w-[46px] h-[26px] rounded-full relative cursor-pointer transition-colors shrink-0 ${useTiers ? "bg-brand-accent" : "bg-gray-200"}`}>
                     <motion.div animate={{ x: useTiers?21:2 }} transition={{ duration:0.2 }}
                       className="absolute top-[3px] w-5 h-5 rounded-full bg-white shadow" />
                   </div>
@@ -1020,19 +1013,19 @@ export function AddEvent() {
               <div className={isDesk ? "col-span-2" : ""}>
                 <label className={labelClass}>Ticket Tiers {errors.tiers && <span className="text-red-600 font-normal normal-case">— {errors.tiers}</span>}</label>
 
-                <div className="bg-pastel-green border border-fintech-green/15 rounded-xl px-3.5 py-2.5 mb-3 flex items-start gap-2">
-                  <CheckCircle2 size={13} strokeWidth={1.75} className="text-fintech-green shrink-0 mt-0.5" />
-                  <span className="text-[11px] text-fintech-green leading-relaxed">
+                <div className="bg-emerald-50 border border-emerald-100 rounded-xl px-3.5 py-2.5 mb-3 flex items-start gap-2">
+                  <CheckCircle size={13} weight="light" className="text-emerald-700 shrink-0 mt-0.5" />
+                  <span className="text-xs text-emerald-700 leading-relaxed">
                     Each tier is saved as its own capacity-tracked ticket type — attendees will see a tier picker on the event's public page to choose Regular, VIP, or VVIP at checkout.
                   </span>
                 </div>
 
-                <div className="bg-brand-canvas border border-gray-100 rounded-xl p-3.5 mb-3">
+                <div className="bg-brand-canvas border border-brand-hairline rounded-xl p-3.5 mb-3">
                   <div className="flex gap-1.5 mb-2.5 flex-wrap">
                     {TIER_PRESETS.map(t => (
                       <button key={t.key} onClick={() => setNewTierType(t.key)}
-                        className={`flex items-center gap-1 px-3 py-1.5 rounded-full text-[12px] font-semibold border transition-colors ${newTierType===t.key ? "border-brand-orange bg-pastel-orange text-brand-orange" : "border-gray-200 bg-brand-card text-brand-muted"}`}>
-                        <t.Icon size={12} strokeWidth={1.75} /> {t.label}
+                        className={`flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-semibold border transition-colors ${newTierType===t.key ? "border-brand-accent bg-[var(--brand-light)] text-brand-accent" : "border-brand-hairline bg-brand-card text-brand-muted"}`}>
+                        <t.Icon size={12} weight="light" /> {t.label}
                       </button>
                     ))}
                   </div>
@@ -1042,17 +1035,17 @@ export function AddEvent() {
                   )}
                   <div className="grid grid-cols-2 gap-2.5 mb-2.5">
                     <div>
-                      <label className="text-[10px] font-semibold text-brand-muted block mb-1 uppercase">Price ({currency})</label>
+                      <label className="text-xs font-semibold text-brand-muted block mb-1 uppercase">Price ({currency})</label>
                       <input type="number" placeholder="e.g. 300" value={newTierPrice} onChange={e => setNewTierPrice(e.target.value)} className={inputClass(false)} />
                     </div>
                     <div>
-                      <label className="text-[10px] font-semibold text-brand-muted block mb-1 uppercase">Capacity</label>
+                      <label className="text-xs font-semibold text-brand-muted block mb-1 uppercase">Capacity</label>
                       <input type="number" placeholder="e.g. 50" value={newTierCap} onChange={e => setNewTierCap(e.target.value)} className={inputClass(false)} />
                     </div>
                   </div>
                   <button onClick={addTier}
-                    className="w-full py-2.5 bg-brand-orange hover:bg-brand-orange-hover text-white rounded-lg text-[13px] font-bold flex items-center justify-center gap-1.5 transition-colors">
-                    <Plus size={14} strokeWidth={2.5} /> Add Tier
+                    className="w-full py-2.5 bg-brand-accent hover:bg-brand-accent-hover text-white rounded-xl text-[13px] font-medium flex items-center justify-center gap-1.5 transition-colors">
+                    <Plus size={14} weight="light" /> Add Tier
                   </button>
                 </div>
 
@@ -1061,28 +1054,28 @@ export function AddEvent() {
                     const Icon = tierIcon(t.key);
                     return (
                       <motion.div key={t.id} initial={{ opacity:0, y:-8 }} animate={{ opacity:1, y:0 }} exit={{ opacity:0, height:0 }}
-                        className="flex items-center justify-between bg-brand-card border border-gray-100 rounded-xl px-3.5 py-2.5 mb-2 shadow-sm">
+                        className="flex items-center justify-between bg-brand-card border border-brand-hairline rounded-xl px-3.5 py-2.5 mb-2">
                         <div className="flex items-center gap-2.5 min-w-0">
-                          <span className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${tierBadgeColor(t.key)}`}>
-                            <Icon size={15} strokeWidth={1.75} />
+                          <span className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 ${tierBadgeColor(t.key)}`}>
+                            <Icon size={15} weight="light" />
                           </span>
                           <div className="min-w-0">
-                            <div className="text-[13px] font-bold text-brand-text truncate">{t.name}</div>
-                            <div className="text-[11px] text-brand-muted font-mono">{currency} {t.price} · {t.capacity} tickets</div>
+                            <div className="text-[13px] font-medium text-brand-text truncate">{t.name}</div>
+                            <div className="text-xs text-brand-muted">{currency} {t.price} · {t.capacity} tickets</div>
                           </div>
                         </div>
-                        <button onClick={() => removeTier(t.id)} className="text-red-600 bg-red-50 rounded-md px-2.5 py-1 text-[11px] font-semibold shrink-0 ml-2">Remove</button>
+                        <button onClick={() => removeTier(t.id)} className="text-red-600 bg-red-50 rounded-xl px-2.5 py-1 text-xs font-semibold shrink-0 ml-2">Remove</button>
                       </motion.div>
                     );
                   })}
                 </AnimatePresence>
 
                 {tiers.length === 0 && (
-                  <div className="text-center py-5 text-brand-muted text-[13px] border-2 border-dashed border-gray-200 rounded-xl">Add your first ticket tier above</div>
+                  <div className="text-center py-5 text-brand-muted text-[13px] border-2 border-dashed border-brand-hairline rounded-xl">Add your first ticket tier above</div>
                 )}
                 {tiers.length > 0 && (
-                  <div className="flex items-center gap-1.5 text-xs text-fintech-green bg-pastel-green px-3.5 py-2.5 rounded-lg mt-1.5">
-                    <CheckCircle2 size={13} strokeWidth={2} /> {tiers.length} tier{tiers.length>1?"s":""} · {tierTotalCapacity} total tickets
+                  <div className="flex items-center gap-1.5 text-xs text-emerald-700 bg-emerald-50 px-3.5 py-2.5 rounded-xl mt-1.5">
+                    <CheckCircle size={13} weight="light" /> {tiers.length} tier{tiers.length>1?"s":""} · {tierTotalCapacity} total tickets
                   </div>
                 )}
               </div>
@@ -1113,7 +1106,7 @@ export function AddEvent() {
                 <div className="flex gap-2 flex-wrap">
                   {CURRENCIES.map(c => (
                     <button key={c.code} onClick={() => setCurrency(c.code)}
-                      className={`px-3.5 py-2 rounded-full border font-mono text-xs font-semibold transition-colors ${currency===c.code ? "border-brand-orange bg-pastel-orange text-brand-orange" : "border-gray-200 bg-transparent text-brand-muted"}`}>
+                      className={`px-3.5 py-2 rounded-full border text-xs font-semibold transition-colors ${currency===c.code ? "border-brand-accent bg-[var(--brand-light)] text-brand-accent" : "border-brand-hairline bg-transparent text-brand-muted"}`}>
                       {c.symbol} {c.code}
                     </button>
                   ))}
@@ -1130,10 +1123,10 @@ export function AddEvent() {
             <div className={isDesk ? "col-span-2" : ""}>
               <label className={labelClass}>Cover Image</label>
               <div className="flex gap-2 mb-2.5">
-                {[["upload",Camera,"Upload"],["url",Link2,"URL"]].map(([v,Icon,l]) => (
+                {[["upload",Camera,"Upload"],["url",Link,"URL"]].map(([v,Icon,l]) => (
                   <div key={v} onClick={() => setImgType(v)}
-                    className={`flex items-center justify-center gap-1.5 px-4 py-2 rounded-lg text-center cursor-pointer text-[13px] font-semibold border transition-colors ${imgType===v ? "border-brand-orange bg-pastel-orange text-brand-orange" : "border-gray-200 bg-transparent text-brand-muted"}`}>
-                    <Icon size={14} strokeWidth={1.75} /> {l}
+                    className={`flex items-center justify-center gap-1.5 px-4 py-2 rounded-xl text-center cursor-pointer text-[13px] font-semibold border transition-colors ${imgType===v ? "border-brand-accent bg-[var(--brand-light)] text-brand-accent" : "border-brand-hairline bg-transparent text-brand-muted"}`}>
+                    <Icon size={14} weight="light" /> {l}
                   </div>
                 ))}
               </div>
@@ -1146,15 +1139,15 @@ export function AddEvent() {
                       const u=URL.createObjectURL(f);
                       im.onload=()=>{ const M=1200; let w=im.width,h=im.height; if(w>M){h=Math.round(h*M/w);w=M;} cv.width=w;cv.height=h; cv.getContext("2d").drawImage(im,0,0,w,h); setAddEventForm({...addEventForm,image:cv.toDataURL("image/jpeg",0.82)}); URL.revokeObjectURL(u); }; im.src=u;
                     }} />
-                  <label htmlFor="ev-img" className="block p-7 bg-brand-canvas border-2 border-dashed border-gray-200 rounded-xl text-center cursor-pointer">
+                  <label htmlFor="ev-img" className="block p-7 bg-brand-canvas border-2 border-dashed border-brand-hairline rounded-xl text-center cursor-pointer">
                     {addEventForm.image?.startsWith("data:")||addEventForm.image?.startsWith("http") ? (
                       <>
-                        <img src={addEventForm.image} alt="preview" className="w-full h-40 object-cover object-top rounded-lg mb-2" />
-                        <div className="flex items-center justify-center gap-1.5 text-fintech-green text-[13px] font-semibold"><CheckCircle2 size={14} strokeWidth={2} /> Image ready — click to change</div>
+                        <img src={addEventForm.image} alt="preview" className="w-full h-40 object-cover object-top rounded-xl mb-2" />
+                        <div className="flex items-center justify-center gap-1.5 text-emerald-700 text-[13px] font-semibold"><CheckCircle size={14} weight="light" /> Image ready — click to change</div>
                       </>
                     ) : (
                       <>
-                        <Camera size={26} strokeWidth={1.5} className="text-brand-muted mx-auto mb-2" />
+                        <Camera size={26} weight="light" className="text-brand-muted mx-auto mb-2" />
                         <div className="text-brand-muted text-sm mb-1">Click to upload a cover image</div>
                         <div className="text-brand-muted text-xs opacity-60">JPG, PNG, WebP</div>
                       </>
@@ -1168,22 +1161,22 @@ export function AddEvent() {
           </div>
 
           {addEventForm.name && (
-            <motion.div initial={{ opacity:0 }} animate={{ opacity:1 }} className="bg-fintech-slate/5 border border-fintech-slate/15 rounded-xl px-4 py-3 mt-5">
-              <div className="flex items-center gap-1.5 text-[10px] font-bold text-fintech-slate tracking-wide font-mono mb-1"><Link2 size={11} strokeWidth={2} /> EVENT URL</div>
+            <motion.div initial={{ opacity:0 }} animate={{ opacity:1 }} className="bg-brand-text/5 border border-brand-text/15 rounded-xl px-4 py-3 mt-5">
+              <div className="flex items-center gap-1.5 text-xs font-medium text-brand-text tracking-wide mb-1"><Link size={11} weight="light" /> EVENT URL</div>
               <div className="font-mono text-xs text-brand-text break-all">{eventUrl}</div>
             </motion.div>
           )}
 
           <div className="flex gap-2 flex-wrap mt-5 mb-6">
-            {evType==="paid" && <span className="flex items-center gap-1.5 text-xs text-fintech-green bg-pastel-green px-3 py-1.5 rounded-lg font-medium"><Wallet size={12} strokeWidth={1.75} /> 95% revenue to you</span>}
-            {evType==="free" && <span className="flex items-center gap-1.5 text-xs text-fintech-green bg-pastel-green px-3 py-1.5 rounded-lg font-medium"><PartyPopper size={12} strokeWidth={1.75} /> Free · QR pass via email</span>}
-            {isMultiDay && <span className="flex items-center gap-1.5 text-xs text-fintech-blue bg-pastel-blue px-3 py-1.5 rounded-lg font-medium"><Calendar size={12} strokeWidth={1.75} /> Attendees pick their day(s)</span>}
-            {evType==="paid" && useTiers && tiers.length > 0 && <span className="flex items-center gap-1.5 text-xs text-brand-orange bg-pastel-orange px-3 py-1.5 rounded-lg font-medium"><Crown size={12} strokeWidth={1.75} /> {tiers.length} ticket tiers</span>}
-            <span className="flex items-center gap-1.5 text-xs text-fintech-blue bg-pastel-blue px-3 py-1.5 rounded-lg font-medium"><Link2 size={12} strokeWidth={1.75} /> NFT on Polygon</span>
+            {evType==="paid" && <span className="flex items-center gap-1.5 text-xs text-emerald-700 bg-emerald-50 px-3 py-1.5 rounded-xl font-medium"><Wallet size={12} weight="light" /> 95% revenue to you</span>}
+            {evType==="free" && <span className="flex items-center gap-1.5 text-xs text-emerald-700 bg-emerald-50 px-3 py-1.5 rounded-xl font-medium"><Confetti size={12} weight="light" /> Free · QR pass via email</span>}
+            {isMultiDay && <span className="flex items-center gap-1.5 text-xs text-blue-700 bg-blue-50 px-3 py-1.5 rounded-xl font-medium"><Calendar size={12} weight="light" /> Attendees pick their day(s)</span>}
+            {evType==="paid" && useTiers && tiers.length > 0 && <span className="flex items-center gap-1.5 text-xs text-brand-accent bg-[var(--brand-light)] px-3 py-1.5 rounded-xl font-medium"><Crown size={12} weight="light" /> {tiers.length} ticket tiers</span>}
+            <span className="flex items-center gap-1.5 text-xs text-blue-700 bg-blue-50 px-3 py-1.5 rounded-xl font-medium"><Link size={12} weight="light" /> NFT on Polygon</span>
           </div>
 
           <motion.button whileHover={{ scale:1.01 }} whileTap={{ scale:0.97 }} onClick={submit}
-            className="w-full py-4 rounded-full bg-brand-orange hover:bg-brand-orange-hover text-white font-bold text-base transition-colors">
+            className="w-full h-12 md:h-11 rounded-xl bg-brand-accent hover:bg-brand-accent-hover text-white font-medium text-[15px] transition-colors">
             Create Event
           </motion.button>
         </motion.div>
@@ -1256,23 +1249,23 @@ export function OrganizerEventDetail() {
   const startEdit = () => { setEditForm({name:ev.name,venue:ev.venue,date:ev.date,time:ev.time||"",price:ev.price,description:ev.description||"",image:ev.image||"",category:ev.category||"other",city:ev.city||"",totalTickets:ev.totalTickets,subtitle:ev.subtitle||"",currency:ev.currency||"GHS",country:ev.country||"Ghana"}); setEditing(true); };
   const saveEdit  = () => { setViewingOrgEvent({...ev,...editForm,price:parseFloat(editForm.price),totalTickets:parseInt(editForm.totalTickets)||ev.totalTickets}); setEditing(false); };
 
-  const sClass = { active:"text-fintech-green bg-pastel-green", redeemed:"text-gray-600 bg-gray-100", resale:"text-red-600 bg-red-50", transferred:"text-fintech-blue bg-pastel-blue" };
+  const sClass = { active:"text-emerald-700 bg-emerald-50", redeemed:"text-gray-600 bg-brand-hairline", resale:"text-red-600 bg-red-50", transferred:"text-blue-700 bg-blue-50" };
   const sLabel = { active:"Active", redeemed:"Redeemed", resale:"Resale", transferred:"Transferred" };
 
-  const editChip = (active) => `px-3 py-1.5 rounded-full cursor-pointer text-[11px] font-medium border transition-colors ${
-    active ? "border-brand-orange bg-pastel-orange text-brand-orange" : "border-gray-200 bg-transparent text-brand-muted"
+  const editChip = (active) => `px-3 py-1.5 rounded-full cursor-pointer text-xs font-medium border transition-colors ${
+    active ? "border-brand-accent bg-[var(--brand-light)] text-brand-accent" : "border-brand-hairline bg-transparent text-brand-muted"
   }`;
 
   if (editing) return (
     <div className="bg-brand-canvas h-full flex flex-col overflow-hidden font-sans">
-      <div className="shrink-0 flex items-center px-4.5 px-4 py-3 gap-3 bg-brand-card border-b border-gray-100">
+      <div className="shrink-0 flex items-center px-4.5 px-4 py-3 gap-3 bg-brand-card border-b border-brand-hairline">
         <button onClick={() => setEditing(false)}
-          className="w-8 h-8 rounded-lg bg-transparent border border-gray-200 flex items-center justify-center text-brand-text hover:border-gray-300 transition-colors">
-          <ArrowLeft size={15} strokeWidth={2} />
+          className="w-8 h-8 rounded-xl bg-transparent border border-brand-hairline flex items-center justify-center text-brand-text hover:border-gray-300 transition-colors">
+          <ArrowLeft size={15} weight="light" />
         </button>
         <div className="flex-1 text-[15px] font-semibold text-brand-text">Edit Event</div>
         <button onClick={saveEdit}
-          className="px-4 py-1.5 bg-brand-orange hover:bg-brand-orange-hover text-white rounded-full text-xs font-bold transition-colors">Save Changes</button>
+          className="px-4 h-8 rounded-xl bg-brand-accent hover:bg-brand-accent-hover text-white text-xs font-medium transition-colors">Save Changes</button>
       </div>
       <div className="flex-1 min-h-0 overflow-y-auto" style={{ WebkitOverflowScrolling:"touch" }}>
         <div className={`mx-auto ${isDesk ? "max-w-[640px]" : "w-full"}`} style={{ padding: isDesk ? "22px 40px 100px" : "14px 14px 100px" }}>
@@ -1291,7 +1284,7 @@ export function OrganizerEventDetail() {
             <div className="flex gap-1.5 flex-wrap">
               {CURRENCIES.map(c => (
                 <button key={c.code} onClick={() => setEditForm(p=>({...p,currency:c.code}))}
-                  className={`px-2.5 py-1.5 rounded-full border font-mono text-[10px] font-semibold transition-colors ${editForm.currency===c.code ? "border-brand-orange bg-pastel-orange text-brand-orange" : "border-gray-200 bg-transparent text-brand-muted"}`}>
+                  className={`px-2.5 py-1.5 rounded-full border text-xs font-semibold transition-colors ${editForm.currency===c.code ? "border-brand-accent bg-[var(--brand-light)] text-brand-accent" : "border-brand-hairline bg-transparent text-brand-muted"}`}>
                   {c.symbol} {c.code}
                 </button>
               ))}
@@ -1302,7 +1295,7 @@ export function OrganizerEventDetail() {
             <div className="flex gap-1.5 mb-1.5">
               {[["upload","Upload"],["url","URL"]].map(([v,l]) => (
                 <div key={v} onClick={() => setEditImgType(v)}
-                  className={`flex-1 py-1.5 rounded-lg text-center cursor-pointer text-xs font-medium border transition-colors ${editImgType===v ? "border-brand-orange bg-pastel-orange text-brand-orange" : "border-gray-200 bg-transparent text-brand-muted"}`}>
+                  className={`flex-1 py-1.5 rounded-xl text-center cursor-pointer text-xs font-medium border transition-colors ${editImgType===v ? "border-brand-accent bg-[var(--brand-light)] text-brand-accent" : "border-brand-hairline bg-transparent text-brand-muted"}`}>
                   {l}
                 </div>
               ))}
@@ -1311,15 +1304,15 @@ export function OrganizerEventDetail() {
               <>
                 <input type="file" accept="image/jpeg,image/png,image/webp" id="edit-img" className="hidden"
                   onChange={e => { const f=e.target.files[0]; if(!f) return; const cv=document.createElement("canvas"); const im=new Image(); const u=URL.createObjectURL(f); im.onload=()=>{const M=1200;let w=im.width,h=im.height;if(w>M){h=Math.round(h*M/w);w=M;}cv.width=w;cv.height=h;cv.getContext("2d").drawImage(im,0,0,w,h);setEditForm(p=>({...p,image:cv.toDataURL("image/jpeg",0.82)}));URL.revokeObjectURL(u);};im.src=u; }} />
-                <label htmlFor="edit-img" className="block p-4 bg-brand-card border-2 border-dashed border-brand-orange/30 rounded-xl text-center cursor-pointer">
+                <label htmlFor="edit-img" className="block p-4 bg-brand-card border-2 border-dashed border-brand-accent/30 rounded-xl text-center cursor-pointer">
                   {editForm.image ? (
                     <>
-                      <img src={editForm.image} alt="p" className="w-full h-28 object-cover object-top rounded-lg mb-1.5" />
-                      <div className="flex items-center justify-center gap-1 text-fintech-green text-xs"><CheckCircle2 size={12} strokeWidth={2} /> Click to change</div>
+                      <img src={editForm.image} alt="p" className="w-full h-28 object-cover object-top rounded-xl mb-1.5" />
+                      <div className="flex items-center justify-center gap-1 text-emerald-700 text-xs"><CheckCircle size={12} weight="light" /> Click to change</div>
                     </>
                   ) : (
                     <>
-                      <Camera size={20} strokeWidth={1.5} className="text-brand-muted mx-auto mb-1.5" />
+                      <Camera size={20} weight="light" className="text-brand-muted mx-auto mb-1.5" />
                       <div className="text-brand-muted text-xs">Click to upload</div>
                     </>
                   )}
@@ -1337,18 +1330,18 @@ export function OrganizerEventDetail() {
               </div>
             ))}
           </div>
-          <div className="flex items-center justify-between px-3.5 py-3 bg-brand-card border border-gray-100 rounded-xl mb-4">
+          <div className="flex items-center justify-between px-3.5 py-3 bg-brand-card border border-brand-hairline rounded-xl mb-4">
             <div>
               <div className="text-[13px] font-medium text-brand-text">Ticket Sales</div>
-              <div className="text-[11px] text-brand-muted">Currently {ev.salesOpen?"open":"paused"}</div>
+              <div className="text-xs text-brand-muted">Currently {ev.salesOpen?"open":"paused"}</div>
             </div>
             <button onClick={() => toggleSales(ev.id)}
-              className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-semibold border transition-colors ${ev.salesOpen ? "bg-red-50 text-red-600 border-red-100" : "bg-pastel-green text-fintech-green border-fintech-green/20"}`}>
-              {ev.salesOpen ? <><Pause size={12} strokeWidth={2} /> Pause</> : <><Play size={12} strokeWidth={2} /> Resume</>}
+              className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-semibold border transition-colors ${ev.salesOpen ? "bg-red-50 text-red-600 border-red-100" : "bg-emerald-50 text-emerald-700 border-emerald-200"}`}>
+              {ev.salesOpen ? <><Pause size={12} weight="light" /> Pause</> : <><Play size={12} weight="light" /> Resume</>}
             </button>
           </div>
           <motion.button whileHover={{ scale:1.01 }} whileTap={{ scale:0.97 }} onClick={saveEdit}
-            className={`py-3 bg-brand-orange hover:bg-brand-orange-hover text-white rounded-full text-[13px] font-bold transition-colors ${isDesk ? "px-6 w-auto" : "w-full"}`}>
+            className={`h-11 rounded-xl bg-brand-accent hover:bg-brand-accent-hover text-white text-sm font-medium transition-colors ${isDesk ? "px-6 w-auto" : "w-full"}`}>
             Save Changes
           </motion.button>
         </div>
@@ -1363,17 +1356,17 @@ export function OrganizerEventDetail() {
         <div className={`relative ${isDesk ? "h-[220px]" : "h-[170px]"}`}>
           <img src={cover} alt={ev.name} className="w-full h-full object-cover object-top" onError={e=>{e.target.src=catImg.other}} />
           <button onClick={() => setScreen("app")}
-            className="absolute top-3 left-3.5 w-8 h-8 rounded-full bg-brand-card shadow-sm flex items-center justify-center text-brand-text">
-            <ArrowLeft size={15} strokeWidth={2} />
+            className="absolute top-3 left-3.5 w-8 h-8 rounded-full bg-brand-card flex items-center justify-center text-brand-text">
+            <ArrowLeft size={15} weight="light" />
           </button>
           <button onClick={startEdit}
-            className="absolute top-3 right-3.5 px-3 py-1.5 bg-brand-card shadow-sm rounded-full text-brand-text text-[11px] font-semibold">Edit</button>
+            className="absolute top-3 right-3.5 px-3 py-1.5 bg-brand-card rounded-full text-brand-text text-xs font-semibold">Edit</button>
           <div className="absolute bottom-3 left-3.5 flex gap-1.5">
-            <span className="bg-brand-text text-white text-[8px] font-bold px-1.5 py-0.5 rounded font-mono">NFT</span>
-            {isFree && <span className="bg-fintech-green text-white text-[8px] font-bold px-1.5 py-0.5 rounded font-mono">FREE</span>}
+            <span className="bg-brand-text text-white text-xs font-medium px-1.5 py-0.5 rounded">NFT</span>
+            {isFree && <span className="bg-emerald-600 text-white text-xs font-medium px-1.5 py-0.5 rounded">FREE</span>}
             {!ev.isApproved && (
-              <span className="flex items-center gap-1 bg-amber-500 text-white text-[8px] font-bold px-1.5 py-0.5 rounded font-mono">
-                <Clock size={8} strokeWidth={2.5} /> PENDING REVIEW
+              <span className="flex items-center gap-1 bg-amber-500 text-white text-xs font-medium px-1.5 py-0.5 rounded">
+                <Clock size={8} weight="light" /> PENDING REVIEW
               </span>
             )}
           </div>
@@ -1382,10 +1375,10 @@ export function OrganizerEventDetail() {
         {!ev.isApproved && (
           <div className="bg-amber-50 border-b border-amber-200 px-4 py-3.5" style={{ padding: isDesk ? "14px 40px" : "14px" }}>
             <div className="flex items-start gap-2.5">
-              <ShieldCheck size={16} strokeWidth={1.75} className="text-amber-700 shrink-0 mt-0.5" />
+              <ShieldCheck size={16} weight="light" className="text-amber-700 shrink-0 mt-0.5" />
               <div>
-                <div className="text-[13px] font-bold text-amber-800">Pending Review</div>
-                <div className="text-[12px] text-amber-700 mt-0.5 leading-relaxed">
+                <div className="text-[13px] font-medium text-amber-800">Pending Review</div>
+                <div className="text-xs text-amber-700 mt-0.5 leading-relaxed">
                   This event isn't visible to attendees yet. Our team reviews new events before they go live to keep the platform safe. You'll be notified once it's approved.
                 </div>
               </div>
@@ -1393,20 +1386,20 @@ export function OrganizerEventDetail() {
           </div>
         )}
 
-        <div className="bg-brand-card border-b border-gray-100" style={{ padding: isDesk ? "16px 40px" : "12px 14px" }}>
-          <div className="text-[10px] font-medium text-brand-muted tracking-wide mb-1 font-mono">{(ev.category||"").toUpperCase()} · {ev.country||"GHANA"}</div>
-          <div className={`font-bold text-brand-text tracking-tight mb-0.5 ${isDesk ? "text-[22px]" : "text-lg"}`}>{ev.name}</div>
-          <div className="flex items-center gap-1 text-xs text-brand-muted font-mono">
-            <MapPin size={11} strokeWidth={1.75} /> {ev.venue} · <Calendar size={11} strokeWidth={1.75} /> {ev.date}
+        <div className="bg-brand-card border-b border-brand-hairline" style={{ padding: isDesk ? "16px 40px" : "12px 14px" }}>
+          <div className="text-xs font-medium text-brand-muted tracking-wide mb-1">{(ev.category||"").toUpperCase()} · {ev.country||"GHANA"}</div>
+          <div className={`font-semibold tracking-[-0.02em] text-brand-text mb-0.5 ${isDesk ? "text-2xl" : "text-xl"}`}>{ev.name}</div>
+          <div className="flex items-center gap-1 text-xs text-brand-muted">
+            <MapPin size={11} weight="light" /> {ev.venue} · <Calendar size={11} weight="light" /> {ev.date}
           </div>
         </div>
 
-        <div className="sticky top-0 z-20 bg-brand-card border-b border-gray-100 flex" style={{ padding: `0 ${isDesk?"40px":"14px"}` }}>
-          {[{id:"overview",label:"Overview",Icon:LayoutDashboard},{id:"holders",label:"Ticket Holders",Icon:Users,count:ev.ticketsSold}].map(t => (
+        <div className="sticky top-0 z-20 bg-brand-card border-b border-brand-hairline flex" style={{ padding: `0 ${isDesk?"40px":"14px"}` }}>
+          {[{id:"overview",label:"Overview",Icon:SquaresFour},{id:"holders",label:"Ticket Holders",Icon:Users,count:ev.ticketsSold}].map(t => (
             <button key={t.id} onClick={() => onTab(t.id)}
-              className={`px-3.5 py-3 bg-transparent border-0 border-b-2 flex items-center gap-1.5 text-[13px] transition-colors ${activeTab===t.id ? "border-brand-orange text-brand-orange font-semibold" : "border-transparent text-brand-muted font-normal"}`}>
-              <t.Icon size={14} strokeWidth={1.75} /> {t.label}
-              {t.count!==undefined && <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-full font-mono ${activeTab===t.id ? "bg-pastel-orange text-brand-orange" : "bg-gray-100 text-brand-muted"}`}>{t.count}</span>}
+              className={`px-3.5 py-3 bg-transparent border-0 border-b-2 flex items-center gap-1.5 text-[13px] transition-colors ${activeTab===t.id ? "border-brand-accent text-brand-accent font-semibold" : "border-transparent text-brand-muted font-normal"}`}>
+              <t.Icon size={14} weight="light" /> {t.label}
+              {t.count!==undefined && <span className={`text-xs font-semibold px-1.5 py-0.5 rounded-full ${activeTab===t.id ? "bg-[var(--brand-light)] text-brand-accent" : "bg-brand-hairline text-brand-muted"}`}>{t.count}</span>}
             </button>
           ))}
         </div>
@@ -1416,32 +1409,32 @@ export function OrganizerEventDetail() {
             <div className="pt-5">
               <div className={`grid gap-2.5 mb-4 ${isDesk ? "grid-cols-4" : "grid-cols-2"}`}>
                 {(isFree ? [
-                  [PartyPopper,"Registered",(ev.regs||ev.ticketsSold).toLocaleString(),"text-fintech-blue"],
+                  [Confetti,"Registered",(ev.regs||ev.ticketsSold).toLocaleString(),"text-blue-700"],
                   [Ticket,"Capacity",ev.totalTickets.toLocaleString(),"text-brand-text"],
-                  [CheckCircle2,"Checked In",admittedCount+" ppl","text-fintech-green"],
-                  [Calendar,"Date",ev.date,"text-fintech-blue"],
+                  [CheckCircle,"Checked In",admittedCount+" ppl","text-emerald-700"],
+                  [Calendar,"Date",ev.date,"text-blue-700"],
                 ] : [
-                  [Wallet,"Revenue (95%)",`${curr} ${revenue.toLocaleString()}`,"text-fintech-green"],
-                  [Landmark,"Platform Fee",`${curr} ${fee.toLocaleString()}`,"text-red-600"],
-                  [Ticket,"Sold",`${ev.ticketsSold}/${ev.totalTickets}`,"text-fintech-blue"],
-                  [DoorOpen,"Admitted",admittedCount+" ppl","text-brand-orange"],
+                  [Wallet,"Revenue (95%)",`${curr} ${revenue.toLocaleString()}`,"text-emerald-700"],
+                  [Bank,"Platform Fee",`${curr} ${fee.toLocaleString()}`,"text-red-600"],
+                  [Ticket,"Sold",`${ev.ticketsSold}/${ev.totalTickets}`,"text-blue-700"],
+                  [DoorOpen,"Admitted",admittedCount+" ppl","text-brand-accent"],
                 ]).map(([Icon,label,value,color]) => (
-                  <motion.div key={label} whileHover={{ y:-1 }} className="bg-brand-card border border-gray-100 rounded-2xl p-3.5 shadow-sm">
-                    <Icon size={15} strokeWidth={1.75} className={`${color} mb-1.5`} />
-                    <div className={`text-lg font-bold mb-0.5 tracking-tight ${color}`}>{value}</div>
-                    <div className="text-[11px] text-brand-muted">{label}</div>
+                  <motion.div key={label} whileHover={{ y:-1 }} className="bg-brand-card border border-brand-hairline rounded-2xl p-3.5">
+                    <Icon size={15} weight="light" className={`${color} mb-1.5`} />
+                    <div className={`text-xl font-semibold mb-0.5 tracking-tight tabular-nums ${color}`}>{value}</div>
+                    <div className="text-xs text-brand-muted">{label}</div>
                   </motion.div>
                 ))}
               </div>
 
               {ev.tiers && ev.tiers.length > 0 && (
                 <Panel className="mb-3">
-                  <div className="text-[10px] font-semibold text-brand-muted font-mono mb-3">TICKET TIERS</div>
+                  <div className="text-xs font-semibold text-brand-muted mb-3">TICKET TIERS</div>
                   <div className="flex flex-col gap-2">
                     {ev.tiers.map(t => (
                       <div key={t.id} className="flex items-center justify-between bg-brand-canvas rounded-xl px-3.5 py-2.5">
                         <div className="text-[13px] font-semibold text-brand-text">{t.name}</div>
-                        <div className="text-[12px] text-brand-muted font-mono">{curr} {t.price} · {t.sold}/{t.capacity} sold</div>
+                        <div className="text-xs text-brand-muted">{curr} {t.price} · {t.sold}/{t.capacity} sold</div>
                       </div>
                     ))}
                   </div>
@@ -1451,68 +1444,68 @@ export function OrganizerEventDetail() {
               <Panel className="mb-3">
                 <div className="flex justify-between mb-2">
                   <span className="text-[13px] font-medium text-brand-text">{isFree?"Registration":"Sales"} Progress</span>
-                  <span className={`text-[13px] font-bold font-mono ${pctColorClass(pct)}`}>{pct}%</span>
+                  <span className={`text-[13px] font-medium tabular-nums ${pctColorClass(pct)}`}>{pct}%</span>
                 </div>
-                <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                <div className="h-1.5 bg-brand-hairline rounded-full overflow-hidden">
                   <motion.div initial={{ width:0 }} animate={{ width:`${pct}%` }} transition={{ duration:0.9 }} className={`h-full rounded-full ${pctBarClass(pct)}`} />
                 </div>
-                <div className="text-[11px] text-brand-muted mt-1.5">{ev.totalTickets-ev.ticketsSold} {isFree?"spots":"tickets"} remaining</div>
+                <div className="text-xs text-brand-muted mt-1.5">{ev.totalTickets-ev.ticketsSold} {isFree?"spots":"tickets"} remaining</div>
               </Panel>
 
               <Panel className="mb-3">
-                <div className="flex items-center gap-1.5 text-[10px] font-semibold text-fintech-slate font-mono mb-2"><Link2 size={11} strokeWidth={2} /> EVENT URL</div>
-                <div className="font-mono text-[11px] text-brand-text bg-brand-canvas px-2.5 py-1.5 rounded-lg border border-gray-100 mb-2.5 break-all">{evUrl}</div>
+                <div className="flex items-center gap-1.5 text-xs font-semibold text-brand-text mb-2"><Link size={11} weight="light" /> EVENT URL</div>
+                <div className="font-mono text-xs text-brand-text bg-brand-canvas px-2.5 py-1.5 rounded-xl border border-brand-hairline mb-2.5 break-all">{evUrl}</div>
                 <button onClick={copyLink}
-                  className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-medium border transition-colors ${copiedLink ? "bg-pastel-green text-fintech-green border-fintech-green/20" : "bg-pastel-orange text-brand-orange border-brand-orange/20"}`}>
-                  {copiedLink ? <><Check size={12} strokeWidth={2} /> Copied</> : <><Copy size={12} strokeWidth={1.75} /> Copy Link</>}
+                  className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-medium border transition-colors ${copiedLink ? "bg-emerald-50 text-emerald-700 border-emerald-200" : "bg-[var(--brand-light)] text-brand-accent border-brand-accent/20"}`}>
+                  {copiedLink ? <><Check size={12} weight="light" /> Copied</> : <><Copy size={12} weight="light" /> Copy Link</>}
                 </button>
               </Panel>
 
               {ev.description && (
                 <Panel className="mb-3">
-                  <div className="text-[10px] font-semibold text-brand-muted font-mono mb-2">DESCRIPTION</div>
+                  <div className="text-xs font-semibold text-brand-muted mb-2">DESCRIPTION</div>
                   <div className="text-[13px] text-brand-muted leading-relaxed">{ev.description}</div>
                 </Panel>
               )}
 
               <div className={`grid gap-2 mb-3.5 ${isDesk ? "grid-cols-2" : "grid-cols-1"}`}>
                 <motion.button whileHover={{ scale:1.01 }} whileTap={{ scale:0.97 }} onClick={() => toggleSales(ev.id)}
-                  className={`py-3 rounded-xl text-[13px] font-semibold text-white flex items-center justify-center gap-1.5 transition-colors ${ev.salesOpen ? "bg-red-600 hover:bg-red-700" : "bg-fintech-green hover:bg-emerald-600"}`}>
-                  {ev.salesOpen ? <><Pause size={14} strokeWidth={2} /> Pause {isFree?"Registrations":"Sales"}</> : <><Play size={14} strokeWidth={2} /> Resume {isFree?"Registrations":"Sales"}</>}
+                  className={`py-3 rounded-xl text-[13px] font-semibold text-white flex items-center justify-center gap-1.5 transition-colors ${ev.salesOpen ? "bg-red-600 hover:bg-red-700" : "bg-emerald-600 hover:bg-emerald-600"}`}>
+                  {ev.salesOpen ? <><Pause size={14} weight="light" /> Pause {isFree?"Registrations":"Sales"}</> : <><Play size={14} weight="light" /> Resume {isFree?"Registrations":"Sales"}</>}
                 </motion.button>
                 <motion.button whileHover={{ scale:1.01 }} whileTap={{ scale:0.97 }} onClick={() => setScreen("scanTicket")}
-                  className="py-3 bg-brand-card text-brand-text border border-gray-200 rounded-xl text-[13px] font-medium flex items-center justify-center gap-1.5 hover:border-gray-300 transition-colors">
-                  <ScanLine size={14} strokeWidth={1.75} /> Scan at Door
+                  className="py-3 bg-brand-card text-brand-text border border-brand-hairline rounded-xl text-[13px] font-medium flex items-center justify-center gap-1.5 hover:border-gray-300 transition-colors">
+                  <Scan size={14} weight="light" /> Scan at Door
                 </motion.button>
               </div>
 
               <Panel>
                 <div className="flex items-center gap-2.5 mb-3">
-                  <div className="w-8 h-8 rounded-lg bg-pastel-orange flex items-center justify-center">
-                    <DoorOpen size={15} strokeWidth={1.75} className="text-brand-orange" />
+                  <div className="w-8 h-8 rounded-xl bg-[var(--brand-light)] flex items-center justify-center">
+                    <DoorOpen size={15} weight="light" className="text-brand-accent" />
                   </div>
                   <div>
                     <div className="text-[13px] font-semibold text-brand-text">Door Staff Access</div>
-                    <div className="text-[10px] text-brand-muted font-mono">Single-use codes · expire after first scan</div>
+                    <div className="text-xs text-brand-muted">Single-use codes · expire after first scan</div>
                   </div>
                 </div>
                 <button onClick={() => generateDoorCode(ev.id,ev.name)}
-                  className="w-full flex items-center justify-center gap-1.5 py-2.5 bg-pastel-orange text-brand-orange border border-dashed border-brand-orange/40 rounded-lg text-xs font-semibold mb-2.5 hover:bg-orange-100 transition-colors">
-                  <Plus size={13} strokeWidth={2} /> Generate Access Code
+                  className="w-full flex items-center justify-center gap-1.5 py-2.5 bg-[var(--brand-light)] text-brand-accent border border-dashed border-brand-accent/40 rounded-xl text-xs font-semibold mb-2.5 hover:bg-[var(--brand-light)] transition-colors">
+                  <Plus size={13} weight="light" /> Generate Access Code
                 </button>
                 {invites.map(inv => (
                   <div key={inv.code} onClick={() => copyCode(inv.code)}
-                    className={`rounded-lg px-3 py-2.5 mb-1.5 flex justify-between items-center cursor-pointer border ${inv.used ? "bg-brand-canvas border-gray-100" : "bg-pastel-orange border-brand-orange/20"}`}>
-                    <span className={`font-mono font-bold text-[13px] tracking-wider ${inv.used ? "text-brand-muted" : "text-brand-orange"}`}>{inv.code}</span>
+                    className={`rounded-xl px-3 py-2.5 mb-1.5 flex justify-between items-center cursor-pointer border ${inv.used ? "bg-brand-canvas border-brand-hairline" : "bg-[var(--brand-light)] border-brand-accent/20"}`}>
+                    <span className={`font-mono font-medium text-[13px] tracking-wider ${inv.used ? "text-brand-muted" : "text-brand-accent"}`}>{inv.code}</span>
                     <div className="flex gap-2 items-center">
-                      <span className={`text-[9px] font-bold font-mono ${inv.used ? "text-brand-muted" : "text-fintech-green"}`}>{inv.used?"USED":"ACTIVE"}</span>
-                      {!inv.used && <span className={`text-[9px] font-mono ${copiedCode===inv.code ? "text-fintech-green" : "text-brand-muted"}`}>{copiedCode===inv.code?"COPIED":"TAP TO COPY"}</span>}
+                      <span className={`text-xs font-medium ${inv.used ? "text-brand-muted" : "text-emerald-700"}`}>{inv.used?"USED":"ACTIVE"}</span>
+                      {!inv.used && <span className={`text-xs ${copiedCode===inv.code ? "text-emerald-700" : "text-brand-muted"}`}>{copiedCode===inv.code?"COPIED":"TAP TO COPY"}</span>}
                     </div>
                   </div>
                 ))}
-                <div className="flex gap-1.5 items-center mt-1 px-2.5 py-2 rounded-lg bg-pastel-blue border border-fintech-blue/15">
-                  <Lock size={12} strokeWidth={1.75} className="text-fintech-blue shrink-0" />
-                  <span className="text-[11px] text-fintech-blue font-medium">Door staff can scan only — no event management access</span>
+                <div className="flex gap-1.5 items-center mt-1 px-2.5 py-2 rounded-xl bg-blue-50 border border-blue-100">
+                  <Lock size={12} weight="light" className="text-blue-700 shrink-0" />
+                  <span className="text-xs text-blue-700 font-medium">Door staff can scan only — no event management access</span>
                 </div>
               </Panel>
             </div>
@@ -1523,21 +1516,21 @@ export function OrganizerEventDetail() {
           <div style={{ padding: PAD }}>
             <div className="pt-4">
               <div className="grid grid-cols-3 gap-2 mb-3.5">
-                {[[Ticket,holders.filter(t=>t.status==="active").length,"Active","text-fintech-green"],[CheckCircle2,holders.filter(t=>t.status==="redeemed").length,"Redeemed","text-gray-500"],[Tag,holders.filter(t=>t.status==="resale").length,"On Resale","text-red-600"]].map(([Icon,count,label,color]) => (
+                {[[Ticket,holders.filter(t=>t.status==="active").length,"Active","text-emerald-700"],[CheckCircle,holders.filter(t=>t.status==="redeemed").length,"Redeemed","text-gray-500"],[Tag,holders.filter(t=>t.status==="resale").length,"On Resale","text-red-600"]].map(([Icon,count,label,color]) => (
                   <Panel key={label} className="text-center py-3 px-2.5">
-                    <Icon size={16} strokeWidth={1.75} className={`${color} mx-auto mb-1`} />
-                    <div className={`text-lg font-bold ${color}`}>{holderLoad?"—":count}</div>
-                    <div className="text-[10px] text-brand-muted mt-0.5">{label}</div>
+                    <Icon size={16} weight="light" className={`${color} mx-auto mb-1`} />
+                    <div className={`text-xl font-semibold tabular-nums ${color}`}>{holderLoad?"—":count}</div>
+                    <div className="text-xs text-brand-muted mt-0.5">{label}</div>
                   </Panel>
                 ))}
               </div>
               <div className="relative mb-3">
-                <Search size={13} strokeWidth={1.75} className="absolute left-3 top-1/2 -translate-y-1/2 text-brand-muted" />
-                <input value={holderSearch} onChange={e=>setHolderSearch(e.target.value)} placeholder="Search name, email or ticket ID..."
+                <MagnifyingGlass size={13} weight="light" className="absolute left-3 top-1/2 -translate-y-1/2 text-brand-muted" />
+                <input value={holderSearch} onChange={e=>setHolderSearch(e.target.value)} placeholder="MagnifyingGlass name, email or ticket ID..."
                   className={`${inputClass(false)} pl-9`} />
                 {holderSearch && (
                   <button onClick={()=>setHolderSearch("")} className="absolute right-3 top-1/2 -translate-y-1/2 text-brand-muted">
-                    <X size={13} strokeWidth={2} />
+                    <X size={13} weight="light" />
                   </button>
                 )}
               </div>
@@ -1545,8 +1538,8 @@ export function OrganizerEventDetail() {
                 <div className="flex flex-col gap-1.5">{[1,2,3,4].map(i=><div key={i} className="skeleton" style={{ height:"54px", borderRadius:"12px" }} />)}</div>
               ) : filtered.length===0 ? (
                 <Panel className="text-center py-12 px-5">
-                  <div className="w-11 h-11 rounded-full bg-pastel-orange flex items-center justify-center mx-auto mb-2.5">
-                    <Users size={20} strokeWidth={1.75} className="text-brand-orange" />
+                  <div className="w-11 h-11 rounded-full bg-[var(--brand-light)] flex items-center justify-center mx-auto mb-2.5">
+                    <Users size={20} weight="light" className="text-brand-accent" />
                   </div>
                   <div className="text-sm font-semibold text-brand-text mb-1">{holderSearch?"No results":"No ticket holders yet"}</div>
                   <div className="text-xs text-brand-muted">{holderSearch?"Try a different search":"Holders will appear here once tickets are purchased"}</div>
@@ -1555,39 +1548,39 @@ export function OrganizerEventDetail() {
                 <div className="flex flex-col gap-1.5">
                   {isDesk && (
                     <div className="grid gap-2.5 px-3.5 py-1" style={{ gridTemplateColumns:"1fr 1fr 80px 100px" }}>
-                      {["HOLDER","TICKET ID","QTY","STATUS"].map(h => <span key={h} className="text-[9px] font-semibold text-brand-muted tracking-wide font-mono">{h}</span>)}
+                      {["HOLDER","TICKET ID","QTY","STATUS"].map(h => <span key={h} className="text-xs font-semibold text-brand-muted tracking-wide">{h}</span>)}
                     </div>
                   )}
                   {filtered.map((t,i) => {
                     const name  = ((t.owner?.first_name||"")+" "+(t.owner?.last_name||"")).trim()||"Unknown";
                     const email = t.owner?.email||"—";
-                    const cls   = sClass[t.status]||"text-gray-600 bg-gray-100";
+                    const cls   = sClass[t.status]||"text-gray-600 bg-brand-hairline";
                     const lbl   = sLabel[t.status]||t.status;
                     return (
                       <motion.div key={t.ticket_id||i} initial={{ opacity:0, y:5 }} animate={{ opacity:1, y:0 }} transition={{ delay:i*0.02 }}
-                        className={`bg-brand-card rounded-xl px-3.5 py-2.5 border border-gray-100 items-center gap-2.5 hover:border-gray-200 transition-colors ${isDesk ? "grid" : "flex"}`}
+                        className={`bg-brand-card rounded-xl px-3.5 py-2.5 border border-brand-hairline items-center gap-2.5 hover:border-brand-hairline transition-colors ${isDesk ? "grid" : "flex"}`}
                         style={isDesk ? { gridTemplateColumns:"1fr 1fr 80px 100px" } : undefined}>
                         <div className={`min-w-0 ${isDesk ? "" : "flex-1"}`}>
                           <div className="text-xs font-semibold text-brand-text truncate mb-0.5">
                             {name}
-                            {t.is_resale && <span className="ml-1.5 text-[8px] font-bold text-fintech-slate bg-gray-100 px-1.5 py-0.5 rounded">RESALE</span>}
+                            {t.is_resale && <span className="ml-1.5 text-xs font-medium text-brand-text bg-brand-hairline px-1.5 py-0.5 rounded">RESALE</span>}
                           </div>
-                          <div className="text-[10px] text-brand-muted truncate">{email}</div>
+                          <div className="text-xs text-brand-muted truncate">{email}</div>
                         </div>
-                        <div className={`font-mono text-[9px] text-brand-muted truncate ${isDesk ? "block" : "hidden"}`}>
+                        <div className={`font-mono text-xs text-brand-muted truncate ${isDesk ? "block" : "hidden"}`}>
                           {String(t.ticket_id||"").slice(0,14)}…
-                          {t.nft_token_id && <div className="text-[8px] text-fintech-slate mt-0.5">NFT #{t.nft_token_id}</div>}
+                          {t.nft_token_id && <div className="font-mono text-xs text-brand-text mt-0.5">NFT #{t.nft_token_id}</div>}
                         </div>
                         <div className={isDesk ? "block" : "hidden"}>
-                          <span className="text-xs font-semibold text-brand-orange font-mono">×{t.quantity||1}</span>
+                          <span className="text-xs font-semibold text-brand-accent">×{t.quantity||1}</span>
                         </div>
                         <div>
-                          <span className={`text-[9px] font-bold px-2 py-1 rounded font-mono whitespace-nowrap ${cls}`}>{lbl.toUpperCase()}</span>
+                          <span className={`text-xs font-medium px-2 py-1 rounded whitespace-nowrap ${cls}`}>{lbl.toUpperCase()}</span>
                         </div>
                       </motion.div>
                     );
                   })}
-                  <div className="text-center py-2.5 text-[10px] text-brand-muted font-mono">
+                  <div className="text-center py-2.5 text-xs text-brand-muted">
                     {filtered.length} of {holders.length} holders{holderSearch&&` · "${holderSearch}"`}
                   </div>
                 </div>

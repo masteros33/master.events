@@ -2,11 +2,11 @@ import React, { useState, useCallback, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useQuery } from "@tanstack/react-query";
 import {
-  Ticket, Search, X, MapPin, Link2, Tag, Calendar, Clock,
-  ShieldCheck, Smartphone, ArrowLeft, ArrowRight, LayoutGrid,
-  Music, Cpu, UtensilsCrossed, Palette, Trophy, Briefcase, MoreHorizontal,
-  FileText, Star, Crown, CheckCircle2,
-} from "lucide-react";
+  Ticket, MagnifyingGlass, X, MapPin, Link, Tag, Calendar, Clock,
+  ShieldCheck, DeviceMobile, ArrowLeft, ArrowRight, SquaresFour,
+  MusicNotes, Cpu, ForkKnife, PaintBrush, Trophy, Briefcase, DotsThreeCircle,
+  FileText, Star, Crown, CheckCircle, WarningCircle,
+} from "@phosphor-icons/react";
 import useStore from "../../store/useStore";
 import { eventsAPI } from "../../api";
 
@@ -21,18 +21,18 @@ const categoryImages = {
 };
 
 const CATEGORIES = [
-  { key: "all",      label: "All",      Icon: LayoutGrid },
-  { key: "music",    label: "Music",    Icon: Music },
+  { key: "music",    label: "Music",    Icon: MusicNotes },
   { key: "tech",     label: "Tech",     Icon: Cpu },
-  { key: "food",     label: "Food",     Icon: UtensilsCrossed },
-  { key: "arts",     label: "Arts",     Icon: Palette },
+  { key: "food",     label: "Food",     Icon: ForkKnife },
+  { key: "arts",     label: "Arts",     Icon: PaintBrush },
   { key: "sports",   label: "Sports",   Icon: Trophy },
   { key: "business", label: "Business", Icon: Briefcase },
-  { key: "other",    label: "Other",    Icon: MoreHorizontal },
+  { key: "other",    label: "Other",    Icon: DotsThreeCircle },
 ];
 
-const ITEMS_PER_PAGE_DESKTOP = 9;
-const ITEMS_PER_PAGE_MOBILE  = 6;
+const RECENT_CATEGORIES_KEY = "me_viewed_categories";
+const ITEMS_PER_PAGE_DESKTOP = 12;
+const ITEMS_PER_PAGE_MOBILE  = 8;
 const isDesktop = () => window.innerWidth > 768;
 
 function hasRealDescription(desc, name) {
@@ -49,18 +49,61 @@ function tierIconFor(name) {
   return Ticket;
 }
 
+function formatDate(dateStr) {
+  if (!dateStr) return "TBA";
+  const d = new Date(dateStr + "T00:00:00");
+  if (isNaN(d)) return dateStr;
+  return d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+}
+
+function formatTime(timeStr) {
+  if (!timeStr) return null;
+  const [h, m] = timeStr.split(":").map(Number);
+  if (isNaN(h)) return null;
+  const period = h >= 12 ? "PM" : "AM";
+  const h12 = h % 12 === 0 ? 12 : h % 12;
+  return `${h12}:${String(m || 0).padStart(2, "0")} ${period}`;
+}
+
+function isSameDate(dateStr, target) {
+  if (!dateStr) return false;
+  const d = new Date(dateStr + "T00:00:00");
+  return d.toDateString() === target.toDateString();
+}
+
+function isThisWeekend(dateStr) {
+  if (!dateStr) return false;
+  const d = new Date(dateStr + "T00:00:00");
+  const now = new Date();
+  const day = now.getDay();
+  const satOffset = (6 - day + 7) % 7;
+  const sat = new Date(now); sat.setDate(now.getDate() + satOffset); sat.setHours(0, 0, 0, 0);
+  const sun = new Date(sat); sun.setDate(sat.getDate() + 1); sun.setHours(23, 59, 59, 999);
+  return d >= sat && d <= sun;
+}
+
+function priceLabel(ev) {
+  const currency = ev.currency || "GHS";
+  const hasTiers = Array.isArray(ev.tiers) && ev.tiers.length > 0;
+  if (hasTiers) {
+    const from = Math.min(...ev.tiers.map(t => parseFloat(t.price) || 0));
+    return from === 0 ? "Free" : `${currency} ${from}+`;
+  }
+  return ev.price === 0 ? "Free" : `${currency} ${ev.price}`;
+}
+
 function DescriptionBlock({ desc, name, compact }) {
   const real = hasRealDescription(desc, name);
   return (
     <div className={compact ? "mb-5" : "mb-7"}>
-      <div className="text-[15px] font-bold text-brand-text mb-2.5">Overview</div>
+      <div className="text-[15px] font-semibold text-brand-text mb-2.5">Overview</div>
       {real ? (
         <p className="text-sm text-brand-text leading-relaxed whitespace-pre-line">
           {desc.trim()}
         </p>
       ) : (
-        <div className="flex items-center gap-2.5 bg-brand-card border border-gray-100 rounded-xl px-3.5 py-3">
-          <FileText size={15} strokeWidth={1.75} className="text-brand-muted shrink-0" />
+        <div className="flex items-center gap-2.5 bg-brand-card border border-brand-hairline rounded-xl px-3.5 py-3">
+          <FileText size={15} weight="light" className="text-brand-muted shrink-0" />
           <span className="text-[13px] text-brand-muted">No description yet — check back closer to the event.</span>
         </div>
       )}
@@ -71,7 +114,7 @@ function DescriptionBlock({ desc, name, compact }) {
 function TierPicker({ tiers, selectedId, onSelect, compact }) {
   return (
     <div className={compact ? "mb-5" : "mb-6"}>
-      <div className="text-[10px] font-bold text-brand-muted uppercase tracking-widest font-mono mb-2.5">
+      <div className="text-xs font-medium text-brand-muted uppercase tracking-widest mb-2.5">
         Select Ticket Type
       </div>
       <div className="flex flex-col gap-2">
@@ -82,26 +125,26 @@ function TierPicker({ tiers, selectedId, onSelect, compact }) {
           return (
             <button key={t.id} disabled={soldOut} onClick={() => onSelect(t)}
               className={`flex items-center justify-between px-4 py-3 rounded-xl border-2 text-left transition-colors ${
-                soldOut ? "border-gray-100 bg-gray-50 opacity-50 cursor-not-allowed"
-                : active ? "border-brand-orange bg-orange-50/30"
-                : "border-gray-200 bg-brand-card"
+                soldOut ? "border-brand-hairline bg-brand-subtle opacity-50 cursor-not-allowed"
+                : active ? "border-brand-accent bg-[var(--brand-light)]"
+                : "border-brand-hairline bg-brand-card"
               }`}>
               <div className="flex items-center gap-3 min-w-0">
-                <span className={`w-9 h-9 rounded-lg flex items-center justify-center shrink-0 ${active ? "bg-brand-orange text-white" : "bg-brand-canvas text-brand-muted"}`}>
-                  <Icon size={16} strokeWidth={1.75} />
+                <span className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${active ? "bg-brand-accent text-white" : "bg-brand-canvas text-brand-muted"}`}>
+                  <Icon size={16} weight="light" />
                 </span>
                 <div className="min-w-0">
-                  <div className="text-[13px] font-bold text-brand-text truncate">{t.name}</div>
-                  <div className="text-[11px] text-brand-muted font-mono">
+                  <div className="text-[13px] font-medium text-brand-text truncate">{t.name}</div>
+                  <div className="text-xs text-brand-muted">
                     {soldOut ? "Sold out" : `${t.remaining} left`}
                   </div>
                 </div>
               </div>
               <div className="flex items-center gap-2 shrink-0">
-                <span className={`text-sm font-extrabold font-mono ${active ? "text-brand-orange" : "text-brand-text"}`}>
+                <span className={`text-sm font-semibold tabular-nums ${active ? "text-brand-accent" : "text-brand-text"}`}>
                   GHS {t.price}
                 </span>
-                {active && <CheckCircle2 size={16} strokeWidth={2} className="text-brand-orange" />}
+                {active && <CheckCircle size={16} weight="light" className="text-brand-accent" />}
               </div>
             </button>
           );
@@ -111,33 +154,49 @@ function TierPicker({ tiers, selectedId, onSelect, compact }) {
   );
 }
 
-function CategoryChip({ cat, active, onClick }) {
+function FilterPills({ active, onChange }) {
+  const pills = [
+    { key: "all",         label: "All" },
+    { key: "today",       label: "Today" },
+    { key: "weekend",     label: "This weekend" },
+    { key: "forYou",      label: "For you" },
+    ...CATEGORIES,
+  ];
   return (
-    <button onClick={onClick}
-      className={`shrink-0 flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-[11px] font-semibold border transition-colors ${active ? "bg-brand-orange border-brand-orange text-white" : "bg-transparent border-gray-200 text-brand-muted hover:text-brand-text"}`}>
-      <cat.Icon size={12} strokeWidth={1.75} />
-      {cat.label}
-    </button>
+    <div className="relative">
+      <div className="flex gap-1.5 overflow-x-auto scroll-smooth snap-x" style={{ scrollbarWidth: "none" }}>
+        {pills.map(p => (
+          <button key={p.key} onClick={() => onChange(p.key)}
+            className={`shrink-0 snap-start flex items-center gap-1.5 h-8 px-3.5 rounded-full text-[13px] font-medium border transition-colors ${
+              active === p.key ? "bg-brand-accent border-brand-accent text-white" : "bg-transparent border-brand-hairline text-brand-muted hover:text-brand-text"
+            }`}>
+            {p.Icon && <p.Icon size={13} weight="light" />}
+            {p.label}
+          </button>
+        ))}
+      </div>
+      <div className="pointer-events-none absolute right-0 top-0 bottom-0 w-8" style={{ background: "linear-gradient(to left, var(--bg-card), transparent)" }} />
+    </div>
   );
 }
 
 function ResaleBanner({ onClick }) {
   return (
     <button onClick={onClick}
-      className="w-full bg-brand-card border border-gray-100 rounded-2xl shadow-sm px-4 py-3.5 flex items-center justify-between text-left transition-shadow hover:shadow-md">
+      className="w-full bg-brand-card border border-brand-hairline rounded-2xl px-4 py-3.5 flex items-center justify-between text-left transition-shadow hover:shadow-[0_1px_2px_rgba(15,23,42,0.04)]">
       <div className="flex items-center gap-3 min-w-0">
-        <div className="w-10 h-10 rounded-full bg-pastel-orange flex items-center justify-center shrink-0">
-          <Tag size={18} strokeWidth={1.75} className="text-brand-orange" />
+        <div className="w-10 h-10 rounded-full flex items-center justify-center shrink-0" style={{ background: "var(--brand-light)" }}>
+          <Tag size={18} weight="light" className="text-brand-accent" />
         </div>
         <div className="min-w-0">
-          <div className="text-[13px] font-bold text-brand-text">Fan-to-Fan Resale Market</div>
+          <div className="text-[13px] font-medium text-brand-text">Fan-to-Fan Resale Market</div>
           <div className="flex items-center gap-1.5 mt-1 flex-wrap">
-            <span className="text-[9px] font-bold text-white bg-brand-text px-2 py-0.5 rounded-full">NFT TRANSFER</span>
-            <span className="text-[9px] font-bold text-brand-muted bg-gray-100 px-2 py-0.5 rounded-full">2% FEE</span>
+            <span className="text-xs font-medium text-white bg-brand-text px-2 py-0.5 rounded-full">NFT TRANSFER</span>
+            <span className="text-xs font-medium text-brand-muted bg-brand-hairline px-2 py-0.5 rounded-full">2% FEE</span>
           </div>
         </div>
       </div>
-      <ArrowRight size={16} strokeWidth={2} className="text-brand-orange shrink-0" />
+      <ArrowRight size={16} weight="light" className="text-brand-accent shrink-0" />
     </button>
   );
 }
@@ -147,13 +206,13 @@ function MobileNavbar({ scrolled }) {
   const isLoggedIn = useStore(s => s.isLoggedIn);
 
   return (
-    <div className="flex items-center justify-between px-4 h-14 bg-brand-card border-b border-gray-100">
+    <div className="flex items-center justify-between px-4 h-14 bg-brand-card border-b border-brand-hairline">
       <motion.div animate={{ justifyContent: scrolled ? "center" : "flex-start" }}
         className={`flex items-center gap-2 transition-all ${scrolled ? "flex-1 justify-center" : ""}`}>
-        <div className="w-7 h-7 rounded-lg bg-brand-orange flex items-center justify-center shrink-0">
-          <Ticket size={13} strokeWidth={2} color="#fff" />
+        <div className="w-7 h-7 rounded-xl bg-brand-accent flex items-center justify-center shrink-0">
+          <Ticket size={13} weight="light" color="#fff" />
         </div>
-        <span className="font-extrabold text-[15px] text-brand-text tracking-tight whitespace-nowrap">Master Events</span>
+        <span className="font-semibold text-[15px] text-brand-text tracking-tight whitespace-nowrap">Master Events</span>
       </motion.div>
 
       <AnimatePresence>
@@ -161,11 +220,11 @@ function MobileNavbar({ scrolled }) {
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.15 }}
             className="flex items-center gap-2 shrink-0">
             <button onClick={() => setScreen("login")}
-              className="px-3.5 py-1.5 rounded-full border border-gray-200 text-brand-text text-xs font-semibold whitespace-nowrap">
+              className="h-8 px-3.5 rounded-xl border border-brand-hairline text-brand-text text-xs font-medium whitespace-nowrap">
               Log in
             </button>
             <button onClick={() => setScreen("signup")}
-              className="px-3.5 py-1.5 rounded-full bg-brand-orange text-white text-xs font-bold whitespace-nowrap">
+              className="h-8 px-3.5 rounded-xl bg-brand-accent text-white text-xs font-medium whitespace-nowrap">
               Sign up
             </button>
           </motion.div>
@@ -175,62 +234,44 @@ function MobileNavbar({ scrolled }) {
   );
 }
 
-function EventCard({ ev, onClick }) {
-  const hasTiers   = Array.isArray(ev.tiers) && ev.tiers.length > 0;
-  const fromPrice  = hasTiers ? Math.min(...ev.tiers.map(t => parseFloat(t.price) || 0)) : ev.price;
+export function EventCard({ ev, onClick, footer }) {
+  const hasTiers = Array.isArray(ev.tiers) && ev.tiers.length > 0;
+  const time = formatTime(ev.time);
 
   return (
     <motion.div whileHover={{ y: -3 }} whileTap={{ scale: 0.98 }} onClick={onClick}
-      className="bg-brand-card rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow overflow-hidden cursor-pointer">
+      className={`bg-brand-card rounded-2xl border border-brand-hairline hover:shadow-[0_1px_2px_rgba(15,23,42,0.04)] transition-shadow overflow-hidden ${onClick ? "cursor-pointer" : ""}`}>
 
-      <div className="relative overflow-hidden h-[190px] md:h-[220px]">
+      <div className="relative overflow-hidden aspect-square">
         <img src={ev.image} alt={ev.name} onError={e => { e.target.src = categoryImages.other; }}
+          loading="lazy" width="400" height="400"
           className="w-full h-full object-cover block" />
 
-        <div className="absolute inset-x-0 top-0 h-16 bg-gradient-to-b from-black/35 to-transparent pointer-events-none" />
-        <div className="absolute inset-x-0 bottom-0 h-14 bg-gradient-to-t from-black/40 to-transparent pointer-events-none" />
-
-        <span className="absolute top-2.5 right-2.5 bg-brand-orange text-white text-[9px] font-bold px-2.5 py-1 rounded-full font-mono shadow-sm">
-          {ev.category.toUpperCase()}
-        </span>
-        {ev.price === 0 && !hasTiers && (
-          <span className="absolute top-2.5 left-2.5 bg-fintech-green text-white text-[9px] font-bold px-2.5 py-1 rounded-full font-mono shadow-sm">FREE</span>
-        )}
         {hasTiers && (
-          <span className="absolute top-2.5 left-2.5 bg-brand-text text-white text-[9px] font-bold px-2.5 py-1 rounded-full font-mono shadow-sm">
+          <span className="absolute top-2 left-2 bg-brand-text text-white text-xs font-medium px-2 py-1 rounded-full">
             {ev.tiers.length} TIERS
           </span>
         )}
-        <span className="absolute bottom-2.5 left-2.5 flex items-center gap-1 bg-brand-text text-white text-[9px] font-bold px-2 py-1 rounded-full shadow-sm">
-          <Link2 size={9} strokeWidth={2.5} /> NFT
+        <span className="absolute bottom-2 left-2 flex items-center gap-1 bg-brand-text text-white text-xs font-medium px-2 py-1 rounded-full">
+          <Link size={9} weight="light" /> NFT
         </span>
       </div>
 
-      <div className="p-4">
-        <div className="font-bold text-sm text-brand-text mb-1.5 leading-snug">{ev.name}</div>
-        <div className="flex items-center gap-1 text-[11px] text-brand-muted mb-3 font-mono truncate">
-          <MapPin size={11} strokeWidth={1.75} /> {ev.venue} · {ev.date}
+      <div className="p-3">
+        <div className="font-medium text-[15px] text-brand-text mb-1 leading-snug line-clamp-2">{ev.name}</div>
+        <div className="flex items-center gap-1 text-[13px] text-brand-muted mb-2.5 tabular-nums truncate">
+          {formatDate(ev.date)}{time ? ` · ${time}` : ""}
         </div>
-
-        {ev.organizerName && (
-          <div className="flex items-center gap-2 mb-3 pt-2.5 border-t border-gray-50">
-            <div className="w-5 h-5 rounded-full bg-pastel-orange flex items-center justify-center text-[9px] font-bold text-brand-orange shrink-0">
-              {ev.organizerName.charAt(0).toUpperCase()}
-            </div>
-            <span className="text-[10px] text-brand-muted">
-              Hosted by <span className="font-semibold text-brand-text">{ev.organizerName}</span>
+        {footer ? footer : (
+          <div className="flex justify-between items-center">
+            <span className="text-xs text-brand-muted flex items-center gap-1 truncate min-w-0">
+              <MapPin size={11} weight="light" className="shrink-0" /> <span className="truncate">{ev.venue}</span>
+            </span>
+            <span className="shrink-0 h-7 px-3 rounded-full bg-brand-accent text-white text-[13px] font-medium flex items-center tabular-nums">
+              {priceLabel(ev)}
             </span>
           </div>
         )}
-
-        <div className="flex justify-between items-center">
-          <div className="text-brand-orange font-extrabold text-lg tracking-tight">
-            {fromPrice === 0 ? "FREE" : `${hasTiers ? "From " : ""}GHS ${fromPrice}`}
-          </div>
-          <span className="text-xs font-semibold text-brand-muted flex items-center gap-1">
-            View <ArrowRight size={12} strokeWidth={2} />
-          </span>
-        </div>
       </div>
     </motion.div>
   );
@@ -241,17 +282,17 @@ function Pagination({ current, total, onChange }) {
   return (
     <div className="flex justify-center items-center gap-1.5 pt-8 pb-2">
       <button onClick={() => onChange(current - 1)} disabled={current === 1}
-        className="px-3.5 py-1.5 rounded-lg border border-gray-200 bg-brand-card text-brand-text text-xs font-semibold font-mono disabled:opacity-40 disabled:cursor-not-allowed">
+        className="h-9 px-3.5 rounded-xl border border-brand-hairline bg-brand-card text-brand-text text-xs font-medium disabled:opacity-40 disabled:cursor-not-allowed">
         ← Prev
       </button>
       {Array.from({ length: total }, (_, i) => i + 1).map(p => (
         <button key={p} onClick={() => onChange(p)}
-          className={`w-8 h-8 rounded-lg text-xs font-mono font-semibold transition-colors ${p === current ? "bg-brand-orange text-white" : "border border-gray-200 bg-brand-card text-brand-muted"}`}>
+          className={`w-9 h-9 rounded-xl text-xs font-medium tabular-nums transition-colors ${p === current ? "bg-brand-accent text-white" : "border border-brand-hairline bg-brand-card text-brand-muted"}`}>
           {p}
         </button>
       ))}
       <button onClick={() => onChange(current + 1)} disabled={current === total}
-        className="px-3.5 py-1.5 rounded-lg border border-gray-200 bg-brand-card text-brand-text text-xs font-semibold font-mono disabled:opacity-40 disabled:cursor-not-allowed">
+        className="h-9 px-3.5 rounded-xl border border-brand-hairline bg-brand-card text-brand-text text-xs font-medium disabled:opacity-40 disabled:cursor-not-allowed">
         Next →
       </button>
     </div>
@@ -260,10 +301,10 @@ function Pagination({ current, total, onChange }) {
 
 function InfoTile({ Icon, label, value }) {
   return (
-    <div className="flex-1 min-w-[80px] bg-brand-canvas border border-gray-100 rounded-xl p-2.5 text-center">
-      <Icon size={16} strokeWidth={1.75} className="text-brand-muted mx-auto mb-1.5" />
-      <div className="text-[8px] text-brand-muted font-mono tracking-wide mb-0.5">{label}</div>
-      <div className="text-[11px] font-bold text-brand-text font-mono">{value}</div>
+    <div className="flex-1 min-w-[80px] bg-brand-canvas border border-brand-hairline rounded-xl p-2.5 text-center">
+      <Icon size={16} weight="light" className="text-brand-muted mx-auto mb-1.5" />
+      <div className="text-xs text-brand-muted tracking-wide mb-0.5">{label}</div>
+      <div className="text-[13px] font-medium text-brand-text tabular-nums">{value}</div>
     </div>
   );
 }
@@ -273,6 +314,7 @@ function EventDetailOverlay({ ev, onBack, onCheckout }) {
   const hasTiers  = Array.isArray(ev.tiers) && ev.tiers.length > 0;
   const remaining = ev.totalTickets - ev.ticketsSold;
   const soldPct   = Math.max(5, Math.min(100, ((ev.ticketsSold || 0) / (ev.totalTickets || 1)) * 100));
+  const currency  = ev.currency || "GHS";
 
   const [selectedTier, setSelectedTier] = useState(hasTiers && ev.tiers.length === 1 ? ev.tiers[0] : null);
 
@@ -282,14 +324,14 @@ function EventDetailOverlay({ ev, onBack, onCheckout }) {
   const buyLabel = () => {
     if (buyDisabled) return "Select a ticket type";
     if (displayPrice === 0 || ev.price === 0) return "Get Free Ticket";
-    return `Buy Ticket — GHS ${displayPrice}`;
+    return `Buy Ticket — ${currency} ${displayPrice}`;
   };
 
   const trustRow = (
     <div className="flex items-center justify-center gap-4 mt-3 flex-wrap">
-      {[[ShieldCheck,"Secure checkout"],[Smartphone,"MoMo accepted"],[Link2,"NFT issued instantly"]].map(([Icon,label]) => (
-        <span key={label} className="flex items-center gap-1 text-[10px] text-brand-muted">
-          <Icon size={11} strokeWidth={1.75} /> {label}
+      {[[ShieldCheck,"Secure checkout"],[DeviceMobile,"MoMo accepted"],[Link,"NFT issued instantly"]].map(([Icon,label]) => (
+        <span key={label} className="flex items-center gap-1 text-xs text-brand-muted">
+          <Icon size={11} weight="light" /> {label}
         </span>
       ))}
     </div>
@@ -303,39 +345,39 @@ function EventDetailOverlay({ ev, onBack, onCheckout }) {
             <img src={ev.image} alt={ev.name} onError={e => { e.target.src = categoryImages.other; }}
               className="w-full h-full object-cover block" />
             <button onClick={onBack}
-              className="absolute top-3.5 left-3.5 w-9 h-9 rounded-full bg-brand-card shadow-sm flex items-center justify-center text-brand-text">
-              <ArrowLeft size={16} strokeWidth={2} />
+              className="absolute top-3.5 left-3.5 w-9 h-9 rounded-full bg-brand-card flex items-center justify-center text-brand-text">
+              <ArrowLeft size={16} weight="light" />
             </button>
-            <span className="absolute top-3.5 right-3.5 flex items-center gap-1 bg-brand-text text-white text-[9px] font-bold px-2.5 py-1 rounded-full">
-              <Link2 size={10} strokeWidth={2.5} /> NFT · POLYGON
+            <span className="absolute top-3.5 right-3.5 flex items-center gap-1 bg-brand-text text-white text-xs font-medium px-2.5 py-1 rounded-full">
+              <Link size={10} weight="light" /> NFT · POLYGON
             </span>
-            <span className="absolute bottom-3 left-3.5 bg-brand-orange text-white text-[9px] font-bold px-2.5 py-1 rounded-full">
+            <span className="absolute bottom-3 left-3.5 bg-brand-accent text-white text-xs font-medium px-2.5 py-1 rounded-full">
               {ev.category.toUpperCase()}
             </span>
           </div>
 
-          <div className="bg-brand-card px-4 py-4 border-b border-gray-100">
-            <div className="font-extrabold text-lg text-brand-text leading-snug mb-1">{ev.name}</div>
+          <div className="bg-brand-card px-4 py-4 border-b border-brand-hairline">
+            <div className="font-semibold text-xl tracking-[-0.02em] text-brand-text leading-snug mb-1">{ev.name}</div>
             <div className="flex items-center gap-1 text-xs text-brand-muted">
-              <MapPin size={12} strokeWidth={1.75} /> {ev.venue}{ev.city ? " · " + ev.city : ""}
+              <MapPin size={12} weight="light" /> {ev.venue}{ev.city ? " · " + ev.city : ""}
             </div>
           </div>
 
           <div className="p-4 pb-24">
             <div className="flex gap-2 mb-5 flex-wrap">
-              <InfoTile Icon={Calendar} label="DATE" value={ev.date || "TBA"} />
-              <InfoTile Icon={Clock} label="TIME" value={ev.time ? ev.time.substring(0,5) : "TBA"} />
+              <InfoTile Icon={Calendar} label="DATE" value={formatDate(ev.date)} />
+              <InfoTile Icon={Clock} label="TIME" value={formatTime(ev.time) || "TBA"} />
               <InfoTile Icon={Ticket} label="LEFT" value={`${remaining} left`} />
             </div>
 
             {ev.organizerName && (
-              <div className="flex items-center gap-2.5 bg-pastel-orange rounded-xl px-3.5 py-2.5 mb-4">
-                <div className="w-7 h-7 rounded-full bg-brand-orange flex items-center justify-center text-xs font-bold text-white shrink-0">
+              <div className="flex items-center gap-2.5 rounded-xl px-3.5 py-2.5 mb-4" style={{ background: "var(--brand-light)" }}>
+                <div className="w-7 h-7 rounded-full bg-brand-accent flex items-center justify-center text-xs font-medium text-white shrink-0">
                   {ev.organizerName.charAt(0).toUpperCase()}
                 </div>
                 <div>
-                  <div className="text-[9px] text-brand-muted font-mono">HOSTED BY</div>
-                  <div className="text-[13px] font-bold text-brand-text">{ev.organizerName}</div>
+                  <div className="text-xs text-brand-muted">HOSTED BY</div>
+                  <div className="text-[13px] font-medium text-brand-text">{ev.organizerName}</div>
                 </div>
               </div>
             )}
@@ -346,17 +388,17 @@ function EventDetailOverlay({ ev, onBack, onCheckout }) {
               <TierPicker tiers={ev.tiers} selectedId={selectedTier?.id} onSelect={setSelectedTier} compact />
             )}
 
-            <div className="flex items-center gap-2.5 bg-pastel-blue rounded-xl px-3.5 py-3 mb-5">
-              <Link2 size={16} strokeWidth={1.75} className="text-fintech-blue shrink-0" />
+            <div className="flex items-center gap-2.5 bg-blue-50 rounded-xl px-3.5 py-3 mb-5">
+              <Link size={16} weight="light" className="text-blue-700 shrink-0" />
               <div>
-                <div className="text-[11px] font-bold text-fintech-blue">Secured by Polygon Blockchain</div>
-                <div className="text-[10px] text-brand-muted mt-0.5">NFT minted · Screenshot-proof · Cannot be duplicated</div>
+                <div className="text-xs font-medium text-blue-700">Secured by Polygon Blockchain</div>
+                <div className="text-xs text-brand-muted mt-0.5">NFT minted · Screenshot-proof · Cannot be duplicated</div>
               </div>
             </div>
 
             <button onClick={() => !buyDisabled && onCheckout(selectedTier)} disabled={buyDisabled}
-              className={`w-full py-4 rounded-full text-[15px] font-bold transition-colors ${
-                buyDisabled ? "bg-gray-200 text-gray-400 cursor-not-allowed" : "bg-brand-orange hover:bg-brand-orange-hover text-white"
+              className={`w-full h-12 rounded-xl text-[15px] font-medium transition-colors ${
+                buyDisabled ? "bg-brand-hairline text-brand-muted cursor-not-allowed" : "bg-brand-accent hover:bg-brand-accent-hover text-white"
               }`}>
               {buyLabel()}
             </button>
@@ -369,64 +411,64 @@ function EventDetailOverlay({ ev, onBack, onCheckout }) {
 
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="bg-brand-canvas h-full overflow-y-auto" style={{ WebkitOverflowScrolling: "touch" }}>
-      <div className="max-w-[1200px] mx-auto px-10 pt-5">
+      <div className="max-w-[1120px] mx-auto px-10 pt-5">
         <button onClick={onBack} className="flex items-center gap-1.5 text-brand-muted text-sm font-medium hover:text-brand-text transition-colors">
-          <ArrowLeft size={15} strokeWidth={2} /> Back to Events
+          <ArrowLeft size={15} weight="light" /> Back to Events
         </button>
       </div>
-      <div className="max-w-[1200px] mx-auto px-10 pt-6 pb-14 flex gap-10 items-start">
+      <div className="max-w-[1120px] mx-auto px-10 pt-6 pb-14 flex gap-10 items-start">
         <div className="w-[45%] shrink-0 sticky top-6">
-          <div className="rounded-2xl overflow-hidden border border-gray-100 shadow-sm relative">
+          <div className="rounded-2xl overflow-hidden border border-brand-hairline relative">
             <img src={ev.image} alt={ev.name} onError={e => { e.target.src = categoryImages.other; }}
               className="w-full aspect-[4/3] object-cover block" />
-            <span className="absolute top-3.5 left-3.5 flex items-center gap-1 bg-brand-text text-white text-[10px] font-bold px-2.5 py-1.5 rounded-full">
-              <Link2 size={11} strokeWidth={2.5} /> NFT · POLYGON AMOY
+            <span className="absolute top-3.5 left-3.5 flex items-center gap-1 bg-brand-text text-white text-xs font-medium px-2.5 py-1.5 rounded-full">
+              <Link size={11} weight="light" /> NFT · POLYGON AMOY
             </span>
-            <span className="absolute top-3.5 right-3.5 bg-brand-orange text-white text-[10px] font-bold px-2.5 py-1.5 rounded-full">
+            <span className="absolute top-3.5 right-3.5 bg-brand-accent text-white text-xs font-medium px-2.5 py-1.5 rounded-full">
               {ev.category.toUpperCase()}
             </span>
           </div>
-          <div className="mt-3.5 flex items-center gap-2.5 bg-pastel-blue rounded-xl px-4 py-3">
-            <Link2 size={18} strokeWidth={1.75} className="text-fintech-blue shrink-0" />
+          <div className="mt-3.5 flex items-center gap-2.5 bg-blue-50 rounded-xl px-4 py-3">
+            <Link size={18} weight="light" className="text-blue-700 shrink-0" />
             <div>
-              <div className="text-[11px] font-bold text-fintech-blue">Secured by Polygon Blockchain</div>
-              <div className="text-[10px] text-brand-muted mt-0.5">NFT minted · Screenshot-proof · Cannot be duplicated</div>
+              <div className="text-xs font-medium text-blue-700">Secured by Polygon Blockchain</div>
+              <div className="text-xs text-brand-muted mt-0.5">NFT minted · Screenshot-proof · Cannot be duplicated</div>
             </div>
           </div>
         </div>
 
         <div className="flex-1 min-w-0">
-          <h1 className="text-[32px] font-extrabold text-brand-text tracking-tight leading-tight mb-2">{ev.name}</h1>
+          <h1 className="text-[30px] font-semibold text-brand-text tracking-[-0.02em] leading-tight mb-2">{ev.name}</h1>
           <div className="flex items-center gap-1.5 text-sm text-brand-muted mb-6">
-            <MapPin size={15} strokeWidth={1.75} /> {ev.venue}{ev.city ? ", " + ev.city : ""}
+            <MapPin size={15} weight="light" /> {ev.venue}{ev.city ? ", " + ev.city : ""}
           </div>
 
           {ev.organizerName && (
-            <div className="flex items-center gap-2.5 bg-pastel-orange rounded-xl px-4 py-3 mb-5">
-              <div className="w-9 h-9 rounded-full bg-brand-orange flex items-center justify-center text-sm font-bold text-white shrink-0">
+            <div className="flex items-center gap-2.5 rounded-xl px-4 py-3 mb-5" style={{ background: "var(--brand-light)" }}>
+              <div className="w-9 h-9 rounded-full bg-brand-accent flex items-center justify-center text-sm font-medium text-white shrink-0">
                 {ev.organizerName.charAt(0).toUpperCase()}
               </div>
               <div>
-                <div className="text-[9px] text-brand-muted font-mono">HOSTED BY</div>
-                <div className="text-sm font-bold text-brand-text">{ev.organizerName}</div>
+                <div className="text-xs text-brand-muted">HOSTED BY</div>
+                <div className="text-sm font-medium text-brand-text">{ev.organizerName}</div>
               </div>
             </div>
           )}
 
-          <div className="bg-brand-card border border-gray-100 rounded-2xl shadow-sm overflow-hidden mb-6">
+          <div className="bg-brand-card border border-brand-hairline rounded-2xl overflow-hidden mb-6">
             {[
-              { Icon: Calendar, label: "WHEN",      value: ev.date || "TBA" },
-              { Icon: Clock,    label: "TIME",      value: ev.time ? ev.time.substring(0, 5) : "TBA" },
+              { Icon: Calendar, label: "WHEN",      value: formatDate(ev.date) },
+              { Icon: Clock,    label: "TIME",      value: formatTime(ev.time) || "TBA" },
               { Icon: MapPin,   label: "WHERE",     value: ev.venue || "TBA" },
               { Icon: Ticket,   label: "AVAILABLE", value: `${remaining} of ${ev.totalTickets} tickets left` },
             ].map((row, i, arr) => (
-              <div key={row.label} className={`flex items-center gap-3.5 px-4.5 py-3.5 ${i < arr.length - 1 ? "border-b border-gray-100" : ""}`}>
-                <div className="w-9 h-9 rounded-lg bg-brand-canvas border border-gray-100 flex items-center justify-center shrink-0">
-                  <row.Icon size={16} strokeWidth={1.75} className="text-brand-muted" />
+              <div key={row.label} className={`flex items-center gap-3.5 px-4.5 py-3.5 ${i < arr.length - 1 ? "border-b border-brand-hairline" : ""}`}>
+                <div className="w-9 h-9 rounded-xl bg-brand-canvas border border-brand-hairline flex items-center justify-center shrink-0">
+                  <row.Icon size={16} weight="light" className="text-brand-muted" />
                 </div>
                 <div>
-                  <div className="text-[9px] font-bold text-brand-muted tracking-wide font-mono mb-0.5">{row.label}</div>
-                  <div className="text-[13px] font-semibold text-brand-text">{row.value}</div>
+                  <div className="text-xs font-medium text-brand-muted tracking-wide mb-0.5">{row.label}</div>
+                  <div className="text-[13px] font-medium text-brand-text tabular-nums">{row.value}</div>
                 </div>
               </div>
             ))}
@@ -434,14 +476,14 @@ function EventDetailOverlay({ ev, onBack, onCheckout }) {
 
           <div className="mb-6">
             <div className="flex justify-between mb-1.5">
-              <span className="text-[10px] font-bold text-brand-muted font-mono">AVAILABILITY</span>
-              <span className={`text-[10px] font-bold font-mono ${remaining < 20 ? "text-red-600" : "text-fintech-green"}`}>{remaining < 20 ? "ALMOST SOLD OUT" : "AVAILABLE"}</span>
+              <span className="text-xs font-medium text-brand-muted">AVAILABILITY</span>
+              <span className={`text-xs font-medium ${remaining < 20 ? "text-red-600" : "text-emerald-700"}`}>{remaining < 20 ? "ALMOST SOLD OUT" : "AVAILABLE"}</span>
             </div>
-            <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
+            <div className="h-1.5 bg-brand-hairline rounded-full overflow-hidden">
               <motion.div initial={{ width: 0 }} animate={{ width: soldPct + "%" }} transition={{ duration: 0.6, ease: "easeOut" }}
-                className={`h-full rounded-full ${remaining < 20 ? "bg-red-500" : "bg-fintech-green"}`} />
+                className={`h-full rounded-full ${remaining < 20 ? "bg-red-500" : "bg-emerald-500"}`} />
             </div>
-            <div className="text-[10px] text-brand-muted mt-1">{ev.ticketsSold || 0} sold · {remaining} remaining</div>
+            <div className="text-xs text-brand-muted mt-1 tabular-nums">{ev.ticketsSold || 0} sold · {remaining} remaining</div>
           </div>
 
           <DescriptionBlock desc={ev.description} name={ev.name} />
@@ -450,19 +492,19 @@ function EventDetailOverlay({ ev, onBack, onCheckout }) {
             <TierPicker tiers={ev.tiers} selectedId={selectedTier?.id} onSelect={setSelectedTier} />
           )}
 
-          <div className="bg-brand-card border border-gray-100 rounded-2xl shadow-sm p-5">
+          <div className="bg-brand-card border border-brand-hairline rounded-2xl p-5">
             <div className="flex items-baseline gap-2 mb-4">
-              <div className="text-[34px] font-extrabold text-brand-orange tracking-tight leading-none">
+              <div className="text-3xl font-semibold text-brand-accent tracking-tight tabular-nums leading-none">
                 {hasTiers
-                  ? (selectedTier ? `GHS ${selectedTier.price}` : "Select a tier")
-                  : (ev.price === 0 ? "FREE" : `GHS ${ev.price}`)}
+                  ? (selectedTier ? `${currency} ${selectedTier.price}` : "Select a tier")
+                  : (ev.price === 0 ? "FREE" : `${currency} ${ev.price}`)}
               </div>
               {!hasTiers && ev.price > 0 && <span className="text-xs text-brand-muted">per ticket</span>}
               {hasTiers && selectedTier && <span className="text-xs text-brand-muted">per ticket</span>}
             </div>
             <button onClick={() => !buyDisabled && onCheckout(selectedTier)} disabled={buyDisabled}
-              className={`w-full py-4 rounded-full text-base font-bold transition-colors mb-3 ${
-                buyDisabled ? "bg-gray-200 text-gray-400 cursor-not-allowed" : "bg-brand-orange hover:bg-brand-orange-hover text-white"
+              className={`w-full h-12 rounded-xl text-[15px] font-medium transition-colors mb-3 ${
+                buyDisabled ? "bg-brand-hairline text-brand-muted cursor-not-allowed" : "bg-brand-accent hover:bg-brand-accent-hover text-white"
               }`}>
               {buyLabel()}{!buyDisabled && " →"}
             </button>
@@ -474,12 +516,29 @@ function EventDetailOverlay({ ev, onBack, onCheckout }) {
   );
 }
 
-function EmptyState({ code }) {
+function EmptyState() {
   return (
     <div className="text-center py-20 px-5">
-      <div className="text-[10px] font-bold text-brand-muted tracking-widest font-mono mb-4">{code}</div>
-      <div className="font-bold text-base text-brand-text mb-2">No events found</div>
-      <div className="text-sm text-brand-muted">Try a different search or category</div>
+      <div className="w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-4" style={{ background: "var(--brand-light)" }}>
+        <Ticket size={26} weight="light" className="text-brand-accent" />
+      </div>
+      <div className="font-medium text-[15px] text-brand-text mb-1.5">No events found</div>
+      <div className="text-sm text-brand-muted">Try a different search, filter, or category</div>
+    </div>
+  );
+}
+
+function ErrorState({ onRetry }) {
+  return (
+    <div className="text-center py-20 px-5">
+      <div className="w-14 h-14 rounded-full bg-red-50 flex items-center justify-center mx-auto mb-4">
+        <WarningCircle size={26} weight="light" className="text-red-600" />
+      </div>
+      <div className="font-medium text-[15px] text-brand-text mb-1.5">Couldn't load events</div>
+      <div className="text-sm text-brand-muted mb-4">Check your connection and try again</div>
+      <button onClick={onRetry} className="h-9 px-4 rounded-xl bg-brand-accent hover:bg-brand-accent-hover text-white text-sm font-medium">
+        Retry
+      </button>
     </div>
   );
 }
@@ -494,7 +553,7 @@ export default function AttendeeHome() {
   const searchQ          = useStore(s => s.searchQ);
   const setSearchQ       = useStore(s => s.setSearchQ);
   const isLoggedIn       = useStore(s => s.isLoggedIn);
-  const [activeCategory, setActiveCategory] = useState("all");
+  const [activeFilter,  setActiveFilter]  = useState("all");
   const [page,           setPage]           = useState(1);
   const [searchFocused,  setSearchFocused]  = useState(false);
   const [scrolled,       setScrolled]       = useState(false);
@@ -510,7 +569,7 @@ export default function AttendeeHome() {
     return () => el.removeEventListener("scroll", onScroll);
   }, [desktop]);
 
-  const { data: eventsData, isLoading: loading } = useQuery({
+  const { data: eventsData, isLoading: loading, isError, refetch } = useQuery({
     queryKey: ["events"],
     queryFn: () =>
       eventsAPI.list().then(data =>
@@ -525,6 +584,7 @@ export default function AttendeeHome() {
               date:          e.date,
               time:          e.time,
               price:         parseFloat(e.price) || 0,
+              currency:      e.currency || "GHS",
               totalTickets:  e.total_tickets || 0,
               ticketsSold:   e.tickets_sold  || 0,
               salesOpen:     e.sales_open,
@@ -549,12 +609,17 @@ export default function AttendeeHome() {
   const events = eventsData || [];
 
   const [prevSearch, setPrevSearch] = useState(searchQ);
-  const [prevCat,    setPrevCat]    = useState(activeCategory);
-  if (searchQ !== prevSearch || activeCategory !== prevCat) {
+  const [prevFilter, setPrevFilter] = useState(activeFilter);
+  if (searchQ !== prevSearch || activeFilter !== prevFilter) {
     setPage(1);
     setPrevSearch(searchQ);
-    setPrevCat(activeCategory);
+    setPrevFilter(activeFilter);
   }
+
+  const recentCategories = (() => {
+    try { return JSON.parse(localStorage.getItem(RECENT_CATEGORIES_KEY) || "[]"); }
+    catch { return []; }
+  })();
 
   const filtered = events.filter(e => {
     const q = searchQ.toLowerCase();
@@ -562,13 +627,27 @@ export default function AttendeeHome() {
       e.name.toLowerCase().includes(q) ||
       e.venue.toLowerCase().includes(q) ||
       e.category.toLowerCase().includes(q);
-    const matchCat = activeCategory === "all" || e.category === activeCategory;
-    return matchSearch && matchCat;
+    if (!matchSearch) return false;
+
+    if (activeFilter === "today")   return isSameDate(e.date, new Date());
+    if (activeFilter === "weekend") return isThisWeekend(e.date);
+    if (activeFilter === "forYou")  return recentCategories.length ? recentCategories.includes(e.category) : true;
+    if (activeFilter === "all")     return true;
+    return e.category === activeFilter;
   });
 
   const perPage    = desktop ? ITEMS_PER_PAGE_DESKTOP : ITEMS_PER_PAGE_MOBILE;
   const totalPages = Math.ceil(filtered.length / perPage);
   const paginated  = filtered.slice((page - 1) * perPage, page * perPage);
+
+  const openEvent = useCallback((ev) => {
+    setOverlayEvent(ev);
+    try {
+      const seen = JSON.parse(localStorage.getItem(RECENT_CATEGORIES_KEY) || "[]");
+      const next = [ev.category, ...seen.filter(c => c !== ev.category)].slice(0, 5);
+      localStorage.setItem(RECENT_CATEGORIES_KEY, JSON.stringify(next));
+    } catch {}
+  }, [setOverlayEvent]);
 
   const goToCheckout = useCallback((ev, tier) => {
     const eventForCheckout = tier ? { ...ev, price: tier.price } : ev;
@@ -585,12 +664,12 @@ export default function AttendeeHome() {
     else window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  const skeletonCard = (h) => (
-    <div className="bg-brand-card rounded-2xl border border-gray-100 overflow-hidden">
-      <div className="skeleton" style={{ height: h }} />
-      <div className="p-4">
-        <div className="skeleton" style={{ height: "14px", width: "70%", marginBottom: "8px", borderRadius: "6px" }} />
-        <div className="skeleton" style={{ height: "11px", width: "45%", borderRadius: "6px" }} />
+  const skeletonCard = () => (
+    <div className="bg-brand-card rounded-2xl border border-brand-hairline overflow-hidden">
+      <div className="skeleton aspect-square" />
+      <div className="p-3">
+        <div className="skeleton" style={{ height: "14px", width: "80%", marginBottom: "8px", borderRadius: "6px" }} />
+        <div className="skeleton" style={{ height: "11px", width: "50%", borderRadius: "6px" }} />
       </div>
     </div>
   );
@@ -603,36 +682,36 @@ export default function AttendeeHome() {
     />
   );
 
+  const gridClass = "grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3";
+
   if (!desktop) {
     return (
       <div className="flex flex-col h-full overflow-hidden">
         <div className="shrink-0 sticky top-0 z-40">
           {!isLoggedIn && <MobileNavbar scrolled={scrolled} />}
 
-          <div className="bg-brand-card border-b border-gray-100 px-4">
+          <div className="bg-brand-card border-b border-brand-hairline px-4">
             <div className="py-2.5">
               <div className="relative">
-                <Search size={14} strokeWidth={1.75} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-brand-muted" />
+                <MagnifyingGlass size={14} weight="light" className="absolute left-3.5 top-1/2 -translate-y-1/2 text-brand-muted" />
                 <input
                   value={searchQ}
                   onChange={e => setSearchQ(e.target.value)}
                   onFocus={() => setSearchFocused(true)}
                   onBlur={() => setSearchFocused(false)}
                   placeholder="Search events..."
-                  className={`w-full pl-10 pr-10 py-2.5 rounded-xl border text-sm text-brand-text outline-none transition-colors ${searchFocused ? "border-brand-orange bg-brand-card ring-2 ring-orange-100" : "border-gray-200 bg-brand-canvas"}`}
+                  className={`w-full pl-10 pr-10 py-2.5 rounded-xl border text-sm text-brand-text outline-none transition-colors ${searchFocused ? "border-brand-accent bg-brand-card ring-2 ring-brand-accent/20" : "border-brand-hairline bg-brand-canvas"}`}
                 />
                 {searchQ && (
                   <button onClick={() => setSearchQ("")}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 w-[18px] h-[18px] rounded-full bg-gray-100 flex items-center justify-center text-brand-muted">
-                    <X size={10} strokeWidth={2.5} />
+                    className="absolute right-3 top-1/2 -translate-y-1/2 w-[18px] h-[18px] rounded-full bg-brand-hairline flex items-center justify-center text-brand-muted">
+                    <X size={10} weight="bold" />
                   </button>
                 )}
               </div>
             </div>
-            <div className="flex gap-1.5 overflow-x-auto pb-2.5" style={{ scrollbarWidth: "none" }}>
-              {CATEGORIES.map(cat => (
-                <CategoryChip key={cat.key} cat={cat} active={activeCategory === cat.key} onClick={() => setActiveCategory(cat.key)} />
-              ))}
+            <div className="pb-2.5">
+              <FilterPills active={activeFilter} onChange={setActiveFilter} />
             </div>
           </div>
         </div>
@@ -644,17 +723,18 @@ export default function AttendeeHome() {
 
           <div className="p-4 pb-24">
             {loading && (
-              <div className="grid grid-cols-1 gap-3">
-                {[1,2,3,4].map(i => <React.Fragment key={i}>{skeletonCard("190px")}</React.Fragment>)}
+              <div className={gridClass}>
+                {[1,2,3,4,5,6].map(i => <React.Fragment key={i}>{skeletonCard()}</React.Fragment>)}
               </div>
             )}
-            {!loading && filtered.length === 0 && <EmptyState code="NO RESULTS" />}
-            {!loading && paginated.length > 0 && (
-              <div className="grid grid-cols-1 gap-3">
-                {paginated.map(ev => <EventCard key={ev.id} ev={ev} onClick={() => setOverlayEvent(ev)} />)}
+            {!loading && isError && <ErrorState onRetry={refetch} />}
+            {!loading && !isError && filtered.length === 0 && <EmptyState />}
+            {!loading && !isError && paginated.length > 0 && (
+              <div className={gridClass}>
+                {paginated.map(ev => <EventCard key={ev.id} ev={ev} onClick={() => openEvent(ev)} />)}
               </div>
             )}
-            {!loading && filtered.length > 0 && (
+            {!loading && !isError && filtered.length > 0 && (
               <Pagination current={page} total={totalPages} onChange={handlePageChange} />
             )}
           </div>
@@ -665,33 +745,30 @@ export default function AttendeeHome() {
 
   return (
     <div className="bg-brand-canvas min-h-full pb-14">
-      <div className="sticky top-0 z-30 bg-brand-card border-b border-gray-100">
-        <div className="px-10">
-          <div className="flex gap-1.5 overflow-x-auto py-2.5" style={{ scrollbarWidth: "none" }}>
-            {CATEGORIES.map(cat => (
-              <CategoryChip key={cat.key} cat={cat} active={activeCategory === cat.key} onClick={() => setActiveCategory(cat.key)} />
-            ))}
-          </div>
+      <div className="sticky top-0 z-30 bg-brand-card border-b border-brand-hairline">
+        <div className="max-w-[1120px] mx-auto px-10 py-2.5">
+          <FilterPills active={activeFilter} onChange={setActiveFilter} />
         </div>
       </div>
 
-      <div className="px-10 pt-4">
+      <div className="max-w-[1120px] mx-auto px-10 pt-4">
         <ResaleBanner onClick={() => setScreen("resaleMarket")} />
       </div>
 
-      <div className="px-10 pt-4">
+      <div className="max-w-[1120px] mx-auto px-10 pt-4">
         {loading && (
-          <div className="grid grid-cols-3 gap-5">
-            {[1,2,3,4,5,6].map(i => <React.Fragment key={i}>{skeletonCard("220px")}</React.Fragment>)}
+          <div className={gridClass}>
+            {[1,2,3,4,5,6,7,8].map(i => <React.Fragment key={i}>{skeletonCard()}</React.Fragment>)}
           </div>
         )}
-        {!loading && filtered.length === 0 && <EmptyState code="QUERY_RESULT: NULL" />}
-        {!loading && paginated.length > 0 && (
-          <div className="grid grid-cols-3 gap-5">
-            {paginated.map(ev => <EventCard key={ev.id} ev={ev} onClick={() => setOverlayEvent(ev)} />)}
+        {!loading && isError && <ErrorState onRetry={refetch} />}
+        {!loading && !isError && filtered.length === 0 && <EmptyState />}
+        {!loading && !isError && paginated.length > 0 && (
+          <div className={gridClass}>
+            {paginated.map(ev => <EventCard key={ev.id} ev={ev} onClick={() => openEvent(ev)} />)}
           </div>
         )}
-        {!loading && filtered.length > 0 && (
+        {!loading && !isError && filtered.length > 0 && (
           <Pagination current={page} total={totalPages} onChange={handlePageChange} />
         )}
       </div>

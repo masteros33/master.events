@@ -8,12 +8,19 @@ export default {
     extend: {
       colors: {
         brand: {
+          // ── v3 canonical accent name. `orange`/`orange-hover` below
+          // are kept as deprecated aliases (same hex) so the ~19 files
+          // still using those class names don't break before their
+          // turn in the rollout — remove once every file is migrated. ──
+          accent: '#1c2e53',
+          'accent-hover': '#16233F',
           orange: '#1c2e53',
           'orange-hover': '#16233F',
           canvas: 'var(--bg)',
           card:   'var(--bg-card)',
           text:   'var(--text-primary)',
           muted:  'var(--text-muted)',
+          hairline: 'var(--border)',
           // ── NEW: previously missing entirely, so every
           // "border-gray-100" etc across the app fell back to
           // Tailwind's hardcoded default gray scale below instead.
@@ -78,13 +85,17 @@ export default {
       borderRadius: {
         xl: '0.75rem',
         '2xl': '1rem',
-        '3xl': '1.5rem',
         full: '9999px',
+        // ── Deprecated alias, not part of the v3 scale (12/16/999 only).
+        // 12 files besides LandingPage.jsx still use `rounded-3xl` and
+        // haven't had their rollout turn yet — removing this outright
+        // would silently square off their cards' corners. Remove once
+        // every file in the rollout order is confirmed off `rounded-3xl`. ──
+        '3xl': '1rem',
       },
       fontFamily: {
-        sans: ['Plus Jakarta Sans', '-apple-system', 'BlinkMacSystemFont', 'sans-serif'],
+        sans: ['Manrope', '-apple-system', 'BlinkMacSystemFont', 'sans-serif'],
         mono: ['JetBrains Mono', 'Fira Code', 'monospace'],
-        display: ['Sora', '-apple-system', 'BlinkMacSystemFont', 'sans-serif'],
       },
     },
   },

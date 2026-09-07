@@ -1,13 +1,15 @@
 import React, { useState, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  Link2, Mail, Lock, Eye, EyeOff, Loader2, ShieldAlert,
-  AlertCircle, CheckCircle2, ArrowLeft, ArrowRight,
-} from "lucide-react";
+  Link, Envelope, Lock, Eye, EyeSlash, CircleNotch, ShieldWarning,
+  WarningCircle, CheckCircle, ArrowLeft, ArrowRight,
+} from "@phosphor-icons/react";
 import useStore from "../../store/useStore";
 
 const API = "https://master-events-backend.onrender.com";
 const GOOGLE_CLIENT_ID = "495384335861-m8bhrto4skv6kmh4far62uuj486i9opt.apps.googleusercontent.com";
+
+const inputClass = "w-full pl-10 pr-4 py-3 rounded-xl border border-brand-hairline bg-brand-card text-sm text-brand-text outline-none focus:border-brand-accent focus:ring-2 focus:ring-brand-accent/20 transition-colors";
 
 function useRateLimit(maxAttempts = 5, windowMs = 60000) {
   const attempts = useRef([]);
@@ -51,47 +53,47 @@ function ForgotPassword({ onBack }) {
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 p-4">
       <motion.div initial={{ opacity: 0, scale: 0.96 }} animate={{ opacity: 1, scale: 1 }}
-        className="max-w-[420px] w-full bg-brand-card rounded-3xl border border-gray-100 shadow-sm p-8">
+        className="max-w-[420px] w-full bg-brand-card rounded-2xl border border-brand-hairline p-8">
         {sent ? (
           <div className="text-center">
-            <div className="w-14 h-14 rounded-full bg-pastel-green flex items-center justify-center mx-auto mb-4">
-              <CheckCircle2 size={26} strokeWidth={1.75} className="text-fintech-green" />
+            <div className="w-14 h-14 rounded-full bg-emerald-50 flex items-center justify-center mx-auto mb-4">
+              <CheckCircle size={26} weight="light" className="text-emerald-700" />
             </div>
-            <h2 className="text-xl font-extrabold text-brand-text mb-2.5">Check your email</h2>
+            <h2 className="text-xl font-semibold text-brand-text mb-2.5">Check your email</h2>
             <p className="text-brand-muted text-sm leading-relaxed mb-6">
               Reset link sent to <strong className="text-brand-text">{email}</strong>
             </p>
             <button onClick={onBack}
-              className="px-7 py-3 rounded-full bg-brand-orange hover:bg-brand-orange-hover text-white font-bold text-sm transition-colors">
+              className="flex items-center justify-center px-7 h-12 md:h-11 rounded-xl bg-brand-accent hover:bg-brand-accent-hover text-white font-medium text-sm transition-colors mx-auto">
               Back to Login
             </button>
           </div>
         ) : (
           <>
-            <button onClick={onBack} className="flex items-center gap-1.5 text-brand-orange text-sm font-semibold mb-5 hover:text-brand-orange-hover transition-colors">
-              <ArrowLeft size={15} strokeWidth={2} /> Back
+            <button onClick={onBack} className="flex items-center gap-1.5 text-brand-accent text-sm font-medium mb-5 hover:text-brand-accent-hover transition-colors">
+              <ArrowLeft size={15} weight="light" /> Back
             </button>
-            <div className="w-12 h-12 rounded-full bg-pastel-orange flex items-center justify-center mb-4">
-              <Mail size={20} strokeWidth={1.75} className="text-brand-orange" />
+            <div className="w-12 h-12 rounded-full flex items-center justify-center mb-4" style={{ background: "var(--brand-light)" }}>
+              <Envelope size={20} weight="light" className="text-brand-accent" />
             </div>
-            <h2 className="text-xl font-extrabold text-brand-text mb-1.5">Forgot Password?</h2>
+            <h2 className="text-xl font-semibold text-brand-text mb-1.5">Forgot Password?</h2>
             <p className="text-brand-muted text-sm mb-5">Enter your email and we'll send a reset link</p>
 
             <div className="relative mb-3">
-              <Mail size={16} strokeWidth={1.75} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-brand-muted" />
+              <Envelope size={16} weight="light" className="absolute left-3.5 top-1/2 -translate-y-1/2 text-brand-muted" />
               <input placeholder="you@email.com" value={email}
                 onChange={e => setEmail(e.target.value)}
                 onKeyDown={e => e.key === "Enter" && handleSend()}
-                className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 bg-brand-card text-sm text-brand-text outline-none focus:border-brand-orange focus:ring-2 focus:ring-orange-100 transition-colors" />
+                className={inputClass} />
             </div>
             {error && (
               <div className="flex items-center gap-1.5 text-red-600 text-xs mb-3">
-                <AlertCircle size={13} strokeWidth={2} /> {error}
+                <WarningCircle size={13} weight="light" /> {error}
               </div>
             )}
             <button onClick={handleSend} disabled={loading}
-              className="w-full py-3.5 rounded-full bg-brand-orange hover:bg-brand-orange-hover disabled:opacity-70 text-white font-bold text-sm flex items-center justify-center gap-2 transition-colors">
-              {loading && <Loader2 size={16} className="animate-spin" />}
+              className="w-full h-12 md:h-11 rounded-xl bg-brand-accent hover:bg-brand-accent-hover disabled:opacity-70 text-white font-medium text-sm flex items-center justify-center gap-2 transition-colors">
+              {loading && <CircleNotch size={16} className="animate-spin" />}
               {loading ? "Sending..." : "Send Reset Link"}
             </button>
           </>
@@ -153,22 +155,22 @@ export default function Login() {
   return (
     <div className="h-full bg-brand-canvas overflow-y-auto flex justify-center items-start px-6 py-10 font-sans">
       <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}
-        className="max-w-[420px] w-full bg-brand-card rounded-3xl border border-gray-100 shadow-sm p-8">
+        className="max-w-[420px] w-full bg-brand-card rounded-2xl border border-brand-hairline p-8">
 
         <div className="flex flex-col items-center mb-7">
-          <div className="w-12 h-12 rounded-full bg-brand-orange flex items-center justify-center mb-3">
-            <Link2 size={20} strokeWidth={2} color="#fff" />
+          <div className="w-12 h-12 rounded-full bg-brand-accent flex items-center justify-center mb-3">
+            <Link size={20} weight="light" color="#fff" />
           </div>
-          <span className="font-extrabold text-base text-brand-text tracking-tight">Master Events</span>
+          <span className="font-semibold text-base text-brand-text tracking-tight">Master Events</span>
         </div>
 
         <div className="mb-6 text-center">
-          <h1 className="text-2xl font-extrabold text-brand-text mb-1.5">Welcome back</h1>
+          <h1 className="text-2xl font-semibold tracking-[-0.02em] text-brand-text mb-1.5">Welcome back</h1>
           <p className="text-sm text-brand-muted">Log in to access your NFT tickets and wallet</p>
         </div>
 
         <button onClick={handleGoogleRedirect}
-          className="w-full py-3 rounded-xl bg-white border border-gray-200 hover:border-gray-300 text-brand-text font-semibold text-sm flex items-center justify-center gap-2.5 mb-4 transition-colors">
+          className="w-full h-12 md:h-11 rounded-xl bg-white border border-brand-hairline hover:border-brand-muted text-brand-text font-medium text-sm flex items-center justify-center gap-2.5 mb-4 transition-colors">
           <svg width="18" height="18" viewBox="0 0 24 24">
             <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
             <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
@@ -179,9 +181,9 @@ export default function Login() {
         </button>
 
         <div className="flex items-center gap-3 mb-5">
-          <div className="flex-1 h-px bg-gray-100" />
-          <span className="text-[11px] text-brand-muted font-medium">or with email</span>
-          <div className="flex-1 h-px bg-gray-100" />
+          <div className="flex-1 h-px bg-brand-hairline" />
+          <span className="text-xs text-brand-muted font-medium">or with email</span>
+          <div className="flex-1 h-px bg-brand-hairline" />
         </div>
 
         <div className="absolute -left-[9999px]" aria-hidden="true">
@@ -189,29 +191,29 @@ export default function Login() {
         </div>
 
         <div className="mb-3.5">
-          <label className="text-xs font-semibold text-brand-muted mb-1.5 block">Email</label>
+          <label className="text-xs font-medium text-brand-muted mb-1.5 block">Email</label>
           <div className="relative">
-            <Mail size={16} strokeWidth={1.75} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-brand-muted" />
+            <Envelope size={16} weight="light" className="absolute left-3.5 top-1/2 -translate-y-1/2 text-brand-muted" />
             <input placeholder="you@email.com" value={email} onChange={e => setEmail(e.target.value)} type="email" autoComplete="email"
-              className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 bg-brand-card text-sm text-brand-text outline-none focus:border-brand-orange focus:ring-2 focus:ring-orange-100 transition-colors" />
+              className={inputClass} />
           </div>
         </div>
 
         <div className="mb-5">
           <div className="flex justify-between items-center mb-1.5">
-            <label className="text-xs font-semibold text-brand-muted">Password</label>
-            <span onClick={() => setShowForgot(true)} className="text-xs text-brand-orange font-semibold cursor-pointer hover:text-brand-orange-hover transition-colors">Forgot?</span>
+            <label className="text-xs font-medium text-brand-muted">Password</label>
+            <span onClick={() => setShowForgot(true)} className="text-xs text-brand-accent font-medium cursor-pointer hover:text-brand-accent-hover transition-colors">Forgot?</span>
           </div>
           <div className="relative">
-            <Lock size={16} strokeWidth={1.75} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-brand-muted" />
+            <Lock size={16} weight="light" className="absolute left-3.5 top-1/2 -translate-y-1/2 text-brand-muted" />
             <input placeholder="••••••••" type={showPw ? "text" : "password"} value={password}
               onChange={e => setPassword(e.target.value)}
               onKeyDown={e => e.key === "Enter" && !loading && !rateLock && onLogin()}
               autoComplete="current-password"
-              className="w-full pl-10 pr-11 py-3 rounded-xl border border-gray-200 bg-brand-card text-sm text-brand-text outline-none focus:border-brand-orange focus:ring-2 focus:ring-orange-100 transition-colors" />
+              className={`${inputClass} pr-11`} />
             <button onClick={() => setShowPw(!showPw)} type="button"
               className="absolute right-3.5 top-1/2 -translate-y-1/2 text-brand-muted hover:text-brand-text transition-colors">
-              {showPw ? <EyeOff size={16} strokeWidth={1.75} /> : <Eye size={16} strokeWidth={1.75} />}
+              {showPw ? <EyeSlash size={16} weight="light" /> : <Eye size={16} weight="light" />}
             </button>
           </div>
         </div>
@@ -219,8 +221,8 @@ export default function Login() {
         <AnimatePresence>
           {rateLock && (
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-              className="flex items-center gap-2 bg-amber-50 border border-amber-100 rounded-xl px-3.5 py-2.5 mb-3 text-amber-700 text-xs font-semibold">
-              <ShieldAlert size={14} strokeWidth={2} /> Too many attempts. Try again in {rateLock}s
+              className="flex items-center gap-2 bg-amber-50 border border-amber-100 rounded-xl px-3.5 py-2.5 mb-3 text-amber-700 text-xs font-medium">
+              <ShieldWarning size={14} weight="light" /> Too many attempts. Try again in <span className="tabular-nums">{rateLock}</span>s
             </motion.div>
           )}
         </AnimatePresence>
@@ -229,29 +231,29 @@ export default function Login() {
           {loginError && !rateLock && (
             <motion.div initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
               className="flex items-center gap-2 bg-red-50 border border-red-100 rounded-xl px-3.5 py-2.5 mb-3 text-red-600 text-xs">
-              <AlertCircle size={14} strokeWidth={2} /> {loginError}
+              <WarningCircle size={14} weight="light" /> {loginError}
             </motion.div>
           )}
         </AnimatePresence>
 
         <button onClick={onLogin} disabled={loading || !!rateLock}
-          className="w-full py-3.5 rounded-full bg-brand-orange hover:bg-brand-orange-hover disabled:bg-gray-100 disabled:text-brand-muted text-white font-bold text-sm flex items-center justify-center gap-2 mb-4 transition-colors">
+          className="w-full h-12 md:h-11 rounded-xl bg-brand-accent hover:bg-brand-accent-hover disabled:bg-brand-hairline disabled:text-brand-muted text-white font-medium text-sm flex items-center justify-center gap-2 mb-4 transition-colors">
           {loading ? (
-            <><Loader2 size={16} className="animate-spin" /> Logging in...</>
+            <><CircleNotch size={16} className="animate-spin" /> Logging in...</>
           ) : rateLock ? (
-            <><ShieldAlert size={15} strokeWidth={2} /> Wait {rateLock}s</>
+            <><ShieldWarning size={15} weight="light" /> Wait <span className="tabular-nums">{rateLock}</span>s</>
           ) : (
-            <>Log In <ArrowRight size={16} strokeWidth={2} /></>
+            <>Log In <ArrowRight size={16} weight="light" /></>
           )}
         </button>
 
         <p className="text-sm text-brand-muted text-center mb-2">
           No account?{" "}
-          <span onClick={() => setScreen("signup")} className="text-brand-orange font-bold cursor-pointer hover:text-brand-orange-hover transition-colors">Sign up free</span>
+          <span onClick={() => setScreen("signup")} className="text-brand-accent font-medium cursor-pointer hover:text-brand-accent-hover transition-colors">Sign up free</span>
         </p>
         <p className="text-xs text-brand-muted text-center">
           Door staff?{" "}
-          <span onClick={() => setScreen("doorStaffLogin")} className="text-brand-orange font-semibold cursor-pointer hover:text-brand-orange-hover transition-colors">Enter with invite code</span>
+          <span onClick={() => setScreen("doorStaffLogin")} className="text-brand-accent font-medium cursor-pointer hover:text-brand-accent-hover transition-colors">Enter with invite code</span>
         </p>
       </motion.div>
 

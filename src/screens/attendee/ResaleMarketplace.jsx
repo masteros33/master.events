@@ -3,9 +3,10 @@ import { motion, AnimatePresence } from "framer-motion";
 import useStore from "../../store/useStore";
 import { ticketsAPI } from "../../api";
 import {
-  ArrowLeft, Tag, Lock, Link2, Wallet, X, AlertCircle,
-  MapPin, Ticket, CheckCircle2, Loader2,
-} from "lucide-react";
+  ArrowLeft, Tag, Lock, Link, Wallet, X, WarningCircle,
+  CheckCircle, CircleNotch,
+} from "@phosphor-icons/react";
+import { EventCard } from "./AttendeeHome";
 
 const API = "https://master-events-backend.onrender.com";
 const isDesktop = () => window.innerWidth > 768;
@@ -144,29 +145,29 @@ export default function ResaleMarket() {
 
   if (payDone && newTicket) {
     return (
-      <div className="bg-fintech-gray min-h-full flex items-center justify-center p-6">
+      <div className="bg-brand-subtle min-h-full flex items-center justify-center p-6">
         <motion.div initial={{ opacity: 0, scale: 0.96 }} animate={{ opacity: 1, scale: 1 }}
-          className={`bg-brand-card rounded-3xl border border-gray-100 shadow-sm max-w-[440px] w-full text-center ${desktop ? "px-9 py-10" : "px-5 py-7"}`}>
-          <div className="w-[72px] h-[72px] rounded-full bg-pastel-green flex items-center justify-center mx-auto mb-5">
-            <CheckCircle2 size={32} strokeWidth={1.75} className="text-fintech-green" />
+          className={`bg-brand-card rounded-2xl border border-brand-hairline max-w-[440px] w-full text-center ${desktop ? "px-9 py-10" : "px-5 py-7"}`}>
+          <div className="w-[72px] h-[72px] rounded-full bg-emerald-50 flex items-center justify-center mx-auto mb-5">
+            <CheckCircle size={32} weight="light" className="text-emerald-700" />
           </div>
-          <h2 className="text-xl font-extrabold text-brand-text mb-2 tracking-tight">Ticket Purchased!</h2>
+          <h2 className="text-xl font-semibold text-brand-text mb-2 tracking-[-0.02em]">Ticket Purchased!</h2>
           <p className="text-brand-muted text-sm leading-relaxed mb-6">
             Your resale ticket for <strong className="text-brand-text">{selected?.event?.name}</strong> is confirmed. NFT minting on Polygon.
           </p>
-          <div className="flex items-center gap-2.5 bg-pastel-blue rounded-xl px-4 py-3 mb-5 text-left">
-            <Link2 size={18} strokeWidth={1.75} className="text-fintech-blue shrink-0" />
+          <div className="flex items-center gap-2.5 bg-blue-50 rounded-xl px-4 py-3 mb-5 text-left">
+            <Link size={18} weight="light" className="text-blue-700 shrink-0" />
             <div>
-              <div className="text-xs font-bold text-fintech-blue">NFT Ownership Transfer</div>
-              <div className="text-[11px] text-brand-muted mt-0.5">On-chain transfer in progress · Polygon Amoy</div>
+              <div className="text-xs font-medium text-blue-700">NFT Ownership Transfer</div>
+              <div className="text-xs text-brand-muted mt-0.5">On-chain transfer in progress · Polygon Amoy</div>
             </div>
           </div>
           <button onClick={() => { if (newTicket) setViewingTicket(newTicket); setScreen("ticketView"); }}
-            className="w-full py-3.5 rounded-full bg-brand-orange hover:bg-brand-orange-hover text-white font-bold text-sm mb-2.5 transition-colors">
+            className="w-full h-11 rounded-xl bg-brand-accent hover:bg-brand-accent-hover text-white font-medium text-sm mb-2.5 transition-colors">
             View My Ticket
           </button>
           <button onClick={() => setScreen("app")}
-            className="w-full py-3 rounded-full bg-transparent border border-gray-200 text-brand-muted text-sm">
+            className="w-full h-11 rounded-xl bg-transparent border border-brand-hairline text-brand-muted text-sm font-medium">
             Back to Events
           </button>
         </motion.div>
@@ -175,34 +176,33 @@ export default function ResaleMarket() {
   }
 
   return (
-    <div className={`bg-fintech-gray min-h-full ${desktop ? "pb-16" : "pb-24"}`}>
+    <div className={`bg-brand-subtle min-h-full ${desktop ? "pb-16" : "pb-24"}`}>
 
-      {/* ── Header — icon-only back button ── */}
       <div className={desktop ? "px-10 pt-7" : "px-4 pt-4"}>
         <button onClick={() => setScreen("app")}
-          className="w-9 h-9 rounded-full bg-brand-card border border-gray-100 flex items-center justify-center mb-4">
-          <ArrowLeft size={16} strokeWidth={2} className="text-brand-text" />
+          className="w-9 h-9 rounded-full bg-brand-card border border-brand-hairline flex items-center justify-center mb-4">
+          <ArrowLeft size={16} weight="light" className="text-brand-text" />
         </button>
 
         <div className="flex items-center gap-3.5 mb-1.5">
-          <div className="w-11 h-11 rounded-full bg-pastel-blue flex items-center justify-center shrink-0">
-            <Tag size={20} strokeWidth={1.75} className="text-fintech-blue" />
+          <div className="w-11 h-11 rounded-full bg-blue-50 flex items-center justify-center shrink-0">
+            <Tag size={20} weight="light" className="text-blue-700" />
           </div>
           <div>
-            <h1 className={`font-extrabold text-brand-text tracking-tight mb-0.5 ${desktop ? "text-2xl" : "text-xl"}`}>Resale Market</h1>
-            <div className="text-[11px] text-brand-muted font-mono">FAN_TO_FAN · NFT_TRANSFER · 2%_FEE</div>
+            <h1 className={`font-semibold text-brand-text tracking-[-0.02em] mb-0.5 ${desktop ? "text-2xl" : "text-xl"}`}>Resale Market</h1>
+            <div className="text-xs text-brand-muted">Fan-to-fan · NFT transfer · 2% fee</div>
           </div>
         </div>
 
         <div className="flex gap-2 mt-4 mb-1 flex-wrap">
           {[
             [Lock, "Secure checkout via Paystack"],
-            [Link2, "NFT transfers on-chain automatically"],
+            [Link, "NFT transfers on-chain automatically"],
             [Wallet, "Seller keeps 98% of sale"],
           ].map(([Icon, text]) => (
-            <div key={text} className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-brand-card border border-gray-100">
-              <Icon size={12} strokeWidth={1.75} className="text-brand-muted" />
-              <span className="text-[10px] text-brand-text font-semibold">{text}</span>
+            <div key={text} className="flex items-center gap-1.5 h-7 px-3 rounded-full bg-brand-card border border-brand-hairline">
+              <Icon size={12} weight="light" className="text-brand-muted" />
+              <span className="text-xs text-brand-text font-medium">{text}</span>
             </div>
           ))}
         </div>
@@ -212,9 +212,9 @@ export default function ResaleMarket() {
         {payError && (
           <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
             className={`${desktop ? "mx-10" : "mx-4"} mt-3 bg-red-50 border border-red-100 rounded-xl px-4 py-3 text-red-600 text-sm flex justify-between items-center gap-3`}>
-            <span className="flex items-center gap-2"><AlertCircle size={14} strokeWidth={2} className="shrink-0" /> {payError}</span>
+            <span className="flex items-center gap-2"><WarningCircle size={14} weight="light" className="shrink-0" /> {payError}</span>
             <button onClick={() => setPayError("")} className="text-brand-muted shrink-0">
-              <X size={14} strokeWidth={2} />
+              <X size={14} weight="light" />
             </button>
           </motion.div>
         )}
@@ -222,99 +222,64 @@ export default function ResaleMarket() {
 
       <div className={desktop ? "px-10 pt-4" : "px-4 pt-3.5"}>
         {loading ? (
-          <div className={`grid gap-4 ${desktop ? "grid-cols-3" : "grid-cols-1"}`}>
-            {[1,2,3].map(i => (
-              <div key={i} className="bg-brand-card rounded-2xl overflow-hidden border border-gray-100">
-                <div className="skeleton" style={{ height: "160px" }} />
-                <div className="p-3.5">
-                  <div className="skeleton" style={{ height: "14px", width: "70%", marginBottom: "10px" }} />
-                  <div className="skeleton" style={{ height: "11px", width: "45%" }} />
+          <div className={`grid gap-3 ${desktop ? "grid-cols-4" : "grid-cols-2"}`}>
+            {[1,2,3,4].map(i => (
+              <div key={i} className="bg-brand-card rounded-2xl overflow-hidden border border-brand-hairline">
+                <div className="skeleton aspect-square" />
+                <div className="p-3">
+                  <div className="skeleton" style={{ height: "14px", width: "70%", marginBottom: "10px", borderRadius: "6px" }} />
+                  <div className="skeleton" style={{ height: "11px", width: "45%", borderRadius: "6px" }} />
                 </div>
               </div>
             ))}
           </div>
         ) : listings.length === 0 ? (
-          <div className="text-center py-20 px-6 bg-brand-card rounded-2xl border border-gray-100 shadow-sm mt-2">
-            <div className="w-14 h-14 rounded-full bg-pastel-blue flex items-center justify-center mx-auto mb-3.5">
-              <Tag size={24} strokeWidth={1.75} className="text-fintech-blue" />
+          <div className="text-center py-20 px-6 bg-brand-card rounded-2xl border border-brand-hairline mt-2">
+            <div className="w-14 h-14 rounded-full bg-blue-50 flex items-center justify-center mx-auto mb-3.5">
+              <Tag size={24} weight="light" className="text-blue-700" />
             </div>
-            <div className="font-extrabold text-base text-brand-text mb-2">No resale listings</div>
+            <div className="font-medium text-[15px] text-brand-text mb-2">No resale listings</div>
             <div className="text-sm text-brand-muted leading-relaxed">When attendees list tickets for resale, they'll appear here.</div>
           </div>
         ) : (
-          <div className={`grid gap-4 ${desktop ? "grid-cols-3" : "grid-cols-1"}`}>
+          <div className={`grid gap-3 ${desktop ? "grid-cols-4" : "grid-cols-2"}`}>
             {listings.map(listing => {
               const ev          = listing.event;
               const isBuying    = paying && selected?.ticket_id === listing.ticket_id;
               const isOwn       = listing.seller === currentUser?.first_name;
               const img         = ev.image || categoryImages[ev.category] || categoryImages.other;
-              const savingsPct  = Math.round(((listing.original_price - listing.resale_price) / listing.original_price) * 100);
+              const currency    = ev.currency || "GHS";
+
+              const footer = (
+                <div>
+                  <div className="flex justify-between items-baseline mb-2">
+                    <span className="text-xl font-semibold text-brand-text tracking-tight tabular-nums">
+                      {currency} {listing.resale_price.toLocaleString()}
+                    </span>
+                    <span className="text-xs text-brand-muted line-through tabular-nums">
+                      {currency} {listing.original_price.toLocaleString()}
+                    </span>
+                  </div>
+                  <div className="text-xs text-brand-muted mb-2.5">Sold by <span className="font-medium text-brand-text">{listing.seller || "Fan"}</span></div>
+                  {isOwn ? (
+                    <div className="text-center h-9 flex items-center justify-center bg-brand-canvas rounded-xl text-xs text-brand-muted font-medium">
+                      Your listing
+                    </div>
+                  ) : (
+                    <button onClick={() => handleBuy(listing)} disabled={isBuying || paying}
+                      className={`w-full h-9 rounded-xl font-medium text-xs tabular-nums flex items-center justify-center gap-2 transition-colors ${isBuying ? "bg-brand-hairline text-brand-muted" : "bg-brand-accent hover:bg-brand-accent-hover text-white"} ${paying && !isBuying ? "opacity-50" : ""}`}>
+                      {isBuying ? (
+                        <><CircleNotch size={14} className="animate-spin" /> Processing...</>
+                      ) : `Buy for ${currency} ${listing.resale_price.toLocaleString()}`}
+                    </button>
+                  )}
+                </div>
+              );
 
               return (
-                <div key={listing.ticket_id} className="bg-brand-card rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-
-                  <div className="h-40 relative">
-                    <img src={img} alt={ev.name} className="w-full h-full object-cover"
-                      onError={e => { e.target.src = categoryImages.other; }} />
-
-                    <span className="absolute top-2.5 left-2.5 flex items-center gap-1 bg-brand-text text-white text-[9px] font-bold px-2.5 py-1 rounded-full">
-                      <Link2 size={9} strokeWidth={2.5} /> NFT
-                    </span>
-
-                    {savingsPct > 0 && (
-                      <span className="absolute top-2.5 right-2.5 bg-fintech-green text-white text-[9px] font-bold px-2.5 py-1 rounded-full font-mono">
-                        -{savingsPct}%
-                      </span>
-                    )}
-                  </div>
-
-                  <div className="p-4">
-                    <div className="font-bold text-sm text-brand-text mb-1 leading-snug">{ev.name}</div>
-                    <div className="flex items-center gap-1 text-[11px] text-brand-muted font-mono mb-3">
-                      <MapPin size={10} strokeWidth={1.75} /> {ev.venue} · {ev.date}
-                    </div>
-
-                    <div className="flex justify-between items-end mb-3">
-                      <div>
-                        <div className="text-3xl font-bold text-fintech-slate tracking-tight font-mono leading-none">
-                          GHS {listing.resale_price.toLocaleString()}
-                        </div>
-                        <div className="text-[11px] text-brand-muted mt-1 font-mono line-through">
-                          GHS {listing.original_price.toLocaleString()}
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        <div className="text-[10px] text-brand-muted font-mono">Sold by</div>
-                        <div className="text-xs font-bold text-brand-text">{listing.seller || "Fan"}</div>
-                      </div>
-                    </div>
-
-                    <div className="flex gap-1.5 mb-3.5 flex-wrap">
-                      {[
-                        [Ticket, listing.quantity + "x ticket"],
-                        [Link2, listing.nft_token_id ? "NFT #" + listing.nft_token_id : "NFT verified"],
-                      ].map(([Icon, text]) => (
-                        <div key={text} className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-pastel-blue">
-                          <Icon size={10} strokeWidth={1.75} className="text-fintech-blue" />
-                          <span className="text-[10px] text-fintech-blue font-semibold font-mono">{text}</span>
-                        </div>
-                      ))}
-                    </div>
-
-                    {isOwn ? (
-                      <div className="text-center py-2.5 bg-brand-canvas rounded-full text-xs text-brand-muted font-semibold">
-                        Your listing
-                      </div>
-                    ) : (
-                      <button onClick={() => handleBuy(listing)} disabled={isBuying || paying}
-                        className={`w-full py-3 rounded-full font-bold text-sm flex items-center justify-center gap-2 transition-colors ${isBuying ? "bg-gray-100 text-brand-muted" : "bg-brand-orange hover:bg-brand-orange-hover text-white"} ${paying && !isBuying ? "opacity-50" : ""}`}>
-                        {isBuying ? (
-                          <><Loader2 size={16} className="animate-spin" /> Processing...</>
-                        ) : `Buy for GHS ${listing.resale_price.toLocaleString()} →`}
-                      </button>
-                    )}
-                  </div>
-                </div>
+                <EventCard key={listing.ticket_id}
+                  ev={{ ...ev, image: img, currency }}
+                  footer={footer} />
               );
             })}
           </div>

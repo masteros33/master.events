@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import {
-  ShieldCheck, Mail, Lock, AlertCircle, ArrowRight, LogOut,
-  LayoutDashboard, Users, CalendarDays, Receipt, Landmark, Ticket,
-  TrendingUp, BarChart3, UserCheck, Zap, Link2, User, Pause, Play,
-  Search, Radio, ExternalLink,
-} from "lucide-react";
+  ShieldCheck, Envelope, Lock, WarningCircle, ArrowRight, SignOut,
+  SquaresFour, Users, CalendarBlank, Receipt, Bank, Ticket,
+  TrendUp, ChartBar, UserCheck, Lightning, Link, User, Pause, Play,
+  MagnifyingGlass, Broadcast, ArrowSquareOut,
+} from "@phosphor-icons/react";
 import useStore from "../../store/useStore";
 
 const BACKEND = "https://master-events-backend.onrender.com";
@@ -23,7 +23,7 @@ async function adminFetch(path, token, opts = {}) {
 }
 
 const TYPE_COLOR = {
-  sale: "bg-fintech-blue", resale_sale: "bg-violet-500",
+  sale: "bg-blue-600", resale_sale: "bg-violet-500",
   withdrawal: "bg-slate-400", refund: "bg-red-500", fee: "bg-gray-400",
 };
 const STATUS_CLASS = {
@@ -31,16 +31,16 @@ const STATUS_CLASS = {
   pending:   "text-amber-700 bg-amber-50",
 };
 
-function StatCard({ Icon, label, value, sub, badgeBg = "bg-pastel-blue", iconClass = "text-fintech-blue" }) {
+function StatCard({ Icon, label, value, sub, badgeBg = "bg-blue-50", iconClass = "text-blue-700" }) {
   return (
     <motion.div whileHover={{ y: -2 }} transition={{ duration: 0.15 }}
-      className="bg-brand-card rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow p-5">
+      className="bg-brand-card rounded-2xl border border-brand-hairline transition-shadow p-5">
       <div className={`w-9 h-9 rounded-full ${badgeBg} flex items-center justify-center mb-3`}>
-        <Icon size={16} strokeWidth={1.75} className={iconClass} />
+        <Icon size={16} weight="light" className={iconClass} />
       </div>
-      <div className="text-2xl font-extrabold text-fintech-slate tracking-tight font-mono mb-0.5">{value}</div>
+      <div className="text-2xl font-semibold text-brand-text tracking-tight tabular-nums mb-0.5">{value}</div>
       <div className="text-xs font-semibold text-brand-text mb-0.5">{label}</div>
-      {sub && <div className="text-[11px] text-brand-muted font-mono">{sub}</div>}
+      {sub && <div className="text-xs text-brand-muted">{sub}</div>}
     </motion.div>
   );
 }
@@ -51,32 +51,32 @@ function OverviewTab({ data }) {
   const { users, events, tickets, revenue } = data;
 
   const flowRows = [
-    { label: "Organizer Payouts (95%)", val: revenue?.total_earned || 0, bar: "bg-fintech-blue" },
+    { label: "Organizer Payouts (95%)", val: revenue?.total_earned || 0, bar: "bg-blue-600" },
     { label: "Platform Fees (5%)",      val: revenue?.platform_fees || 0, bar: "bg-slate-400" },
     { label: "Withdrawn",               val: revenue?.total_withdrawn || 0, bar: "bg-slate-300" },
   ];
   const flowMax = revenue?.total_earned || 1;
 
   const miniStats = [
-    { Icon: TrendingUp, label: "FILL_RATE",     val: tickets?.total > 0 ? Math.min(100, Math.round((tickets.total / ((events?.total || 1) * 100)) * 100)) + "%" : "N/A", badgeBg: "bg-pastel-orange", iconClass: "text-brand-orange" },
-    { Icon: BarChart3,  label: "AVG_REV/EVENT", val: events?.total > 0 ? "GHS " + Math.round((revenue?.total_earned || 0) / (events.total || 1)).toLocaleString() : "N/A", badgeBg: "bg-pastel-blue", iconClass: "text-fintech-blue" },
-    { Icon: UserCheck,  label: "USERS/EVENT",   val: events?.total > 0 ? (users?.total / events.total).toFixed(1) : "N/A", badgeBg: "bg-pastel-pink", iconClass: "text-pink-600" },
-    { Icon: Zap,        label: "SALES_ACTIVE",  val: events?.active || 0, badgeBg: "bg-pastel-green", iconClass: "text-fintech-green" },
+    { Icon: TrendUp, label: "Fill Rate",     val: tickets?.total > 0 ? Math.min(100, Math.round((tickets.total / ((events?.total || 1) * 100)) * 100)) + "%" : "N/A", badgeBg: "bg-[var(--brand-light)]", iconClass: "text-brand-accent" },
+    { Icon: ChartBar,  label: "Avg Revenue/Event", val: events?.total > 0 ? "GHS " + Math.round((revenue?.total_earned || 0) / (events.total || 1)).toLocaleString() : "N/A", badgeBg: "bg-blue-50", iconClass: "text-blue-700" },
+    { Icon: UserCheck,  label: "Users/Event",   val: events?.total > 0 ? (users?.total / events.total).toFixed(1) : "N/A", badgeBg: "bg-pink-50", iconClass: "text-pink-600" },
+    { Icon: Lightning,        label: "Active Sales",  val: events?.active || 0, badgeBg: "bg-emerald-50", iconClass: "text-emerald-700" },
   ];
 
   return (
     <div className="p-7 pb-14">
       <div className="grid grid-cols-4 gap-3.5 mb-6">
-        <StatCard Icon={Users} label="Total Users" value={users?.total || 0} sub={`${users?.attendees || 0} attendees · ${users?.organizers || 0} organizers`} badgeBg="bg-pastel-blue" iconClass="text-fintech-blue" />
-        <StatCard Icon={CalendarDays} label="Total Events" value={events?.total || 0} sub={`${events?.active || 0} live now`} badgeBg="bg-pastel-orange" iconClass="text-brand-orange" />
-        <StatCard Icon={Ticket} label="Tickets Issued" value={tickets?.total || 0} sub="All time · NFT minted" badgeBg="bg-pastel-pink" iconClass="text-pink-600" />
-        <StatCard Icon={Landmark} label="Platform Revenue" value={"GHS " + Math.round((revenue?.total_earned || 0) * 0.05).toLocaleString()} sub="5% of total ticket sales" badgeBg="bg-pastel-green" iconClass="text-fintech-green" />
+        <StatCard Icon={Users} label="Total Users" value={users?.total || 0} sub={`${users?.attendees || 0} attendees · ${users?.organizers || 0} organizers`} badgeBg="bg-blue-50" iconClass="text-blue-700" />
+        <StatCard Icon={CalendarBlank} label="Total Events" value={events?.total || 0} sub={`${events?.active || 0} live now`} badgeBg="bg-[var(--brand-light)]" iconClass="text-brand-accent" />
+        <StatCard Icon={Ticket} label="Tickets Issued" value={tickets?.total || 0} sub="All time · NFT minted" badgeBg="bg-pink-50" iconClass="text-pink-600" />
+        <StatCard Icon={Bank} label="Platform Revenue" value={"GHS " + Math.round((revenue?.total_earned || 0) * 0.05).toLocaleString()} sub="5% of total ticket sales" badgeBg="bg-emerald-50" iconClass="text-emerald-700" />
       </div>
 
       <div className="grid grid-cols-[2fr_1fr] gap-3.5 mb-6">
-        <div className="bg-brand-card border border-gray-100 rounded-2xl shadow-sm p-5">
-          <div className="text-[11px] font-bold text-brand-muted tracking-widest font-mono mb-1">REVENUE_FLOW</div>
-          <div className="text-base font-bold text-brand-text mb-5">Organizer Payouts vs Platform Fees</div>
+        <div className="bg-brand-card border border-brand-hairline rounded-2xl p-5">
+          <div className="text-xs font-medium text-brand-muted tracking-widest mb-1">REVENUE FLOW</div>
+          <div className="text-base font-medium text-brand-text mb-5">Organizer Payouts vs Platform Fees</div>
           <div className="flex flex-col gap-3.5">
             {flowRows.map(r => {
               const pct = Math.max(2, Math.round((r.val / flowMax) * 100));
@@ -84,9 +84,9 @@ function OverviewTab({ data }) {
                 <div key={r.label}>
                   <div className="flex justify-between mb-1.5">
                     <span className="text-xs font-medium text-brand-text">{r.label}</span>
-                    <span className="text-xs font-bold font-mono text-fintech-slate">GHS {Math.round(r.val).toLocaleString()}</span>
+                    <span className="text-xs font-medium text-brand-text tabular-nums">GHS {Math.round(r.val).toLocaleString()}</span>
                   </div>
-                  <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                  <div className="h-1.5 bg-brand-hairline rounded-full overflow-hidden">
                     <motion.div initial={{ width: 0 }} animate={{ width: pct + "%" }} transition={{ duration: 0.6, ease: "easeOut" }}
                       className={`h-full rounded-full ${r.bar}`} />
                   </div>
@@ -96,43 +96,43 @@ function OverviewTab({ data }) {
           </div>
         </div>
 
-        <div className="bg-fintech-slate rounded-2xl p-5">
-          <div className="text-[11px] font-bold text-slate-400 tracking-widest font-mono mb-1">BLOCKCHAIN</div>
+        <div className="bg-brand-accent rounded-2xl p-5">
+          <div className="text-xs font-medium text-white/60 tracking-widest mb-1">BLOCKCHAIN</div>
           <div className="flex items-center gap-2 mb-4">
-            <div className="w-7 h-7 rounded-full bg-slate-700 flex items-center justify-center shrink-0">
-              <Link2 size={13} strokeWidth={2} className="text-white" />
+            <div className="w-7 h-7 rounded-full bg-white/10 flex items-center justify-center shrink-0">
+              <Link size={13} weight="light" className="text-white" />
             </div>
-            <div className="text-sm font-bold text-white">Polygon Amoy Network</div>
+            <div className="text-sm font-medium text-white">Polygon Amoy Network</div>
           </div>
           {[
-            ["CONTRACT",   "0x956F...0Daf"],
-            ["CHAIN_ID",   "80002"],
-            ["NFT_SUPPLY", tickets?.total || 0],
-            ["GAS/MINT",   "~0.0002 POL"],
+            ["Contract",   "0x956F...0Daf"],
+            ["Chain ID",   "80002"],
+            ["NFT Supply", tickets?.total || 0],
+            ["Gas / Mint", "~0.0002 POL"],
           ].map(([key, val]) => (
             <div key={key} className="flex justify-between items-center mb-2">
-              <span className="text-[9px] text-slate-500 font-mono">{key}</span>
-              <span className="text-[10px] font-bold text-slate-200 font-mono">{val}</span>
+              <span className="text-xs text-white/50">{key}</span>
+              <span className="font-mono text-xs font-medium text-white/90 tabular-nums">{val}</span>
             </div>
           ))}
           <div className="mt-3.5 flex items-center gap-1.5">
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
-            <span className="text-[9px] font-bold text-emerald-400 font-mono">NETWORK_HEALTHY</span>
+            <span className="text-xs font-medium text-emerald-400">NETWORK HEALTHY</span>
           </div>
         </div>
       </div>
 
-      <div className="bg-brand-card border border-gray-100 rounded-2xl shadow-sm p-5">
-        <div className="text-[11px] font-bold text-brand-muted tracking-widest font-mono mb-1">PLATFORM_HEALTH</div>
-        <div className="text-base font-bold text-brand-text mb-5">Key Metrics at a Glance</div>
+      <div className="bg-brand-card border border-brand-hairline rounded-2xl p-5">
+        <div className="text-xs font-medium text-brand-muted tracking-widest mb-1">PLATFORM HEALTH</div>
+        <div className="text-base font-medium text-brand-text mb-5">Key Metrics at a Glance</div>
         <div className="grid grid-cols-4 gap-3">
           {miniStats.map(s => (
-            <div key={s.label} className="bg-fintech-gray rounded-xl border border-gray-100 p-4 text-center">
+            <div key={s.label} className="bg-brand-subtle rounded-xl border border-brand-hairline p-4 text-center">
               <div className={`w-8 h-8 rounded-full ${s.badgeBg} flex items-center justify-center mx-auto mb-2`}>
-                <s.Icon size={14} strokeWidth={1.75} className={s.iconClass} />
+                <s.Icon size={14} weight="light" className={s.iconClass} />
               </div>
-              <div className="text-base font-extrabold text-fintech-slate font-mono mb-1">{s.val}</div>
-              <div className="text-[9px] text-brand-muted font-mono">{s.label}</div>
+              <div className="text-base font-semibold text-brand-text tabular-nums mb-1">{s.val}</div>
+              <div className="text-xs text-brand-muted">{s.label}</div>
             </div>
           ))}
         </div>
@@ -168,32 +168,32 @@ function OrganizersTab({ token }) {
   );
 
   const summary = [
-    { Icon: Landmark, label: "TOTAL_EARNED", val: "GHS " + Math.round(organizers.reduce((s,o) => s + o.total_earned, 0)).toLocaleString(), badgeBg: "bg-pastel-green", iconClass: "text-fintech-green" },
-    { Icon: CalendarDays, label: "TOTAL_EVENTS", val: organizers.reduce((s,o) => s + o.events_count, 0), badgeBg: "bg-pastel-orange", iconClass: "text-brand-orange" },
-    { Icon: Ticket, label: "TOTAL_SOLD", val: organizers.reduce((s,o) => s + o.tickets_sold, 0), badgeBg: "bg-pastel-blue", iconClass: "text-fintech-blue" },
+    { Icon: Bank, label: "Total Earned", val: "GHS " + Math.round(organizers.reduce((s,o) => s + o.total_earned, 0)).toLocaleString(), badgeBg: "bg-emerald-50", iconClass: "text-emerald-700" },
+    { Icon: CalendarBlank, label: "Total Events", val: organizers.reduce((s,o) => s + o.events_count, 0), badgeBg: "bg-[var(--brand-light)]", iconClass: "text-brand-accent" },
+    { Icon: Ticket, label: "Total Sold", val: organizers.reduce((s,o) => s + o.tickets_sold, 0), badgeBg: "bg-blue-50", iconClass: "text-blue-700" },
   ];
 
   return (
     <div className="p-7 pb-14">
       <div className="flex justify-between items-center mb-5">
         <div>
-          <div className="text-[11px] font-bold text-brand-muted tracking-widest font-mono mb-1">ORGANIZER_REGISTRY</div>
-          <h2 className="font-extrabold text-xl text-brand-text tracking-tight">All Organizers</h2>
+          <div className="text-xs font-medium text-brand-muted tracking-widest mb-1">ORGANIZER REGISTRY</div>
+          <h2 className="font-semibold text-xl text-brand-text tracking-tight">All Organizers</h2>
         </div>
-        <div className="px-3.5 py-1.5 bg-pastel-orange rounded-full text-xs font-bold text-brand-orange font-mono">
+        <div className="px-3.5 py-1.5 bg-[var(--brand-light)] rounded-full text-xs font-medium text-brand-accent">
           {organizers.length} TOTAL
         </div>
       </div>
 
       <div className="grid grid-cols-3 gap-3 mb-5">
         {summary.map(s => (
-          <div key={s.label} className="bg-brand-card border border-gray-100 rounded-xl shadow-sm p-4 flex items-center gap-3">
+          <div key={s.label} className="bg-brand-card border border-brand-hairline rounded-xl p-4 flex items-center gap-3">
             <div className={`w-9 h-9 rounded-full ${s.badgeBg} flex items-center justify-center shrink-0`}>
-              <s.Icon size={16} strokeWidth={1.75} className={s.iconClass} />
+              <s.Icon size={16} weight="light" className={s.iconClass} />
             </div>
             <div>
-              <div className="text-base font-extrabold text-fintech-slate font-mono">{s.val}</div>
-              <div className="text-[10px] text-brand-muted font-mono">{s.label}</div>
+              <div className="text-base font-semibold text-brand-text tabular-nums">{s.val}</div>
+              <div className="text-xs text-brand-muted">{s.label}</div>
             </div>
           </div>
         ))}
@@ -202,21 +202,21 @@ function OrganizersTab({ token }) {
       <div className="flex flex-col gap-2">
         {organizers.map(org => (
           <div key={org.id}
-            className={`bg-brand-card border rounded-xl shadow-sm px-4.5 py-4 flex items-center gap-4 ${org.is_suspended ? "border-red-100" : "border-gray-100"}`}>
+            className={`bg-brand-card border rounded-xl px-4.5 py-4 flex items-center gap-4 ${org.is_suspended ? "border-red-100" : "border-brand-hairline"}`}>
 
-            <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${org.is_suspended ? "bg-red-50" : "bg-pastel-orange"}`}>
+            <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${org.is_suspended ? "bg-red-50" : "bg-[var(--brand-light)]"}`}>
               {org.is_suspended
-                ? <Lock size={16} strokeWidth={1.75} className="text-red-600" />
-                : <User size={16} strokeWidth={1.75} className="text-brand-orange" />}
+                ? <Lock size={16} weight="light" className="text-red-600" />
+                : <User size={16} weight="light" className="text-brand-accent" />}
             </div>
 
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 mb-0.5">
-                <span className="font-bold text-sm text-brand-text truncate">{org.name}</span>
-                {org.is_suspended && <span className="text-[9px] font-bold text-red-600 bg-red-50 px-2 py-0.5 rounded-full font-mono shrink-0">SUSPENDED</span>}
-                {org.is_verified && <span className="text-[9px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full font-mono shrink-0">VERIFIED</span>}
+                <span className="font-medium text-sm text-brand-text truncate">{org.name}</span>
+                {org.is_suspended && <span className="text-xs font-medium text-red-600 bg-red-50 px-2 py-0.5 rounded-full shrink-0">SUSPENDED</span>}
+                {org.is_verified && <span className="text-xs font-medium text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full shrink-0">VERIFIED</span>}
               </div>
-              <div className="text-[11px] text-brand-muted font-mono truncate">{org.email}</div>
+              <div className="text-xs text-brand-muted truncate">{org.email}</div>
             </div>
 
             <div className="flex gap-5 shrink-0">
@@ -226,14 +226,14 @@ function OrganizersTab({ token }) {
                 ["EARNED", "GHS " + Math.round(org.total_earned).toLocaleString()],
               ].map(([k, v]) => (
                 <div key={k} className="text-center">
-                  <div className="text-[13px] font-extrabold text-fintech-slate font-mono">{v}</div>
-                  <div className="text-[8px] text-brand-muted font-mono">{k}</div>
+                  <div className="text-[13px] font-semibold text-brand-text tabular-nums">{v}</div>
+                  <div className="text-xs text-brand-muted">{k}</div>
                 </div>
               ))}
             </div>
 
             <button onClick={() => handleSuspend(org.id)} disabled={suspending === org.id}
-              className={`px-3.5 py-1.5 rounded-full border text-[11px] font-bold font-mono shrink-0 transition-colors ${suspending === org.id ? "opacity-60" : ""} ${org.is_suspended ? "border-emerald-200 bg-emerald-50 text-emerald-700" : "border-red-200 bg-red-50 text-red-600"}`}>
+              className={`px-3.5 py-1.5 rounded-full border text-xs font-medium shrink-0 transition-colors ${suspending === org.id ? "opacity-60" : ""} ${org.is_suspended ? "border-emerald-200 bg-emerald-50 text-emerald-700" : "border-red-200 bg-red-50 text-red-600"}`}>
               {suspending === org.id ? "..." : org.is_suspended ? "REINSTATE" : "SUSPEND"}
             </button>
           </div>
@@ -288,16 +288,16 @@ function EventsTab({ token }) {
     <div className="p-7 pb-14">
       <div className="flex justify-between items-center mb-5">
         <div>
-          <div className="text-[11px] font-bold text-brand-muted tracking-widest font-mono mb-1">EVENT_REGISTRY</div>
-          <h2 className="font-extrabold text-xl text-brand-text tracking-tight">All Events</h2>
+          <div className="text-xs font-medium text-brand-muted tracking-widest mb-1">EVENT REGISTRY</div>
+          <h2 className="font-semibold text-xl text-brand-text tracking-tight">All Events</h2>
         </div>
         <div className="flex items-center gap-2">
           {pendingCount > 0 && (
-            <div className="px-3.5 py-1.5 bg-amber-50 border border-amber-200 rounded-full text-xs font-bold text-amber-700 font-mono">
+            <div className="px-3.5 py-1.5 bg-amber-50 border border-amber-200 rounded-full text-xs font-medium text-amber-700">
               {pendingCount} PENDING REVIEW
             </div>
           )}
-          <div className="px-3.5 py-1.5 bg-pastel-orange rounded-full text-xs font-bold text-brand-orange font-mono">
+          <div className="px-3.5 py-1.5 bg-[var(--brand-light)] rounded-full text-xs font-medium text-brand-accent">
             {events.length} EVENTS
           </div>
         </div>
@@ -306,31 +306,31 @@ function EventsTab({ token }) {
       <div className="flex flex-col gap-2">
         {events.map(ev => (
           <div key={ev.id}
-            className={`bg-brand-card border rounded-xl shadow-sm px-4.5 py-4 flex items-center gap-4 ${
-              !ev.is_approved ? "border-amber-200" : !ev.is_active ? "border-red-100" : "border-gray-100"
+            className={`bg-brand-card border rounded-xl px-4.5 py-4 flex items-center gap-4 ${
+              !ev.is_approved ? "border-amber-200" : !ev.is_active ? "border-red-100" : "border-brand-hairline"
             }`}>
 
             <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${
-              !ev.is_approved ? "bg-amber-50" : ev.sales_open && ev.is_active ? "bg-pastel-green" : "bg-gray-100"
+              !ev.is_approved ? "bg-amber-50" : ev.sales_open && ev.is_active ? "bg-emerald-50" : "bg-brand-hairline"
             }`}>
               {!ev.is_approved
-                ? <ShieldCheck size={14} strokeWidth={1.75} className="text-amber-600" />
+                ? <ShieldCheck size={14} weight="light" className="text-amber-600" />
                 : ev.sales_open && ev.is_active
-                  ? <span className="w-2 h-2 rounded-full bg-fintech-green" />
-                  : <Pause size={14} strokeWidth={1.75} className="text-brand-muted" />}
+                  ? <span className="w-2 h-2 rounded-full bg-emerald-600" />
+                  : <Pause size={14} weight="light" className="text-brand-muted" />}
             </div>
 
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 mb-0.5">
-                <span className="font-bold text-sm text-brand-text truncate">{ev.name}</span>
+                <span className="font-medium text-sm text-brand-text truncate">{ev.name}</span>
                 {!ev.is_approved && (
-                  <span className="text-[9px] font-bold text-amber-700 bg-amber-50 px-2 py-0.5 rounded-full font-mono shrink-0">PENDING REVIEW</span>
+                  <span className="text-xs font-medium text-amber-700 bg-amber-50 px-2 py-0.5 rounded-full shrink-0">PENDING REVIEW</span>
                 )}
                 {ev.is_approved && !ev.is_active && (
-                  <span className="text-[9px] font-bold text-red-600 bg-red-50 px-2 py-0.5 rounded-full font-mono shrink-0">DISABLED</span>
+                  <span className="text-xs font-medium text-red-600 bg-red-50 px-2 py-0.5 rounded-full shrink-0">DISABLED</span>
                 )}
               </div>
-              <div className="text-[11px] text-brand-muted font-mono truncate">{ev.organizer} · {ev.date} · {ev.venue}</div>
+              <div className="text-xs text-brand-muted truncate">{ev.organizer} · {ev.date} · {ev.venue}</div>
             </div>
 
             <div className="flex gap-5 shrink-0">
@@ -340,8 +340,8 @@ function EventsTab({ token }) {
                 ["REVENUE", "GHS " + Math.round(ev.revenue).toLocaleString()],
               ].map(([k, v]) => (
                 <div key={k} className="text-center">
-                  <div className="text-[12px] font-extrabold text-fintech-slate font-mono">{v}</div>
-                  <div className="text-[8px] text-brand-muted font-mono">{k}</div>
+                  <div className="text-xs font-semibold text-brand-text tabular-nums">{v}</div>
+                  <div className="text-xs text-brand-muted">{k}</div>
                 </div>
               ))}
             </div>
@@ -349,17 +349,17 @@ function EventsTab({ token }) {
             {!ev.is_approved ? (
               <div className="flex gap-1.5 shrink-0">
                 <button onClick={() => handleReview(ev.id, "reject")} disabled={reviewing === ev.id}
-                  className={`px-3 py-1.5 rounded-full border text-[11px] font-bold font-mono transition-colors ${reviewing === ev.id ? "opacity-60" : ""} border-red-200 bg-red-50 text-red-600`}>
+                  className={`px-3 py-1.5 rounded-full border text-xs font-medium transition-colors ${reviewing === ev.id ? "opacity-60" : ""} border-red-200 bg-red-50 text-red-600`}>
                   {reviewing === ev.id ? "..." : "REJECT"}
                 </button>
                 <button onClick={() => handleReview(ev.id, "approve")} disabled={reviewing === ev.id}
-                  className={`px-3 py-1.5 rounded-full border text-[11px] font-bold font-mono transition-colors ${reviewing === ev.id ? "opacity-60" : ""} border-emerald-200 bg-emerald-50 text-emerald-700`}>
+                  className={`px-3 py-1.5 rounded-full border text-xs font-medium transition-colors ${reviewing === ev.id ? "opacity-60" : ""} border-emerald-200 bg-emerald-50 text-emerald-700`}>
                   {reviewing === ev.id ? "..." : "APPROVE"}
                 </button>
               </div>
             ) : (
               <button onClick={() => handleToggle(ev.id)} disabled={toggling === ev.id}
-                className={`px-3.5 py-1.5 rounded-full border text-[11px] font-bold font-mono shrink-0 transition-colors ${toggling === ev.id ? "opacity-60" : ""} ${ev.is_active ? "border-red-200 bg-red-50 text-red-600" : "border-emerald-200 bg-emerald-50 text-emerald-700"}`}>
+                className={`px-3.5 py-1.5 rounded-full border text-xs font-medium shrink-0 transition-colors ${toggling === ev.id ? "opacity-60" : ""} ${ev.is_active ? "border-red-200 bg-red-50 text-red-600" : "border-emerald-200 bg-emerald-50 text-emerald-700"}`}>
                 {toggling === ev.id ? "..." : ev.is_active ? "DISABLE" : "ENABLE"}
               </button>
             )}
@@ -393,10 +393,10 @@ function TransactionsTab({ token }) {
     <div className="p-7 pb-14">
       <div className="flex justify-between items-center mb-4">
         <div>
-          <div className="text-[11px] font-bold text-brand-muted tracking-widest font-mono mb-1">TRANSACTION_LOG</div>
-          <h2 className="font-extrabold text-xl text-brand-text tracking-tight">All Transactions</h2>
+          <div className="text-xs font-medium text-brand-muted tracking-widest mb-1">TRANSACTION LOG</div>
+          <h2 className="font-semibold text-xl text-brand-text tracking-tight">All Transactions</h2>
         </div>
-        <div className="text-[11px] text-brand-muted font-mono">
+        <div className="text-xs text-brand-muted">
           {filtered.length} · GHS {Math.round(filtered.reduce((s,t) => s + (t.type !== "withdrawal" ? t.amount : 0), 0)).toLocaleString()} total
         </div>
       </div>
@@ -404,7 +404,7 @@ function TransactionsTab({ token }) {
       <div className="flex gap-1.5 mb-4 flex-wrap">
         {["all","sale","resale_sale","withdrawal","fee"].map(f => (
           <button key={f} onClick={() => setFilter(f)}
-            className={`px-3.5 py-1.5 rounded-full border text-[10px] font-bold font-mono transition-colors ${filter === f ? "border-brand-orange bg-pastel-orange text-brand-orange" : "border-gray-200 bg-brand-card text-brand-muted"}`}>
+            className={`px-3.5 py-1.5 rounded-full border text-xs font-medium transition-colors ${filter === f ? "border-brand-accent bg-[var(--brand-light)] text-brand-accent" : "border-brand-hairline bg-brand-card text-brand-muted"}`}>
             {f.toUpperCase().replace("_"," ")}
           </button>
         ))}
@@ -413,17 +413,17 @@ function TransactionsTab({ token }) {
       <div className="flex flex-col gap-1.5">
         {filtered.slice(0, 50).map((t, i) => (
           <div key={t.id || i}
-            className="bg-brand-card border border-gray-100 rounded-xl shadow-sm px-4 py-3 flex items-center gap-3.5">
-            <span className={`w-2 h-2 rounded-full shrink-0 ${TYPE_COLOR[t.type] || "bg-gray-300"}`} />
+            className="bg-brand-card border border-brand-hairline rounded-xl px-4 py-3 flex items-center gap-3.5">
+            <span className={`w-2 h-2 rounded-full shrink-0 ${TYPE_COLOR[t.type] || "bg-brand-muted"}`} />
             <div className="flex-1 min-w-0">
               <div className="font-semibold text-sm text-brand-text truncate">{t.description}</div>
-              <div className="text-[10px] text-brand-muted font-mono mt-0.5">{t.user} · {t.reference}</div>
+              <div className="font-mono text-xs text-brand-muted mt-0.5">{t.user} · {t.reference}</div>
             </div>
             <div className="text-right shrink-0">
-              <div className="font-extrabold text-sm text-fintech-slate font-mono">
+              <div className="font-semibold text-sm text-brand-text">
                 {t.type === "withdrawal" ? "-" : "+"}GHS {parseFloat(t.amount).toLocaleString()}
               </div>
-              <div className={`text-[9px] font-bold font-mono mt-0.5 px-1.5 py-0.5 rounded-full inline-block ${STATUS_CLASS[t.status] || "text-red-700 bg-red-50"}`}>
+              <div className={`text-xs font-medium mt-0.5 px-1.5 py-0.5 rounded-full inline-block ${STATUS_CLASS[t.status] || "text-red-700 bg-red-50"}`}>
                 {t.status?.toUpperCase()}
               </div>
             </div>
@@ -465,46 +465,46 @@ function TicketHoldersTab({ token }) {
     <div className="p-7 pb-14">
       <div className="flex justify-between items-center mb-4">
         <div>
-          <div className="text-[11px] font-bold text-brand-muted tracking-widest font-mono mb-1">TICKET_HOLDERS</div>
-          <h2 className="font-extrabold text-xl text-brand-text tracking-tight">All Ticket Holders</h2>
+          <div className="text-xs font-medium text-brand-muted tracking-widest mb-1">TICKET HOLDERS</div>
+          <h2 className="font-semibold text-xl text-brand-text tracking-tight">All Ticket Holders</h2>
         </div>
-        <div className="px-3.5 py-1.5 bg-pastel-blue rounded-full text-xs font-bold text-fintech-blue font-mono">
+        <div className="px-3.5 py-1.5 bg-blue-50 rounded-full text-xs font-medium text-blue-700">
           {filtered.length} SHOWN
         </div>
       </div>
 
       <div className="relative mb-4">
-        <Search size={14} strokeWidth={1.75} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-brand-muted" />
+        <MagnifyingGlass size={14} weight="light" className="absolute left-3.5 top-1/2 -translate-y-1/2 text-brand-muted" />
         <input value={search} onChange={e => setSearch(e.target.value)}
-          placeholder="Search by name, email, event, or ticket ID..."
-          className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-gray-200 bg-brand-card text-sm text-brand-text outline-none focus:border-brand-orange focus:ring-2 focus:ring-orange-100 transition-colors" />
+          placeholder="MagnifyingGlass by name, email, event, or ticket ID..."
+          className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-brand-hairline bg-brand-card text-sm text-brand-text outline-none focus:border-brand-accent focus:ring-2 focus:ring-brand-accent/20 transition-colors" />
       </div>
 
       {filtered.length === 0 ? (
-        <div className="text-center py-12 bg-brand-card rounded-2xl border border-gray-100 shadow-sm">
+        <div className="text-center py-12 bg-brand-card rounded-2xl border border-brand-hairline">
           <div className="text-sm text-brand-muted">No ticket holders found</div>
         </div>
       ) : (
         <div className="flex flex-col gap-1.5">
           {filtered.slice(0, 150).map((h, i) => (
-            <div key={h.id + i} className="bg-brand-card border border-gray-100 rounded-xl shadow-sm px-4 py-3 flex items-center gap-3.5">
-              <div className={`w-9 h-9 rounded-full flex items-center justify-center shrink-0 ${h.is_free ? "bg-pastel-green" : "bg-pastel-blue"}`}>
-                <User size={15} strokeWidth={1.75} className={h.is_free ? "text-fintech-green" : "text-fintech-blue"} />
+            <div key={h.id + i} className="bg-brand-card border border-brand-hairline rounded-xl px-4 py-3 flex items-center gap-3.5">
+              <div className={`w-9 h-9 rounded-full flex items-center justify-center shrink-0 ${h.is_free ? "bg-emerald-50" : "bg-blue-50"}`}>
+                <User size={15} weight="light" className={h.is_free ? "text-emerald-700" : "text-blue-700"} />
               </div>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 mb-0.5">
                   <span className="font-semibold text-sm text-brand-text truncate">{h.holder_name}</span>
-                  {h.is_free && <span className="text-[8px] font-bold text-fintech-green bg-pastel-green px-1.5 py-0.5 rounded-full font-mono shrink-0">FREE</span>}
-                  {h.nft_minted && <span className="text-[8px] font-bold text-fintech-blue bg-pastel-blue px-1.5 py-0.5 rounded-full font-mono shrink-0">NFT</span>}
+                  {h.is_free && <span className="text-xs font-medium text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded-full shrink-0">FREE</span>}
+                  {h.nft_minted && <span className="text-xs font-medium text-blue-700 bg-blue-50 px-1.5 py-0.5 rounded-full shrink-0">NFT</span>}
                 </div>
-                <div className="text-[11px] text-brand-muted truncate">{h.event_name} · {h.event_date}</div>
+                <div className="text-xs text-brand-muted truncate">{h.event_name} · {h.event_date}</div>
               </div>
               <div className="text-right shrink-0">
-                <div className="text-[13px] font-extrabold text-fintech-slate font-mono">
+                <div className="text-[13px] font-semibold text-brand-text">
                   {h.is_free ? "FREE" : "GHS " + h.price_paid.toLocaleString()}
                 </div>
-                <div className={`text-[9px] font-bold font-mono mt-0.5 px-1.5 py-0.5 rounded-full inline-block ${
-                  h.status === "redeemed" ? "text-gray-600 bg-gray-100" :
+                <div className={`text-xs font-medium mt-0.5 px-1.5 py-0.5 rounded-full inline-block ${
+                  h.status === "redeemed" ? "text-gray-600 bg-brand-hairline" :
                   h.status === "resale" ? "text-red-600 bg-red-50" :
                   "text-emerald-700 bg-emerald-50"
                 }`}>
@@ -546,33 +546,33 @@ function LiveActivityTab({ token }) {
     <div className="p-7 pb-14">
       <div className="flex justify-between items-center mb-4">
         <div>
-          <div className="text-[11px] font-bold text-brand-muted tracking-widest font-mono mb-1">LIVE_ACTIVITY</div>
-          <h2 className="font-extrabold text-xl text-brand-text tracking-tight">Platform-Wide Activity</h2>
+          <div className="text-xs font-medium text-brand-muted tracking-widest mb-1">LIVE ACTIVITY</div>
+          <h2 className="font-semibold text-xl text-brand-text tracking-tight">Platform-Wide Activity</h2>
         </div>
         <div className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-emerald-50">
           <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 pulse-dot" />
-          <span className="text-[10px] font-bold text-emerald-700 font-mono">LIVE · UPDATES EVERY 15S</span>
+          <span className="text-xs font-medium text-emerald-700">LIVE · UPDATES EVERY 15S</span>
         </div>
       </div>
 
       {feed.length === 0 ? (
-        <div className="text-center py-12 bg-brand-card rounded-2xl border border-gray-100 shadow-sm">
+        <div className="text-center py-12 bg-brand-card rounded-2xl border border-brand-hairline">
           <div className="text-sm text-brand-muted">No activity yet — real transactions will appear here as they happen</div>
         </div>
       ) : (
         <div className="flex flex-col gap-1.5">
           {feed.map((t, i) => (
-            <div key={t.id || i} className="bg-brand-card border border-gray-100 rounded-xl shadow-sm px-4 py-3 flex items-center gap-3.5">
-              <span className={`w-2 h-2 rounded-full shrink-0 ${TYPE_COLOR[t.type] || "bg-gray-300"}`} />
+            <div key={t.id || i} className="bg-brand-card border border-brand-hairline rounded-xl px-4 py-3 flex items-center gap-3.5">
+              <span className={`w-2 h-2 rounded-full shrink-0 ${TYPE_COLOR[t.type] || "bg-brand-muted"}`} />
               <div className="flex-1 min-w-0">
                 <div className="font-semibold text-sm text-brand-text truncate">{t.description}</div>
-                <div className="text-[10px] text-brand-muted font-mono mt-0.5">{t.user_name} · {t.reference}</div>
+                <div className="font-mono text-xs text-brand-muted mt-0.5">{t.user_name} · {t.reference}</div>
               </div>
               <div className="text-right shrink-0">
-                <div className="font-extrabold text-sm text-fintech-slate font-mono">
+                <div className="font-semibold text-sm text-brand-text">
                   {t.type === "withdrawal" ? "-" : "+"}GHS {parseFloat(t.amount).toLocaleString()}
                 </div>
-                <div className="text-[9px] text-brand-muted font-mono mt-0.5">
+                <div className="text-xs text-brand-muted mt-0.5">
                   {new Date(t.created_at).toLocaleTimeString()}
                 </div>
               </div>
@@ -616,59 +616,59 @@ export function AdminLogin() {
   };
 
   return (
-    <div className="h-full bg-fintech-gray overflow-y-auto flex justify-center items-start px-6 py-10 font-sans">
+    <div className="h-full bg-brand-subtle overflow-y-auto flex justify-center items-start px-6 py-10 font-sans">
       <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}
-        className="max-w-[420px] w-full bg-brand-card rounded-3xl border border-gray-100 shadow-sm p-8">
+        className="max-w-[420px] w-full bg-brand-card rounded-2xl border border-brand-hairline p-8">
 
         <div className="flex flex-col items-center mb-7">
-          <div className="w-12 h-12 rounded-full bg-fintech-slate flex items-center justify-center mb-3">
-            <ShieldCheck size={20} strokeWidth={2} color="#fff" />
+          <div className="w-12 h-12 rounded-full bg-brand-accent flex items-center justify-center mb-3">
+            <ShieldCheck size={20} weight="light" color="#fff" />
           </div>
-          <span className="font-extrabold text-base text-brand-text tracking-tight">Master Events</span>
-          <span className="text-[11px] font-bold text-brand-muted tracking-widest font-mono mt-0.5">ADMIN GATEWAY</span>
+          <span className="font-semibold text-base text-brand-text tracking-tight">Master Events</span>
+          <span className="text-xs font-medium text-brand-muted tracking-widest mt-0.5">ADMIN GATEWAY</span>
         </div>
 
         <div className="mb-6 text-center">
-          <h1 className="text-2xl font-extrabold text-brand-text mb-1.5">Super Admin</h1>
+          <h1 className="text-2xl font-semibold text-brand-text mb-1.5">Super Admin</h1>
           <p className="text-sm text-brand-muted">Protected access. Authorized personnel only.</p>
         </div>
 
         <div className="mb-3.5">
           <label className="text-xs font-semibold text-brand-muted mb-1.5 block">Email</label>
           <div className="relative">
-            <Mail size={16} strokeWidth={1.75} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-brand-muted" />
+            <Envelope size={16} weight="light" className="absolute left-3.5 top-1/2 -translate-y-1/2 text-brand-muted" />
             <input type="email" value={email} onChange={e => setEmail(e.target.value)}
               placeholder="admin@masterevents.com"
               onKeyDown={e => e.key === "Enter" && handleLogin()}
-              className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 bg-brand-card text-sm text-brand-text outline-none focus:border-brand-orange focus:ring-2 focus:ring-orange-100 transition-colors" />
+              className="w-full pl-10 pr-4 py-3 rounded-xl border border-brand-hairline bg-brand-card text-sm text-brand-text outline-none focus:border-brand-accent focus:ring-2 focus:ring-brand-accent/20 transition-colors" />
           </div>
         </div>
 
         <div className="mb-5">
           <label className="text-xs font-semibold text-brand-muted mb-1.5 block">Password</label>
           <div className="relative">
-            <Lock size={16} strokeWidth={1.75} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-brand-muted" />
+            <Lock size={16} weight="light" className="absolute left-3.5 top-1/2 -translate-y-1/2 text-brand-muted" />
             <input type="password" value={password} onChange={e => setPassword(e.target.value)}
               placeholder="••••••••••••"
               onKeyDown={e => e.key === "Enter" && handleLogin()}
-              className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 bg-brand-card text-sm text-brand-text outline-none focus:border-brand-orange focus:ring-2 focus:ring-orange-100 transition-colors" />
+              className="w-full pl-10 pr-4 py-3 rounded-xl border border-brand-hairline bg-brand-card text-sm text-brand-text outline-none focus:border-brand-accent focus:ring-2 focus:ring-brand-accent/20 transition-colors" />
           </div>
         </div>
 
         {error && (
           <div className="flex items-center gap-2 bg-red-50 border border-red-100 rounded-xl px-3.5 py-2.5 mb-3.5 text-red-600 text-xs">
-            <AlertCircle size={14} strokeWidth={2} /> {error}
+            <WarningCircle size={14} weight="light" /> {error}
           </div>
         )}
 
         <button onClick={handleLogin} disabled={loading}
-          className="w-full py-3.5 rounded-full bg-brand-orange hover:bg-brand-orange-hover disabled:opacity-60 text-white font-bold text-sm flex items-center justify-center gap-2 transition-colors">
-          {loading ? "Authenticating..." : <>Enter Admin Gateway <ArrowRight size={16} strokeWidth={2} /></>}
+          className="w-full h-12 rounded-xl bg-brand-accent hover:bg-brand-accent-hover disabled:opacity-60 text-white font-medium text-sm flex items-center justify-center gap-2 transition-colors">
+          {loading ? "Authenticating..." : <>Enter Admin Gateway <ArrowRight size={16} weight="light" /></>}
         </button>
 
         <div className="text-center mt-5">
           <span onClick={() => setScreen("home")}
-            className="text-xs text-brand-muted cursor-pointer hover:text-brand-orange transition-colors">
+            className="text-xs text-brand-muted cursor-pointer hover:text-brand-accent transition-colors">
             ← Back to Master Events
           </span>
         </div>
@@ -713,87 +713,87 @@ export function AdminDashboard() {
 
   // ── NEW: two tabs appended — existing four unchanged ──
   const tabs = [
-    { id: "overview",       Icon: LayoutDashboard, label: "Overview" },
+    { id: "overview",       Icon: SquaresFour, label: "Overview" },
     { id: "organizers",     Icon: Users,           label: "Organizers" },
-    { id: "events",         Icon: CalendarDays,    label: "Events" },
+    { id: "events",         Icon: CalendarBlank,    label: "Events" },
     { id: "transactions",   Icon: Receipt,         label: "Transactions" },
     { id: "ticketHolders",  Icon: Ticket,          label: "Ticket Holders" },
-    { id: "liveActivity",   Icon: Radio,           label: "Live Activity" },
+    { id: "liveActivity",   Icon: Broadcast,           label: "Live Activity" },
   ];
   const activeMeta = tabs.find(t => t.id === activeTab);
 
   return (
-    <div className="flex h-screen bg-fintech-gray font-sans overflow-hidden">
+    <div className="flex h-screen bg-brand-subtle font-sans overflow-hidden">
 
-      <div className="w-60 shrink-0 bg-fintech-slate flex flex-col h-screen">
+      <div className="w-60 shrink-0 bg-brand-accent flex flex-col h-screen">
 
-        <div className="px-4 py-4 border-b border-slate-800 shrink-0">
+        <div className="px-4 py-4 border-b border-white/10 shrink-0">
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-lg bg-brand-orange flex items-center justify-center shrink-0">
-              <ShieldCheck size={16} strokeWidth={2} color="#fff" />
+            <div className="w-8 h-8 rounded-xl bg-white/15 flex items-center justify-center shrink-0">
+              <ShieldCheck size={16} weight="light" color="#fff" />
             </div>
             <div>
-              <div className="font-bold text-[13px] text-white tracking-tight">Admin Portal</div>
-              <div className="text-[9px] text-brand-orange font-bold tracking-widest font-mono">MASTER EVENTS</div>
+              <div className="font-medium text-[13px] text-white tracking-tight">Admin Portal</div>
+              <div className="text-xs text-white/50 font-medium tracking-widest">MASTER EVENTS</div>
             </div>
           </div>
         </div>
 
         {adminUser && (
-          <div className="px-4 py-3 border-b border-slate-800 shrink-0">
-            <div className="text-xs font-bold text-white mb-0.5">{adminUser.first_name} {adminUser.last_name}</div>
-            <div className="text-[10px] text-slate-400 font-mono mb-1.5 truncate">{adminUser.email}</div>
-            <span className="inline-block px-2 py-0.5 rounded-full bg-slate-800 text-[8px] font-bold text-brand-orange font-mono">SUPER_ADMIN</span>
+          <div className="px-4 py-3 border-b border-white/10 shrink-0">
+            <div className="text-xs font-medium text-white mb-0.5">{adminUser.first_name} {adminUser.last_name}</div>
+            <div className="text-xs text-white/50 mb-1.5 truncate">{adminUser.email}</div>
+            <span className="inline-block px-2 py-0.5 rounded-full bg-white/10 text-xs font-medium text-white/80">SUPER ADMIN</span>
           </div>
         )}
 
         <nav className="flex-1 p-2 overflow-y-auto">
-          <div className="text-[9px] font-bold text-slate-500 tracking-widest px-2.5 pt-2 pb-1.5 font-mono">NAVIGATE</div>
+          <div className="text-xs font-medium text-white/40 tracking-widest px-2.5 pt-2 pb-1.5">NAVIGATE</div>
           {tabs.map(t => (
             <button key={t.id} onClick={() => setActiveTab(t.id)}
-              className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg mb-0.5 text-left transition-colors relative ${activeTab === t.id ? "bg-slate-800" : "hover:bg-slate-800/60"}`}>
-              {activeTab === t.id && <span className="absolute left-0 top-1/5 h-3/5 w-[3px] rounded-r-full bg-brand-orange" />}
-              <t.Icon size={15} strokeWidth={1.75} className={activeTab === t.id ? "text-brand-orange" : "text-slate-400"} />
-              <span className={`font-semibold text-[13px] ${activeTab === t.id ? "text-brand-orange" : "text-slate-300"}`}>{t.label}</span>
+              className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl mb-0.5 text-left transition-colors relative ${activeTab === t.id ? "bg-white/10" : "hover:bg-white/5"}`}>
+              {activeTab === t.id && <span className="absolute left-0 top-1/5 h-3/5 w-[3px] rounded-r-full bg-white" />}
+              <t.Icon size={15} weight="light" className={activeTab === t.id ? "text-white" : "text-white/50"} />
+              <span className={`font-medium text-[13px] ${activeTab === t.id ? "text-white" : "text-white/70"}`}>{t.label}</span>
             </button>
           ))}
         </nav>
 
-        <div className="p-2 border-t border-slate-800 shrink-0">
+        <div className="p-2 border-t border-white/10 shrink-0">
           <button onClick={handleAdminLogout}
-            className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg hover:bg-slate-800 transition-colors">
-            <LogOut size={15} strokeWidth={1.75} className="text-red-400" />
-            <span className="font-semibold text-xs text-red-400">Sign Out</span>
+            className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl hover:bg-white/5 transition-colors">
+            <SignOut size={15} weight="light" className="text-red-300" />
+            <span className="font-medium text-xs text-red-300">Sign Out</span>
           </button>
         </div>
       </div>
 
       <main className="flex-1 flex flex-col min-w-0 overflow-hidden">
 
-        <div className="bg-brand-card border-b border-gray-100 px-7 h-15 flex items-center justify-between shrink-0">
+        <div className="bg-brand-card border-b border-brand-hairline px-7 h-14 flex items-center justify-between shrink-0">
           <div>
-            <h1 className="font-extrabold text-base text-brand-text tracking-tight">{activeMeta?.label}</h1>
-            <p className="text-[10px] text-brand-muted font-mono mt-0.5">
-              ADMIN_SESSION · {new Date().toLocaleDateString("en-GH", { weekday: "short", month: "short", day: "numeric" })}
+            <h1 className="font-semibold text-base text-brand-text tracking-tight">{activeMeta?.label}</h1>
+            <p className="text-xs text-brand-muted mt-0.5">
+              ADMIN SESSION · {new Date().toLocaleDateString("en-GH", { weekday: "short", month: "short", day: "numeric" })}
             </p>
           </div>
 
           <div className="flex items-center gap-3">
             <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-50">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-              <span className="text-[10px] font-bold text-emerald-700 font-mono">PLATFORM LIVE</span>
+              <span className="text-xs font-medium text-emerald-700">PLATFORM LIVE</span>
             </div>
 
             {overview && (
-              <div className="flex gap-4 text-[11px] font-mono">
+              <div className="flex gap-4 text-xs">
                 {[
                   ["USERS",   overview.users?.total || 0],
                   ["EVENTS",  overview.events?.total || 0],
                   ["TICKETS", overview.tickets?.total || 0],
                 ].map(([k, v]) => (
                   <div key={k} className="flex items-center gap-1">
-                    <span className="text-brand-muted text-[9px]">{k}:</span>
-                    <span className="font-bold text-fintech-slate">{v}</span>
+                    <span className="text-brand-muted text-xs">{k}:</span>
+                    <span className="font-medium text-brand-text">{v}</span>
                   </div>
                 ))}
               </div>

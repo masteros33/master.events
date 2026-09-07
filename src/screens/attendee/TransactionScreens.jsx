@@ -282,12 +282,23 @@ function PremiumTicket({ ev, ownerName, qrSrc, qrLoaded, qrError, refreshing, se
 }
 
 export function PaymentSuccess() {
-  const setScreen     = useStore(s => s.setScreen);
-  const setActiveTab  = useStore(s => s.setActiveTab);
-  const viewingTicket = useStore(s => s.viewingTicket);
-  const checkoutEvent = useStore(s => s.checkoutEvent);
+  const setScreen         = useStore(s => s.setScreen);
+  const setActiveTab      = useStore(s => s.setActiveTab);
+  const viewingTicket     = useStore(s => s.viewingTicket);
+  const checkoutEvent     = useStore(s => s.checkoutEvent);
+  const lastPurchaseBatch = useStore(s => s.lastPurchaseBatch);
   const desktop = isDesktop();
   const event   = viewingTicket?.event || checkoutEvent;
+
+  // ── Amount paid must reflect the WHOLE purchase, not just the first
+  // ticket in the batch — a qty-2 purchase was previously showing one
+  // unit's price as "Amount Paid," which read as a billing error. ──
+  const batch      = lastPurchaseBatch?.length ? lastPurchaseBatch : (viewingTicket ? [viewingTicket] : []);
+  const ticketCount = batch.length || 1;
+  const totalPaid   = batch.length
+    ? batch.reduce((s, t) => s + (t.price_paid ?? parseFloat(t.event?.price || 0)), 0)
+    : parseFloat(event?.price || 0);
+  const mintedCount = batch.filter(t => t.nft_tx_hash).length;
 
   return (
     <div className={`bg-brand-subtle min-h-full flex items-center justify-center ${desktop ? "p-10" : "p-5"}`}>
@@ -301,17 +312,19 @@ export function PaymentSuccess() {
               <CheckCircle size={32} weight="light" className="text-emerald-700" />
             </div>
             <h2 className="text-2xl font-semibold text-brand-text tracking-tight mb-1.5">Payment Confirmed</h2>
-            <p className="text-brand-muted text-sm leading-relaxed">Your NFT ticket is being minted on Polygon</p>
+            <p className="text-brand-muted text-sm leading-relaxed">
+              {ticketCount > 1 ? `Your ${ticketCount} NFT tickets are being minted on Polygon` : "Your NFT ticket is being minted on Polygon"}
+            </p>
           </div>
 
           <div className="bg-brand-subtle rounded-2xl px-5 py-4 mb-5 text-center border border-brand-hairline">
             <div className="text-xs font-semibold text-brand-muted tracking-wide mb-1.5">AMOUNT PAID</div>
             <div className="text-3xl font-semibold text-brand-text tracking-tight tabular-nums">
-              GHS {event?.price ? parseFloat(event.price).toLocaleString() : "—"}
+              GHS {totalPaid.toLocaleString()}
             </div>
-            {viewingTicket?.tierName && (
-              <div className="text-xs text-brand-accent font-semibold mt-1.5">{viewingTicket.tierName}</div>
-            )}
+            <div className="text-xs text-brand-muted mt-1.5 tabular-nums">
+              {ticketCount} ticket{ticketCount > 1 ? "s" : ""}{viewingTicket?.tierName ? ` · ${viewingTicket.tierName}` : ""}
+            </div>
           </div>
 
           {event && (
@@ -324,9 +337,28 @@ export function PaymentSuccess() {
             </div>
           )}
 
-          <div className="mb-6">
-            <ChainStrip txHash={viewingTicket?.nft_tx_hash} tokenId={viewingTicket?.nft_token_id} />
-          </div>
+          {ticketCount > 1 ? (
+            <div className="bg-brand-subtle rounded-2xl p-4 mb-6 border border-brand-hairline">
+              <div className="flex items-center justify-between mb-3">
+                <div className="text-xs font-medium text-brand-muted tracking-widest">YOUR TICKETS</div>
+                <span className="text-xs text-brand-muted tabular-nums">{mintedCount}/{ticketCount} NFTs confirmed</span>
+              </div>
+              <div className="flex flex-col gap-2">
+                {batch.map((t, i) => (
+                  <div key={t.ticket_id || i} className="flex items-center justify-between bg-brand-card border border-brand-hairline rounded-xl px-3.5 py-2.5">
+                    <span className="font-mono text-xs text-brand-text truncate">{String(t.ticket_id || "").slice(0, 16)}</span>
+                    <span className={`text-xs font-medium shrink-0 ml-2 ${t.nft_tx_hash ? "text-emerald-700" : "text-brand-muted"}`}>
+                      {t.nft_tx_hash ? `NFT #${t.nft_token_id ?? "✓"}` : "Minting…"}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ) : (
+            <div className="mb-6">
+              <ChainStrip txHash={viewingTicket?.nft_tx_hash} tokenId={viewingTicket?.nft_token_id} />
+            </div>
+          )}
 
           <div className="flex justify-center gap-4 mb-6 flex-wrap">
             {[[Lock,"Secured"],[Link,"On-chain"],[DeviceMobile,"Instant"]].map(([Icon,label]) => (
@@ -336,7 +368,9 @@ export function PaymentSuccess() {
             ))}
           </div>
 
-          <PrimaryBtn onClick={() => setScreen("ticketView")}>View My Ticket →</PrimaryBtn>
+          <PrimaryBtn onClick={() => setScreen("ticketView")}>
+            {ticketCount > 1 ? "View My Tickets →" : "View My Ticket →"}
+          </PrimaryBtn>
         </div>
 
         <GhostBtn onClick={() => { setScreen("app"); setActiveTab("home"); }}>Back to Events</GhostBtn>

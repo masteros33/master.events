@@ -165,6 +165,41 @@ function ResultCard({ result }) {
   );
 }
 
+// ── Build a ResultCard-shaped object from the /api/tickets/verify/
+// response. Was previously called but never defined anywhere in this
+// file — every scan threw a ReferenceError that the catch block
+// swallowed and reported as "Could not verify. Check your connection.",
+// regardless of whether the network call succeeded or what the backend
+// actually said. ──
+function buildResult(data) {
+  if (data?.valid) {
+    return {
+      status:     "valid",
+      title:      "Ticket Valid — Admitted",
+      msg:        data.is_free ? "Free entry pass confirmed." : "Verified on the blockchain.",
+      holder:     data.holder,
+      event_name: data.event_name,
+      ticket_id:  data.ticket_id,
+      token_id:   data.nft_token_id,
+      tx_hash:    data.blockchain_url ? data.blockchain_url.split("/tx/")[1] : null,
+    };
+  }
+
+  const reason = data?.reason || "Could not verify this ticket.";
+  let status = "invalid";
+  if (/already redeemed|already used/i.test(reason)) status = "redeemed";
+  else if (/wrong event/i.test(reason)) status = "wrong_event";
+
+  return {
+    status,
+    title:      status === "redeemed" ? "Already Used" : status === "wrong_event" ? "Wrong Event" : "Invalid Ticket",
+    msg:        reason,
+    holder:     data?.holder || null,
+    event_name: data?.event_name || null,
+    ticket_id:  null,
+  };
+}
+
 // ── Door Staff Login ──────────────────────────────────────────
 export function DoorStaffLogin() {
   const setScreen            = useStore(s => s.setScreen);

@@ -322,6 +322,7 @@ const useStore = create((set, get) => ({
           },
           qty:          1,
           quantity:     1,
+          price_paid:   0,
           purchasedAt:  new Date().toLocaleDateString(),
           status:       data.status || "active",
           qr_data:      data.qr_data      || null,
@@ -330,6 +331,9 @@ const useStore = create((set, get) => ({
           qr_image:     data.qr_image
             ? (data.qr_image.startsWith("http") ? data.qr_image : BACKEND + data.qr_image)
             : null,
+          nft_tx_hash:  data.nft_tx_hash  || null,
+          nft_token_id: data.nft_token_id || null,
+          nft_minting:  true,
           is_free_registration: true,
         };
 
@@ -393,6 +397,12 @@ const useStore = create((set, get) => ({
       // basket size. ──
       qty:          raw.quantity || 1,
       quantity:     raw.quantity || 1,
+      // ── The actual amount this specific ticket was bought for —
+      // distinct from event.price, which is the event's current live
+      // listing price and can drift after purchase (price changes,
+      // tiers). price_paid is what the backend charged, and is what
+      // "Amount Paid" on the confirmation screen must show. ──
+      price_paid:   raw.price_paid != null ? parseFloat(raw.price_paid) : parseFloat(raw.event?.price || checkoutEvent?.price || 0),
       payMethod,
       purchasedAt:  new Date().toLocaleDateString(),
       owner:        typeof raw.owner === "object"

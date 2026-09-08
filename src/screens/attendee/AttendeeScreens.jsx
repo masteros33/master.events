@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import useStore from "../../store/useStore";
 import { ticketsAPI } from "../../api";
+import { formatDate } from "../../utils/formatDate";
 import {
   Ticket, Link2, Calendar, MapPin, CheckCircle2, Bell, Tag, ExternalLink,
 } from "lucide-react";
@@ -53,8 +54,8 @@ function TicketCard({ t, onView, onResell, onSend, onCancel }) {
       <div className="px-3 pt-2.5 pb-3">
         <div className="font-bold text-[13px] text-brand-text mb-1.5 leading-snug line-clamp-2">{t.event.name}</div>
 
-        <div className="flex items-center gap-1 text-[10px] text-brand-muted mb-2 font-mono truncate">
-          <Calendar size={10} strokeWidth={1.75} /> {t.event.date} · <MapPin size={10} strokeWidth={1.75} /> {t.event.venue}
+        <div className="flex items-center gap-1 text-[10px] text-brand-muted mb-2 tabular-nums truncate">
+          <Calendar size={10} strokeWidth={1.75} /> {formatDate(t.event.date)} · <MapPin size={10} strokeWidth={1.75} /> {t.event.venue}
         </div>
 
         <div className="flex justify-between items-center mb-2.5">
@@ -184,7 +185,7 @@ export function AttendeeAlerts() {
       badgeBg: t.status === "redeemed" ? "bg-pastel-green" : t.status === "resale" ? "bg-pastel-orange" : "bg-pastel-blue",
       iconClass: t.status === "redeemed" ? "text-fintech-green" : t.status === "resale" ? "text-brand-orange" : "text-fintech-blue",
       title: t.status === "redeemed" ? "Ticket Used at Event" : t.status === "resale" ? "Listed on Resale Market" : "NFT Ticket Purchased",
-      body:  `Your ticket for ${t.event?.name} on ${t.event?.date} at ${t.event?.venue}.`,
+      body:  `Your ticket for ${t.event?.name} on ${formatDate(t.event?.date)} at ${t.event?.venue}.`,
       time: t.purchasedAt || "Recently", txHash: null, ticket: t,
     })),
   ] : [{

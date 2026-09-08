@@ -9,6 +9,7 @@ import {
 } from "@phosphor-icons/react";
 import useStore from "../../store/useStore";
 import { eventsAPI } from "../../api";
+import { formatDate } from "../../utils/formatDate";
 
 const CHART = { orange: "#1c2e53", green: "#10B981", blue: "#2563EB", red: "#DC2626" };
 
@@ -166,8 +167,8 @@ function EventCard({ ev, onClick }) {
 
       <div className="p-3.5 pb-4">
         <div className="font-medium text-[13px] text-brand-text mb-0.5 truncate">{ev.name}</div>
-        <div className="flex items-center gap-1 text-xs text-brand-muted mb-3 truncate">
-          <Calendar size={10} weight="light" /> {ev.date} · <MapPin size={10} weight="light" /> {ev.city}
+        <div className="flex items-center gap-1 text-xs text-brand-muted mb-3 tabular-nums truncate">
+          <Calendar size={10} weight="light" /> {formatDate(ev.date)} · <MapPin size={10} weight="light" /> {ev.city}
         </div>
 
         <div className="flex items-center justify-between">
@@ -340,8 +341,8 @@ function EventRow({ ev, onClick }) {
         <div>
           <div className="text-xs font-medium text-brand-muted uppercase tracking-wide mb-1">{ev.category} · {ev.country}</div>
           <div className="text-[15px] font-medium text-brand-text tracking-tight mb-1 truncate">{ev.name}</div>
-          <div className="flex items-center gap-1 text-xs text-brand-muted mb-3">
-            <MapPin size={11} weight="light" /> {ev.venue} · <Calendar size={11} weight="light" /> {ev.date}
+          <div className="flex items-center gap-1 text-xs text-brand-muted mb-3 tabular-nums">
+            <MapPin size={11} weight="light" /> {ev.venue} · <Calendar size={11} weight="light" /> {formatDate(ev.date)}
           </div>
         </div>
         <div>
@@ -1389,8 +1390,8 @@ export function OrganizerEventDetail() {
         <div className="bg-brand-card border-b border-brand-hairline" style={{ padding: isDesk ? "16px 40px" : "12px 14px" }}>
           <div className="text-xs font-medium text-brand-muted tracking-wide mb-1">{(ev.category||"").toUpperCase()} · {ev.country||"GHANA"}</div>
           <div className={`font-semibold tracking-[-0.02em] text-brand-text mb-0.5 ${isDesk ? "text-2xl" : "text-xl"}`}>{ev.name}</div>
-          <div className="flex items-center gap-1 text-xs text-brand-muted">
-            <MapPin size={11} weight="light" /> {ev.venue} · <Calendar size={11} weight="light" /> {ev.date}
+          <div className="flex items-center gap-1 text-xs text-brand-muted tabular-nums">
+            <MapPin size={11} weight="light" /> {ev.venue} · <Calendar size={11} weight="light" /> {formatDate(ev.date)}
           </div>
         </div>
 
@@ -1412,7 +1413,7 @@ export function OrganizerEventDetail() {
                   [Confetti,"Registered",(ev.regs||ev.ticketsSold).toLocaleString(),"text-blue-700"],
                   [Ticket,"Capacity",ev.totalTickets.toLocaleString(),"text-brand-text"],
                   [CheckCircle,"Checked In",admittedCount+" ppl","text-emerald-700"],
-                  [Calendar,"Date",ev.date,"text-blue-700"],
+                  [Calendar,"Date",formatDate(ev.date),"text-blue-700"],
                 ] : [
                   [Wallet,"Revenue (95%)",`${curr} ${revenue.toLocaleString()}`,"text-emerald-700"],
                   [Bank,"Platform Fee",`${curr} ${fee.toLocaleString()}`,"text-red-600"],

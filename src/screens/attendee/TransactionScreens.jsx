@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import useStore from "../../store/useStore";
 import { ticketsAPI } from "../../api";
 import { Avatar } from "../../utils/avatar";
+import { formatDate, formatTime } from "../../utils/formatDate";
 import {
   ArrowLeft, Lock, Link, DeviceMobile, CreditCard, Ticket, MapPin, Calendar,
   CheckCircle, WarningCircle, Warning, CircleNotch, Eye, EyeSlash, Prohibit,
@@ -182,10 +183,10 @@ function PremiumTicket({ ev, ownerName, qrSrc, qrLoaded, qrError, refreshing, se
       </div>
 
       <div className="flex justify-around bg-brand-subtle py-3.5 border-y border-brand-hairline">
-        {[["DATE", ev?.date || "TBA"], ["TIME", ev?.time ? ev.time.substring(0, 5) : "TBA"], ["QTY", String(quantity || 1)]].map(([label, val]) => (
+        {[["DATE", formatDate(ev?.date)], ["TIME", formatTime(ev?.time) || "TBA"], ["QTY", String(quantity || 1)]].map(([label, val]) => (
           <div key={label} className="text-center">
             <div className="text-xs text-brand-muted font-medium tracking-widest mb-1">{label}</div>
-            <div className="text-[13px] font-semibold text-brand-text">{val}</div>
+            <div className="text-[13px] font-semibold text-brand-text tabular-nums">{val}</div>
           </div>
         ))}
       </div>
@@ -331,8 +332,8 @@ export function PaymentSuccess() {
             <div className="bg-brand-subtle rounded-2xl p-4 mb-5 border border-brand-hairline">
               <div className="text-xs font-medium text-brand-muted tracking-widest mb-2">EVENT</div>
               <div className="font-medium text-[15px] text-brand-text mb-1.5">{event.name}</div>
-              <div className="flex items-center gap-1.5 text-xs text-brand-muted">
-                <Calendar size={12} weight="light" /> {event.date} · <MapPin size={12} weight="light" /> {event.venue}
+              <div className="flex items-center gap-1.5 text-xs text-brand-muted tabular-nums">
+                <Calendar size={12} weight="light" /> {formatDate(event.date)} · <MapPin size={12} weight="light" /> {event.venue}
               </div>
             </div>
           )}
@@ -500,8 +501,8 @@ export function Checkout() {
             </div>
             <div className="bg-brand-card px-4 py-3.5">
               <div className="font-medium text-brand-text text-[15px] mb-1">{checkoutEvent.name}</div>
-              <div className="flex items-center gap-1.5 text-brand-muted text-xs">
-                <Calendar size={11} weight="light" /> {checkoutEvent.date} · <MapPin size={11} weight="light" /> {checkoutEvent.venue}
+              <div className="flex items-center gap-1.5 text-brand-muted text-xs tabular-nums">
+                <Calendar size={11} weight="light" /> {formatDate(checkoutEvent.date)} · <MapPin size={11} weight="light" /> {checkoutEvent.venue}
               </div>
             </div>
           </div>

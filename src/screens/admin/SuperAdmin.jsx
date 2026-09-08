@@ -7,6 +7,7 @@ import {
   MagnifyingGlass, Broadcast, ArrowSquareOut,
 } from "@phosphor-icons/react";
 import useStore from "../../store/useStore";
+import { formatDate } from "../../utils/formatDate";
 
 const BACKEND = "https://master-events-backend.onrender.com";
 
@@ -330,7 +331,7 @@ function EventsTab({ token }) {
                   <span className="text-xs font-medium text-red-600 bg-red-50 px-2 py-0.5 rounded-full shrink-0">DISABLED</span>
                 )}
               </div>
-              <div className="text-xs text-brand-muted truncate">{ev.organizer} · {ev.date} · {ev.venue}</div>
+              <div className="text-xs text-brand-muted truncate tabular-nums">{ev.organizer} · {formatDate(ev.date)} · {ev.venue}</div>
             </div>
 
             <div className="flex gap-5 shrink-0">

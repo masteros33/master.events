@@ -4,6 +4,7 @@ import {
   ShieldCheck, Calendar, MapPin, Ticket, Link2, ExternalLink,
   XCircle, Loader2, User, AlertTriangle,
 } from "lucide-react";
+import { formatDate } from "../../utils/formatDate";
 
 const NAVY = "#1c2e53";
 const NAVY_PASTEL = "#EBEEF5";
@@ -105,8 +106,8 @@ export default function VerifyTicket({ ticketId, onDone }) {
                   </span>
                 </div>
 
-                <div className="flex items-center gap-1.5 text-[13px] text-brand-muted mb-1.5">
-                  <Calendar size={13} strokeWidth={1.75} /> {data.event_date}
+                <div className="flex items-center gap-1.5 text-[13px] text-brand-muted mb-1.5 tabular-nums">
+                  <Calendar size={13} strokeWidth={1.75} /> {formatDate(data.event_date)}
                 </div>
                 <div className="flex items-center gap-1.5 text-[13px] text-brand-muted mb-5">
                   <MapPin size={13} strokeWidth={1.75} /> {data.event_venue}{data.event_city ? `, ${data.event_city}` : ""}

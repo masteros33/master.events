@@ -5,6 +5,7 @@ import {
   Ticket, Link, Lock, DeviceMobile, MagnifyingGlass, Calendar, Clock, MapPin,
   CircleNotch, SmileySad, Confetti, NavigationArrow, FileText, Crown, Star, Check,
 } from "@phosphor-icons/react";
+import { formatDate, formatTime } from "../../utils/formatDate";
 
 const BACKEND = "https://master-events-backend.onrender.com";
 const isDesktop = () => window.innerWidth >= 1024;
@@ -50,7 +51,7 @@ function DetailRow({ Icon, label, value }) {
       </div>
       <div className="min-w-0">
         <div className="text-xs font-medium text-brand-muted tracking-wide mb-0.5">{label}</div>
-        <div className="text-sm font-semibold text-brand-text truncate">{value}</div>
+        <div className="text-sm font-semibold text-brand-text truncate tabular-nums">{value}</div>
       </div>
     </div>
   );
@@ -436,7 +437,7 @@ export default function PublicEventPage() {
 
             <div className="text-[13px] text-brand-muted mb-6 flex flex-col gap-1">
               <span className="flex items-center gap-1.5"><MapPin size={13} weight="light" /> {event.venue}{event.city ? `, ${event.city}` : ""}</span>
-              <span className="flex items-center gap-1.5"><Calendar size={13} weight="light" /> {event.date}{event.time ? ` · ${event.time.substring(0,5)}` : ""}</span>
+              <span className="flex items-center gap-1.5 tabular-nums"><Calendar size={13} weight="light" /> {formatDate(event.date)}{event.time ? ` · ${formatTime(event.time)}` : ""}</span>
             </div>
 
             {!isDesk && (
@@ -462,8 +463,8 @@ export default function PublicEventPage() {
             </div>
 
             <div className="bg-brand-card border border-brand-hairline rounded-2xl overflow-hidden mb-6 px-4">
-              <DetailRow Icon={Calendar} label="DATE" value={event.date || "TBA"} />
-              <DetailRow Icon={Clock} label="TIME" value={event.time ? event.time.substring(0,5) : "TBA"} />
+              <DetailRow Icon={Calendar} label="DATE" value={formatDate(event.date)} />
+              <DetailRow Icon={Clock} label="TIME" value={formatTime(event.time) || "TBA"} />
               <DetailRow Icon={MapPin} label="VENUE" value={`${event.venue || "TBA"}${event.city ? `, ${event.city}` : ""}`} />
               <DetailRow Icon={Ticket} label="CAPACITY" value={`${event.total_tickets || 0} spots total`} />
             </div>

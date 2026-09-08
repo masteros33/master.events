@@ -9,6 +9,7 @@ import {
 } from "@phosphor-icons/react";
 import useStore from "../../store/useStore";
 import { eventsAPI } from "../../api";
+import { formatDate, formatTime } from "../../utils/formatDate";
 
 const categoryImages = {
   music:    "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=800",
@@ -47,22 +48,6 @@ function tierIconFor(name) {
   if (n.includes("vvip")) return Crown;
   if (n.includes("vip"))  return Star;
   return Ticket;
-}
-
-function formatDate(dateStr) {
-  if (!dateStr) return "TBA";
-  const d = new Date(dateStr + "T00:00:00");
-  if (isNaN(d)) return dateStr;
-  return d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
-}
-
-function formatTime(timeStr) {
-  if (!timeStr) return null;
-  const [h, m] = timeStr.split(":").map(Number);
-  if (isNaN(h)) return null;
-  const period = h >= 12 ? "PM" : "AM";
-  const h12 = h % 12 === 0 ? 12 : h % 12;
-  return `${h12}:${String(m || 0).padStart(2, "0")} ${period}`;
 }
 
 function isSameDate(dateStr, target) {

@@ -7,6 +7,7 @@ import {
 } from "@phosphor-icons/react";
 import { QRCodeSVG } from "qrcode.react";
 import { eventsAPI } from "../../api";
+import { formatDate } from "../../utils/formatDate";
 import { NavBar } from "./shared";
 
 const BACKEND = "https://master-events-backend.onrender.com";
@@ -179,8 +180,8 @@ function EventCard({ ev, catImg, onSignup }) {
         {ev ? (
           <>
             <div className="font-medium text-[15px] text-brand-text mb-1.5 leading-snug">{ev.name}</div>
-            <div className="flex items-center gap-1 text-xs text-brand-muted mb-3.5">
-              <Calendar size={12} weight="light" /> {ev.date} <span className="mx-0.5">·</span> <MapPin size={12} weight="light" /> {ev.venue}
+            <div className="flex items-center gap-1 text-xs text-brand-muted mb-3.5 tabular-nums">
+              <Calendar size={12} weight="light" /> {formatDate(ev.date)} <span className="mx-0.5">·</span> <MapPin size={12} weight="light" /> {ev.venue}
             </div>
             <div className="flex justify-between items-center">
               <span className="font-medium text-[17px] text-brand-accent tabular-nums">{parseFloat(ev.price) === 0 ? "FREE" : "GHS " + ev.price}</span>

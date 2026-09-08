@@ -1,6 +1,6 @@
 import React from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import useStore, { _setRestoringFromHistory } from "./store/useStore";
+import useStore, { _setRestoringFromHistory, touchActivity } from "./store/useStore";
 import PhoneFrame from "./components/PhoneFrame";
 import Login from "./screens/auth/Login";
 import { Signup, RoleSelect } from "./screens/auth/Signup";
@@ -28,6 +28,7 @@ import OrganizerWallet from "./screens/organizer/OrganizerWallet";
 import { DoorStaffLogin, DoorStaffScan, OrganizerScan } from "./screens/doorstaff/DoorStaffScreens";
 import { AdminLogin, AdminDashboard } from "./screens/admin/SuperAdmin";
 import { useTheme } from "./hooks/useTheme";
+import { useIdleTimeout } from "./hooks/useIdleTimeout";
 import { Avatar } from "./utils/avatar";
 import toast from "react-hot-toast";
 import {
@@ -499,6 +500,7 @@ export default function App() {
   const oauthHandled = React.useRef(false);
   const [verifyingTicketId, setVerifyingTicketId] = React.useState(null);
   useTheme();
+  useIdleTimeout();
 
   React.useEffect(() => {
     const isAppMode = isLoggedIn || APP_MODE_SCREENS.includes(screen);
@@ -529,6 +531,7 @@ export default function App() {
           if (data.tokens) {
             localStorage.setItem("access_token", data.tokens.access);
             localStorage.setItem("refresh_token", data.tokens.refresh);
+            touchActivity();
             const user = data.user;
             const firstTab = user.role === "organizer" ? "dashboard" : "home";
             const postAuthScreen = localStorage.getItem("post_auth_screen") || "app";

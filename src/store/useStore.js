@@ -60,6 +60,7 @@ function saveTokens(access, refresh) {
     setCookie("me_access",  access,  1);
     setCookie("me_refresh", refresh, 30);
   } catch {}
+  touchActivity();
 }
 
 function getToken() {
@@ -70,9 +71,23 @@ function getToken() {
 
 function clearSession() {
   try {
-    ["me_session","access_token","refresh_token"].forEach(k => localStorage.removeItem(k));
+    ["me_session","access_token","refresh_token","me_last_activity"].forEach(k => localStorage.removeItem(k));
     ["me_session","me_access","me_refresh","me_role","me_name"].forEach(removeCookie);
   } catch {}
+}
+
+// ── Idle session timeout — 12h of inactivity logs the user out ──
+export const IDLE_LIMIT_MS = 12 * 60 * 60 * 1000;
+
+export function touchActivity() {
+  try { localStorage.setItem("me_last_activity", String(Date.now())); } catch {}
+}
+
+function idleExpired() {
+  try {
+    const last = parseInt(localStorage.getItem("me_last_activity") || "0", 10);
+    return last > 0 && (Date.now() - last > IDLE_LIMIT_MS);
+  } catch { return false; }
 }
 
 // ── Detect event slug at boot time before any redirect clears the URL ──
@@ -87,6 +102,8 @@ if (_bootSlug) {
 // while the Google callback request is in flight. ──
 const _isOAuthCallback = window.location.pathname === "/auth/callback" &&
   (new URLSearchParams(window.location.search)).has("code");
+
+if (idleExpired()) clearSession();
 
 const saved     = loadSession();
 const token     = getToken();
@@ -225,7 +242,7 @@ const useStore = create((set, get) => ({
   },
 
   // ── Logout ─────────────────────────────────────────────────
-  handleLogout: async () => {
+  handleLogout: async (message) => {
     try {
       const refresh = localStorage.getItem("refresh_token");
       const access  = localStorage.getItem("access_token");
@@ -243,7 +260,7 @@ const useStore = create((set, get) => ({
       console.log("Logout blacklist failed (non-critical):", e);
     }
     clearSession();
-    toast.success("Logged out successfully");
+    toast.success(message || "Logged out successfully");
     set({
       screen:      "home",
       currentUser: null,

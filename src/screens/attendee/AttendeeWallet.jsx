@@ -4,7 +4,7 @@ import useStore from "../../store/useStore";
 import { paymentsAPI } from "../../api";
 import toast from "react-hot-toast";
 import {
-  ArrowLeft, Info, DeviceMobile, ArrowDownLeft, ArrowUpRight, Wallet,
+  Info, DeviceMobile, ArrowDownLeft, ArrowUpRight, Wallet,
 } from "@phosphor-icons/react";
 
 const isDesktop = () => window.innerWidth > 768;
@@ -21,8 +21,7 @@ function txMeta(type) {
 }
 
 export default function AttendeeWallet() {
-  const setScreen = useStore(s => s.setScreen);
-  const desktop   = isDesktop();
+  const desktop = isDesktop();
 
   const [wallet,       setWallet]       = useState(null);
   const [loading,      setLoading]      = useState(true);
@@ -80,18 +79,6 @@ export default function AttendeeWallet() {
 
   return (
     <div className="bg-brand-subtle min-h-full pb-20 font-sans">
-
-      {/* ── Header — icon-only back button, no "Back" text label.
-      The browser back button now works correctly (history fix), so
-      the in-app text label was pure duplication. ── */}
-      <div className={`sticky top-0 z-20 bg-brand-card border-b border-brand-hairline h-14 flex items-center justify-between ${desktop ? "px-10" : "px-4"}`}>
-        <button onClick={() => setScreen("app")}
-          className="w-9 h-9 rounded-full bg-brand-canvas border border-brand-hairline flex items-center justify-center shrink-0">
-          <ArrowLeft size={16} weight="light" className="text-brand-text" />
-        </button>
-        <div className="font-semibold text-base text-brand-text tracking-tight">My Wallet</div>
-        <div className="w-9" />
-      </div>
 
       <div className={`mx-auto ${desktop ? "max-w-[600px] px-10 py-7" : "px-4 py-4"}`}>
 

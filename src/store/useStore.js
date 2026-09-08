@@ -406,7 +406,7 @@ const useStore = create((set, get) => ({
           showSuccessToast:   true,
         });
         toast.dismiss(loadingToast);
-        toast.success("🎉 Registered! Check your email for your entry pass.");
+        toast.success("Registered! Check your email for your entry pass.");
       } else {
         toast.dismiss(loadingToast);
         toast.error(data.error || "Registration failed. Please try again.");
@@ -495,8 +495,8 @@ const useStore = create((set, get) => ({
       });
       toast.success(
         built.length > 1
-          ? `🎉 ${built.length} tickets confirmed! Each one is yours to keep or gift.`
-          : "🎉 Payment confirmed! Ticket is yours."
+          ? `${built.length} tickets confirmed! Each one is yours to keep or gift.`
+          : "Payment confirmed! Ticket is yours."
       );
     };
 
@@ -570,12 +570,12 @@ const useStore = create((set, get) => ({
           const shown = await fetchAndShow();
           if (!shown) {
             toast.dismiss();
-            toast.success("🎉 Payment confirmed! Check My Tickets.");
+            toast.success("Payment confirmed! Check My Tickets.");
             set({ screen: "app", activeTab: "tickets", checkoutEvent: null, selectedTier: null });
           }
         } catch {
           toast.dismiss();
-          toast.success("🎉 Payment confirmed! Check My Tickets.");
+          toast.success("Payment confirmed! Check My Tickets.");
           set({ screen: "app", activeTab: "tickets", checkoutEvent: null, selectedTier: null });
         }
         return;
@@ -785,7 +785,7 @@ const useStore = create((set, get) => ({
           screen: "app", activeTab: "events",
         });
         toast.dismiss(loadingToast);
-        toast.success("🎉 Event created successfully!");
+        toast.success("Event created successfully!");
       } else {
         toast.dismiss(loadingToast);
         const errMsg = typeof data === "object"

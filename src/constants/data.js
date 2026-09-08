@@ -1,10 +1,3 @@
-export const ONBOARDING = [
-  { bg: "linear-gradient(135deg, #f5a623 0%, #f7c56a 100%)", image: "https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=600&q=80", title: "Discover Events", subtitle: "Find the best concerts, festivals, workshops and more happening in Ghana", icon: "🎉" },
-  { bg: "linear-gradient(135deg, #7b2ff7 0%, #2196f3 100%)", image: "https://images.unsplash.com/photo-1501281668745-f7f57925c3b4?w=600&q=80", title: "Your Ticket is an NFT", subtitle: "Every ticket is minted on the blockchain — 100% unique, unforgeable and verifiable at the door", icon: "🔗" },
-  { bg: "linear-gradient(135deg, #27ae60 0%, #00b4db 100%)", image: "https://images.unsplash.com/photo-1559027615-cd4628902d4a?w=600&q=80", title: "Resell or Transfer", subtitle: "Can't make it? Resell at a fair price or transfer to a friend — all secured on-chain", icon: "📤" },
-  { bg: "linear-gradient(135deg, #e74c3c 0%, #f5a623 100%)", image: "https://images.unsplash.com/photo-1492684223066-81342ee5ff30?w=600&q=80", title: "If Not Now, When?", subtitle: "Join thousands of event-goers across Accra. Create memories that last a lifetime.", icon: "🌍" },
-];
-
 export const EVENTS = [
   { id: 1, name: "Recovery Saturdays", subtitle: "Love on the beach", date: "28/02/26", time: "2:00pm", venue: "Ozzies Beach, Accra", host: "Recovery Entertainment", price: 100, color: "#00b4db", image: "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=500&q=80", description: "Recovery Saturdays is back — Love on the Beach. A sun-kissed day party where romance meets rhythm. Beach vibes, smooth jams, cocktails flowing, and love in the air." },
   { id: 2, name: "Pottery Workshop", subtitle: "", date: "28/02/26", time: "1:00pm", venue: "Accra Art District", host: "Accra Art District", price: 290, color: "#6b4226", image: "https://images.unsplash.com/photo-1565193566173-7a0ee3dbe261?w=500&q=80", description: "Get your hands dirty at the Accra Art District Pottery Workshop. Learn to shape, mold, and create your own masterpiece." },

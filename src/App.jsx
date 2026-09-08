@@ -591,7 +591,7 @@ export default function App() {
           window.history.replaceState({}, "", "/");
           if (data.message && !data.error) {
             useStore.getState().setScreen("login");
-            setTimeout(() => toast.success("✅ Email verified! You can now log in."), 400);
+            setTimeout(() => toast.success("Email verified! You can now log in."), 400);
           } else {
             useStore.getState().setScreen("login");
             setTimeout(() => toast.error(data.error || "Verification failed."), 400);

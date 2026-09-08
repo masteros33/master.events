@@ -1,5 +1,6 @@
 import React from "react";
 import { motion } from "framer-motion";
+import { Warning, Ticket } from "@phosphor-icons/react";
 
 export default class ErrorBoundary extends React.Component {
   constructor(props) {
@@ -56,10 +57,9 @@ export default class ErrorBoundary extends React.Component {
               background: "rgba(220,38,38,0.12)",
               border: "1.5px solid rgba(220,38,38,0.25)",
               display: "flex", alignItems: "center", justifyContent: "center",
-              fontSize: "32px",
               margin: "0 auto 24px",
             }}>
-            ⚠️
+            <Warning size={32} weight="light" color="#dc2626" />
           </motion.div>
 
           <h1 style={{
@@ -159,7 +159,7 @@ export default class ErrorBoundary extends React.Component {
             gap: "8px",
             opacity: 0.4,
           }}>
-            <span style={{ fontSize: "14px" }}>🎟️</span>
+            <Ticket size={14} weight="light" color="#fff" />
             <span style={{ fontSize: "12px", fontWeight: 700, color: "#fff" }}>Master Events</span>
           </div>
         </motion.div>

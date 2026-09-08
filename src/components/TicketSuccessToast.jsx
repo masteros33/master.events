@@ -1,5 +1,6 @@
 import React, { useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { Ticket, Confetti, Link } from "@phosphor-icons/react";
 import useStore from "../store/useStore";
 
 export default function TicketSuccessToast() {
@@ -77,7 +78,7 @@ export default function TicketSuccessToast() {
             }}>
               {evImage
                 ? <img src={evImage} alt={evName} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-                : <div style={{ width: "100%", height: "100%", background: "linear-gradient(135deg, #f5a623, #e8920f)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "22px" }}>🎟️</div>
+                : <div style={{ width: "100%", height: "100%", background: "linear-gradient(135deg, #f5a623, #e8920f)", display: "flex", alignItems: "center", justifyContent: "center" }}><Ticket size={22} weight="light" color="#fff" /></div>
               }
             </div>
 
@@ -87,8 +88,8 @@ export default function TicketSuccessToast() {
                 <motion.div
                   animate={{ scale: [1, 1.3, 1] }}
                   transition={{ repeat: 2, duration: 0.4 }}
-                  style={{ fontSize: "14px" }}>
-                  🎉
+                  style={{ display: "flex" }}>
+                  <Confetti size={14} weight="light" color="#4ade80" />
                 </motion.div>
                 <span style={{ fontSize: "12px", fontWeight: 700, color: "#4ade80", letterSpacing: "0.3px" }}>
                   TICKET CONFIRMED
@@ -110,8 +111,8 @@ export default function TicketSuccessToast() {
               <div style={{
                 width: "36px", height: "36px", borderRadius: "10px",
                 background: "rgba(124,58,237,0.3)", border: "1px solid rgba(124,58,237,0.4)",
-                display: "flex", alignItems: "center", justifyContent: "center", fontSize: "16px",
-              }}>⛓️</div>
+                display: "flex", alignItems: "center", justifyContent: "center",
+              }}><Link size={16} weight="light" color="#a78bfa" /></div>
               <span style={{ fontSize: "8px", fontWeight: 700, color: "#a78bfa", letterSpacing: "0.3px" }}>NFT</span>
             </div>
           </div>

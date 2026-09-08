@@ -7,12 +7,12 @@ Tracking list for the current bug-fix pass on `fix/qa-round-1`. One fix per comm
 Root cause: text colours hard-coded for a light canvas while these screens render on a dark canvas (or vice versa). Fix at the token level first, then verify each instance. Every text/background pair must pass 4.5:1.
 
 - [x] 1. `PublicEventPage.jsx` — "Hosted by" organiser name inside the pale card: invisible. **Already fixed** — verified live (`/events/afrobeat-night`): the org row already uses `text-brand-text`/`text-brand-muted` tokens, computed color is `#1a1714` on white. Resolved by the v3 token rewrite (`6cf2f87`), no further change needed.
-- [ ] 2. `Signup.jsx` — "Sign up with Google as Attendee" button label: white on white.
-- [ ] 3. `VerifyTicket.jsx` / ticket view — owner name under the green "Verified owner" banner: invisible.
-- [ ] 4. `ResaleMarketplace.jsx` — "NFT TRANSFER" badge text invisible; "NFT" badge on event cards invisible.
-- [ ] 5. `AttendeeScreens.jsx` My Tickets — "NFT #56" and "MINTING" badge text invisible.
-- [ ] 6. `AttendeeWallet.jsx` — info box text under the balance card: invisible.
-- [ ] 7. Signup form — email field label/placeholder invisible; label-to-input gap should be 8px, group-to-group 16px (labels currently sit too far from inputs).
+- [x] 2. `Signup.jsx` — "Sign up with Google as Attendee" button label: white on white. **Already fixed** — button is `bg-white`/`text-brand-text` (both tabs), verified live via computed styles (`color: rgb(26,23,20)` on `rgb(255,255,255)`). No code change needed.
+- [x] 3. `VerifyTicket.jsx` / ticket view — owner name under the green "Verified owner" banner: invisible. **Already fixed** — `TransactionScreens.jsx` PremiumTicket "Verified Owner" pill and `VerifyTicket.jsx` HOLDER field both render the name with `text-brand-text` (dark on white/emerald-50). Verified by code inspection; live render check was blocked by a frozen Chrome tab, worth a quick manual spot-check later.
+- [x] 4. `ResaleMarketplace.jsx` — "NFT TRANSFER" badge text invisible; "NFT" badge on event cards invisible. **Already fixed** — all NFT badges (`AttendeeHome.jsx` shared `EventCard`) use `text-white` on `bg-brand-text` (dark), correct contrast. No code change needed.
+- [x] 5. `AttendeeScreens.jsx` My Tickets — "NFT #56" and "MINTING" badge text invisible. **Already fixed** — badge is `bg-brand-text text-white` (dark bg, white text). No code change needed.
+- [x] 6. `AttendeeWallet.jsx` — info box text under the balance card: invisible. **Already fixed** — `bg-blue-50` box with `text-brand-text`, readable. No code change needed.
+- [x] 7. Signup form — email field label/placeholder invisible; label-to-input gap should be 8px, group-to-group 16px (labels currently sit too far from inputs). **Fixed spacing** — label-to-input was 6px (`mb-1.5`), now 8px (`mb-2`); group-to-group was 12px (`mb-3`), now 16px (`mb-4`), matching the v3 spacing scale. The "invisible" contrast claim didn't reproduce (verified live — Email label/placeholder both legible), so only spacing changed.
 
 Add to the grep step: no `text-white` on light surfaces, no `text-gray-x00` on dark surfaces, without an explicit reason.
 

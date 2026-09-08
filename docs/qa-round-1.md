@@ -18,7 +18,7 @@ Add to the grep step: no `text-white` on light surfaces, no `text-gray-x00` on d
 
 ## P2 — UX gaps from tester feedback
 
-- [ ] 8. After login the landing page flashes ~5s before redirecting. Add an auth-resolving state: minimal branded loading screen (logo + thin progress line) while session/role resolves, then route straight to the correct home. No landing flash.
+- [x] 8. After login the landing page flashes ~5s before redirecting. Add an auth-resolving state: minimal branded loading screen (logo + thin progress line) while session/role resolves, then route straight to the correct home. No landing flash. **Fixed** — root cause was the Google OAuth full-page redirect back to `/auth/callback`: on that fresh page load, `useStore`'s boot state had no tokens yet, so it defaulted to the unauthenticated view while the callback `fetch` (can take a few seconds against the Render free-tier backend) was in flight. Added `authResolving` screen (logo + thin animated progress line, `App.jsx`), and `useStore.js` now detects the OAuth callback at boot time and starts on that screen instead of "home". Regular email/password login was unaffected (stays on the Login screen with its own spinner, no page reload).
 - [ ] 9. Sessions expire after 12 hours of inactivity: frontend idle timeout (reset on interaction) + matching token lifetime on the backend.
 - [ ] 10. Resell/send: when a user holds N tickets for an event, let them choose how many (1..N) to list or transfer; price applies per ticket.
 - [ ] 11. `AttendeeWallet.jsx` — remove the redundant "My Wallet" title bar with back arrow; the wallet is a tab destination, the page heading is enough.

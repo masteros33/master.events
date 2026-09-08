@@ -50,6 +50,23 @@ const APP_MODE_SCREENS = [
   "doorStaffLogin", "doorStaffScan", "app",
 ];
 
+function AuthResolving() {
+  return (
+    <div className="h-dvh flex flex-col items-center justify-center bg-brand-canvas gap-5 px-6">
+      <div className="w-12 h-12 rounded-2xl bg-brand-accent flex items-center justify-center">
+        <Ticket size={22} color="#fff" />
+      </div>
+      <div className="w-[120px] h-[3px] rounded-full bg-brand-hairline overflow-hidden">
+        <motion.div
+          className="h-full w-1/3 rounded-full bg-brand-accent"
+          animate={{ x: ["-120%", "220%"] }}
+          transition={{ duration: 1, repeat: Infinity, ease: "easeInOut" }}
+        />
+      </div>
+    </div>
+  );
+}
+
 function publicNavigate(target) {
   const setScreen = useStore.getState().setScreen;
   if (target === "home")   { setScreen("landing"); return; }
@@ -602,6 +619,7 @@ export default function App() {
     return () => window.removeEventListener("resize", handler);
   }, []);
 
+  if (screen === "authResolving")  return <AuthResolving />;
   if (screen === "adminGateway")   return <AdminLogin />;
   if (screen === "adminDashboard") return <AdminDashboard />;
   if (screen === "resetPassword")  return <ResetPassword />;

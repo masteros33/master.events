@@ -82,19 +82,25 @@ if (_bootSlug) {
   localStorage.setItem("pending_event_slug", _bootSlug);
 }
 
+// ── OAuth callback boot: session/role isn't resolved yet, so show a
+// branded loading state instead of flashing the unauthenticated view
+// while the Google callback request is in flight. ──
+const _isOAuthCallback = window.location.pathname === "/auth/callback" &&
+  (new URLSearchParams(window.location.search)).has("code");
+
 const saved     = loadSession();
 const token     = getToken();
 const bootState = saved && token ? {
   currentUser: saved.currentUser,
   role:        saved.role,
   isLoggedIn:  true,
-  screen:      _bootSlug ? "pendingEvent" : "app",
+  screen:      _isOAuthCallback ? "authResolving" : (_bootSlug ? "pendingEvent" : "app"),
   activeTab:   saved.role === "organizer" ? "dashboard" : "home",
 } : {
   currentUser: null,
   role:        null,
   isLoggedIn:  false,
-  screen:      _bootSlug ? "pendingEvent" : "home",
+  screen:      _isOAuthCallback ? "authResolving" : (_bootSlug ? "pendingEvent" : "home"),
   activeTab:   "home",
 };
 

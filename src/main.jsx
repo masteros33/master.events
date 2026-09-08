@@ -4,7 +4,6 @@ import App from './App'
 import './index.css'
 import { Toaster } from 'react-hot-toast'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { useTheme } from './hooks/useTheme'
 import ErrorBoundary from './components/ErrorBoundary'
 import TicketSuccessToast from './components/TicketSuccessToast'
 import { GoogleOAuthProvider } from '@react-oauth/google'
@@ -28,7 +27,6 @@ if (import.meta.env.PROD && "serviceWorker" in navigator) {
 }
 
 function Root() {
-  useTheme();
   return (<GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID}>
       <App />
       <TicketSuccessToast />

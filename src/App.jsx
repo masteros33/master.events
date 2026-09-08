@@ -27,13 +27,12 @@ import {
 import OrganizerWallet from "./screens/organizer/OrganizerWallet";
 import { DoorStaffLogin, DoorStaffScan, OrganizerScan } from "./screens/doorstaff/DoorStaffScreens";
 import { AdminLogin, AdminDashboard } from "./screens/admin/SuperAdmin";
-import { useTheme } from "./hooks/useTheme";
 import { useIdleTimeout } from "./hooks/useIdleTimeout";
 import { Avatar } from "./utils/avatar";
 import toast from "react-hot-toast";
 import {
   Home, Ticket, Bell, LayoutDashboard, CalendarDays, Wallet,
-  LogOut, Sun, Moon, Monitor, ChevronLeft, ChevronRight,
+  LogOut, ChevronLeft, ChevronRight,
   PlusCircle, Zap, ScanLine, Search, Settings as SettingsIcon,
   Menu, X, ShoppingBag
 } from "lucide-react";
@@ -81,11 +80,6 @@ function publicNavigate(target) {
 // mobile: Discover/Checkout/Ticket View content went dark correctly,
 // but the header sitting above them stayed hardcoded light. ──
 function MobileTopHeader({ onMenuOpen, title }) {
-  const { theme, setTheme } = useTheme();
-  const themeOrder = ["light", "dark", "system"];
-  const ThemeIcons = { light: Sun, dark: Moon, system: Monitor };
-  const nextTheme  = themeOrder[(themeOrder.indexOf(theme) + 1) % 3];
-  const ThemeIcon  = ThemeIcons[theme];
   return (
     <div className="sticky top-0 z-50 bg-brand-card border-b border-gray-100 h-14 flex items-center justify-between px-4 shrink-0">
       <div className="flex items-center gap-2">
@@ -95,10 +89,6 @@ function MobileTopHeader({ onMenuOpen, title }) {
         <span className="font-extrabold text-[15px] text-brand-text tracking-tight">{title || "Master Events"}</span>
       </div>
       <div className="flex items-center gap-1.5">
-        <motion.button whileTap={{ scale: 0.88 }} onClick={() => setTheme(nextTheme)}
-          className="w-[34px] h-[34px] rounded-xl bg-brand-canvas border border-gray-200 flex items-center justify-center">
-          <ThemeIcon size={15} className="text-brand-muted" />
-        </motion.button>
         <motion.button whileTap={{ scale: 0.88 }} onClick={onMenuOpen}
           className="w-[34px] h-[34px] rounded-xl bg-brand-canvas border border-gray-200 flex items-center justify-center">
           <Menu size={17} className="text-brand-text" />
@@ -290,11 +280,9 @@ function NavItem({ icon: Icon, label, active, collapsed, onClick, title }) {
 // ── FIX: bg-white → bg-brand-card on the desktop topbar — this is
 // the exact bar sitting above Discover/My Tickets on desktop that
 // stayed light while the content below it went dark. ──
-function DesktopTopbar({ navItems, activeTab, isFullScreen, screen, screenTitles, role, setScreen, setActiveTab, theme, setTheme, currentUser }) {
+function DesktopTopbar({ navItems, activeTab, isFullScreen, screen, screenTitles, role, setScreen, setActiveTab, currentUser }) {
   const searchQ    = useStore(s => s.searchQ);
   const setSearchQ = useStore(s => s.setSearchQ);
-  const themeOpts  = { light:Sun, dark:Moon, system:Monitor };
-  const ThemeIcon  = themeOpts[theme] || Sun;
   const pageTitle  = isFullScreen ? screenTitles[screen] || "Master Events" : navItems.find(n => n.id === activeTab)?.label || "Master Events";
 
   return (
@@ -321,10 +309,6 @@ function DesktopTopbar({ navItems, activeTab, isFullScreen, screen, screenTitles
           <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 pulse-dot" />
           <span className="text-[10px] font-bold text-emerald-600 font-mono">AMOY</span>
         </div>
-        <motion.button whileTap={{ scale:0.88 }} onClick={() => setTheme(["light","dark","system"][(["light","dark","system"].indexOf(theme)+1)%3])}
-          className="w-8 h-8 rounded-xl bg-brand-canvas border border-gray-200 flex items-center justify-center hover:border-brand-orange transition-colors">
-          <ThemeIcon size={14} className="text-brand-muted" />
-        </motion.button>
         <div className="flex items-center gap-2 pl-1.5 pr-2.5 py-1 rounded-full bg-brand-canvas border border-gray-200">
           <Avatar seed={currentUser?.email} name={currentUser?.first_name} size={28} className="rounded-full shrink-0" />
           <span className="text-xs font-semibold text-brand-text whitespace-nowrap max-w-[100px] truncate">{currentUser?.first_name} {currentUser?.last_name}</span>
@@ -345,7 +329,6 @@ function DesktopAppLayout() {
   const setScreen    = useStore(s => s.setScreen);
   const currentUser  = useStore(s => s.currentUser);
   const handleLogout = useStore(s => s.handleLogout);
-  const { theme, setTheme } = useTheme();
   const [collapsed, setCollapsed] = React.useState(false);
 
   const attendeeNav = [
@@ -470,7 +453,7 @@ function DesktopAppLayout() {
       </motion.aside>
 
       <main className="flex-1 flex flex-col min-w-0 overflow-hidden">
-        <DesktopTopbar navItems={navItems} activeTab={activeTab} isFullScreen={isFullScreen} screen={screen} screenTitles={screenTitles} role={role} setScreen={setScreen} setActiveTab={setActiveTab} theme={theme} setTheme={setTheme} currentUser={currentUser} />
+        <DesktopTopbar navItems={navItems} activeTab={activeTab} isFullScreen={isFullScreen} screen={screen} screenTitles={screenTitles} role={role} setScreen={setScreen} setActiveTab={setActiveTab} currentUser={currentUser} />
         <div className="flex-1 overflow-y-auto overflow-x-hidden">
           <div key={screen + activeTab} className="screen-enter min-h-full">{renderContent()}</div>
         </div>
@@ -499,7 +482,6 @@ export default function App() {
   const [desktop, setDesktop] = React.useState(window.innerWidth > 768);
   const oauthHandled = React.useRef(false);
   const [verifyingTicketId, setVerifyingTicketId] = React.useState(null);
-  useTheme();
   useIdleTimeout();
 
   React.useEffect(() => {

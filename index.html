@@ -37,20 +37,6 @@
 
     <title>Master Events — Blockchain Ticketing</title>
 
-    <!-- ── Anti-flash theme script — must be before React loads ── -->
-    <script>
-      (function() {
-        try {
-          var stored = localStorage.getItem('me_theme');
-          var resolved = stored && stored !== 'system'
-            ? stored
-            : (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
-          document.documentElement.setAttribute('data-theme', resolved);
-          document.documentElement.style.colorScheme = resolved;
-        } catch(e) {}
-      })();
-    </script>
-
     <style>
       *, *::before, *::after {
         box-sizing: border-box;
@@ -65,6 +51,7 @@
         scroll-behavior: smooth;
         -webkit-text-size-adjust: 100%;
         text-size-adjust: 100%;
+        color-scheme: light;
       }
 
       body {
@@ -93,7 +80,7 @@
         content: '';
         position: fixed;
         inset: 0;
-        background: var(--bg, #0e0d0b);
+        background: #faf9f7;
       }
     </style>
   </head>

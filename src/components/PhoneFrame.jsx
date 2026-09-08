@@ -1,6 +1,5 @@
 import React from "react";
 import useStore from "../store/useStore";
-import { useTheme } from "../hooks/useTheme";
 import LandingPage from "../screens/landing/LandingPage";
 import AboutPage from "../screens/landing/AboutPage";
 
@@ -8,7 +7,6 @@ export default function PhoneFrame({ children }) {
   const setScreen  = useStore(s => s.setScreen);
   const screen     = useStore(s => s.screen);
   const isLoggedIn = useStore(s => s.isLoggedIn);
-  useTheme();
 
   const getPage = () => {
     if (screen === "pendingEvent") return "app";

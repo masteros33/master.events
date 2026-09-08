@@ -6,7 +6,6 @@ import {
   Ticket, Link2, Calendar, MapPin, CheckCircle2, Bell, Tag, ExternalLink,
 } from "lucide-react";
 
-const API = "https://master-events-backend.onrender.com";
 const isDesktop = () => window.innerWidth > 768;
 
 const STATUS_META = {
@@ -116,42 +115,11 @@ export function AttendeeTickets() {
   const handleCancelResale = useStore(s => s.handleCancelResale);
   const desktop = isDesktop();
 
+  const setMyTicketsFromApi = useStore(s => s.setMyTicketsFromApi);
+
   useEffect(() => {
     ticketsAPI.myTickets().then(data => {
-      if (Array.isArray(data)) {
-        useStore.setState({
-          myTickets: data.map(t => ({
-            id:           t.ticket_id,
-            ticket_id:    t.ticket_id,
-            event: {
-              id:     t.event?.id,
-              name:   t.event?.name,
-              date:   t.event?.date,
-              venue:  t.event?.venue,
-              time:   t.event?.time,
-              price:  parseFloat(t.event?.price || 0),
-              image:  t.event?.image || "https://images.unsplash.com/photo-1492684223066-81342ee5ff30?w=600",
-            },
-            qty:          t.quantity,
-            quantity:     t.quantity,
-            status:       t.status,
-            qr_data:      t.qr_data,
-            qr_base64:    t.qr_base64   || null,
-            dynamic_qr:   t.dynamic_qr  || null,
-            qr_image:     t.qr_image
-              ? (t.qr_image.startsWith("http") ? t.qr_image : API + t.qr_image)
-              : null,
-            qr_image_url: t.qr_image_url || null,
-            nft_tx_hash:  t.nft_tx_hash  || null,
-            nft_token_id: t.nft_token_id || null,
-            purchasedAt:  t.created_at
-              ? new Date(t.created_at).toLocaleDateString()
-              : "Recently",
-            owner:      (t.owner?.first_name || "") + " " + (t.owner?.last_name || ""),
-            ownerEmail: t.owner?.email,
-          }))
-        });
-      }
+      if (Array.isArray(data)) setMyTicketsFromApi(data);
     }).catch(() => {});
   }, []);
 

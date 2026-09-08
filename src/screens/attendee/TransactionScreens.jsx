@@ -717,16 +717,21 @@ export function Resale() {
   const resaleTicket        = useStore(s => s.resaleTicket);
   const resalePrice         = useStore(s => s.resalePrice);
   const resaleError         = useStore(s => s.resaleError);
+  const resaleQty           = useStore(s => s.resaleQty);
   const setResalePrice      = useStore(s => s.setResalePrice);
+  const setResaleQty        = useStore(s => s.setResaleQty);
   const handleListForResale = useStore(s => s.handleListForResale);
   const setScreen           = useStore(s => s.setScreen);
   const desktop = isDesktop();
 
   if (!resaleTicket) return null;
-  const ev     = resaleTicket.event;
-  const price  = parseFloat(resalePrice) || 0;
-  const fee    = Math.round(price * 0.02 * 100) / 100;
-  const payout = Math.round((price - fee) * 100) / 100;
+  const ev      = resaleTicket.event;
+  const held    = resaleTicket.quantity || 1;
+  const qty     = Math.min(Math.max(1, resaleQty || 1), held);
+  const price   = parseFloat(resalePrice) || 0;
+  const total   = Math.round(price * qty * 100) / 100;
+  const fee     = Math.round(total * 0.02 * 100) / 100;
+  const payout  = Math.round((total - fee) * 100) / 100;
 
   return (
     <div className="bg-brand-subtle h-full flex flex-col overflow-hidden">
@@ -737,8 +742,28 @@ export function Resale() {
 
           <div className="bg-brand-card rounded-2xl border border-brand-hairline px-4.5 py-4 mb-4">
             <div className="font-medium text-[15px] text-brand-text mb-1">{ev.name}</div>
-            <div className="text-xs text-brand-muted tabular-nums">Original: GHS {ev.price} · Max resale: GHS {ev.price}</div>
+            <div className="text-xs text-brand-muted tabular-nums">Original: GHS {ev.price} · Max resale: GHS {ev.price} per ticket</div>
           </div>
+
+          {held > 1 && (
+            <div className="flex items-center justify-between bg-brand-card rounded-2xl border border-brand-hairline px-4.5 py-4 mb-4">
+              <div>
+                <div className="text-[13px] font-medium text-brand-text">How many to list?</div>
+                <div className="text-xs text-brand-muted mt-0.5">You hold {held} tickets for this event</div>
+              </div>
+              <div className="flex items-center gap-3">
+                <button onClick={() => setResaleQty(Math.max(1, qty - 1))} disabled={qty <= 1}
+                  className="w-8 h-8 rounded-lg border border-brand-hairline flex items-center justify-center text-brand-text disabled:opacity-30 transition-colors">
+                  <Minus size={13} weight="bold" />
+                </button>
+                <span className="w-6 text-center text-[15px] font-semibold text-brand-text tabular-nums">{qty}</span>
+                <button onClick={() => setResaleQty(Math.min(held, qty + 1))} disabled={qty >= held}
+                  className="w-8 h-8 rounded-lg border border-brand-hairline flex items-center justify-center text-brand-text disabled:opacity-30 transition-colors">
+                  <Plus size={13} weight="bold" />
+                </button>
+              </div>
+            </div>
+          )}
 
           <div className="flex items-center gap-2.5 bg-[var(--brand-light)] rounded-xl px-4 py-3 mb-5">
             <Tag size={16} weight="light" className="text-brand-accent shrink-0" />
@@ -749,7 +774,7 @@ export function Resale() {
           </div>
 
           <div className="mb-4">
-            <div className="text-xs font-medium text-brand-muted tracking-wide mb-2">RESALE PRICE (GHS)</div>
+            <div className="text-xs font-medium text-brand-muted tracking-wide mb-2">RESALE PRICE PER TICKET (GHS)</div>
             <input value={resalePrice} onChange={e => setResalePrice(e.target.value)} type="number"
               placeholder={`Max GHS ${ev.price}`}
               className={`${fieldClass} text-xl font-semibold tracking-tight tabular-nums ${resaleError ? "border-red-300" : ""}`} />
@@ -765,7 +790,7 @@ export function Resale() {
             <div className="bg-brand-subtle rounded-2xl p-4 mb-5 border border-brand-hairline">
               <div className="text-xs font-medium text-brand-muted tracking-wide mb-3">PAYOUT BREAKDOWN</div>
               {[
-                ["Listing Price", `GHS ${price}`, "text-brand-text", "font-medium"],
+                [`Listing Price${qty > 1 ? ` (${qty} × GHS ${price})` : ""}`, `GHS ${total}`, "text-brand-text", "font-medium"],
                 ["Platform Fee (2%)", `− GHS ${fee}`, "text-brand-muted", "font-medium"],
                 ["Your Payout", `GHS ${payout}`, "text-emerald-700", "font-semibold"],
               ].map(([k, v, c, w], i) => (
@@ -777,7 +802,7 @@ export function Resale() {
             </div>
           )}
 
-          <PrimaryBtn onClick={handleListForResale}>List for Resale</PrimaryBtn>
+          <PrimaryBtn onClick={handleListForResale}>{qty > 1 ? `List ${qty} Tickets for Resale` : "List for Resale"}</PrimaryBtn>
         </div>
       </div>
     </div>
@@ -813,8 +838,10 @@ export function Transfer() {
   const transferEmail    = useStore(s => s.transferEmail);
   const transferName     = useStore(s => s.transferName);
   const transferDone     = useStore(s => s.transferDone);
+  const transferQty      = useStore(s => s.transferQty);
   const setTransferEmail = useStore(s => s.setTransferEmail);
   const setTransferName  = useStore(s => s.setTransferName);
+  const setTransferQty   = useStore(s => s.setTransferQty);
   const handleTransfer   = useStore(s => s.handleTransfer);
   const setScreen        = useStore(s => s.setScreen);
   const setActiveTab     = useStore(s => s.setActiveTab);
@@ -822,7 +849,9 @@ export function Transfer() {
   const desktop = isDesktop();
 
   if (!transferTicket) return null;
-  const ev = transferTicket.event;
+  const ev   = transferTicket.event;
+  const held = transferTicket.quantity || 1;
+  const qty  = Math.min(Math.max(1, transferQty || 1), held);
 
   const onTransfer = async () => { setTransferring(true); await handleTransfer(); setTransferring(false); };
 
@@ -833,9 +862,9 @@ export function Transfer() {
           <div className="w-[68px] h-[68px] rounded-full bg-emerald-50 flex items-center justify-center mx-auto mb-5">
             <CheckCircle size={30} weight="light" className="text-emerald-700" />
           </div>
-          <h2 className="text-xl font-semibold text-brand-text tracking-tight mb-2">Ticket Transferred</h2>
+          <h2 className="text-xl font-semibold text-brand-text tracking-tight mb-2">{qty > 1 ? "Tickets Transferred" : "Ticket Transferred"}</h2>
           <p className="text-brand-muted text-[13px] leading-relaxed mb-7">
-            NFT ownership of <strong className="text-brand-text">{ev.name}</strong> has been sent to{" "}
+            NFT ownership of {qty > 1 ? `${qty} tickets for` : ""} <strong className="text-brand-text">{ev.name}</strong> has been sent to{" "}
             <span className="text-brand-accent font-semibold">{transferName || transferEmail}</span>.
           </p>
           <PrimaryBtn onClick={() => { setScreen("app"); setActiveTab("tickets"); }}>My Tickets</PrimaryBtn>
@@ -867,6 +896,26 @@ export function Transfer() {
             ))}
           </div>
 
+          {held > 1 && (
+            <div className="flex items-center justify-between bg-brand-card rounded-2xl border border-brand-hairline px-4.5 py-4 mb-4">
+              <div>
+                <div className="text-[13px] font-medium text-brand-text">How many to send?</div>
+                <div className="text-xs text-brand-muted mt-0.5">You hold {held} tickets for this event</div>
+              </div>
+              <div className="flex items-center gap-3">
+                <button onClick={() => setTransferQty(Math.max(1, qty - 1))} disabled={qty <= 1}
+                  className="w-8 h-8 rounded-lg border border-brand-hairline flex items-center justify-center text-brand-text disabled:opacity-30 transition-colors">
+                  <Minus size={13} weight="bold" />
+                </button>
+                <span className="w-6 text-center text-[15px] font-semibold text-brand-text tabular-nums">{qty}</span>
+                <button onClick={() => setTransferQty(Math.min(held, qty + 1))} disabled={qty >= held}
+                  className="w-8 h-8 rounded-lg border border-brand-hairline flex items-center justify-center text-brand-text disabled:opacity-30 transition-colors">
+                  <Plus size={13} weight="bold" />
+                </button>
+              </div>
+            </div>
+          )}
+
           <div className="mb-4">
             <div className="text-xs font-medium text-brand-muted tracking-wide mb-2">RECIPIENT NAME</div>
             <input placeholder="e.g. Kwame Mensah" value={transferName} onChange={e => setTransferName(e.target.value)} className={fieldClass} />
@@ -882,7 +931,7 @@ export function Transfer() {
           </div>
 
           <PrimaryBtn onClick={onTransfer} loading={transferring}>
-            {transferring ? "Transferring..." : "Confirm Transfer →"}
+            {transferring ? "Transferring..." : qty > 1 ? `Confirm Transfer of ${qty} Tickets →` : "Confirm Transfer →"}
           </PrimaryBtn>
         </div>
       </div>

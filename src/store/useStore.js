@@ -300,6 +300,38 @@ const useStore = create((set, get) => ({
 
   // ── Tickets ────────────────────────────────────────────────
   myTickets:        [],
+  setMyTicketsFromApi: (data) => set({
+    myTickets: data.map(t => ({
+      id:           t.ticket_id,
+      ticket_id:    t.ticket_id,
+      event: {
+        id:     t.event?.id,
+        name:   t.event?.name,
+        date:   t.event?.date,
+        venue:  t.event?.venue,
+        time:   t.event?.time,
+        price:  parseFloat(t.event?.price || 0),
+        image:  t.event?.image || "https://images.unsplash.com/photo-1492684223066-81342ee5ff30?w=600",
+      },
+      qty:          t.quantity,
+      quantity:     t.quantity,
+      status:       t.status,
+      qr_data:      t.qr_data,
+      qr_base64:    t.qr_base64   || null,
+      dynamic_qr:   t.dynamic_qr  || null,
+      qr_image:     t.qr_image
+        ? (t.qr_image.startsWith("http") ? t.qr_image : `${BACKEND}${t.qr_image}`)
+        : null,
+      qr_image_url: t.qr_image_url || null,
+      nft_tx_hash:  t.nft_tx_hash  || null,
+      nft_token_id: t.nft_token_id || null,
+      purchasedAt:  t.created_at
+        ? new Date(t.created_at).toLocaleDateString()
+        : "Recently",
+      owner:      (t.owner?.first_name || "") + " " + (t.owner?.last_name || ""),
+      ownerEmail: t.owner?.email,
+    })),
+  }),
   resaleListings:   [],
   checkoutEvent:    null,
   ticketQty:        1,
@@ -573,21 +605,23 @@ const useStore = create((set, get) => ({
   },
 
   // ── Resale ─────────────────────────────────────────────────
-  resaleTicket: null, resalePrice: "", resaleError: "",
-  setResaleTicket: (v) => set({ resaleTicket: v }),
+  resaleTicket: null, resalePrice: "", resaleError: "", resaleQty: 1,
+  setResaleTicket: (v) => set({ resaleTicket: v, resaleQty: 1 }),
   setResalePrice:  (v) => set({ resalePrice: v }),
   setResaleError:  (v) => set({ resaleError: v }),
+  setResaleQty:    (v) => set({ resaleQty: v }),
 
   handleListForResale: async () => {
-    const { resaleTicket, resalePrice, myTickets, resaleListings, currentUser } = get();
+    const { resaleTicket, resalePrice, resaleQty, resaleListings, currentUser } = get();
     const price = parseFloat(resalePrice);
     const orig  = resaleTicket.event.price;
+    const qty   = Math.min(Math.max(1, resaleQty || 1), resaleTicket.quantity || 1);
 
     if (!price || isNaN(price)) { set({ resaleError: "Please enter a valid price." }); return; }
     if (price >= orig)           { set({ resaleError: "Must be less than original price (GHS " + orig + ")." }); return; }
     if (price < orig * 0.3)      { set({ resaleError: "Minimum resale price: GHS " + Math.floor(orig * 0.3) + "." }); return; }
 
-    const loadingToast = toast.loading("Listing ticket...");
+    const loadingToast = toast.loading(qty > 1 ? `Listing ${qty} tickets...` : "Listing ticket...");
     try {
       const token = localStorage.getItem("access_token") || "";
       const res = await fetch(`${BACKEND}/api/tickets/resale/list/`, {
@@ -596,25 +630,31 @@ const useStore = create((set, get) => ({
         body: JSON.stringify({
           ticket_id:    resaleTicket.ticket_id || resaleTicket.id,
           resale_price: price,
+          quantity:     qty,
         }),
       });
       const data = await res.json();
 
       if (res.ok) {
+        // Refetch from the server rather than guessing at the resulting
+        // split locally — the backend is the source of truth for whether
+        // a partial-quantity listing splits the ticket record.
+        const { ticketsAPI } = await import("../api");
+        ticketsAPI.myTickets().then(fresh => {
+          if (Array.isArray(fresh)) get().setMyTicketsFromApi(fresh);
+        }).catch(() => {});
+
         set({
-          myTickets: myTickets.map(t =>
-            t.id === resaleTicket.id ? { ...t, status: "resale", resalePrice: price } : t
-          ),
           resaleListings: [...resaleListings, {
-            ...resaleTicket, resalePrice: price,
+            ...resaleTicket, resalePrice: price, quantity: qty,
             listedAt: new Date().toLocaleDateString(),
             seller: currentUser?.first_name,
           }],
-          resaleTicket: null, resalePrice: "", resaleError: "",
+          resaleTicket: null, resalePrice: "", resaleError: "", resaleQty: 1,
           screen: "resaleSuccess",
         });
         toast.dismiss(loadingToast);
-        toast.success("Ticket listed for resale!");
+        toast.success(qty > 1 ? `${qty} tickets listed for resale!` : "Ticket listed for resale!");
       } else {
         toast.dismiss(loadingToast);
         set({ resaleError: data.error || "Failed to list ticket." });
@@ -646,29 +686,33 @@ const useStore = create((set, get) => ({
   },
 
   // ── Transfer ───────────────────────────────────────────────
-  transferTicket: null, transferEmail: "", transferName: "", transferDone: false,
-  setTransferTicket: (v) => set({ transferTicket: v }),
+  transferTicket: null, transferEmail: "", transferName: "", transferDone: false, transferQty: 1,
+  setTransferTicket: (v) => set({ transferTicket: v, transferQty: 1 }),
   setTransferEmail:  (v) => set({ transferEmail: v }),
   setTransferName:   (v) => set({ transferName: v }),
   setTransferDone:   (v) => set({ transferDone: v }),
+  setTransferQty:    (v) => set({ transferQty: v }),
 
   handleTransfer: async () => {
     const { ticketsAPI } = await import("../api");
-    const { transferEmail, transferTicket, myTickets } = get();
+    const { transferEmail, transferTicket, transferQty } = get();
     if (!transferEmail) { toast.error("Please enter recipient email."); return; }
-    const loadingToast = toast.loading("Transferring ticket...");
+    const qty = Math.min(Math.max(1, transferQty || 1), transferTicket.quantity || 1);
+    const loadingToast = toast.loading(qty > 1 ? `Transferring ${qty} tickets...` : "Transferring ticket...");
     try {
       const data = await ticketsAPI.transfer({
         ticket_id: transferTicket.ticket_id || transferTicket.id,
         to_email:  transferEmail,
+        quantity:  qty,
       });
       if (data.message) {
-        set({
-          myTickets:    myTickets.filter(t => t.id !== transferTicket.id),
-          transferDone: true,
-        });
+        ticketsAPI.myTickets().then(fresh => {
+          if (Array.isArray(fresh)) get().setMyTicketsFromApi(fresh);
+        }).catch(() => {});
+
+        set({ transferDone: true });
         toast.dismiss(loadingToast);
-        toast.success("Ticket transferred successfully!");
+        toast.success(qty > 1 ? `${qty} tickets transferred successfully!` : "Ticket transferred successfully!");
       } else {
         toast.dismiss(loadingToast);
         toast.error(data.error || "Transfer failed.");

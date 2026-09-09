@@ -11,7 +11,11 @@ import { adminAPI } from "../../api";
 import { OPS_TABS, OPS_COMPONENTS } from "./AdminOps";
 import { formatDate } from "../../utils/formatDate";
 
-const BACKEND = "https://master-events-backend.onrender.com";
+// The six original tabs still use adminFetch below; keep them pointed at the
+// same host as the rest of the app so local testing does not silently read
+// production.
+const BACKEND = (import.meta.env.VITE_API_BASE || "https://master-events-backend.onrender.com/api")
+  .replace(/\/api\/?$/, "");
 
 async function adminFetch(path, token, opts = {}) {
   const res = await fetch(BACKEND + path, {

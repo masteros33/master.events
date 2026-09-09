@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import useStore from "../../store/useStore";
-import { ticketsAPI } from "../../api";
+import { resaleAPI, paymentsAPI } from "../../api";
 import {
   ArrowLeft, Tag, Lock, Link, Wallet, X, WarningCircle,
   CheckCircle, CircleNotch,
@@ -36,7 +36,7 @@ export default function ResaleMarket() {
   const desktop = isDesktop();
 
   useEffect(() => {
-    ticketsAPI.resaleListings()
+    resaleAPI.listings()
       .then(data => { setListings(Array.isArray(data) ? data : []); setLoading(false); })
       .catch(() => setLoading(false));
   }, []);
@@ -47,7 +47,7 @@ export default function ResaleMarket() {
     setPayError("");
     setPaying(true);
 
-    const total = Math.round(listing.resale_price * 100) / 100;
+    const total = Math.round(listing.resale_price * 100) / 100;   // display only — the server prices the order
     const totalPesewas = Math.round(total * 100);
 
     try {
@@ -63,30 +63,21 @@ export default function ResaleMarket() {
       setPaying(false); return;
     }
 
+    // Reserves this listing for us and prices it server-side. A second buyer
+    // hitting the same listing now gets a clean "someone else is buying this"
+    // instead of both of us paying for one ticket.
     let accessCode, payRef;
-    try {
-      const token = localStorage.getItem("access_token") || "";
-      const initRes = await fetch(`${API}/api/payments/initialize/`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
-        body: JSON.stringify({
-          amount:     total,
-          event_id:   listing.event.id,
-          event_name: listing.event.name,
-          quantity:   1,
-        }),
-      });
-      const initData = await initRes.json();
-      if (!initRes.ok || !initData.access_code) {
-        setPayError(initData.error || "Failed to initialize payment.");
-        setPaying(false); return;
+    const initData = await resaleAPI.checkout(listing.listing_id || listing.id);
+    if (!initData.ok || !initData.access_code) {
+      setPayError(initData.error || "This ticket is no longer available.");
+      setPaying(false);
+      if (initData._status === 404 || initData._status === 409) {
+        setListings(prev => prev.filter(l => (l.listing_id || l.id) !== (listing.listing_id || listing.id)));
       }
-      accessCode = initData.access_code;
-      payRef     = initData.reference;
-    } catch {
-      setPayError("Connection error. Please try again.");
-      setPaying(false); return;
+      return;
     }
+    accessCode = initData.access_code;
+    payRef     = initData.reference;
 
     const doHandle = (() => {
       let called = false;
@@ -94,16 +85,15 @@ export default function ResaleMarket() {
         if (called) return;
         called = true;
         try {
-          const result = await ticketsAPI.buyResale({
-            ticket_id:         listing.ticket_id,
-            payment_reference: ref,
-          });
-          if (result._status === 201 || result.ticket_id) {
-            setNewTicket(result);
+          const result = await paymentsAPI.awaitTickets(ref);
+          if (result.state === "fulfilled" && result.tickets?.length) {
+            setNewTicket(result.tickets[0]);
             setPayDone(true);
-            setListings(prev => prev.filter(l => l.ticket_id !== listing.ticket_id));
+            setListings(prev => prev.filter(l => (l.listing_id || l.id) !== (listing.listing_id || listing.id)));
+          } else if (result.state === "pending") {
+            setPayError("Payment received — your ticket will appear in My Tickets shortly.");
           } else {
-            setPayError(result.error || "Purchase failed. Please try again.");
+            setPayError(result.message || result.error || "Purchase failed. Please try again.");
           }
         } catch {
           setPayError("Server error. Check My Tickets — your ticket may have been issued.");

@@ -1,7 +1,7 @@
 import { create } from "zustand";
 import toast from "react-hot-toast";
 import { DEMO_ORG_EVENTS } from "../constants/data";
-import { authAPI, eventsAPI, ticketsAPI } from "../api";
+import { authAPI, eventsAPI, ticketsAPI, paymentsAPI } from "../api";
 
 const BACKEND = "https://master-events-backend.onrender.com";
 const ping = () => fetch(BACKEND + "/health/").catch(() => {});
@@ -524,28 +524,20 @@ const useStore = create((set, get) => ({
 
       let data;
       try {
-        const controller = new AbortController();
-        const timeoutId  = setTimeout(() => controller.abort(), 120000);
-        const body = {
-          event_id:          checkoutEvent.id,
-          quantity:          ticketQty,
-          payment_reference: reference,
+        // The order was already priced and reserved by /payments/initialize/.
+        // All we do now is confirm the reference. awaitTickets() keeps asking
+        // until the Paystack webhook lands, so a slow confirmation shows a
+        // spinner rather than losing somebody's ticket.
+        const verified = await paymentsAPI.awaitTickets(reference);
+        data = {
+          ...verified,
+          _status: verified.state === "fulfilled" ? 201
+                 : verified.state === "pending"   ? 202
+                 : verified.state === "sold_out"  ? 409
+                 : (verified._status || 400),
+          error: verified.state === "fulfilled" ? undefined : (verified.message || verified.error),
         };
-        if (selectedTier?.id) body.tier_id = selectedTier.id;
-
-        const res = await fetch(`${BACKEND}/api/tickets/purchase/`, {
-          method:  "POST",
-          headers: {
-            "Content-Type":  "application/json",
-            "Authorization": `Bearer ${localStorage.getItem("access_token") || ""}`,
-          },
-          body: JSON.stringify(body),
-          signal: controller.signal,
-        });
-        clearTimeout(timeoutId);
-        data = { ...await res.json(), _status: res.status };
-
-      } catch (fetchErr) {
+      } catch {
         toast.dismiss(loadingToast);
         toast.loading("Payment received — confirming ticket...");
         try {
@@ -558,6 +550,23 @@ const useStore = create((set, get) => ({
         } catch {
           toast.dismiss();
           toast.error("Payment received — your ticket will appear in My Tickets shortly.");
+          set({ screen: "app", activeTab: "tickets" });
+        }
+        return;
+      }
+
+      if (data._status === 202) {
+        toast.dismiss(loadingToast);
+        toast.loading("Payment received — confirming your ticket...");
+        try {
+          const shown = await fetchAndShow();
+          if (!shown) {
+            toast.dismiss();
+            toast.success("Payment received — your ticket will appear in My Tickets shortly.");
+            set({ screen: "app", activeTab: "tickets", checkoutEvent: null, selectedTier: null });
+          }
+        } catch {
+          toast.dismiss();
           set({ screen: "app", activeTab: "tickets" });
         }
         return;
@@ -617,9 +626,12 @@ const useStore = create((set, get) => ({
     const orig  = resaleTicket.event.price;
     const qty   = Math.min(Math.max(1, resaleQty || 1), resaleTicket.quantity || 1);
 
+    // The backend caps resale at what the seller actually paid for that ticket
+    // (price_paid, not the current event price) and allows selling at cost.
+    const paid = parseFloat(resaleTicket.price_paid ?? orig);
     if (!price || isNaN(price)) { set({ resaleError: "Please enter a valid price." }); return; }
-    if (price >= orig)           { set({ resaleError: "Must be less than original price (GHS " + orig + ")." }); return; }
-    if (price < orig * 0.3)      { set({ resaleError: "Minimum resale price: GHS " + Math.floor(orig * 0.3) + "." }); return; }
+    if (price > paid)            { set({ resaleError: "Resale price cannot exceed what you paid (GHS " + paid + ")." }); return; }
+    if (price < 1)               { set({ resaleError: "Minimum resale price is GHS 1." }); return; }
 
     const loadingToast = toast.loading(qty > 1 ? `Listing ${qty} tickets...` : "Listing ticket...");
     try {
@@ -851,12 +863,20 @@ const useStore = create((set, get) => ({
     }
   },
 
+  handleDoorStaffLogout: async () => {
+    const { scanAPI } = await import("../api");
+    await scanAPI.logout();
+    set({ doorStaffUser: null, doorCode: "", screen: "doorStaffLogin" });
+  },
+
   handleDoorStaffLogin: async () => {
-    const { ticketsAPI } = await import("../api");
+    const { scanAPI } = await import("../api");
     const { doorCode, doorStaffInvites } = get();
     const trimmed = doorCode.trim().toUpperCase();
     try {
-      const data = await ticketsAPI.doorStaffLogin(trimmed);
+      // Returns a scan token that every scan must carry. Being logged in is
+      // no longer enough to admit somebody — the device itself is authorised.
+      const data = await scanAPI.login(trimmed);
       if (data.valid) {
         set({
           doorStaffUser: {
@@ -869,6 +889,7 @@ const useStore = create((set, get) => ({
         toast.success("Access granted: " + data.event_name);
         return;
       }
+      if (data.error) { set({ doorCodeError: data.error }); return; }
     } catch {}
     let found = null;
     Object.values(doorStaffInvites).forEach(invites => {

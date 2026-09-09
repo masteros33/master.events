@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import useStore from "../../store/useStore";
-import { ticketsAPI } from "../../api";
+import { ticketsAPI, scanAPI } from "../../api";
 import { Html5Qrcode } from "html5-qrcode";
 import {
   DoorOpen, Scan, Keyboard, CheckCircle, XCircle,
@@ -287,7 +287,7 @@ export function DoorStaffScan() {
     setTimeout(() => { lastScan.current = null; }, 3000);
     setVerifying(true); setResult(null);
     try {
-      const data = await ticketsAPI.verify({ qr_data: trimmed });
+      const data = await scanAPI.scan(trimmed, doorStaffUser?.eventId);
       const res  = buildResult(data, trimmed);
       setResult(res);
       if (res.status === "valid") {
@@ -434,6 +434,9 @@ export function DoorStaffScan() {
 // ── Organizer Scan — width-constrained ──────────────────────────
 export function OrganizerScan() {
   const setScreen = useStore(s => s.setScreen);
+  // The organizer scans with their own account, so the backend needs to know
+  // which event's gate this is — it checks they actually own or staff it.
+  const selectedEvent = useStore(s => s.viewingOrgEvent);
   const [scanInput,  setScanInput]  = useState("");
   const [result,     setResult]     = useState(null);
   const [verifying,  setVerifying]  = useState(false);
@@ -448,7 +451,7 @@ export function OrganizerScan() {
     setTimeout(() => { lastScan.current = null; }, 3000);
     setVerifying(true); setResult(null);
     try {
-      const data = await ticketsAPI.verify({ qr_data: trimmed });
+      const data = await scanAPI.scan(trimmed, selectedEvent?.id);
       setResult(buildResult(data, trimmed));
     } catch {
       setResult({ status: "error", title: "Verification Failed", msg: "Could not connect to server.", holder: null });

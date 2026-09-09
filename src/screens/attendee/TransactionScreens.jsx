@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import useStore from "../../store/useStore";
+import { paymentsAPI } from "../../api";
 import { ticketsAPI } from "../../api";
 import { Avatar } from "../../utils/avatar";
 import { formatDate, formatTime } from "../../utils/formatDate";
@@ -349,7 +350,7 @@ export function PaymentSuccess() {
                   <div key={t.ticket_id || i} className="flex items-center justify-between bg-brand-card border border-brand-hairline rounded-xl px-3.5 py-2.5">
                     <span className="font-mono text-xs text-brand-text truncate">{String(t.ticket_id || "").slice(0, 16)}</span>
                     <span className={`text-xs font-medium shrink-0 ml-2 ${t.nft_tx_hash ? "text-emerald-700" : "text-brand-muted"}`}>
-                      {t.nft_tx_hash ? `NFT #${t.nft_token_id ?? "✓"}` : "Minting…"}
+                      {t.nft_tx_hash ? `NFT #${t.nft_token_id ?? "MINTED"}` : "Minting"}
                     </span>
                   </div>
                 ))}
@@ -427,18 +428,20 @@ export function Checkout() {
       });
     } catch { setPayError("Failed to load payment gateway."); setPaying(false); return; }
 
-    let accessCode, payRef;
+    let accessCode, payRef, serverTotal = total;
     try {
-      const token = localStorage.getItem("access_token") || "";
-      const initRes = await fetch(`${API}/api/payments/initialize/`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json", "Authorization": token ? `Bearer ${token}` : "" },
-        body: JSON.stringify({ amount: total, event_id: checkoutEvent.id, event_name: checkoutEvent.name, quantity: qty }),
+      // No amount here on purpose — the backend prices the order from the
+      // event/tier and reserves the tickets, so the browser can't be talked
+      // into paying the wrong number.
+      const initData = await paymentsAPI.initialize({
+        event_id: checkoutEvent.id,
+        tier_id:  selectedTier?.id,
+        quantity: qty,
       });
-      const initData = await initRes.json();
-      if (!initRes.ok || !initData.access_code) { setPayError(initData.error || "Failed to initialize payment."); setPaying(false); return; }
-      accessCode = initData.access_code;
-      payRef     = initData.reference;
+      if (!initData.ok || !initData.access_code) { setPayError(initData.error || "Failed to initialize payment."); setPaying(false); return; }
+      accessCode  = initData.access_code;
+      payRef      = initData.reference;
+      serverTotal = parseFloat(initData.order?.total ?? total);
     } catch { setPayError("Connection error initializing payment."); setPaying(false); return; }
 
     const doHandle = (() => {
@@ -455,7 +458,7 @@ export function Checkout() {
         const handler = window.PaystackPop.setup({
           key: import.meta.env.VITE_PAYSTACK_PUBLIC_KEY || "",
           email: currentUser?.email || "",
-          amount: Math.round(total * 100), currency: "GHS",
+          amount: Math.round(serverTotal * 100), currency: "GHS",
           channels: ["mobile_money", "card"],
           ref: payRef, access_code: accessCode,
           onClose: () => setPaying(false),

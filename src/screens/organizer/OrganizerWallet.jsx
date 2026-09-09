@@ -35,6 +35,7 @@ export default function OrganizerWallet() {
   const [method, setMethod]             = useState("momo");
   const [network, setNetwork]           = useState("mtn");
   const [momoNumber, setMomoNumber]     = useState("");
+  const [payoutMessage, setPayoutMessage] = useState("");
   const [txRef, setTxRef]               = useState("");
   const [loading, setLoading]           = useState(true);
   const [wallet, setWallet]             = useState(null);
@@ -58,7 +59,13 @@ export default function OrganizerWallet() {
     }).catch(() => setLoading(false));
   }, []);
 
-  const balance        = wallet ? parseFloat(wallet.balance)         : 0;
+  // `balance` is everything the ledger says they have earned. `available` is
+  // what they can actually take out — earnings are held until the event has
+  // happened, which is what stops a fake event being cashed out before anyone
+  // turns up. Withdrawing must validate against `available`, never `balance`.
+  const balance        = wallet ? parseFloat(wallet.available ?? wallet.balance) : 0;
+  const totalBalance   = wallet ? parseFloat(wallet.balance)         : 0;
+  const pending        = wallet ? parseFloat(wallet.pending || 0)    : 0;
   const totalEarned    = wallet ? parseFloat(wallet.total_earned)    : 0;
   const totalWithdrawn = wallet ? parseFloat(wallet.total_withdrawn) : 0;
   const feesPaid       = wallet ? parseFloat(wallet.fees_paid || 0)  : 0;
@@ -67,7 +74,9 @@ export default function OrganizerWallet() {
     const amt = parseFloat(amount);
     if (!amount || isNaN(amt)) { setAmountError("Please enter an amount"); return false; }
     if (amt < 10)               { setAmountError("Minimum withdrawal is GHS 10"); return false; }
-    if (amt > balance)          { setAmountError("Amount exceeds your balance"); return false; }
+    if (amt > balance)          { setAmountError(pending > 0
+                                    ? `Only GHS ${balance.toLocaleString()} is available — GHS ${pending.toLocaleString()} is held until your events have taken place.`
+                                    : "Amount exceeds your available balance"); return false; }
     if (!momoNumber)            { setAmountError("Please enter your account number"); return false; }
     setAmountError(""); return true;
   };
@@ -82,7 +91,8 @@ export default function OrganizerWallet() {
       });
       if (data.reference) {
         setTxRef(data.reference);
-        setWallet(prev => ({ ...prev, balance: data.new_balance }));
+        setWallet(prev => ({ ...prev, balance: data.new_balance, available: data.available ?? prev?.available }));
+        setPayoutMessage(data.message || "");
         setStep(3);
       } else {
         setAmountError(data.error || "Withdrawal failed. Try again.");
@@ -249,11 +259,16 @@ export default function OrganizerWallet() {
                 <div className="text-4xl font-semibold text-white tracking-tight tabular-nums mb-1 leading-none">
                   GHS {Math.round(balance).toLocaleString()}
                 </div>
-                <div className="text-[13px] text-white/60 mb-5">Ready to withdraw · updated live</div>
+                <div className="text-[13px] text-white/60 mb-5">
+                  {pending > 0
+                    ? `Ready to withdraw · GHS ${Math.round(pending).toLocaleString()} held until your events have taken place`
+                    : "Ready to withdraw · updated live"}
+                </div>
 
                 <div className="flex justify-between bg-white/10 rounded-2xl px-4 py-3.5 mb-4">
                   {[
                     ["Lifetime",  "GHS " + Math.round(totalEarned).toLocaleString()],
+                    ["Held",      "GHS " + Math.round(pending).toLocaleString()],
                     ["Fees",      "GHS " + Math.round(feesPaid).toLocaleString()],
                     ["Withdrawn", "GHS " + Math.round(totalWithdrawn).toLocaleString()],
                   ].map(([k,v]) => (

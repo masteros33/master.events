@@ -42,7 +42,7 @@ function TicketCard({ t, onView, onResell, onSend, onCancel }) {
         <div className="absolute top-2 left-2 flex items-center gap-1">
           <span className="flex items-center gap-1 bg-brand-text text-white text-[8px] font-bold px-2 py-1 rounded-full">
             <Link2 size={8} strokeWidth={2.5} />
-            {t.nft_tx_hash ? `NFT #${t.nft_token_id || "✓"}` : "MINTING"}
+            {t.nft_tx_hash ? `NFT #${t.nft_token_id || "MINTED"}` : "MINTING"}
           </span>
         </div>
 
@@ -93,7 +93,7 @@ function TicketCard({ t, onView, onResell, onSend, onCancel }) {
 
           {t.status === "redeemed" && (
             <div className="flex-1 py-2 bg-brand-canvas border border-gray-200 text-brand-muted rounded-lg text-[10px] font-semibold text-center">
-              Used ✓
+              Used
             </div>
           )}
         </div>

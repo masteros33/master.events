@@ -4,7 +4,7 @@ import useStore from "../../store/useStore";
 import { paymentsAPI } from "../../api";
 import toast from "react-hot-toast";
 import {
-  Info, DeviceMobile, ArrowDownLeft, ArrowUpRight, Wallet,
+  Info, DeviceMobile, ArrowDownLeft, ArrowUpRight, Wallet, Ticket,
 } from "@phosphor-icons/react";
 
 const isDesktop = () => window.innerWidth > 768;
@@ -23,6 +23,7 @@ function txMeta(type) {
 export default function AttendeeWallet() {
   const desktop = isDesktop();
 
+  const setScreen = useStore(s => s.setScreen);
   const [wallet,       setWallet]       = useState(null);
   const [loading,      setLoading]      = useState(true);
   const [showWithdraw, setShowWithdraw] = useState(false);
@@ -75,7 +76,10 @@ export default function AttendeeWallet() {
     }
   };
 
-  const canWithdraw = (wallet?.balance || 0) >= 10;
+  // Master Events Credits are closed-loop: they buy tickets on the platform,
+  // they are not a cash balance. The backend refuses withdrawal outright, so
+  // the screen sends people to spend them instead of offering a dead button.
+  const canSpend = (wallet?.balance || 0) > 0;
 
   return (
     <div className="bg-brand-subtle min-h-full pb-20 font-sans">
@@ -90,7 +94,7 @@ export default function AttendeeWallet() {
           <>
             <div className="bg-brand-accent rounded-2xl p-6 mb-4">
               <div className="text-xs font-medium text-white/60 tracking-widest mb-2">
-                AVAILABLE BALANCE
+                MASTER EVENTS CREDITS
               </div>
               <div className="text-4xl font-semibold text-white tracking-tight tabular-nums mb-4">
                 GHS {(wallet?.balance || 0).toFixed(2)}
@@ -101,8 +105,8 @@ export default function AttendeeWallet() {
                   <div className="text-sm font-medium text-white tabular-nums">GHS {(wallet?.total_earned || 0).toFixed(2)}</div>
                 </div>
                 <div>
-                  <div className="text-xs text-white/60 mb-0.5">Withdrawn</div>
-                  <div className="text-sm font-medium text-white tabular-nums">GHS {(wallet?.total_withdrawn || 0).toFixed(2)}</div>
+                  <div className="text-xs text-white/60 mb-0.5">Spent on tickets</div>
+                  <div className="text-sm font-medium text-white tabular-nums">GHS {(wallet?.total_spent ?? wallet?.total_withdrawn ?? 0).toFixed(2)}</div>
                 </div>
               </div>
             </div>
@@ -110,13 +114,13 @@ export default function AttendeeWallet() {
             <div className="flex items-center gap-2.5 bg-blue-50 rounded-xl px-4 py-3 mb-4">
               <Info size={16} weight="light" className="text-blue-700 shrink-0" />
               <div className="text-xs text-brand-text leading-relaxed">
-                Earn money by reselling tickets. Your earnings land here instantly and you can withdraw to MoMo anytime.
+                Sell a ticket and your credits land here instantly. Spend them on any ticket on Master Events — they come off your total at checkout.
               </div>
             </div>
 
-            <button onClick={() => setShowWithdraw(true)} disabled={!canWithdraw}
-              className={`w-full h-12 rounded-xl font-medium text-[15px] flex items-center justify-center gap-2 mb-6 transition-colors ${canWithdraw ? "bg-brand-accent hover:bg-brand-accent-hover text-white" : "bg-brand-hairline text-brand-muted cursor-not-allowed"}`}>
-              {canWithdraw ? <><DeviceMobile size={16} weight="light" /> Withdraw to MoMo</> : "Minimum GHS 10 to withdraw"}
+            <button onClick={() => setScreen("app")} disabled={!canSpend}
+              className={`w-full h-12 rounded-xl font-medium text-[15px] flex items-center justify-center gap-2 mb-6 transition-colors ${canSpend ? "bg-brand-accent hover:bg-brand-accent-hover text-white" : "bg-brand-hairline text-brand-muted cursor-not-allowed"}`}>
+              {canSpend ? <><Ticket size={16} weight="light" /> Spend credits on a ticket</> : "Sell a ticket to earn credits"}
             </button>
 
             <div className="font-semibold text-base text-brand-text tracking-tight mb-3.5">

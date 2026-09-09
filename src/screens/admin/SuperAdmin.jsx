@@ -7,6 +7,8 @@ import {
   MagnifyingGlass, Broadcast, ArrowSquareOut,
 } from "@phosphor-icons/react";
 import useStore from "../../store/useStore";
+import { adminAPI } from "../../api";
+import { OPS_TABS, OPS_COMPONENTS } from "./AdminOps";
 import { formatDate } from "../../utils/formatDate";
 
 const BACKEND = "https://master-events-backend.onrender.com";
@@ -589,29 +591,32 @@ export function AdminLogin() {
   const setScreen = useStore(s => s.setScreen);
   const [email,    setEmail]    = useState("");
   const [password, setPassword] = useState("");
+  const [otp,      setOtp]      = useState("");
+  const [needsOtp, setNeedsOtp] = useState(false);
   const [error,    setError]    = useState("");
   const [loading,  setLoading]  = useState(false);
 
+  // The server decides whether a code is needed: an admin who has enrolled an
+  // authenticator gets a 401 with {mfa_required: true} on the first attempt,
+  // and we ask for the code rather than guessing at enrolment state up front.
   const handleLogin = async () => {
     if (!email || !password) { setError("Email and password are required"); return; }
+    if (needsOtp && otp.trim().length < 6) { setError("Enter the 6-digit code from your authenticator app"); return; }
     setLoading(true); setError("");
-    try {
-      const res  = await fetch(BACKEND + "/api/auth/admin/login/", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
-      });
-      const data = await res.json();
-      if (data.tokens?.access) {
-        localStorage.setItem("admin_access_token",  data.tokens.access);
-        localStorage.setItem("admin_refresh_token", data.tokens.refresh);
-        localStorage.setItem("admin_user",          JSON.stringify(data.user));
-        setScreen("adminDashboard");
-      } else {
-        setError(data.error || "Invalid credentials");
-      }
-    } catch {
-      setError("Connection error. Please try again.");
+
+    const data = await adminAPI.login(email.trim().toLowerCase(), password, needsOtp ? otp.trim() : undefined);
+
+    if (data.tokens?.access) {
+      localStorage.setItem("admin_access_token",  data.tokens.access);
+      localStorage.setItem("admin_refresh_token", data.tokens.refresh);
+      localStorage.setItem("admin_user",          JSON.stringify(data.user));
+      setScreen("adminDashboard");
+    } else if (data.mfa_required) {
+      setNeedsOtp(true);
+      setOtp("");
+      setError(data.error || "");
+    } else {
+      setError(data.error || "Invalid credentials");
     }
     setLoading(false);
   };
@@ -656,6 +661,20 @@ export function AdminLogin() {
           </div>
         </div>
 
+        {needsOtp && (
+          <div className="mb-5">
+            <label className="text-xs font-semibold text-brand-muted mb-1.5 block">Authentication code</label>
+            <input value={otp} autoFocus inputMode="numeric" autoComplete="one-time-code" maxLength={8}
+              onChange={e => setOtp(e.target.value.replace(/[^0-9a-zA-Z-]/g, ""))}
+              placeholder="000000"
+              onKeyDown={e => e.key === "Enter" && handleLogin()}
+              className="w-full px-4 py-3 rounded-xl border border-brand-hairline bg-brand-card text-center text-lg font-medium tracking-[0.4em] tabular-nums text-brand-text outline-none focus:border-brand-accent focus:ring-2 focus:ring-brand-accent/20 transition-colors" />
+            <p className="text-xs text-brand-muted mt-1.5">
+              From your authenticator app. A backup code works here too.
+            </p>
+          </div>
+        )}
+
         {error && (
           <div className="flex items-center gap-2 bg-red-50 border border-red-100 rounded-xl px-3.5 py-2.5 mb-3.5 text-red-600 text-xs">
             <WarningCircle size={14} weight="light" /> {error}
@@ -664,7 +683,7 @@ export function AdminLogin() {
 
         <button onClick={handleLogin} disabled={loading}
           className="w-full h-12 rounded-xl bg-brand-accent hover:bg-brand-accent-hover disabled:opacity-60 text-white font-medium text-sm flex items-center justify-center gap-2 transition-colors">
-          {loading ? "Authenticating..." : <>Enter Admin Gateway <ArrowRight size={16} weight="light" /></>}
+          {loading ? "Authenticating..." : <>{needsOtp ? "Verify code" : "Enter Admin Gateway"} <ArrowRight size={16} weight="light" /></>}
         </button>
 
         <div className="text-center mt-5">
@@ -712,16 +731,18 @@ export function AdminDashboard() {
     return null;
   }
 
-  // ── NEW: two tabs appended — existing four unchanged ──
   const tabs = [
     { id: "overview",       Icon: SquaresFour, label: "Overview" },
     { id: "organizers",     Icon: Users,           label: "Organizers" },
     { id: "events",         Icon: CalendarBlank,    label: "Events" },
     { id: "transactions",   Icon: Receipt,         label: "Transactions" },
     { id: "ticketHolders",  Icon: Ticket,          label: "Ticket Holders" },
-    { id: "liveActivity",   Icon: Broadcast,           label: "Live Activity" },
+    { id: "liveActivity",   Icon: Broadcast,       label: "Live Activity" },
+    ...OPS_TABS,
   ];
   const activeMeta = tabs.find(t => t.id === activeTab);
+  const OpsPanel   = OPS_COMPONENTS[activeTab] || null;
+  const opsIds     = new Set(OPS_TABS.map(t => t.id));
 
   return (
     <div className="flex h-screen bg-brand-subtle font-sans overflow-hidden">
@@ -749,14 +770,19 @@ export function AdminDashboard() {
         )}
 
         <nav className="flex-1 p-2 overflow-y-auto">
-          <div className="text-xs font-medium text-white/40 tracking-widest px-2.5 pt-2 pb-1.5">NAVIGATE</div>
-          {tabs.map(t => (
-            <button key={t.id} onClick={() => setActiveTab(t.id)}
-              className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl mb-0.5 text-left transition-colors relative ${activeTab === t.id ? "bg-white/10" : "hover:bg-white/5"}`}>
-              {activeTab === t.id && <span className="absolute left-0 top-1/5 h-3/5 w-[3px] rounded-r-full bg-white" />}
-              <t.Icon size={15} weight="light" className={activeTab === t.id ? "text-white" : "text-white/50"} />
-              <span className={`font-medium text-[13px] ${activeTab === t.id ? "text-white" : "text-white/70"}`}>{t.label}</span>
-            </button>
+          {[["NAVIGATE", tabs.filter(t => !opsIds.has(t.id))],
+            ["OPERATIONS", tabs.filter(t => opsIds.has(t.id))]].map(([group, items]) => (
+            <div key={group}>
+              <div className="text-xs font-medium text-white/40 tracking-widest px-2.5 pt-2 pb-1.5">{group}</div>
+              {items.map(t => (
+                <button key={t.id} onClick={() => setActiveTab(t.id)}
+                  className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl mb-0.5 text-left transition-colors relative ${activeTab === t.id ? "bg-white/10" : "hover:bg-white/5"}`}>
+                  {activeTab === t.id && <span className="absolute left-0 top-1/5 h-3/5 w-[3px] rounded-r-full bg-white" />}
+                  <t.Icon size={15} weight="light" className={activeTab === t.id ? "text-white" : "text-white/50"} />
+                  <span className={`font-medium text-[13px] ${activeTab === t.id ? "text-white" : "text-white/70"}`}>{t.label}</span>
+                </button>
+              ))}
+            </div>
           ))}
         </nav>
 
@@ -809,6 +835,7 @@ export function AdminDashboard() {
           {activeTab === "transactions"  && <TransactionsTab token={token} />}
           {activeTab === "ticketHolders" && <TicketHoldersTab token={token} />}
           {activeTab === "liveActivity"  && <LiveActivityTab token={token} />}
+          {OpsPanel && <OpsPanel />}
         </div>
       </main>
     </div>

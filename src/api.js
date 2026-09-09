@@ -1,4 +1,4 @@
-const BASE_URL = "https://master-events-backend.onrender.com/api";
+const BASE_URL = import.meta.env.VITE_API_BASE || "https://master-events-backend.onrender.com/api";
 
 const getToken = () => {
   try {
@@ -14,166 +14,325 @@ const headers = () => ({
   Authorization: `Bearer ${getToken()}`,
 });
 
+// Every call goes through here so a screen never has to think about status
+// codes. `_status` is always present; `ok` tells you whether it worked.
+const request = async (path, { method = "GET", body, auth = true, extraHeaders } = {}) => {
+  const h = auth ? headers() : { "Content-Type": "application/json" };
+  try {
+    const res = await fetch(`${BASE_URL}${path}`, {
+      method,
+      headers: { ...h, ...(extraHeaders || {}) },
+      ...(body !== undefined ? { body: JSON.stringify(body) } : {}),
+    });
+    let json = {};
+    try { json = await res.json(); } catch { json = {}; }
+    if (Array.isArray(json)) return Object.assign([...json], { _status: res.status, ok: res.ok });
+    return { ...json, _status: res.status, ok: res.ok };
+  } catch {
+    return { _status: 0, ok: false, error: "Connection error. Please check your network." };
+  }
+};
+
 export const authAPI = {
-  register: (data) =>
-    fetch(`${BASE_URL}/auth/register/`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(data),
-    }).then(r => r.json()),
-
-  login: (data) =>
-    fetch(`${BASE_URL}/auth/login/`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(data),
-    }).then(r => r.json()),
-
-  me: () =>
-    fetch(`${BASE_URL}/auth/me/`, { headers: headers() }).then(r => r.json()),
+  register: (data) => request("/auth/register/", { method: "POST", body: data, auth: false }),
+  login:    (data) => request("/auth/login/",    { method: "POST", body: data, auth: false }),
+  me:       ()     => request("/auth/me/"),
 };
 
 export const eventsAPI = {
-  list: (params = "") => {
-    const token = getToken();
-    return fetch(`${BASE_URL}/events/${params}`, {
-      headers: token
-        ? { "Content-Type": "application/json", Authorization: `Bearer ${token}` }
-        : { "Content-Type": "application/json" },
-    }).then(r => r.json());
-  },
-
-  detail: (id) =>
-    fetch(`${BASE_URL}/events/${id}/`, { headers: headers() }).then(r => r.json()),
-
-  create: (data) =>
-    fetch(`${BASE_URL}/events/create/`, {
-      method: "POST",
-      headers: headers(),
-      body: JSON.stringify(data),
-    }).then(r => r.json()),
-
-  myEvents: () =>
-    fetch(`${BASE_URL}/events/my-events/`, { headers: headers() }).then(r => r.json()),
-
-  toggleSales: (id) =>
-    fetch(`${BASE_URL}/events/${id}/toggle-sales/`, {
-      method: "POST",
-      headers: headers(),
-    }).then(r => r.json()),
+  list:        (params = "") => request(`/events/${params}`, { auth: !!getToken() }),
+  detail:      (id)   => request(`/events/${id}/`),
+  bySlug:      (slug) => request(`/events/slug/${slug}/`, { auth: false }),
+  create:      (data) => request("/events/create/", { method: "POST", body: data }),
+  myEvents:    ()     => request("/events/my-events/"),
+  toggleSales: (id)   => request(`/events/${id}/toggle-sales/`, { method: "POST" }),
+  // A rejected event can be fixed and sent back for review.
+  resubmit:    (id)   => request(`/events/${id}/resubmit/`, { method: "POST" }),
 };
 
-export const ticketsAPI = {
-  myTickets: () =>
-    fetch(`${BASE_URL}/tickets/my/`, { headers: headers() }).then(r => r.json()),
-
-  purchase: async (data) => {
-    const res = await fetch(`${BASE_URL}/tickets/purchase/`, {
-      method: "POST",
-      headers: headers(),
-      body: JSON.stringify(data),
-    });
-    const json = await res.json();
-    return { ...json, _status: res.status };
-  },
-
-  transfer: (data) =>
-    fetch(`${BASE_URL}/tickets/transfer/`, {
-      method: "POST",
-      headers: headers(),
-      body: JSON.stringify(data),
-    }).then(r => r.json()),
-
-  verify: (data) =>
-    fetch(`${BASE_URL}/tickets/verify/`, {
-      method: "POST",
-      headers: headers(),
-      body: JSON.stringify(data),
-    }).then(r => r.json()),
-
-  publicScan: (data) =>
-    fetch(`${BASE_URL}/tickets/scan/public/`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(data),
-    }).then(r => r.json()),
-
-  generateDoorCode: (eventId) =>
-    fetch(`${BASE_URL}/tickets/event/${eventId}/door-code/`, {
-      method: "POST",
-      headers: headers(),
-    }).then(r => r.json()),
-
-  doorStaffLogin: (code) =>
-    fetch(`${BASE_URL}/tickets/door-staff/login/`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ code }),
-    }).then(r => r.json()),
-
-  // ── Resale marketplace ────────────────────────────────────
-  resaleListings: () =>
-    fetch(`${BASE_URL}/tickets/resale/`, {
-      headers: headers(),
-    }).then(r => r.json()),
-
-  buyResale: async (data) => {
-    const res = await fetch(`${BASE_URL}/tickets/resale/buy/`, {
-      method: "POST",
-      headers: headers(),
-      body: JSON.stringify(data),
-    });
-    const json = await res.json();
-    return { ...json, _status: res.status };
-  },
-
-  listForResale: (data) =>
-    fetch(`${BASE_URL}/tickets/resale/list/`, {
-      method: "POST",
-      headers: headers(),
-      body: JSON.stringify(data),
-    }).then(r => r.json()),
-
-  cancelResale: (ticket_id) =>
-    fetch(`${BASE_URL}/tickets/resale/cancel/`, {
-      method: "POST",
-      headers: headers(),
-      body: JSON.stringify({ ticket_id }),
-    }).then(r => r.json()),
-
-  // ── Payment init ──────────────────────────────────────────
-  initializePayment: async (data) => {
-    const res = await fetch(`${BASE_URL}/payments/initialize/`, {
-      method: "POST",
-      headers: headers(),
-      body: JSON.stringify(data),
-    });
-    const json = await res.json();
-    return { ...json, _status: res.status };
-  },
-};
+// ═══════════════════════════════════════════════════════════════
+//  CHECKOUT
+//
+//  The server prices the order — we send what we want, never an amount.
+//    initialize({event_id, tier_id, quantity})  → { access_code, reference }
+//    Paystack collects
+//    verify(reference)                          → { state, tickets }
+//
+//  verify() can come back "pending" when Paystack hasn't finished. That is
+//  not an error: awaitTickets() keeps asking the order endpoint until the
+//  webhook lands, so a slow network never loses somebody's ticket.
+// ═══════════════════════════════════════════════════════════════
 
 export const paymentsAPI = {
-  wallet: () =>
-    fetch(`${BASE_URL}/payments/wallet/`, { headers: headers() }).then(r => r.json()),
-
-  withdraw: (data) =>
-    fetch(`${BASE_URL}/payments/withdraw/`, {
+  initialize: ({ event_id, tier_id, quantity, pay_with_credits }) =>
+    request("/payments/initialize/", {
       method: "POST",
-      headers: headers(),
-      body: JSON.stringify(data),
-    }).then(r => r.json()),
+      body: { event_id, quantity, ...(tier_id ? { tier_id } : {}), ...(pay_with_credits ? { pay_with_credits: true } : {}) },
+    }),
 
-  transactions: () =>
-    fetch(`${BASE_URL}/payments/transactions/`, { headers: headers() }).then(r => r.json()),
+  verify: (reference) => request("/payments/verify/", { method: "POST", body: { reference } }),
 
-  attendeeWallet: () =>
-    fetch(`${BASE_URL}/payments/attendee-wallet/`, { headers: headers() }).then(r => r.json()),
+  orderStatus: (reference) => request(`/payments/orders/${reference}/`),
 
-  attendeeWithdraw: (data) =>
-    fetch(`${BASE_URL}/payments/attendee-withdraw/`, {
+  // Poll until the payment is confirmed. Returns the same shape as verify().
+  awaitTickets: async (reference, { attempts = 10, delayMs = 3000 } = {}) => {
+    let last = await paymentsAPI.verify(reference);
+    if (last.state === "fulfilled" || last.state === "failed" || last.state === "sold_out") return last;
+    for (let i = 0; i < attempts; i++) {
+      await new Promise(r => setTimeout(r, delayMs));
+      const res = await paymentsAPI.orderStatus(reference);
+      if (res.ok && res.order?.status === "fulfilled") {
+        return { ...res, state: "fulfilled", tickets: res.tickets || [], count: (res.tickets || []).length, ok: true };
+      }
+      if (res.ok && ["failed", "cancelled", "expired", "refunded"].includes(res.order?.status)) {
+        return { ...res, state: "failed", message: "Payment was not completed." };
+      }
+      last = res;
+    }
+    return { ...last, state: "pending", message: "Payment received — your ticket will appear in My Tickets shortly." };
+  },
+
+  // Organizer earnings (ledger-backed; same shape the wallet screen already reads)
+  wallet:       () => request("/payments/wallet/"),
+  withdraw:     (data) => request("/payments/withdraw/", { method: "POST", body: data }),
+  transactions: () => request("/payments/transactions/"),
+
+  // Attendee Master Events Credits. Closed loop — spendable, not withdrawable.
+  attendeeWallet: () => request("/payments/attendee-wallet/"),
+};
+
+// ═══════════════════════════════════════════════════════════════
+//  RESALE
+// ═══════════════════════════════════════════════════════════════
+
+// The marketplace moved to its own app and the row shape changed. Normalising
+// here keeps every existing screen working off the field names it already uses.
+const normaliseListing = (l) => ({
+  ...l,
+  listing_id:     l.id,
+  ticket_id:      l.ticket_id,
+  resale_price:   parseFloat(l.price),
+  original_price: parseFloat(l.original_price),
+  seller:         l.seller,
+  is_transfer:    true,
+});
+
+export const resaleAPI = {
+  listings: async (eventId) => {
+    const data = await request(`/resale/${eventId ? `?event_id=${eventId}` : ""}`, { auth: !!getToken() });
+    return Array.isArray(data) ? data.map(normaliseListing) : [];
+  },
+
+  mine: async () => {
+    const data = await request("/resale/mine/");
+    return Array.isArray(data) ? data.map(normaliseListing) : [];
+  },
+
+  // What the seller actually receives after the platform fee.
+  quote: (price) => request(`/resale/quote/?price=${encodeURIComponent(price)}`, { auth: false }),
+
+  list:   ({ ticket_id, price }) => request("/resale/list/", { method: "POST", body: { ticket_id, price } }),
+  cancel: (listingId) => request(`/resale/${listingId}/cancel/`, { method: "POST" }),
+
+  // Server prices it from the listing — we only say which listing and how we pay.
+  checkout: (listingId, { pay_with_credits } = {}) =>
+    request(`/resale/${listingId}/checkout/`, {
       method: "POST",
-      headers: headers(),
-      body: JSON.stringify(data),
-    }).then(r => r.json()),
+      body: pay_with_credits ? { pay_with_credits: true } : {},
+    }),
+};
+
+// ═══════════════════════════════════════════════════════════════
+//  TICKETS
+// ═══════════════════════════════════════════════════════════════
+
+export const ticketsAPI = {
+  myTickets:    () => request("/tickets/my/"),
+  transfer:     (data) => request("/tickets/transfer/", { method: "POST", body: data }),
+  registerFree: (data) => request("/tickets/register-free/", { method: "POST", body: data }),
+  publicScan:   (data) => request("/tickets/scan/public/", { method: "POST", body: data, auth: false }),
+  publicVerify: (ticketId) => request(`/tickets/verify/${ticketId}/`, { auth: false }),
+  eventTickets: (eventId) => request(`/tickets/event/${eventId}/`),
+  platformStats:() => request("/tickets/platform-stats/", { auth: false }),
+
+  // Kept so older call sites still resolve. Both now run through the order flow.
+  resaleListings: () => resaleAPI.listings(),
+  listForResale:  ({ ticket_id, resale_price, price }) => resaleAPI.list({ ticket_id, price: resale_price ?? price }),
+};
+
+// ═══════════════════════════════════════════════════════════════
+//  DOOR SCANNING
+//
+//  Signing in with a door code returns a scan token. Every scan must carry
+//  it as X-Scan-Token — a logged-in account is no longer enough to admit
+//  somebody, which is the point.
+// ═══════════════════════════════════════════════════════════════
+
+const SCAN_TOKEN_KEY = "me_scan_token";
+const SCAN_EVENT_KEY = "me_scan_event";
+
+export const scanAPI = {
+  getToken:   () => { try { return localStorage.getItem(SCAN_TOKEN_KEY); } catch { return null; } },
+  getEventId: () => { try { return JSON.parse(localStorage.getItem(SCAN_EVENT_KEY) || "null")?.event_id ?? null; } catch { return null; } },
+  getSession: () => { try { return JSON.parse(localStorage.getItem(SCAN_EVENT_KEY) || "null"); } catch { return null; } },
+
+  login: async (code) => {
+    const res = await request("/scanning/login/", { method: "POST", body: { code, device_label: navigator.userAgent.slice(0, 100) }, auth: false });
+    if (res.ok && res.scan_token) {
+      try {
+        localStorage.setItem(SCAN_TOKEN_KEY, res.scan_token);
+        localStorage.setItem(SCAN_EVENT_KEY, JSON.stringify({
+          event_id: res.event_id, event_name: res.event_name,
+          event_date: res.event_date, venue: res.venue, expires_at: res.expires_at,
+        }));
+      } catch { /* private mode — the token still works for this session */ }
+    }
+    return res;
+  },
+
+  logout: async () => {
+    const token = scanAPI.getToken();
+    if (token) await request("/scanning/logout/", { method: "POST", auth: false, extraHeaders: { "X-Scan-Token": token } });
+    try { localStorage.removeItem(SCAN_TOKEN_KEY); localStorage.removeItem(SCAN_EVENT_KEY); } catch { /* ignore */ }
+  },
+
+  // Works two ways: a door-code device (scan token) or an organizer / assigned
+  // staff member signed in normally (JWT + event_id).
+  scan: (qr_data, eventId) => {
+    const token = scanAPI.getToken();
+    const event_id = eventId ?? scanAPI.getEventId();
+    return request("/scanning/scan/", {
+      method: "POST",
+      body: { qr_data, ...(event_id ? { event_id } : {}) },
+      auth: !token,
+      extraHeaders: token ? { "X-Scan-Token": token } : undefined,
+    });
+  },
+
+  myEvents:      () => request("/scanning/my-events/"),
+  stats:         (eventId) => request(`/scanning/events/${eventId}/stats/`),
+  logs:          (eventId, result) => request(`/scanning/events/${eventId}/logs/${result ? `?result=${result}` : ""}`),
+  generateCode:  (eventId, body = {}) => request(`/scanning/events/${eventId}/door-code/`, { method: "POST", body }),
+  doorCodes:     (eventId) => request(`/scanning/events/${eventId}/door-codes/`),
+  staff:         (eventId) => request(`/scanning/events/${eventId}/staff/`),
+  addStaff:      (eventId, email, role = "scanner") => request(`/scanning/events/${eventId}/staff/`, { method: "POST", body: { email, role } }),
+  removeStaff:   (eventId, staffId) => request(`/scanning/events/${eventId}/staff/${staffId}/`, { method: "DELETE" }),
+};
+
+// ═══════════════════════════════════════════════════════════════
+//  ORGANIZER
+// ═══════════════════════════════════════════════════════════════
+
+export const organizersAPI = {
+  profile:            () => request("/organizers/me/"),
+  updateProfile:      (data) => request("/organizers/me/", { method: "PATCH", body: data }),
+  submitVerification: (data) => request("/organizers/me/submit-verification/", { method: "POST", body: data }),
+  payoutAccounts:     () => request("/organizers/me/payout-accounts/"),
+  addPayoutAccount:   (data) => request("/organizers/me/payout-accounts/", { method: "POST", body: data }),
+  setDefaultAccount:  (id) => request(`/organizers/me/payout-accounts/${id}/`, { method: "POST" }),
+  removeAccount:      (id) => request(`/organizers/me/payout-accounts/${id}/`, { method: "DELETE" }),
+  banks:              (type) => request(`/organizers/banks/${type ? `?type=${type}` : ""}`),
+  publicProfile:      (id) => request(`/organizers/${id}/`, { auth: false }),
+};
+
+export const ledgerAPI = {
+  earnings:      () => request("/ledger/earnings/"),
+  settlements:   (eventId) => request(`/ledger/settlements/${eventId ? `?event_id=${eventId}` : ""}`),
+  payouts:       () => request("/ledger/payouts/"),
+  requestPayout: (amount, payout_account_id) =>
+    request("/ledger/payouts/", { method: "POST", body: { amount, ...(payout_account_id ? { payout_account_id } : {}) } }),
+  credits:       () => request("/ledger/credits/"),
+};
+
+// ═══════════════════════════════════════════════════════════════
+//  REFUNDS + NOTIFICATIONS
+// ═══════════════════════════════════════════════════════════════
+
+export const refundsAPI = {
+  policy:   (eventId) => request(`/refunds/events/${eventId}/policy/`, { auth: false }),
+  request:  (data) => request("/refunds/request/", { method: "POST", body: data }),
+  mine:     () => request("/refunds/mine/"),
+  organizer:(eventId) => request(`/refunds/organizer/${eventId ? `?event_id=${eventId}` : ""}`),
+  cancelEvent: (eventId, reason) => request(`/refunds/events/${eventId}/cancel/`, { method: "POST", body: { reason } }),
+};
+
+export const notificationsAPI = {
+  list:           (unreadOnly) => request(`/notifications/${unreadOnly ? "?unread=true" : ""}`),
+  unreadCount:    () => request("/notifications/unread-count/"),
+  markRead:       (ids) => request("/notifications/read/", { method: "POST", body: ids ? { ids } : {} }),
+  preferences:    () => request("/notifications/preferences/"),
+  setPreferences: (data) => request("/notifications/preferences/", { method: "PATCH", body: data }),
+};
+
+// ═══════════════════════════════════════════════════════════════
+//  ADMIN
+// ═══════════════════════════════════════════════════════════════
+
+export const adminAPI = {
+  // otp is only needed once the admin has enrolled an authenticator app.
+  login: (email, password, otp) =>
+    request("/admin/login/", { method: "POST", body: { email, password, ...(otp ? { otp } : {}) }, auth: false }),
+
+  overview:      () => request("/admin/overview/"),
+  events:        (status, search) => request(`/admin/events/?status=${status || ""}&search=${encodeURIComponent(search || "")}`),
+  eventDetail:   (id) => request(`/admin/events/${id}/`),
+  approveEvent:  (id, notes) => request(`/admin/events/${id}/approve/`, { method: "POST", body: { notes } }),
+  rejectEvent:   (id, reason) => request(`/admin/events/${id}/reject/`, { method: "POST", body: { reason } }),
+  suspendEvent:  (id, reason) => request(`/admin/events/${id}/suspend/`, { method: "POST", body: { reason } }),
+  reinstateEvent:(id, reason) => request(`/admin/events/${id}/reinstate/`, { method: "POST", body: { reason } }),
+
+  organizers:    () => request("/admin/organizers/"),
+  users:         (params = "") => request(`/admin/users/${params}`),
+  userDetail:    (id) => request(`/admin/users/${id}/`),
+  suspendUser:   (id, reason) => request(`/admin/users/${id}/suspend/`, { method: "POST", body: { reason } }),
+
+  orders:        (params = "") => request(`/admin/orders/${params}`),
+  orderDetail:   (ref) => request(`/admin/orders/${ref}/`),
+  payments:      (params = "") => request(`/admin/payments/${params}`),
+  webhooks:      (params = "") => request(`/admin/webhooks/${params}`),
+  replayWebhook: (id) => request(`/admin/webhooks/${id}/replay/`, { method: "POST" }),
+  transactions:  () => request("/admin/transactions/"),
+  ticketHolders: (search) => request(`/admin/ticket-holders/${search ? `?search=${encodeURIComponent(search)}` : ""}`),
+  liveActivity:  () => request("/admin/live-activity/"),
+  auditLogs:     (params = "") => request(`/admin/audit-logs/${params}`),
+  settings:      () => request("/admin/settings/"),
+  setSetting:    (key, value, reason) => request("/admin/settings/", { method: "POST", body: { key, value, reason } }),
+
+  mfaStatus:  () => request("/admin/mfa/status/"),
+  mfaSetup:   () => request("/admin/mfa/setup/", { method: "POST" }),
+  mfaConfirm: (code) => request("/admin/mfa/confirm/", { method: "POST", body: { code } }),
+
+  // Organizer verification queue
+  organizerQueue:     (status) => request(`/organizers/admin/?status=${status || ""}`),
+  verifyOrganizer:    (id, notes) => request(`/organizers/admin/${id}/verify/`, { method: "POST", body: { notes } }),
+  rejectOrganizer:    (id, reason) => request(`/organizers/admin/${id}/reject/`, { method: "POST", body: { reason } }),
+  suspendOrganizer:   (id, reason) => request(`/organizers/admin/${id}/suspend/`, { method: "POST", body: { reason } }),
+  reinstateOrganizer: (id, reason) => request(`/organizers/admin/${id}/reinstate/`, { method: "POST", body: { reason } }),
+
+  // Money
+  ledgerOverview: () => request("/ledger/admin/overview/"),
+  ledgerEntries:  (params = "") => request(`/ledger/admin/entries/${params}`),
+  adminPayouts:   (status) => request(`/ledger/admin/payouts/${status ? `?status=${status}` : ""}`),
+  markPayoutPaid: (id, provider_reference, note) =>
+    request(`/ledger/admin/payouts/${id}/mark-paid/`, { method: "POST", body: { provider_reference, note } }),
+  markPayoutFailed: (id, reason) => request(`/ledger/admin/payouts/${id}/mark-failed/`, { method: "POST", body: { reason } }),
+  settlements:    (params = "") => request(`/ledger/admin/settlements/${params}`),
+  reconcile:      () => request("/ledger/admin/reconcile/", { method: "POST" }),
+  issues:         (status) => request(`/ledger/admin/issues/${status ? `?status=${status}` : ""}`),
+
+  // Refunds
+  refunds:       (status) => request(`/refunds/admin/?status=${status || "open"}`),
+  approveRefund: (id, notes, method) => request(`/refunds/admin/${id}/approve/`, { method: "POST", body: { notes, method } }),
+  rejectRefund:  (id, reason) => request(`/refunds/admin/${id}/reject/`, { method: "POST", body: { reason } }),
+  retryRefund:   (id) => request(`/refunds/admin/${id}/retry/`, { method: "POST" }),
+
+  // NFT
+  nftStats:   () => request("/nft/admin/stats/"),
+  nftList:    (status) => request(`/nft/admin/list/?status=${status || "failed"}`),
+  requeueMint:(ref) => request(`/nft/admin/${ref}/requeue/`, { method: "POST" }),
+};
+
+export default {
+  authAPI, eventsAPI, ticketsAPI, paymentsAPI, resaleAPI,
+  scanAPI, organizersAPI, ledgerAPI, refundsAPI, notificationsAPI, adminAPI,
 };

@@ -142,6 +142,34 @@ function PerforatedLine() {
   );
 }
 
+function ResendVerification() {
+  const currentUser = useStore(s => s.currentUser);
+  const [state, setState] = useState("idle");
+
+  const send = async () => {
+    if (!currentUser?.email) return;
+    setState("sending");
+    const { authAPI } = await import("../../api");
+    const res = await authAPI.resendVerification(currentUser.email);
+    setState(res?.ok ? "sent" : "failed");
+  };
+
+  if (state === "sent") {
+    return (
+      <div className="mt-2 text-[13px] text-emerald-700">
+        Sent. Check your inbox — the link expires in 24 hours.
+      </div>
+    );
+  }
+
+  return (
+    <button onClick={send} disabled={state === "sending"}
+      className="mt-2 text-[13px] font-medium text-red-700 underline underline-offset-2 disabled:opacity-60">
+      {state === "sending" ? "Sending…" : state === "failed" ? "Could not send — tap to retry" : "Resend the verification email"}
+    </button>
+  );
+}
+
 function PremiumTicket({ ev, ownerName, qrSrc, qrLoaded, qrError, refreshing, setQrLoaded, setQrError, timeLeft, isExpiringSoon, progressColor, ticketId, txHash, tokenId, status, quantity, tierName }) {
   const desktop  = isDesktop();
   const [showId, setShowId] = useState(false);
@@ -350,7 +378,7 @@ export function PaymentSuccess() {
                   <div key={t.ticket_id || i} className="flex items-center justify-between bg-brand-card border border-brand-hairline rounded-xl px-3.5 py-2.5">
                     <span className="font-mono text-xs text-brand-text truncate">{String(t.ticket_id || "").slice(0, 16)}</span>
                     <span className={`text-xs font-medium shrink-0 ml-2 ${t.nft_tx_hash ? "text-emerald-700" : "text-brand-muted"}`}>
-                      {t.nft_tx_hash ? `NFT #${t.nft_token_id ?? "MINTED"}` : "Minting"}
+                      {t.nft_tx_hash ? `NFT #${t.nft_token_id ?? "✓"}` : "Minting…"}
                     </span>
                   </div>
                 ))}
@@ -579,8 +607,13 @@ export function Checkout() {
           <AnimatePresence>
             {payError && (
               <motion.div initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
-                className="flex items-start gap-2 bg-red-50 border border-red-100 rounded-xl px-4 py-3 mb-4 text-red-600 text-[13px] leading-relaxed">
-                <WarningCircle size={14} weight="light" className="shrink-0 mt-0.5" /> {payError}
+                className="bg-red-50 border border-red-100 rounded-xl px-4 py-3 mb-4 text-red-600 text-[13px] leading-relaxed">
+                <div className="flex items-start gap-2">
+                  <WarningCircle size={14} weight="light" className="shrink-0 mt-0.5" /> {payError}
+                </div>
+                {/* The message used to end with "request a new one" and give the
+                    buyer nothing to press. This is that control. */}
+                {/verify|confirm your email/i.test(payError) && <ResendVerification />}
               </motion.div>
             )}
           </AnimatePresence>

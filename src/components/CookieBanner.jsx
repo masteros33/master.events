@@ -1,25 +1,49 @@
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Cookie } from "lucide-react";
+import { Cookie } from "@phosphor-icons/react";
 
-const COOKIE_KEY = "me_cookie_consent";
+const CONSENT_KEY = "me_cookie_consent";
+
+// Consent has to survive in an in-app browser — most of our traffic arrives
+// from a WhatsApp or Gmail webview, and some of those refuse localStorage
+// outright. Every read and write is therefore guarded, and a cookie backs the
+// value up. Previously `localStorage.setItem` threw before `setVisible(false)`
+// ran, so tapping Accept did nothing and the banner sat over the page for the
+// whole session, on every screen.
+
+function readConsent() {
+  try {
+    const v = localStorage.getItem(CONSENT_KEY);
+    if (v) return v;
+  } catch { /* storage blocked */ }
+  try {
+    const m = document.cookie.match(/(^| )me_cookie_consent=([^;]+)/);
+    return m ? decodeURIComponent(m[2]) : null;
+  } catch { return null; }
+}
+
+function writeConsent(value) {
+  try { localStorage.setItem(CONSENT_KEY, value); } catch { /* storage blocked */ }
+  try {
+    const expires = new Date(Date.now() + 365 * 864e5).toUTCString();
+    document.cookie = `${CONSENT_KEY}=${encodeURIComponent(value)};expires=${expires};path=/;SameSite=Lax`;
+  } catch { /* nothing left to try */ }
+}
 
 export default function CookieBanner() {
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
-    const consent = localStorage.getItem(COOKIE_KEY);
-    if (!consent) setTimeout(() => setVisible(true), 1200);
+    if (readConsent()) return;
+    const t = setTimeout(() => setVisible(true), 1200);
+    return () => clearTimeout(t);
   }, []);
 
-  const accept = () => {
-    localStorage.setItem(COOKIE_KEY, "all");
+  // Dismiss first, persist second. If persistence fails the banner still goes
+  // away for this session rather than becoming impossible to get rid of.
+  const choose = (value) => {
     setVisible(false);
-  };
-
-  const decline = () => {
-    localStorage.setItem(COOKIE_KEY, "essential");
-    setVisible(false);
+    writeConsent(value);
   };
 
   return (
@@ -29,31 +53,32 @@ export default function CookieBanner() {
           initial={{ y: 100, opacity: 0 }}
           animate={{ y: 0,   opacity: 1 }}
           exit={{   y: 100, opacity: 0 }}
-          transition={{ type: "spring", stiffness: 380, damping: 36 }}
-          className="fixed bottom-4 left-4 right-4 mx-auto max-w-[480px] w-auto bg-brand-card border border-gray-100 rounded-2xl shadow-sm p-4 z-[9999] flex items-center gap-3.5 box-border font-sans">
+          transition={{ duration: 0.18, ease: "easeOut" }}
+          role="dialog"
+          aria-label="Cookie preferences"
+          className="fixed left-4 right-4 mx-auto max-w-[480px] w-auto bg-brand-card border border-brand-hairline rounded-2xl p-4 z-[9999] flex items-center gap-3.5 box-border font-sans"
+          style={{ bottom: "calc(1rem + env(safe-area-inset-bottom))" }}>
 
-          <div className="w-9 h-9 rounded-full bg-pastel-orange flex items-center justify-center shrink-0">
-            <Cookie size={17} strokeWidth={1.75} className="text-brand-orange" />
+          <div className="w-9 h-9 rounded-full bg-brand-canvas border border-brand-hairline flex items-center justify-center shrink-0">
+            <Cookie size={18} weight="light" className="text-brand-muted" />
           </div>
 
           <div className="flex-1 min-w-0">
-            <div className="text-[13px] font-bold text-brand-text mb-0.5">
-              We use cookies
-            </div>
-            <div className="text-[11px] text-brand-muted leading-relaxed">
+            <div className="text-[13px] font-medium text-brand-text mb-0.5">We use cookies</div>
+            <div className="text-xs text-brand-muted leading-relaxed">
               Essential cookies keep the app working. Analytics help us improve.
             </div>
           </div>
 
           <div className="flex flex-col gap-1.5 shrink-0">
-            <motion.button whileTap={{ scale: 0.94 }} onClick={accept}
-              className="px-3.5 py-1.5 rounded-full bg-brand-orange hover:bg-brand-orange-hover text-white text-xs font-bold whitespace-nowrap transition-colors">
-              Accept All
-            </motion.button>
-            <motion.button whileTap={{ scale: 0.94 }} onClick={decline}
-              className="px-3 py-1.5 rounded-full bg-transparent border border-gray-200 text-brand-muted text-xs font-semibold whitespace-nowrap hover:border-gray-300 transition-colors">
+            <button onClick={() => choose("all")}
+              className="px-3.5 py-1.5 rounded-full bg-brand-accent hover:bg-brand-accent-hover text-white text-xs font-medium whitespace-nowrap transition-colors">
+              Accept all
+            </button>
+            <button onClick={() => choose("essential")}
+              className="px-3 py-1.5 rounded-full border border-brand-hairline text-brand-muted text-xs font-medium whitespace-nowrap transition-colors">
               Essential
-            </motion.button>
+            </button>
           </div>
         </motion.div>
       )}

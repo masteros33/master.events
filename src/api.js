@@ -37,6 +37,8 @@ export const authAPI = {
   register: (data) => request("/auth/register/", { method: "POST", body: data, auth: false }),
   login:    (data) => request("/auth/login/",    { method: "POST", body: data, auth: false }),
   me:       ()     => request("/auth/me/"),
+  resendVerification: (email) =>
+    request("/auth/resend-verification/", { method: "POST", body: { email }, auth: false }),
 };
 
 export const eventsAPI = {
@@ -268,68 +270,83 @@ export const notificationsAPI = {
 //  ADMIN
 // ═══════════════════════════════════════════════════════════════
 
+// The admin portal keeps its own session under `admin_access_token` — a
+// super admin can be signed in as themselves and as an admin at the same time,
+// and the admin token is the one that carries the `mfa` claim. Every admin call
+// goes out with that token, never the attendee one.
+const adminToken = () => {
+  try { return localStorage.getItem("admin_access_token"); } catch { return null; }
+};
+const arequest = (path, opts = {}) => {
+  const t = adminToken();
+  return request(path, {
+    ...opts,
+    extraHeaders: { ...(opts.extraHeaders || {}), ...(t ? { Authorization: `Bearer ${t}` } : {}) },
+  });
+};
+
 export const adminAPI = {
   // otp is only needed once the admin has enrolled an authenticator app.
   login: (email, password, otp) =>
     request("/admin/login/", { method: "POST", body: { email, password, ...(otp ? { otp } : {}) }, auth: false }),
 
-  overview:      () => request("/admin/overview/"),
-  events:        (status, search) => request(`/admin/events/?status=${status || ""}&search=${encodeURIComponent(search || "")}`),
-  eventDetail:   (id) => request(`/admin/events/${id}/`),
-  approveEvent:  (id, notes) => request(`/admin/events/${id}/approve/`, { method: "POST", body: { notes } }),
-  rejectEvent:   (id, reason) => request(`/admin/events/${id}/reject/`, { method: "POST", body: { reason } }),
-  suspendEvent:  (id, reason) => request(`/admin/events/${id}/suspend/`, { method: "POST", body: { reason } }),
-  reinstateEvent:(id, reason) => request(`/admin/events/${id}/reinstate/`, { method: "POST", body: { reason } }),
+  overview:      () => arequest("/admin/overview/"),
+  events:        (status, search) => arequest(`/admin/events/?status=${status || ""}&search=${encodeURIComponent(search || "")}`),
+  eventDetail:   (id) => arequest(`/admin/events/${id}/`),
+  approveEvent:  (id, notes) => arequest(`/admin/events/${id}/approve/`, { method: "POST", body: { notes } }),
+  rejectEvent:   (id, reason) => arequest(`/admin/events/${id}/reject/`, { method: "POST", body: { reason } }),
+  suspendEvent:  (id, reason) => arequest(`/admin/events/${id}/suspend/`, { method: "POST", body: { reason } }),
+  reinstateEvent:(id, reason) => arequest(`/admin/events/${id}/reinstate/`, { method: "POST", body: { reason } }),
 
-  organizers:    () => request("/admin/organizers/"),
-  users:         (params = "") => request(`/admin/users/${params}`),
-  userDetail:    (id) => request(`/admin/users/${id}/`),
-  suspendUser:   (id, reason) => request(`/admin/users/${id}/suspend/`, { method: "POST", body: { reason } }),
+  organizers:    () => arequest("/admin/organizers/"),
+  users:         (params = "") => arequest(`/admin/users/${params}`),
+  userDetail:    (id) => arequest(`/admin/users/${id}/`),
+  suspendUser:   (id, reason) => arequest(`/admin/users/${id}/suspend/`, { method: "POST", body: { reason } }),
 
-  orders:        (params = "") => request(`/admin/orders/${params}`),
-  orderDetail:   (ref) => request(`/admin/orders/${ref}/`),
-  payments:      (params = "") => request(`/admin/payments/${params}`),
-  webhooks:      (params = "") => request(`/admin/webhooks/${params}`),
-  replayWebhook: (id) => request(`/admin/webhooks/${id}/replay/`, { method: "POST" }),
-  transactions:  () => request("/admin/transactions/"),
-  ticketHolders: (search) => request(`/admin/ticket-holders/${search ? `?search=${encodeURIComponent(search)}` : ""}`),
-  liveActivity:  () => request("/admin/live-activity/"),
-  auditLogs:     (params = "") => request(`/admin/audit-logs/${params}`),
-  settings:      () => request("/admin/settings/"),
-  setSetting:    (key, value, reason) => request("/admin/settings/", { method: "POST", body: { key, value, reason } }),
+  orders:        (params = "") => arequest(`/admin/orders/${params}`),
+  orderDetail:   (ref) => arequest(`/admin/orders/${ref}/`),
+  payments:      (params = "") => arequest(`/admin/payments/${params}`),
+  webhooks:      (params = "") => arequest(`/admin/webhooks/${params}`),
+  replayWebhook: (id) => arequest(`/admin/webhooks/${id}/replay/`, { method: "POST" }),
+  transactions:  () => arequest("/admin/transactions/"),
+  ticketHolders: (search) => arequest(`/admin/ticket-holders/${search ? `?search=${encodeURIComponent(search)}` : ""}`),
+  liveActivity:  () => arequest("/admin/live-activity/"),
+  auditLogs:     (params = "") => arequest(`/admin/audit-logs/${params}`),
+  settings:      () => arequest("/admin/settings/"),
+  setSetting:    (key, value, reason) => arequest("/admin/settings/", { method: "POST", body: { key, value, reason } }),
 
-  mfaStatus:  () => request("/admin/mfa/status/"),
-  mfaSetup:   () => request("/admin/mfa/setup/", { method: "POST" }),
-  mfaConfirm: (code) => request("/admin/mfa/confirm/", { method: "POST", body: { code } }),
+  mfaStatus:  () => arequest("/admin/mfa/status/"),
+  mfaSetup:   () => arequest("/admin/mfa/setup/", { method: "POST" }),
+  mfaConfirm: (code) => arequest("/admin/mfa/confirm/", { method: "POST", body: { code } }),
 
   // Organizer verification queue
-  organizerQueue:     (status) => request(`/organizers/admin/?status=${status || ""}`),
-  verifyOrganizer:    (id, notes) => request(`/organizers/admin/${id}/verify/`, { method: "POST", body: { notes } }),
-  rejectOrganizer:    (id, reason) => request(`/organizers/admin/${id}/reject/`, { method: "POST", body: { reason } }),
-  suspendOrganizer:   (id, reason) => request(`/organizers/admin/${id}/suspend/`, { method: "POST", body: { reason } }),
-  reinstateOrganizer: (id, reason) => request(`/organizers/admin/${id}/reinstate/`, { method: "POST", body: { reason } }),
+  organizerQueue:     (status) => arequest(`/organizers/admin/?status=${status || ""}`),
+  verifyOrganizer:    (id, notes) => arequest(`/organizers/admin/${id}/verify/`, { method: "POST", body: { notes } }),
+  rejectOrganizer:    (id, reason) => arequest(`/organizers/admin/${id}/reject/`, { method: "POST", body: { reason } }),
+  suspendOrganizer:   (id, reason) => arequest(`/organizers/admin/${id}/suspend/`, { method: "POST", body: { reason } }),
+  reinstateOrganizer: (id, reason) => arequest(`/organizers/admin/${id}/reinstate/`, { method: "POST", body: { reason } }),
 
   // Money
-  ledgerOverview: () => request("/ledger/admin/overview/"),
-  ledgerEntries:  (params = "") => request(`/ledger/admin/entries/${params}`),
-  adminPayouts:   (status) => request(`/ledger/admin/payouts/${status ? `?status=${status}` : ""}`),
+  ledgerOverview: () => arequest("/ledger/admin/overview/"),
+  ledgerEntries:  (params = "") => arequest(`/ledger/admin/entries/${params}`),
+  adminPayouts:   (status) => arequest(`/ledger/admin/payouts/${status ? `?status=${status}` : ""}`),
   markPayoutPaid: (id, provider_reference, note) =>
-    request(`/ledger/admin/payouts/${id}/mark-paid/`, { method: "POST", body: { provider_reference, note } }),
-  markPayoutFailed: (id, reason) => request(`/ledger/admin/payouts/${id}/mark-failed/`, { method: "POST", body: { reason } }),
-  settlements:    (params = "") => request(`/ledger/admin/settlements/${params}`),
-  reconcile:      () => request("/ledger/admin/reconcile/", { method: "POST" }),
-  issues:         (status) => request(`/ledger/admin/issues/${status ? `?status=${status}` : ""}`),
+    arequest(`/ledger/admin/payouts/${id}/mark-paid/`, { method: "POST", body: { provider_reference, note } }),
+  markPayoutFailed: (id, reason) => arequest(`/ledger/admin/payouts/${id}/mark-failed/`, { method: "POST", body: { reason } }),
+  settlements:    (params = "") => arequest(`/ledger/admin/settlements/${params}`),
+  reconcile:      () => arequest("/ledger/admin/reconcile/", { method: "POST" }),
+  issues:         (status) => arequest(`/ledger/admin/issues/${status ? `?status=${status}` : ""}`),
 
   // Refunds
-  refunds:       (status) => request(`/refunds/admin/?status=${status || "open"}`),
-  approveRefund: (id, notes, method) => request(`/refunds/admin/${id}/approve/`, { method: "POST", body: { notes, method } }),
-  rejectRefund:  (id, reason) => request(`/refunds/admin/${id}/reject/`, { method: "POST", body: { reason } }),
-  retryRefund:   (id) => request(`/refunds/admin/${id}/retry/`, { method: "POST" }),
+  refunds:       (status) => arequest(`/refunds/admin/?status=${status || "open"}`),
+  approveRefund: (id, notes, method) => arequest(`/refunds/admin/${id}/approve/`, { method: "POST", body: { notes, method } }),
+  rejectRefund:  (id, reason) => arequest(`/refunds/admin/${id}/reject/`, { method: "POST", body: { reason } }),
+  retryRefund:   (id) => arequest(`/refunds/admin/${id}/retry/`, { method: "POST" }),
 
   // NFT
-  nftStats:   () => request("/nft/admin/stats/"),
-  nftList:    (status) => request(`/nft/admin/list/?status=${status || "failed"}`),
-  requeueMint:(ref) => request(`/nft/admin/${ref}/requeue/`, { method: "POST" }),
+  nftStats:   () => arequest("/nft/admin/stats/"),
+  nftList:    (status) => arequest(`/nft/admin/list/?status=${status || "failed"}`),
+  requeueMint:(ref) => arequest(`/nft/admin/${ref}/requeue/`, { method: "POST" }),
 };
 
 export default {

@@ -76,6 +76,59 @@ const inputClass = (err) =>
   } focus:ring-2 focus:ring-brand-accent/20`;
 const labelClass = "text-xs font-semibold text-brand-muted mb-1.5 block uppercase tracking-wide";
 
+// Lets the organizer say which part of the poster matters. Every card crops
+// with object-cover, so on a tall poster something always gets cut; this
+// decides what survives. Click or drag the preview to move the marker — the
+// value is a CSS object-position, and the uploaded image is never altered.
+function ImageFocusPicker({ src, value, onChange, height = "h-40" }) {
+  const ref = React.useRef(null);
+  const [dragging, setDragging] = React.useState(false);
+
+  const [fx, fy] = (value || "50% 50%").split(" ").map(v => parseInt(v, 10) || 50);
+
+  const setFromEvent = (e) => {
+    const box = ref.current?.getBoundingClientRect();
+    if (!box) return;
+    const point = e.touches?.[0] || e;
+    const x = Math.round(Math.min(100, Math.max(0, ((point.clientX - box.left) / box.width) * 100)));
+    const y = Math.round(Math.min(100, Math.max(0, ((point.clientY - box.top) / box.height) * 100)));
+    onChange(`${x}% ${y}%`);
+  };
+
+  const stop = (e) => { e.preventDefault(); e.stopPropagation(); };
+
+  return (
+    <div>
+      <div
+        ref={ref}
+        onClick={(e) => { stop(e); setFromEvent(e); }}
+        onPointerDown={(e) => { stop(e); setDragging(true); setFromEvent(e); }}
+        onPointerMove={(e) => { if (dragging) { stop(e); setFromEvent(e); } }}
+        onPointerUp={() => setDragging(false)}
+        onPointerLeave={() => setDragging(false)}
+        className={`relative w-full ${height} rounded-xl overflow-hidden cursor-crosshair select-none touch-none`}>
+        <img src={src} alt="Event cover" draggable={false}
+          className="w-full h-full object-cover block pointer-events-none"
+          style={{ objectPosition: `${fx}% ${fy}%` }} />
+        <span
+          className="absolute w-7 h-7 rounded-full border-2 border-white pointer-events-none"
+          style={{
+            left: `${fx}%`, top: `${fy}%`, transform: "translate(-50%, -50%)",
+            boxShadow: "0 0 0 1px rgba(15,23,42,.35)",
+          }} />
+      </div>
+      <div className="flex items-center justify-between mt-1.5">
+        <span className="text-xs text-brand-muted">Tap the part that must stay visible</span>
+        <button type="button"
+          onClick={(e) => { stop(e); onChange("50% 50%"); }}
+          className="text-xs font-medium text-brand-muted hover:text-brand-text">
+          Centre
+        </button>
+      </div>
+    </div>
+  );
+}
+
 function dlCSV(events) {
   if (!events.length) return;
   const rows = events.map(e => ({
@@ -145,7 +198,7 @@ function EventCard({ ev, onClick }) {
     <motion.div whileHover={{ y: -3 }} whileTap={{ scale: 0.98 }} onClick={onClick}
       className="bg-brand-card rounded-2xl border border-brand-hairline hover:shadow-[0_1px_2px_rgba(15,23,42,0.04)] transition-shadow overflow-hidden cursor-pointer min-w-[220px] w-full">
       <div className="h-[140px] relative overflow-hidden">
-        <img src={ev.image} alt={ev.name} onError={e => { e.target.src = catImg.other; }} className="w-full h-full object-cover object-top block" />
+        <img src={ev.image} alt={ev.name} onError={e => { e.target.src = catImg.other; }} className="w-full h-full object-cover block" style={{ objectPosition: ev?.image_focus || "50% 50%" }} />
 
         <div className="absolute top-2.5 left-2.5 flex gap-1.5">
           <span className="bg-brand-text text-white text-xs font-medium px-2 py-1 rounded-full">{ev.category.toUpperCase()}</span>
@@ -322,7 +375,7 @@ function EventRow({ ev, onClick }) {
     <motion.div whileHover={{ y: -1 }} whileTap={{ scale: 0.99 }} onClick={onClick}
       className={`bg-brand-card border rounded-2xl overflow-hidden cursor-pointer transition-shadow hover:shadow-[0_1px_2px_rgba(15,23,42,0.04)] flex ${tab() ? "flex-row" : "flex-col"} ${!ev.isApproved ? "border-amber-200" : "border-brand-hairline"}`}>
       <div className={`relative shrink-0 ${tab() ? "w-40 h-auto min-h-[80px]" : "w-full h-[120px]"}`}>
-        <img src={ev.image} alt={ev.name} onError={e=>{e.target.src=catImg.other}} className="w-full h-full object-cover object-top block" />
+        <img src={ev.image} alt={ev.name} onError={e=>{e.target.src=catImg.other}} className="w-full h-full object-cover block" style={{ objectPosition: ev?.image_focus || "50% 50%" }} />
         <div className="absolute top-2 left-2 flex gap-1">
           <span className="bg-brand-text text-white text-xs font-medium px-1.5 py-0.5 rounded">NFT</span>
           {isFree && <span className="bg-emerald-600 text-white text-xs font-medium px-1.5 py-0.5 rounded">FREE</span>}
@@ -1143,7 +1196,12 @@ export function AddEvent() {
                   <label htmlFor="ev-img" className="block p-7 bg-brand-canvas border-2 border-dashed border-brand-hairline rounded-xl text-center cursor-pointer">
                     {addEventForm.image?.startsWith("data:")||addEventForm.image?.startsWith("http") ? (
                       <>
-                        <img src={addEventForm.image} alt="preview" className="w-full h-40 object-cover object-top rounded-xl mb-2" />
+                        <div onClick={e => e.preventDefault()}>
+                          <ImageFocusPicker
+                            src={addEventForm.image}
+                            value={addEventForm.image_focus}
+                            onChange={v => setAddEventForm({ ...addEventForm, image_focus: v })} />
+                        </div>
                         <div className="flex items-center justify-center gap-1.5 text-emerald-700 text-[13px] font-semibold"><CheckCircle size={14} weight="light" /> Image ready — click to change</div>
                       </>
                     ) : (
@@ -1247,7 +1305,7 @@ export function OrganizerEventDetail() {
   });
   const copyCode = c => { navigator.clipboard?.writeText(c).catch(()=>{}); setCopiedCode(c); setTimeout(()=>setCopiedCode(null),2000); };
   const copyLink = () => { navigator.clipboard?.writeText(evUrl).catch(()=>{}); setCopiedLink(true); setTimeout(()=>setCopiedLink(false),2000); };
-  const startEdit = () => { setEditForm({name:ev.name,venue:ev.venue,date:ev.date,time:ev.time||"",price:ev.price,description:ev.description||"",image:ev.image||"",category:ev.category||"other",city:ev.city||"",totalTickets:ev.totalTickets,subtitle:ev.subtitle||"",currency:ev.currency||"GHS",country:ev.country||"Ghana"}); setEditing(true); };
+  const startEdit = () => { setEditForm({name:ev.name,venue:ev.venue,date:ev.date,time:ev.time||"",price:ev.price,description:ev.description||"",image:ev.image||"",image_focus:ev.image_focus||"50% 50%",category:ev.category||"other",city:ev.city||"",totalTickets:ev.totalTickets,subtitle:ev.subtitle||"",currency:ev.currency||"GHS",country:ev.country||"Ghana"}); setEditing(true); };
   const saveEdit  = () => { setViewingOrgEvent({...ev,...editForm,price:parseFloat(editForm.price),totalTickets:parseInt(editForm.totalTickets)||ev.totalTickets}); setEditing(false); };
 
   const sClass = { active:"text-emerald-700 bg-emerald-50", redeemed:"text-gray-600 bg-brand-hairline", resale:"text-red-600 bg-red-50", transferred:"text-blue-700 bg-blue-50" };
@@ -1308,7 +1366,13 @@ export function OrganizerEventDetail() {
                 <label htmlFor="edit-img" className="block p-4 bg-brand-card border-2 border-dashed border-brand-accent/30 rounded-xl text-center cursor-pointer">
                   {editForm.image ? (
                     <>
-                      <img src={editForm.image} alt="p" className="w-full h-28 object-cover object-top rounded-xl mb-1.5" />
+                      <div onClick={e => e.preventDefault()}>
+                        <ImageFocusPicker
+                          src={editForm.image}
+                          value={editForm.image_focus}
+                          onChange={v => setEditForm(f => ({ ...f, image_focus: v }))}
+                          height="h-28" />
+                      </div>
                       <div className="flex items-center justify-center gap-1 text-emerald-700 text-xs"><CheckCircle size={12} weight="light" /> Click to change</div>
                     </>
                   ) : (
@@ -1355,7 +1419,7 @@ export function OrganizerEventDetail() {
     <div className="bg-brand-canvas h-full overflow-y-auto font-sans" style={{ WebkitOverflowScrolling:"touch" }}>
       <div className="max-w-[900px] mx-auto">
         <div className={`relative ${isDesk ? "h-[220px]" : "h-[170px]"}`}>
-          <img src={cover} alt={ev.name} className="w-full h-full object-cover object-top" onError={e=>{e.target.src=catImg.other}} />
+          <img src={cover} alt={ev.name} className="w-full h-full object-cover" style={{ objectPosition: ev?.image_focus || "50% 50%" }} onError={e=>{e.target.src=catImg.other}} />
           <button onClick={() => setScreen("app")}
             className="absolute top-3 left-3.5 w-8 h-8 rounded-full bg-brand-card flex items-center justify-center text-brand-text">
             <ArrowLeft size={15} weight="light" />

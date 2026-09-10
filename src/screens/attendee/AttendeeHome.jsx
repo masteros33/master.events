@@ -230,7 +230,7 @@ export function EventCard({ ev, onClick, footer }) {
       <div className="relative overflow-hidden aspect-square">
         <img src={ev.image} alt={ev.name} onError={e => { e.target.src = categoryImages.other; }}
           loading="lazy" width="400" height="400"
-          className="w-full h-full object-cover block" />
+          className="w-full h-full object-cover block" style={{ objectPosition: ev?.image_focus || "50% 50%" }} />
 
         {hasTiers && (
           <span className="absolute top-2 left-2 bg-brand-text text-white text-xs font-medium px-2 py-1 rounded-full">
@@ -328,7 +328,7 @@ function EventDetailOverlay({ ev, onBack, onCheckout }) {
         <div className="flex-1 overflow-y-auto" style={{ WebkitOverflowScrolling: "touch" }}>
           <div className="relative h-[220px]">
             <img src={ev.image} alt={ev.name} onError={e => { e.target.src = categoryImages.other; }}
-              className="w-full h-full object-cover block" />
+              className="w-full h-full object-cover block" style={{ objectPosition: ev?.image_focus || "50% 50%" }} />
             <button onClick={onBack}
               className="absolute top-3.5 left-3.5 w-9 h-9 rounded-full bg-brand-card flex items-center justify-center text-brand-text">
               <ArrowLeft size={16} weight="light" />
@@ -405,7 +405,7 @@ function EventDetailOverlay({ ev, onBack, onCheckout }) {
         <div className="w-[45%] shrink-0 sticky top-6">
           <div className="rounded-2xl overflow-hidden border border-brand-hairline relative">
             <img src={ev.image} alt={ev.name} onError={e => { e.target.src = categoryImages.other; }}
-              className="w-full aspect-[4/3] object-cover block" />
+              className="w-full aspect-[4/3] object-cover block" style={{ objectPosition: ev?.image_focus || "50% 50%" }} />
             <span className="absolute top-3.5 left-3.5 flex items-center gap-1 bg-brand-text text-white text-xs font-medium px-2.5 py-1.5 rounded-full">
               <Link size={11} weight="light" /> NFT · POLYGON AMOY
             </span>

@@ -521,7 +521,8 @@ export function Checkout() {
           <div className="rounded-2xl overflow-hidden border border-brand-hairline mb-5">
             <div className="h-[120px] relative">
               {checkoutEvent.image
-                ? <img src={checkoutEvent.image} alt={checkoutEvent.name} className="w-full h-full object-cover object-top" />
+                ? <img src={checkoutEvent.image} alt={checkoutEvent.name} className="w-full h-full object-cover"
+                    style={{ objectPosition: checkoutEvent?.image_focus || "50% 50%" }} />
                 : <div className="w-full h-full bg-brand-accent" />
               }
               {selectedTier?.name && (

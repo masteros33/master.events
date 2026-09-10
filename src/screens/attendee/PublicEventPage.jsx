@@ -588,7 +588,7 @@ export default function PublicEventPage() {
       <div className={`max-w-[1100px] mx-auto ${isDesk ? "px-10 pt-7 pb-14" : "px-4 pt-4 pb-10"}`}>
 
         <div className={`rounded-2xl overflow-hidden border border-brand-hairline mb-6 relative ${isDesk ? "h-[360px]" : "h-[200px]"}`}>
-          <img src={cover} alt={event.name} className="w-full h-full object-cover object-top block"
+          <img src={cover} alt={event.name} className="w-full h-full object-cover block" style={{ objectPosition: event?.image_focus || "50% 50%" }}
             onError={e => { e.target.src = catImg.other; }} />
           <div className="absolute top-3.5 left-3.5 flex gap-1.5">
             <span className="bg-brand-accent text-white text-xs font-medium px-2.5 py-1 rounded-full">

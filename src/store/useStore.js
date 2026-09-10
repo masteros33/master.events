@@ -780,7 +780,12 @@ const useStore = create((set, get) => ({
         total_tickets: parseInt(addEventForm.totalTickets) || 100,
         sales_open:    true,
       };
-      if (addEventForm.image) payload.image = addEventForm.image;
+      if (addEventForm.image) {
+        payload.image = addEventForm.image;
+        // Only meaningful alongside an image, and only when the organizer
+        // actually moved the marker off centre.
+        if (addEventForm.image_focus) payload.image_focus = addEventForm.image_focus;
+      }
       if (Array.isArray(addEventForm.ticket_tiers) && addEventForm.ticket_tiers.length) {
         payload.ticket_tiers = addEventForm.ticket_tiers;
       }

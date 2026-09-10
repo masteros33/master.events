@@ -36,6 +36,14 @@ function removeCookie(name) {
   } catch {}
 }
 
+export function persistAuth(user, access, refresh) {
+  // The one way a signed-in session is written. The Google callback used to
+  // set access_token/refresh_token by hand and skip saveSession entirely, so
+  // `me_session` was never written and the next page load booted logged out.
+  saveTokens(access, refresh);
+  saveSession({ currentUser: user, role: user.role });
+}
+
 function saveSession(data) {
   try {
     const json = JSON.stringify(data);
@@ -260,7 +268,10 @@ const useStore = create((set, get) => ({
       console.log("Logout blacklist failed (non-critical):", e);
     }
     clearSession();
-    toast.success(message || "Logged out successfully");
+    // Callers sometimes wire this straight to onClick, which hands us a React
+    // synthetic event. Rendering that as a toast child crashes the app, so only
+    // a real string is ever used.
+    toast.success(typeof message === "string" && message ? message : "Logged out successfully");
     set({
       screen:      "home",
       currentUser: null,

@@ -1,6 +1,6 @@
 import React from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import useStore, { _setRestoringFromHistory, touchActivity } from "./store/useStore";
+import useStore, { _setRestoringFromHistory, persistAuth } from "./store/useStore";
 import PhoneFrame from "./components/PhoneFrame";
 import Login from "./screens/auth/Login";
 import { Signup, RoleSelect } from "./screens/auth/Signup";
@@ -443,7 +443,7 @@ function DesktopAppLayout() {
         </nav>
 
         <div className="p-2 border-t border-gray-100 shrink-0">
-          <motion.div whileTap={{ scale:0.9 }} onClick={handleLogout} title={collapsed?"Log Out":""}
+          <motion.div whileTap={{ scale:0.9 }} onClick={() => handleLogout()} title={collapsed?"Log Out":""}
             className={`flex items-center gap-2.5 rounded-xl cursor-pointer hover:bg-red-50 transition-colors
               ${collapsed ? "justify-center py-2.5" : "justify-start px-3 py-2.5"}`}>
             <LogOut size={16} className="text-red-600 shrink-0" />
@@ -511,10 +511,10 @@ export default function App() {
         .then(data => {
           window.history.replaceState({}, "", "/");
           if (data.tokens) {
-            localStorage.setItem("access_token", data.tokens.access);
-            localStorage.setItem("refresh_token", data.tokens.refresh);
-            touchActivity();
             const user = data.user;
+            // Same persistence path as email login. Writing only the tokens
+            // left `me_session` empty, so a refresh booted straight back out.
+            persistAuth(user, data.tokens.access, data.tokens.refresh);
             const firstTab = user.role === "organizer" ? "dashboard" : "home";
             const postAuthScreen = localStorage.getItem("post_auth_screen") || "app";
             localStorage.removeItem("post_auth_screen");

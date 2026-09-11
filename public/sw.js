@@ -1,7 +1,8 @@
-const CACHE = "me-v2";
+const CACHE = "me-v3";
+// index.html is deliberately NOT pre-cached. It names the content-hashed
+// bundles for one particular build, so serving a stale copy pins the visitor
+// to that build forever — new deploys never reach them.
 const STATIC = [
-  "/",
-  "/index.html",
   "/manifest.json",
 ];
 
@@ -74,7 +75,30 @@ self.addEventListener("fetch", e => {
     return;
   }
 
-  // Static assets — cache first
+  // The document itself — network first.
+  //
+  // This is the whole reason a deploy reaches anyone. index.html points at
+  // build-specific hashed filenames; caching it first meant a returning
+  // visitor kept being handed the old document, which asked for the old
+  // bundles, which were also cached. Every user stayed on whatever build they
+  // happened to see first. Cache is the offline fallback only.
+  if (e.request.mode === "navigate" || url.pathname === "/" || url.pathname.endsWith(".html")) {
+    e.respondWith(
+      fetch(e.request)
+        .then(res => {
+          if (res.ok) {
+            const clone = res.clone();
+            caches.open(CACHE).then(c => c.put("/index.html", clone));
+          }
+          return res;
+        })
+        .catch(() => caches.match("/index.html"))
+    );
+    return;
+  }
+
+  // Hashed build assets — cache first is correct here, because the filename
+  // changes whenever the contents change, so a cached copy can never be stale.
   e.respondWith(
     caches.match(e.request).then(cached => {
       if (cached) return cached;

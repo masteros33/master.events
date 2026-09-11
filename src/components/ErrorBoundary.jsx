@@ -1,29 +1,60 @@
 import React from "react";
 import { motion } from "framer-motion";
 import { Warning, Ticket } from "@phosphor-icons/react";
+import { looksLikeStaleBuild, recoverFromStaleBuild } from "../utils/staleBuild";
 
 export default class ErrorBoundary extends React.Component {
   constructor(props) {
     super(props);
-    this.state = { hasError: false, error: null, errorInfo: null };
+    this.state = { hasError: false, error: null, errorInfo: null, recovering: false };
   }
 
   static getDerivedStateFromError(error) {
-    return { hasError: true, error };
+    return { hasError: true, error, recovering: looksLikeStaleBuild(error) };
   }
 
   componentDidCatch(error, errorInfo) {
     this.setState({ errorInfo });
     // In production you'd send this to Sentry / LogRocket
     console.error("[ErrorBoundary caught]", error, errorInfo);
+
+    // Most crashes users actually see are a deploy landing under an open tab,
+    // not a bug in the screen. Those we fix without asking: clear the old
+    // build's caches and reload. If recovery has already been tried in this
+    // tab it returns false and the error screen stands.
+    if (looksLikeStaleBuild(error)) {
+      recoverFromStaleBuild().then(started => {
+        if (!started) this.setState({ recovering: false });
+      });
+    }
   }
 
   render() {
     if (!this.state.hasError) return this.props.children;
 
+    // A reload is already in flight — don't flash an error at someone whose
+    // page is about to replace itself.
+    if (this.state.recovering) {
+      return (
+        <div style={{
+          minHeight: "100vh",
+          background: "#080810",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+        }} />
+      );
+    }
+
     const reload = () => {
       this.setState({ hasError: false, error: null, errorInfo: null });
-      window.location.reload();
+      // Always tear the caches down first. If a bad build is what put the user
+      // here, a plain reload just serves it back to them.
+      // force: the user asked for this one, so the once-per-tab guard that
+      // stops automatic reload loops shouldn't stand in their way.
+      recoverFromStaleBuild({ force: true }).then(started => {
+        if (!started) window.location.reload();
+      });
     };
 
     return (

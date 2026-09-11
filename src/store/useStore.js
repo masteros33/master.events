@@ -865,7 +865,7 @@ const useStore = create((set, get) => ({
     // whenever the request failed and report success, so the organizer was
     // handed a code the server had never heard of and door staff were told it
     // did not exist. A credential the server did not issue is worthless.
-    const data = await scanAPI.generateCode(eventId);
+    const data = await scanAPI.generateCode(eventId, { max_uses: 1 });
     toast.dismiss(loadingToast);
     if (!data?.code) {
       toast.error(data?.error || "Could not generate a code. Please try again.");

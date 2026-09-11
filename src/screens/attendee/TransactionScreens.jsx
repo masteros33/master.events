@@ -170,7 +170,7 @@ function ResendVerification() {
   );
 }
 
-function PremiumTicket({ ev, ownerName, qrSrc, qrLoaded, qrError, refreshing, setQrLoaded, setQrError, timeLeft, isExpiringSoon, progressColor, ticketId, txHash, tokenId, status, quantity, tierName }) {
+function PremiumTicket({ ev, ownerName, qrSrc, qrLoaded, qrError, refreshing, setQrLoaded, onQrError, timeLeft, isExpiringSoon, progressColor, ticketId, txHash, tokenId, status, quantity, tierName }) {
   const desktop  = isDesktop();
   const [showId, setShowId] = useState(false);
   const TierIcon = tierIcon(tierName);
@@ -248,7 +248,7 @@ function PremiumTicket({ ev, ownerName, qrSrc, qrLoaded, qrError, refreshing, se
             </AnimatePresence>
             <div className={`p-2.5 bg-white rounded-2xl border-2 transition-colors ${isExpiringSoon ? "border-red-400" : "border-emerald-400"}`}>
               <img src={qrSrc} alt="QR Code"
-                onLoad={() => setQrLoaded(true)} onError={() => setQrError(true)}
+                onLoad={() => setQrLoaded(true)} onError={onQrError}
                 className="w-[140px] h-[140px] rounded-xl" style={{ display: qrError ? "none" : "block" }} />
               {qrError && (
                 <div className="w-[140px] h-[140px] flex flex-col items-center justify-center gap-2">
@@ -655,6 +655,7 @@ export function TicketView() {
   const [qrError,      setQrError]      = useState(false);
   const [refreshing,   setRefreshing]   = useState(false);
   const [showSecurity, setShowSecurity] = useState(false);
+  const dynamicQrRef = useRef(dynamicQR);
   const desktop = isDesktop();
 
   useEffect(() => {
@@ -663,11 +664,19 @@ export function TicketView() {
       const sLeft = 10 - (Math.floor(Date.now() / 1000) % 10);
       setTimeLeft(sLeft);
       if (sLeft === 10) {
-        setRefreshing(true); setQrLoaded(false);
+        setRefreshing(true);
         ticketsAPI.myTickets().then(data => {
           if (Array.isArray(data)) {
             const updated = data.find(t => t.ticket_id === viewingTicket.ticket_id);
-            if (updated?.dynamic_qr) setDynamicQR(updated.dynamic_qr);
+            // Do not reset the loaded state unless the image source actually
+            // changes. Otherwise cached images never emit another load event
+            // and the QR looks blank after a refresh cycle.
+            if (updated?.dynamic_qr && updated.dynamic_qr !== dynamicQrRef.current) {
+              dynamicQrRef.current = updated.dynamic_qr;
+              setQrError(false);
+              setQrLoaded(false);
+              setDynamicQR(updated.dynamic_qr);
+            }
           }
           setRefreshing(false);
         }).catch(() => setRefreshing(false));
@@ -689,6 +698,19 @@ export function TicketView() {
     || (viewingTicket.qr_image
         ? (viewingTicket.qr_image.startsWith("http") ? viewingTicket.qr_image : API + viewingTicket.qr_image)
         : null);
+  const onQrError = () => {
+    // A dynamic data image can fail transiently. Fall back to the ticket's
+    // server-issued backup QR rather than leaving the attendee with a blank
+    // panel; only show "unavailable" if that fallback also fails.
+    if (dynamicQR) {
+      dynamicQrRef.current = null;
+      setDynamicQR(null);
+      setQrLoaded(false);
+      setQrError(false);
+    } else {
+      setQrError(true);
+    }
+  };
   const isExpiringSoon = timeLeft <= 3;
   const progressColor  = isExpiringSoon ? "#dc2626" : "#10B981";
 
@@ -703,7 +725,7 @@ export function TicketView() {
 
       <div className="px-4 py-4">
         <PremiumTicket ev={ev} ownerName={ownerName} qrSrc={qrSrc} qrLoaded={qrLoaded} qrError={qrError}
-          refreshing={refreshing} setQrLoaded={setQrLoaded} setQrError={setQrError}
+          refreshing={refreshing} setQrLoaded={setQrLoaded} onQrError={onQrError}
           timeLeft={timeLeft} isExpiringSoon={isExpiringSoon} progressColor={progressColor}
           ticketId={viewingTicket.ticket_id || viewingTicket.id}
           txHash={viewingTicket.nft_tx_hash} tokenId={viewingTicket.nft_token_id}

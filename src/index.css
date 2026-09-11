@@ -173,3 +173,17 @@ body.app-mode #root {
   height: 100dvh;
   overflow: hidden;
 }
+
+/* Door staff need a compact camera view on phones so the admission result is
+   visible immediately after scanning. Html5Qrcode inserts its own video node,
+   so these selectors deliberately constrain that generated element as well. */
+.door-qr-scanner,
+.door-qr-scanner > div,
+.door-qr-scanner video {
+  height: 100% !important;
+}
+
+.door-qr-scanner video {
+  width: 100% !important;
+  object-fit: cover;
+}

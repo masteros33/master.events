@@ -62,7 +62,7 @@ function ChainStrip({ txHash, tokenId }) {
 }
 
 // ── QR Scanner ────────────────────────────────────────────────
-function QRScanner({ onScan }) {
+function QRScanner({ onScan, compact = false }) {
   const scannerRef = useRef(null);
   const html5QrRef = useRef(null);
   const [camError, setCamError] = useState(false);
@@ -98,9 +98,9 @@ function QRScanner({ onScan }) {
   );
 
   return (
-    <div className="rounded-2xl overflow-hidden relative bg-black border border-brand-hairline">
+    <div className={`rounded-2xl overflow-hidden relative bg-black border border-brand-hairline ${compact ? "door-qr-scanner h-[280px] sm:h-[360px]" : ""}`}>
       <div ref={scannerRef} className="w-full" />
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-60 h-60 pointer-events-none">
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-52 h-52 sm:w-60 sm:h-60 pointer-events-none">
         <div className="absolute inset-0" style={{ boxShadow: "0 0 0 9999px rgba(0,0,0,0.55)" }} />
         <span className="absolute w-7 h-7 top-0 left-0 border-t-[3px] border-l-[3px] border-brand-accent rounded-tl" />
         <span className="absolute w-7 h-7 top-0 right-0 border-t-[3px] border-r-[3px] border-brand-accent rounded-tr" />
@@ -352,7 +352,7 @@ export function DoorStaffScan() {
         {/* Camera mode */}
         {cameraMode ? (
           <div className="mb-4">
-            <QRScanner onScan={processId} />
+            {!result && <QRScanner onScan={processId} compact />}
             <AnimatePresence>
               {verifying && (
                 <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
@@ -386,6 +386,13 @@ export function DoorStaffScan() {
 
         {/* Result */}
         <ResultCard result={result} />
+
+        {cameraMode && result && (
+          <button onClick={() => setResult(null)}
+            className="w-full h-12 mb-4 rounded-xl bg-brand-accent hover:bg-brand-accent-hover text-white font-medium text-sm flex items-center justify-center gap-2 transition-colors">
+            <Camera size={16} weight="light" /> Scan Next Ticket
+          </button>
+        )}
 
         {/* Admitted list — ledger treatment */}
         {admittedList.length > 0 && (

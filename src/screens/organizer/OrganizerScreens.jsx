@@ -80,6 +80,18 @@ const labelClass = "text-xs font-semibold text-brand-muted mb-1.5 block uppercas
 // with object-cover, so on a tall poster something always gets cut; this
 // decides what survives. Click or drag the preview to move the marker — the
 // value is a CSS object-position, and the uploaded image is never altered.
+// The badge used to read a single `used` flag, so a code that had expired or
+// been used up on every allowed device still displayed ACTIVE — door staff
+// were handed a dead code and told it was live. This reports what the server
+// actually says about it.
+function doorCodeState(inv) {
+  if (inv.is_expired)                          return { label: "EXPIRED",  dead: true };
+  if (inv.max_uses && inv.uses >= inv.max_uses) return { label: "USED UP",  dead: true };
+  if (inv.is_active === false || inv.used)      return { label: "REVOKED",  dead: true };
+  const left = inv.max_uses ? inv.max_uses - (inv.uses || 0) : null;
+  return { label: left != null ? `ACTIVE · ${left} left` : "ACTIVE", dead: false };
+}
+
 function ImageFocusPicker({ src, value, onChange, height = "h-40" }) {
   const ref = React.useRef(null);
   const [dragging, setDragging] = React.useState(false);
@@ -1558,16 +1570,19 @@ export function OrganizerEventDetail() {
                   className="w-full flex items-center justify-center gap-1.5 py-2.5 bg-[var(--brand-light)] text-brand-accent border border-dashed border-brand-accent/40 rounded-xl text-xs font-semibold mb-2.5 hover:bg-[var(--brand-light)] transition-colors">
                   <Plus size={13} weight="light" /> Generate Access Code
                 </button>
-                {invites.map(inv => (
-                  <div key={inv.code} onClick={() => copyCode(inv.code)}
-                    className={`rounded-xl px-3 py-2.5 mb-1.5 flex justify-between items-center cursor-pointer border ${inv.used ? "bg-brand-canvas border-brand-hairline" : "bg-[var(--brand-light)] border-brand-accent/20"}`}>
-                    <span className={`font-mono font-medium text-[13px] tracking-wider ${inv.used ? "text-brand-muted" : "text-brand-accent"}`}>{inv.code}</span>
+                {invites.map(inv => {
+                  const st = doorCodeState(inv);
+                  return (
+                  <div key={inv.code} onClick={() => !st.dead && copyCode(inv.code)}
+                    className={`rounded-xl px-3 py-2.5 mb-1.5 flex justify-between items-center border ${st.dead ? "bg-brand-canvas border-brand-hairline" : "bg-[var(--brand-light)] border-brand-accent/20 cursor-pointer"}`}>
+                    <span className={`font-mono font-medium text-[13px] tracking-wider ${st.dead ? "text-brand-muted line-through" : "text-brand-accent"}`}>{inv.code}</span>
                     <div className="flex gap-2 items-center">
-                      <span className={`text-xs font-medium ${inv.used ? "text-brand-muted" : "text-emerald-700"}`}>{inv.used?"USED":"ACTIVE"}</span>
-                      {!inv.used && <span className={`text-xs ${copiedCode===inv.code ? "text-emerald-700" : "text-brand-muted"}`}>{copiedCode===inv.code?"COPIED":"TAP TO COPY"}</span>}
+                      <span className={`text-xs font-medium ${st.dead ? "text-brand-muted" : "text-emerald-700"}`}>{st.label}</span>
+                      {!st.dead && <span className={`text-xs ${copiedCode===inv.code ? "text-emerald-700" : "text-brand-muted"}`}>{copiedCode===inv.code?"COPIED":"TAP TO COPY"}</span>}
                     </div>
                   </div>
-                ))}
+                  );
+                })}
                 <div className="flex gap-1.5 items-center mt-1 px-2.5 py-2 rounded-xl bg-blue-50 border border-blue-100">
                   <Lock size={12} weight="light" className="text-blue-700 shrink-0" />
                   <span className="text-xs text-blue-700 font-medium">Door staff can scan only — no event management access</span>

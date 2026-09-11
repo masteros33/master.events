@@ -10,6 +10,7 @@ import {
 import useStore from "../../store/useStore";
 import { eventsAPI } from "../../api";
 import { formatDate, formatTime } from "../../utils/formatDate";
+import { GoodToKnow, LocationCard, FaqSection } from "../../components/EventSections";
 
 const categoryImages = {
   music:    "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=800",
@@ -369,6 +370,10 @@ function EventDetailOverlay({ ev, onBack, onCheckout }) {
 
             <DescriptionBlock desc={ev.description} name={ev.name} compact />
 
+            <GoodToKnow event={ev} />
+            <LocationCard venue={ev.venue} city={ev.city} country={ev.country} />
+            <FaqSection faq={ev.faq} />
+
             {hasTiers && (
               <TierPicker tiers={ev.tiers} selectedId={selectedTier?.id} onSelect={setSelectedTier} compact />
             )}
@@ -473,6 +478,10 @@ function EventDetailOverlay({ ev, onBack, onCheckout }) {
 
           <DescriptionBlock desc={ev.description} name={ev.name} />
 
+          <GoodToKnow event={ev} />
+          <LocationCard venue={ev.venue} city={ev.city} country={ev.country} />
+          <FaqSection faq={ev.faq} />
+
           {hasTiers && (
             <TierPicker tiers={ev.tiers} selectedId={selectedTier?.id} onSelect={setSelectedTier} />
           )}
@@ -566,6 +575,7 @@ export default function AttendeeHome() {
               category:      e.category,
               venue:         e.venue,
               city:          e.city,
+              country:       e.country,
               date:          e.date,
               time:          e.time,
               price:         parseFloat(e.price) || 0,
@@ -574,6 +584,13 @@ export default function AttendeeHome() {
               ticketsSold:   e.tickets_sold  || 0,
               salesOpen:     e.sales_open,
               image:         e.image || categoryImages[e.category] || categoryImages.other,
+              // Passed through under their API names: the section components
+              // are shared with the public page, which reads the raw payload.
+              refund_policy:   e.refund_policy,
+              attendance_mode: e.attendance_mode,
+              age_restriction: e.age_restriction,
+              parking:         e.parking,
+              faq:             Array.isArray(e.faq) ? e.faq : [],
               organizerName: e.organizer?.first_name
                 ? `${e.organizer.first_name} ${e.organizer.last_name || ""}`.trim()
                 : e.organizer_name || null,

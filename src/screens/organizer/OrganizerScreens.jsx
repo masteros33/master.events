@@ -13,6 +13,16 @@ import { formatDate } from "../../utils/formatDate";
 
 const CHART = { orange: "#1c2e53", green: "#10B981", blue: "#2563EB", red: "#DC2626" };
 
+// A ticket somebody was given is not a resale. Both used to set is_resale, so
+// gifted tickets wore a RESALE chip on the holders list. acquired_via tells
+// them apart; is_resale is the fallback for rows written before it existed.
+const acquiredLabel = (t) => {
+  const via = t.acquired_via || (t.is_resale ? "resale" : "purchase");
+  if (via === "transfer") return "TRANSFERRED";
+  if (via === "resale")   return "RESALE";
+  return null;
+};
+
 const CURRENCIES = [
   { code:"GHS", symbol:"₵" }, { code:"USD", symbol:"$" },
   { code:"EUR", symbol:"€" }, { code:"GBP", symbol:"£" },
@@ -1648,7 +1658,11 @@ export function OrganizerEventDetail() {
                         <div className={`min-w-0 ${isDesk ? "" : "flex-1"}`}>
                           <div className="text-xs font-semibold text-brand-text truncate mb-0.5">
                             {name}
-                            {t.is_resale && <span className="ml-1.5 text-xs font-medium text-brand-text bg-brand-hairline px-1.5 py-0.5 rounded">RESALE</span>}
+                            {acquiredLabel(t) && (
+                              <span className="ml-1.5 text-xs font-medium text-brand-text bg-brand-hairline px-1.5 py-0.5 rounded">
+                                {acquiredLabel(t)}
+                              </span>
+                            )}
                           </div>
                           <div className="text-xs text-brand-muted truncate">{email}</div>
                         </div>

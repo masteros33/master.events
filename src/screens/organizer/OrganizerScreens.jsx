@@ -1276,7 +1276,9 @@ export function OrganizerEventDetail() {
 
   // The list has to come from the server, not from whatever this browser
   // happens to remember.
-  React.useEffect(() => { if (ev?.id) loadDoorCodes(ev.id); }, [ev?.id, loadDoorCodes]);
+  React.useEffect(() => {
+    if (viewingOrgEvent?.id) loadDoorCodes(viewingOrgEvent.id);
+  }, [viewingOrgEvent?.id, loadDoorCodes]);
   const setScreen          = useStore(s => s.setScreen);
 
   const [editing,      setEditing]      = useState(false);
@@ -1308,7 +1310,6 @@ export function OrganizerEventDetail() {
       setHolders([]);
       fetchHolders(viewingOrgEvent.id);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [viewingOrgEvent?.id]);
 
   if (!viewingOrgEvent) return null;

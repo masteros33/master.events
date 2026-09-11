@@ -847,36 +847,32 @@ const useStore = create((set, get) => ({
   setDoorCode:      (v) => set({ doorCode: v.toUpperCase(), doorCodeError: "" }),
   setDoorCodeError: (v) => set({ doorCodeError: v }),
 
+  // Loads the codes the SERVER has for this event. The panel used to show a
+  // purely local list, so it could never tell the organizer the truth.
+  loadDoorCodes: async (eventId) => {
+    const { scanAPI } = await import("../api");
+    const rows = await scanAPI.doorCodes(eventId);
+    if (!Array.isArray(rows)) return;
+    set(state => ({
+      doorStaffInvites: { ...state.doorStaffInvites, [eventId]: rows },
+    }));
+  },
+
   generateDoorCode: async (eventId, eventName) => {
-    const { ticketsAPI } = await import("../api");
+    const { scanAPI } = await import("../api");
     const loadingToast = toast.loading("Generating code...");
-    try {
-      const data = await ticketsAPI.generateDoorCode(eventId);
-      if (data.code) {
-        const invite = { code: data.code, eventId, eventName, used: false, createdAt: new Date().toLocaleTimeString() };
-        set(state => ({
-          doorStaffInvites: {
-            ...state.doorStaffInvites,
-            [eventId]: [...(state.doorStaffInvites[eventId] || []), invite],
-          },
-        }));
-        toast.dismiss(loadingToast);
-        toast.success("Code generated: " + data.code);
-      }
-    } catch {
-      const chars  = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-      const rand   = Array.from({ length: 6 }, () => chars[Math.floor(Math.random() * chars.length)]).join("");
-      const code   = "DOOR-" + rand;
-      const invite = { code, eventId, eventName, used: false, createdAt: new Date().toLocaleTimeString() };
-      set(state => ({
-        doorStaffInvites: {
-          ...state.doorStaffInvites,
-          [eventId]: [...(state.doorStaffInvites[eventId] || []), invite],
-        },
-      }));
-      toast.dismiss(loadingToast);
-      toast.success("Code generated: " + code);
+    // No local fallback on purpose. This used to invent a code in the browser
+    // whenever the request failed and report success, so the organizer was
+    // handed a code the server had never heard of and door staff were told it
+    // did not exist. A credential the server did not issue is worthless.
+    const data = await scanAPI.generateCode(eventId);
+    toast.dismiss(loadingToast);
+    if (!data?.code) {
+      toast.error(data?.error || "Could not generate a code. Please try again.");
+      return;
     }
+    await get().loadDoorCodes(eventId);
+    toast.success("Code generated: " + data.code);
   },
 
   handleDoorStaffLogout: async () => {

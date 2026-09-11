@@ -1261,7 +1261,12 @@ export function OrganizerEventDetail() {
   const setViewingOrgEvent = useStore(s => s.setViewingOrgEvent);
   const toggleSales        = useStore(s => s.toggleSales);
   const generateDoorCode   = useStore(s => s.generateDoorCode);
+  const loadDoorCodes      = useStore(s => s.loadDoorCodes);
   const doorStaffInvites   = useStore(s => s.doorStaffInvites);
+
+  // The list has to come from the server, not from whatever this browser
+  // happens to remember.
+  React.useEffect(() => { if (ev?.id) loadDoorCodes(ev.id); }, [ev?.id, loadDoorCodes]);
   const setScreen          = useStore(s => s.setScreen);
 
   const [editing,      setEditing]      = useState(false);
